@@ -8,10 +8,10 @@ Publications about the MERX TRON resource exchange in 5 languages.
 | Language | Folder | Articles |
 |----------|--------|----------|
 | English | [EN/](EN/) | 6 |
-| Russian | [RU/](RU/) | Coming soon |
-| Turkish | [TR/](TR/) | Coming soon |
-| Spanish | [ES/](ES/) | Coming soon |
-| Chinese | [ZH/](ZH/) | Coming soon |
+| Russian | [RU/](RU/) | 6 |
+| Turkish | [TR/](TR/) | 6 |
+| Spanish | [ES/](ES/) | 6 |
+| Chinese | [ZH/](ZH/) | 6 |
 
 ## Article Series
 
