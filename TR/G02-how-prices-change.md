@@ -96,7 +96,7 @@ Certain events cause sharp, temporary price increases:
 MERX monitors prices across all seven providers continuously, providing tools to analyze and act on price movements:
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

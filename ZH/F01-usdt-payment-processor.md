@@ -29,7 +29,7 @@ MERX 在步骤 4 集成,但其影响贯穿整个架构。
 ### 选项 1:逐笔购买
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

@@ -144,7 +144,7 @@ Energy demand follows daily and weekly patterns:
 The seven-provider market creates genuine price competition. No single provider can maintain above-market rates without losing order flow to competitors. This competitive pressure benefits buyers, particularly when using an aggregator that routes to the cheapest option automatically.
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

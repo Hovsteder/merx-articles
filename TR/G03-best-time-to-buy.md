@@ -15,7 +15,7 @@ The problem is that you cannot know in advance exactly when that minimum will oc
 MERX tracks price data across all providers over time. The `analyze_prices` tool provides statistical summaries that reveal pricing patterns:
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

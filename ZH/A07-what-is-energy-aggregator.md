@@ -113,7 +113,7 @@ Redis 持有每个供应商的最新价格，TTL 为 60 秒。如果某供应商
 当你下单时，路由器查询 Redis 获取所有当前价格，筛选能够满足你特定需求（数量、时长）的供应商，并选择最便宜的选项。整个过程耗时毫秒级。
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
@@ -176,11 +176,11 @@ MERX 不在供应商价格上加价。如果最便宜的供应商以每单位 28
 MERX 提供 REST API、JavaScript 和 Python SDK、WebSocket 实时价格推送以及供 AI 代理使用的 MCP 服务器。最快的集成路径：
 
 ```bash
-npm install @merx/sdk
+npm install merx-sdk
 ```
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: 'YOUR_API_KEY' });
 

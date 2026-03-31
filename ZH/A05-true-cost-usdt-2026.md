@@ -232,7 +232,7 @@ Monthly: ~1,032 TRX = ~$258
 能量价格根据网络需求波动。MERX 提供价格历史和 WebSocket 价格推送，以便你在低价时段执行非紧急操作：
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

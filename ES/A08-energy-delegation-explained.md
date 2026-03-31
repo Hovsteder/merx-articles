@@ -187,7 +187,7 @@ MERX performs automated verification after every order:
 5. If verification fails (energy not received within timeout), the order is flagged and the buyer is refunded.
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

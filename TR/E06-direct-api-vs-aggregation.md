@@ -170,7 +170,7 @@ This is a simplified version. A production implementation needs retry logic, cir
 Now compare this with the MERX approach. The entire integration:
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
@@ -237,7 +237,7 @@ Any language with HTTP support can use the REST API directly.
 ### JavaScript SDK
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 const merx = new MerxClient({ apiKey: 'your-key' });
 const prices = await merx.getPrices({ energy_amount: 65000, duration: '1h' });
 ```

@@ -258,7 +258,7 @@ Prices are lowest during off-peak hours (roughly 00:00-08:00 UTC) and highest du
 At low volume, the simplest approach is to buy energy for each transaction as needed. The overhead of staking or maintaining long-duration rentals is not justified.
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

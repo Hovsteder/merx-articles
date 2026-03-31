@@ -42,7 +42,7 @@ These variations mean that a hardcoded estimate of 150,000 energy per mint will 
 MERX's estimacion de energia uses `triggerConstantContract` to simulate the exact mint operation before execution:
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

@@ -80,7 +80,7 @@ MERX maintains continuous monitoring across all seven providers, tracking metric
 ### Health Monitoring
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

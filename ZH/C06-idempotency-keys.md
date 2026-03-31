@@ -81,7 +81,7 @@ Idempotency-Key: order-user42-2026-03-30-batch7-item3
 MERX JavaScript SDK在您传递 `idempotencyKey` 选项时自动处理幂等性密钥。以下是带重试逻辑的完整示例:
 
 ```javascript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 import { randomUUID } from 'crypto';
 
 const merx = new MerxClient({

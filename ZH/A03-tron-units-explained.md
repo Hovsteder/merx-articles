@@ -245,7 +245,7 @@ At $0.25/TRX = $146.25/day = $4,388/month
 SDK 处理换算：
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 const prices = await client.getPrices({ energy: 65000 });

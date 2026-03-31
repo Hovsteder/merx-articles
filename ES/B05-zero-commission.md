@@ -260,7 +260,7 @@ Create an account and start trading at cero comision:
 4. Make your first order
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

@@ -187,7 +187,7 @@ MERX 在每笔订单后执行自动验证：
 5. 如果验证失败（能量未在超时时间内到账），订单被标记并退款给买家。
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

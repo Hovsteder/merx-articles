@@ -88,7 +88,7 @@ This is where MERX transforms your cost structure. Before sending any USDT trans
 For lower volumes, buy energy for each outbound transfer:
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

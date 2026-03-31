@@ -155,7 +155,7 @@ At 100 transfers/day, the bandwidth burn cost is $258/month. If staking $1,720 w
 Some energy providers also offer bandwidth delegation. This is less common than energy rental because bandwidth costs are lower and demand is smaller. MERX supports bandwidth delegation for users who need it:
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

@@ -113,7 +113,7 @@ Redis holds the latest price from each provider with a 60-second TTL. If a provi
 When you place an order, the router queries Redis for all current prices, filters for providers that can fulfill your specific request (amount, duration), and selects the cheapest option. The entire process takes milliseconds.
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
@@ -176,11 +176,11 @@ An aggregator adds less value when:
 MERX offers a REST API, JavaScript and Python SDKs, WebSocket tiempo real flujo de precioss, and an MCP server for AI agents. The fastest path to integration:
 
 ```bash
-npm install @merx/sdk
+npm install merx-sdk
 ```
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: 'YOUR_API_KEY' });
 

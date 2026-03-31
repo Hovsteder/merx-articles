@@ -49,7 +49,7 @@ TronSave 价格由个别卖家设定。MERX 价格反映所有七个供应商在
 直接去 TronSave,你支付 35 SUN。通过 MERX,你支付 28 SUN,因为系统自动路由到 Feee。随着交易量增加,节省也会累积。
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

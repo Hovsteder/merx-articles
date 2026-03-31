@@ -36,7 +36,7 @@ Before building, you need:
 mkdir usdt-payment-bot
 cd usdt-payment-bot
 npm init -y
-npm install @anthropic/merx-sdk tronweb dotenv uuid
+npm install merx-sdk tronweb dotenv uuid
 ```
 
 Create a `.env` file (never commit this to version control):
@@ -55,7 +55,7 @@ Create the MERX client and TronWeb instance:
 
 ```javascript
 // src/clients.js
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 import TronWeb from 'tronweb';
 import dotenv from 'dotenv';
 

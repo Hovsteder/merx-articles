@@ -245,7 +245,7 @@ Al trabajar con la API de MERX, todos los valores siguen convenciones consistent
 El SDK gestiona las conversiones:
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 const prices = await client.getPrices({ energy: 65000 });

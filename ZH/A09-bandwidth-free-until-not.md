@@ -155,7 +155,7 @@ Capital at $0.25:   $1,720
 一些能量供应商也提供带宽委托。这不如能量租赁常见，因为带宽成本较低且需求较少。MERX 为需要的用户支持带宽委托：
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

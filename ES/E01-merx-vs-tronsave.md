@@ -70,7 +70,7 @@ Consider a practical scenario. You need 65,000 energy for a USDT transfer. At a 
 If you go to TronSave directly, you pay 35 SUN. Through MERX, you pay 28 SUN because the system routes to Feee automatically. The savings compound with volume.
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

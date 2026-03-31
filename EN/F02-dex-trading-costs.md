@@ -47,7 +47,7 @@ Both scenarios cost you money. The solution is exact simulation.
 MERX uses the TRON network's `triggerConstantContract` endpoint to simulate your specific swap before execution. This dry-run tells you exactly how much energy the swap will consume -- not an estimate, not an average, but the precise number for your specific transaction.
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

@@ -355,7 +355,7 @@ Ledger entries are append-only. They are never updated or deleted. This creates 
 The MERX API provides tiempo real estado de la orden through both REST and WebSocket:
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

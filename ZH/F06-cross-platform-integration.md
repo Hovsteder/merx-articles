@@ -67,7 +67,7 @@ app.post('/webhooks/merx', (req, res) => {
 ## JavaScript SDK
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY! });
 const prices = await merx.getPrices({ energy_amount: 65000, duration: '1h' });
 const order = await merx.createOrder({

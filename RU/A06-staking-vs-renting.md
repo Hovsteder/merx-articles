@@ -256,7 +256,7 @@ The hybrid saves roughly $3,400/year versus pure renting while requiring only 65
 MERX supports automated resource management that enables the hybrid strategy without manual intervention:
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

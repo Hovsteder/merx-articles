@@ -310,7 +310,7 @@ The JavaScript/TypeScript SDK wraps the REST API and WebSocket connections with 
 ### Implementation
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({
   apiKey: process.env.MERX_API_KEY!
@@ -449,7 +449,7 @@ An AI agent can use these tools to answer questions like "What is the cheapest e
   "mcpServers": {
     "merx": {
       "command": "npx",
-      "args": ["@anthropic/merx-mcp"],
+      "args": ["merx-mcp"],
       "env": {
         "MERX_API_KEY": "your-api-key"
       }

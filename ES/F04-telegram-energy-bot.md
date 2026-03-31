@@ -17,7 +17,7 @@ By the end of this article, you will have a working bot with three commands -- `
 mkdir tron-energy-bot
 cd tron-energy-bot
 npm init -y
-npm install telegraf @anthropic/merx-sdk dotenv express
+npm install telegraf merx-sdk dotenv express
 npm install -D typescript @types/node @types/express ts-node
 ```
 
@@ -95,7 +95,7 @@ User sends /buy 65000 1h TAddress
 ```typescript
 // src/index.ts
 import { Telegraf, Context } from 'telegraf';
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 import express from 'express';
 import dotenv from 'dotenv';
 

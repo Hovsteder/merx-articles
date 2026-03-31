@@ -81,7 +81,7 @@ Idempotency keys are stored for 24 hours. After that, the same key can be reused
 The MERX JavaScript SDK handles idempotency keys automatically when you pass the `idempotencyKey` option. Here is a complete example with retry logic:
 
 ```javascript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 import { randomUUID } from 'crypto';
 
 const merx = new MerxClient({

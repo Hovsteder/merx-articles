@@ -355,7 +355,7 @@ INSERT INTO ledger (
 MERX API 通过 REST 和 WebSocket 提供实时订单状态：
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

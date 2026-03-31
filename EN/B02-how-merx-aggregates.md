@@ -264,7 +264,7 @@ try {
 ### With MERX
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-merx-key' });
 

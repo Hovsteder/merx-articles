@@ -232,7 +232,7 @@ Incluso si tiene un proveedor preferido, enrutar a traves de un agregador como M
 Los precios de energia fluctuan segun la demanda de la red. MERX proporciona historial de precios y feeds de precios por WebSocket para que pueda programar operaciones no urgentes para periodos de precios bajos:
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

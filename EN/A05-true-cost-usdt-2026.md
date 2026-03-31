@@ -232,7 +232,7 @@ Even if you have a preferred provider, routing through an aggregator like MERX e
 Energy prices fluctuate based on network demand. MERX provides price history and WebSocket price feeds so you can time non-urgent operations for low-price periods:
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

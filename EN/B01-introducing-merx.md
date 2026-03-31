@@ -151,7 +151,7 @@ Available on [npm](https://www.npmjs.com/package/merx-mcp) as `merx-mcp`. Source
 - **Documentation:** 36 pages including full API reference
 - **SDKs:** JavaScript (npm) and Python (PyPI)
 - **Cost reduction:** up to 94% compared to TRX burn
-- **Mainnet verified:** 8 transactions confirmed on TRON mainnet
+- **Mainnet verified:** transactions confirmed on TRON mainnet
 
 ## What Makes MERX Different from Single Providers
 

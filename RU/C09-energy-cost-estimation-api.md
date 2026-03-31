@@ -211,7 +211,7 @@ Use `estimate` when you need to tell a user "this transaction will cost X if you
 You run a payment processor that sends USDT to merchants. Before each payout, you estimate the cost:
 
 ```javascript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({
   apiKey: process.env.MERX_API_KEY,

@@ -211,7 +211,7 @@ curl "https://merx.exchange/api/v1/orders/preview?energy_amount=65000&target_add
 您运营一个向商户发送USDT的支付处理器。每次付款前,您估算成本:
 
 ```javascript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({
   apiKey: process.env.MERX_API_KEY,

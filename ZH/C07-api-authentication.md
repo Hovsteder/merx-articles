@@ -84,7 +84,7 @@ curl -X POST https://merx.exchange/api/v1/keys \
 ### 使用JavaScript SDK
 
 ```javascript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({
   apiKey: process.env.MERX_API_KEY,

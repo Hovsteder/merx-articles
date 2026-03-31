@@ -260,7 +260,7 @@ MERX SDK 是开源的：
 4. 下第一笔订单
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

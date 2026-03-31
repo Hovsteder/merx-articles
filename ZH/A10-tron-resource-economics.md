@@ -258,7 +258,7 @@ Provider stakes 1,000,000 TRX
 在低频下，最简单的方式是根据需要为每笔交易购买能量。维护质押或长期租赁的开销不值得。
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

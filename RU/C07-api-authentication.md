@@ -84,7 +84,7 @@ Note: the key creation endpoint requires JWT authentication. You must log in fir
 ### Using the JavaScript SDK
 
 ```javascript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({
   apiKey: process.env.MERX_API_KEY,

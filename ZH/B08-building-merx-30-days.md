@@ -191,7 +191,7 @@ POST   /api/v1/withdraw        Request withdrawal
 JavaScript SDK 为 Node.js 和浏览器环境构建：
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 const prices = await client.getPrices({ energy: 65000 });

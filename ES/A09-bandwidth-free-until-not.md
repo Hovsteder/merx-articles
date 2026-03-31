@@ -155,7 +155,7 @@ At 100 transfers/day, the bandwidth costo de quema is $258/month. If staking $1,
 Some proveedor de energias also offer bandwidth delegation. This is less common than alquiler de energia because bandwidth costs are lower and demand is smaller. MERX supports bandwidth delegation for users who need it:
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

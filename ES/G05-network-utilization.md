@@ -167,7 +167,7 @@ During periods of high network utilization:
 This creates a counter-intuitive dynamic: the best time to buy energy is not during congestion (when you need it most) but before congestion. Es por esto que MERX orden permanentes are valuable -- they pre-purchase energy at target prices during calm periods, providing a buffer for congested periods when prices spike.
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

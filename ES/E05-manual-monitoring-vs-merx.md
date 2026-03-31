@@ -109,7 +109,7 @@ The response includes prices from all active providers, sorted by rate, with the
 ### Placing an Order
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 

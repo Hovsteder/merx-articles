@@ -256,7 +256,7 @@ vs. Pure renting (100/day):
 MERX 支持自动化资源管理，使混合策略无需手动干预即可实施：
 
 ```typescript
-import { MerxClient } from '@merx/sdk';
+import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 

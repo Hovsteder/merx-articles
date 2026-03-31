@@ -35,7 +35,7 @@ If you need 65,000 energy per transaction and send 100 transactions over 8 hours
 Medium durations provide the best balance for most high-frequency caso de usos. Buy enough energy for your expected transaction volume over the next 1-6 hours in a single purchase.
 
 ```typescript
-import { MerxClient } from '@anthropic/merx-sdk';
+import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
