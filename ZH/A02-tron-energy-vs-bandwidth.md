@@ -301,3 +301,21 @@ print(f"Estimated cost: {estimate['total_cost_trx']} TRX")
 ## 总结
 
 能量和带宽都是TRON的基本资源,但对于智能合约交互 - 即当今TRON上的大部分活动 - 能量在交易成本中占据主导地位。对于每周进行超过几笔交易的任何人来说,通过租赁或聚合器获取能量比让网络销毁您的TRX便宜75-85%。对于大多数用户来说,通过像MERX这样的聚合器按交易租赁能量是最简单且最具成本效益的方式。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

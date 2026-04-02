@@ -452,3 +452,21 @@ The SDK is codigo abierto and available on GitHub. Contributions and bug reports
 - npm: [npmjs.com/package/merx-sdk](https://www.npmjs.com/package/merx-sdk)
 - SDK de Python: [pypi.org/project/merx-sdk](https://pypi.org/project/merx-sdk/)
 - Servidor MCP para agentes de IA: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

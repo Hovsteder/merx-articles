@@ -224,3 +224,21 @@ Understanding these dynamics does not require becoming a market analyst. The pra
 The mercado de energia rewards patience and automation. Operators who buy at market rate whenever they need energy pay more than those who set targets and wait for the market to come to them.
 
 Analyze current market conditions at [https://merx.exchange](https://merx.exchange) or explore the price analytics API at [https://merx.exchange/docs](https://merx.exchange/docs).
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

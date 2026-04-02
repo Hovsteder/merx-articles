@@ -86,3 +86,21 @@ const standing = await merx.createStandingOrder({
 MERX 用亚秒级 API 调用替代了 15 分钟的手动工作流,捕捉手动监控无法获取的价格机会,并从每天一单扩展到数千单,无需额外努力。
 
 在 [https://merx.exchange](https://merx.exchange) 试用平台或在 [https://merx.exchange/docs](https://merx.exchange/docs) 探索文档。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -170,3 +170,21 @@ CMD ["node", "dist/index.js"]
 用三个核心命令和 webhook 集成的 Telegram 机器人,用户可以在不离开 Telegram 的情况下查价格、买能量并接收通知。实现利用 MERX SDK 进行所有能量市场交互,自动获得跨七个供应商的最优价格路由。
 
 API 文档: [https://merx.exchange/docs](https://merx.exchange/docs)。MCP 服务器: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

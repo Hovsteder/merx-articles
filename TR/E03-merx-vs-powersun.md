@@ -225,3 +225,21 @@ MERX operates at a different level. By aggregating PowerSun alongside six other 
 For most developers and businesses operating on TRON, the aggregator model provides better pricing, higher reliability, and more powerful tooling. PowerSun's supply remains available through MERX, so choosing the aggregator does not mean losing access to PowerSun -- it means gaining access to everything else alongside it.
 
 Start exploring at [https://merx.exchange](https://merx.exchange) or review the API documentation at [https://merx.exchange/docs](https://merx.exchange/docs).
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

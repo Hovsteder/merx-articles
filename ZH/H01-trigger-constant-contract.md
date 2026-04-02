@@ -123,3 +123,21 @@ class EstimationCache {
 `triggerConstantContract` 将能量购买从估算游戏转变为精确计算。MERX 将此能力直接集成到能量购买工作流中。模拟,获取精确数量,以七个供应商中的最佳价格购买,执行交易,零浪费零 TRX 燃烧。
 
 在 [https://merx.exchange/docs](https://merx.exchange/docs) 探索估算 API。MCP 服务器: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

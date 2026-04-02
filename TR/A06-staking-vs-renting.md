@@ -296,3 +296,21 @@ Calculate your optimal strategy with real-time pricing at [https://merx.exchange
 ---
 
 *Bu makale, TRON altyapisi uzerine MERX bilgi serisinin bir parcasidir. MERX, ilk blokzincir kaynak borsasidir. Dokumantasyon: [https://merx.exchange/docs](https://merx.exchange/docs).*
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

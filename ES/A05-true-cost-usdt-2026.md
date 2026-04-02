@@ -272,3 +272,21 @@ Consulte los precios actuales de energia y calcule sus ahorros potenciales en [h
 ---
 
 *Este articulo es parte de la serie de conocimiento de MERX sobre infraestructura TRON. MERX es el primer exchange de recursos blockchain, agregando todos los principales proveedores de energia en una sola API. Codigo fuente y SDKs disponibles en [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) y [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python).*
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

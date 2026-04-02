@@ -87,3 +87,21 @@ TronSave 是一个可靠的能量市场,具有运作良好的 P2P 模型。MERX 
 这种区别是结构性的,而非质量上的。TronSave 是一个做好本职工作的供应商。MERX 是在其之上的一层,使 TronSave - 以及其他六个 - 自动协同工作。
 
 在 [https://merx.exchange/docs](https://merx.exchange/docs) 探索 API 文档或在 [https://merx.exchange](https://merx.exchange) 试用平台。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

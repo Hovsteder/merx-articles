@@ -68,3 +68,21 @@ class TimingStrategy {
 数据驱动的方法很简单:分析历史价格了解分布,设定目标在 25 百分位,创建常备订单,维护缓冲,追踪结果并调整。
 
 在 [https://merx.exchange](https://merx.exchange) 开始分析价格或在 [https://merx.exchange/docs](https://merx.exchange/docs) 探索分析 API。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -276,3 +276,21 @@ console.log(`MERX fee: 0`);
 ---
 
 *本文是 MERX 知识系列的一部分。MERX 是首个区块链资源交易所，在所有主要 TRON 能量供应商之间提供零佣金能量交易和最优价格路由。*
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -63,3 +63,21 @@ TRX 燃烧成本(天花板)
 TRON 能量价格从网络层面动态中产生。理解这些动态的实际要点是:价格随可测量因素变动,常备订单等工具让你自动利用有利条件。
 
 在 [https://merx.exchange](https://merx.exchange) 探索当前网络条件和能量价格或在 [https://merx.exchange/docs](https://merx.exchange/docs) 了解更多。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

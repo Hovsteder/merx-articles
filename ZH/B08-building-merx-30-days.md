@@ -327,3 +327,21 @@ TRON 上的能量聚合市场正在等待一个让它变得简单的平台。MER
 ---
 
 *MERX 是首个区块链资源交易所。在 [https://merx.exchange](https://merx.exchange) 探索平台。文档请访问 [https://merx.exchange/docs](https://merx.exchange/docs)。开源 SDK 和 MCP 服务器请访问 GitHub。*
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

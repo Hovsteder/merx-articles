@@ -115,3 +115,21 @@ const order = await merx.createOrder({
 PowerSun 是一个可靠的能量供应商,定价模式清晰。MERX 在不同层面运作。通过将 PowerSun 与其他六个供应商聚合,它确保你在 PowerSun 最优时获得 PowerSun 的费率 - 在其他供应商更优时获得更低费率。PowerSun 的供应通过 MERX 仍然可用,因此选择聚合器并不意味着失去对 PowerSun 的访问 - 而是同时获得对其他一切的访问。
 
 在 [https://merx.exchange](https://merx.exchange) 开始探索或在 [https://merx.exchange/docs](https://merx.exchange/docs) 查看 API 文档。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

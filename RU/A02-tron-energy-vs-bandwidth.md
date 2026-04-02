@@ -301,3 +301,21 @@ print(f"Estimated cost: {estimate['total_cost_trx']} TRX")
 ## Заключение
 
 Энергия и bandwidth - оба необходимые ресурсы TRON, но энергия доминирует в стоимости транзакций при взаимодействии со смарт-контрактами, а это большая часть того, что происходит в TRON сегодня. Для всех, кто совершает более нескольких транзакций в неделю, приобретение энергии через аренду или агрегатор обходится на 75-85% дешевле, чем позволять сети сжигать ваш TRX. Для большинства пользователей аренда энергии за транзакцию через агрегатор вроде MERX - самый простой и экономически эффективный подход.
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

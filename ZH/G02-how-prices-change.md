@@ -60,3 +60,21 @@ const standing = await merx.createStandingOrder({
 TRON 能量价格是动态的。实用方法很简单:使用价格分析工具了解典型范围,以目标价设置常备订单,让系统处理时机。MERX 的聚合确保你始终获得最佳可用费率,常备订单自动捕捉手动购买无法获取的价格下跌。
 
 在 [https://merx.exchange](https://merx.exchange) 分析当前市场条件或在 [https://merx.exchange/docs](https://merx.exchange/docs) 探索价格分析 API。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

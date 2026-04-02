@@ -301,3 +301,21 @@ La documentacion completa de la API esta disponible en [merx.exchange/docs](http
 ## Resumen
 
 La energia y el ancho de banda son recursos esenciales de TRON, pero la energia domina los costos de transaccion para las interacciones con contratos inteligentes - que es la mayor parte de lo que sucede en TRON hoy. Para cualquiera que realice mas de unas pocas transacciones por semana, adquirir energia a traves de alquiler o un agregador es un 75-85% mas barato que dejar que la red queme su TRX. Para la mayoria de los usuarios, alquilar energia por transaccion a traves de un agregador como MERX es el enfoque mas simple y rentable.
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

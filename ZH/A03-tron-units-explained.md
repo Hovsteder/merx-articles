@@ -289,3 +289,21 @@ TRON 的资源模型比大多数链更为精细，但一旦你理解了四个核
 ---
 
 *本文是 MERX TRON 基础设施知识系列的一部分。MERX 是首个区块链资源交易所，将所有主要能量供应商聚合到单一 API 中。了解更多请访问 [https://merx.exchange](https://merx.exchange)。*
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

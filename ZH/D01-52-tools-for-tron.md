@@ -367,3 +367,21 @@ MERX MCP 服务器面向三类主要用户：
 完整文档可在 [merx.exchange/docs](https://merx.exchange/docs) 获取。SDK 可用于 [JavaScript](https://github.com/Hovsteder/merx-sdk-js) 和 [Python](https://github.com/Hovsteder/merx-sdk-python)，如果你更喜欢不通过 MCP 的程序化访问。
 
 TRON 生态系统多年来一直需要适当的 AI 代理工具。MERX MCP 服务器实现了这一目标 - 52 个工具，可用于生产环境，主网验证，今天即可使用。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

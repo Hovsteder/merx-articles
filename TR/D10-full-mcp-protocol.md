@@ -12,13 +12,13 @@ Most MCP servers implement only tools. They expose a handful of callable functio
 
 Tools alone give the model actions but no guidance on when or how to use them. Without prompts, the model must figure out complex multi-step workflows from scratch every time. Without resources, the model has no structured data to reference - it must make tool calls just to read information that should be passively available.
 
-MERX implements all three primitives: 21 tools, 30 prompts, and 21 resources. This article explains what each primitive does, why all three matter, and how MERX uses them to create an MCP server that is qualitatively different from tools-only implementations.
+MERX implements all three primitives: 54 tools, 30 prompts, and 21 resources. This article explains what each primitive does, why all three matter, and how MERX uses them to create an MCP server that is qualitatively different from tools-only implementations.
 
 ## Primitive 1: Tools (Actions)
 
 Tools are the most intuitive primitive. A tool is a function the model can call to perform an action. It has a name, a description, typed parameters, and returns a structured response.
 
-MERX exposes 21 tools covering the full scope of TRON blockchain operations:
+MERX exposes 54 tools covering the full scope of TRON blockchain operations:
 
 ### Wallet Operations
 - `set_private_key` - Configure the wallet with a private key (derives address automatically)
@@ -441,7 +441,7 @@ A survey of blockchain-related MCP servers as of early 2026 shows a consistent p
 | Solana MCP | 10-12 | 0 | 0 | No |
 | Bitcoin MCP | 3-4 | 0 | 0 | No |
 | Multi-chain MCP | 15-20 | 0 | 0 | No |
-| MERX | 21 | 30 | 21 | Yes |
+| MERX | 52 | 30 | 21 | Yes |
 
 No other blockchain MCP server implements prompts or resources. They are all tools-only, which means:
 
@@ -456,7 +456,7 @@ MERX is the only MCP server where the model has a complete operational environme
 
 MERX by the numbers:
 
-- **21 tools** across 5 categories (wallet, energy market, DEX, automation, advanced)
+- **54 tools** across 5 categories (wallet, energy market, DEX, automation, advanced)
 - **30 prompts** across 10 categories (getting started, energy, transactions, automation, analysis, accounts, x402, network, troubleshooting, integration)
 - **21 resources** (14 static documentation, 7 dynamic data templates)
 - **72 total capabilities** exposed through a single MCP server
@@ -480,3 +480,21 @@ Thirty prompts. Twenty-one resources. Twenty-one tools. No other blockchain MCP 
 - MERX Platformu: [https://merx.exchange](https://merx.exchange)
 - MCP Sunucusu (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - MCP Sunucusu (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

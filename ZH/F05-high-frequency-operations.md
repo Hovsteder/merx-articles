@@ -104,3 +104,21 @@ await merx.enableAutoEnergy({
 4. **监控利用率。** 购买足以避免 TRX 燃烧但不至于能量闲置的量。
 
 在 [https://merx.exchange/docs](https://merx.exchange/docs) 探索高频能力或在 [https://merx.exchange](https://merx.exchange) 开始使用。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

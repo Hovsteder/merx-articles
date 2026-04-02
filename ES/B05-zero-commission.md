@@ -276,3 +276,21 @@ Documentacion: [https://merx.exchange/docs](https://merx.exchange/docs)
 ---
 
 *Este articulo es parte de la serie de conocimiento de MERX. MERX es el primer exchange de recursos blockchain, offering cero comision energy trading with enrutamiento al mejor precio across all major TRON proveedor de energias.*
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

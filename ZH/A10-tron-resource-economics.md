@@ -334,3 +334,21 @@ TRON 资源模型奖励理解它的开发者。能量成本主导交易经济，
 完整文档：[https://merx.exchange/docs](https://merx.exchange/docs)
 平台：[https://merx.exchange](https://merx.exchange)
 MCP 服务器：[https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

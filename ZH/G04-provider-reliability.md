@@ -73,3 +73,21 @@ async function reliableEnergyPurchase(amount: number, wallet: string): Promise<O
 聚合模型通过消除单一供应商依赖来实现接近完美的实际可靠性。对于任何交易吞吐量重要的自动化系统,聚合带来的可靠性提升与价格优化一样有价值。
 
 在 [https://merx.exchange/docs](https://merx.exchange/docs) 探索供应商比较工具或在 [https://merx.exchange](https://merx.exchange) 测试平台。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

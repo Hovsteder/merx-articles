@@ -113,3 +113,21 @@ const estimate = await merx.estimateEnergy({
 在 TRON 上构建没有能量管理的 USDT 支付处理器,就像运营没有燃油优化的快递服务 - 技术上可行但经济上不合理。对于处理 500 笔日交易的支付处理器,TRX 燃烧与优化能量购买之间的差异超过每月 $20,000。
 
 在 [https://merx.exchange/docs](https://merx.exchange/docs) 开始构建或在 [https://merx.exchange](https://merx.exchange) 探索平台。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

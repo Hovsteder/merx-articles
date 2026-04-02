@@ -367,3 +367,21 @@ Sifirdan calisan TRON yetenekli bir yapay zeka ajanina giden en hizli yol:
 Eksiksiz dokumantasyon [merx.exchange/docs](https://merx.exchange/docs) adresinde mevcuttur. MCP olmadan programatik erisim tercih ederseniz, SDK hem [JavaScript](https://github.com/Hovsteder/merx-sdk-js) hem de [Python](https://github.com/Hovsteder/merx-sdk-python) icin mevcuttur.
 
 TRON ekosistemi yillardir uygun yapay zeka ajan araclarina ihtiyac duyuyordu. MERX MCP sunucusu bunu sunmaktadir - 52 arac, uretime hazir, mainnet'te dogrulanmis ve bugun kullanilabilir.
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -192,7 +192,7 @@ TronLink is strong for user-facing applications where browser wallet integration
 
 ### For Maximum Coverage
 
-MERX covers the most ground with 52 tools across energy, wallets, DEX, automation, and chain data. If you want a single MCP server that handles the widest range of TRON operations, MERX is the most complete option.
+MERX covers the most ground with 54 tools across energy, wallets, DEX, automation, and chain data. If you want a single MCP server that handles the widest range of TRON operations, MERX is the most complete option.
 
 ### For Specific Providers
 
@@ -221,10 +221,28 @@ This gives the agent access to MERX for energy operations and resource-aware tra
 
 ## Conclusion
 
-The TRON MCP server landscape is still young. MERX leads in breadth (52 tools, 30 prompts, 21 resources) and mercado de energia coverage (7 providers). Sun Protocol leads in DEX depth. TronLink provides familiar wallet integration. Netts and PowerSun serve their respective platforms.
+The TRON MCP server landscape is still young. MERX leads in breadth (54 tools, 30 prompts, 21 resources) and mercado de energia coverage (7 providers). Sun Protocol leads in DEX depth. TronLink provides familiar wallet integration. Netts and PowerSun serve their respective platforms.
 
 For most caso de usos -- especially those involving energy optimization, reduccion de costos, and general TRON operations -- MERX provides the most complete single-server solution. For specialized DeFi workflows, combining MERX with Sun Protocol covers nearly every TRON operation an agent might need.
 
 MERX Servidor MCP: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 Plataforma: [https://merx.exchange](https://merx.exchange)
 Documentacion: [https://merx.exchange/docs](https://merx.exchange/docs)
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

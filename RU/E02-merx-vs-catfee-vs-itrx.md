@@ -306,6 +306,24 @@ MERX проверяет всех поставщиков в момент кажд
 
 Чтобы начать сравнивать цены всех поставщиков, посетите [merx.exchange](https://merx.exchange). Платформа показывает ценообразование в реальном времени от всех интегрированных поставщиков.
 
-Для программного доступа [документация MERX](https://merx.exchange/docs) охватывает аутентификацию API, создание заказов и ценовые запросы. SDK доступны для JavaScript и Python. Для интеграции AI-агентов [MCP-сервер MERX](https://github.com/Hovsteder/merx-mcp) предоставляет 52 инструмента, доступных через Model Context Protocol.
+Для программного доступа [документация MERX](https://merx.exchange/docs) охватывает аутентификацию API, создание заказов и ценовые запросы. SDK доступны для JavaScript и Python. Для интеграции AI-агентов [MCP-сервер MERX](https://github.com/Hovsteder/merx-mcp) предоставляет 54 инструмента, доступных через Model Context Protocol.
 
 Рынок энергии TRON конкурентен, и эта конкуренция выгодна покупателям. Но для получения этих преимуществ необходимо видеть весь рынок, а не только прайс-лист одного поставщика. Для этого и существует агрегатор.
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

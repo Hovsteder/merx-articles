@@ -309,3 +309,21 @@ MERX 在每次下单时检查所有供应商，并路由到最便宜的可用选
 对于程序化访问，[MERX 文档](https://merx.exchange/docs)涵盖了 API 身份验证、订单创建和价格查询。SDK 可用于 JavaScript 和 Python。对于 AI 代理集成，[MERX MCP 服务器](https://github.com/Hovsteder/merx-mcp)提供 52 个可通过 Model Context Protocol 访问的工具。
 
 TRON energy 市场竞争激烈，这种竞争有利于买方。但要获取这些优势，需要看到完整的市场 - 而不仅仅是一个供应商的价格表。这就是聚合器的意义所在。
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

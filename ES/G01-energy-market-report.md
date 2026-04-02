@@ -240,3 +240,21 @@ For buyers, the market offers genuine savings over TRX burn -- 60-90% depending 
 Understanding market dynamics -- when prices are lower, which providers are competitive for your order profile, and how to structure purchases for optimal cost -- is the difference between mediocre and exceptional costo de energia management.
 
 Explore current market prices at [https://merx.exchange](https://merx.exchange) or access price analytics through the API at [https://merx.exchange/docs](https://merx.exchange/docs).
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

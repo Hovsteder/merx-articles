@@ -208,7 +208,7 @@ merx://network/chain-info
 | Solana MCP | 10-12 | 0 | 0 | 否 |
 | Bitcoin MCP | 3-4 | 0 | 0 | 否 |
 | 多链 MCP | 15-20 | 0 | 0 | 否 |
-| MERX | 21 | 30 | 21 | 是 |
+| MERX | 52 | 30 | 21 | 是 |
 
 没有其他区块链 MCP 服务器实现提示或资源。它们都是仅工具的,这意味着:
 
@@ -247,3 +247,21 @@ MERX 实现了完整协议,因为完整协议是 MCP 被设计的使用方式。
 - MERX 平台: [https://merx.exchange](https://merx.exchange)
 - MCP 服务器 (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - MCP 服务器 (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
