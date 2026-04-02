@@ -306,6 +306,25 @@ The key insight is not that MERX is always cheaper than every individual provide
 
 To start comparing prices across all providers, visit [merx.exchange](https://merx.exchange). The platform shows real-time pricing from all integrated providers.
 
-For programmatic access, the [MERX documentation](https://merx.exchange/docs) covers API authentication, order creation, and price queries. SDKs are available for JavaScript and Python. For AI agent integration, the [MERX MCP server](https://github.com/Hovsteder/merx-mcp) provides 52 tools accessible through the Model Context Protocol.
+For programmatic access, the [MERX documentation](https://merx.exchange/docs) covers API authentication, order creation, and price queries. SDKs are available for JavaScript and Python. For AI agent integration, the [MERX MCP server](https://github.com/Hovsteder/merx-mcp) provides 54 tools accessible through the Model Context Protocol.
 
 The TRON energy market is competitive, and that competition benefits buyers. But capturing those benefits requires seeing the full market - not just one provider's price sheet. That is what an aggregator is for.
+
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

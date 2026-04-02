@@ -301,3 +301,22 @@ Full API documentation is available at [merx.exchange/docs](https://merx.exchang
 ## Summary
 
 Energy and bandwidth are both essential TRON resources, but energy dominates transaction costs for smart contract interactions - which is most of what happens on TRON today. For anyone doing more than a few transactions per week, acquiring energy through renting or an aggregator is 75-85% cheaper than letting the network burn your TRX. For most users, renting energy per transaction through an aggregator like MERX is the simplest and most cost-effective approach.
+
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

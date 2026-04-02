@@ -249,3 +249,22 @@ Understanding these dynamics does not require you to become a network analyst. T
 The network's resource system is well-designed: it provides a cost-effective path (energy delegation) that is dramatically cheaper than the default path (TRX burn), creating a market that benefits both stakers (earning yield) and transactors (paying less). MERX's role is to make this market as efficient as possible by connecting every buyer with the best available rate from every provider.
 
 Explore current network conditions and energy prices at [https://merx.exchange](https://merx.exchange) or learn more at [https://merx.exchange/docs](https://merx.exchange/docs).
+
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

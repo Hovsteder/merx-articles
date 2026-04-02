@@ -337,3 +337,22 @@ For collection launches, the savings are measured in tens of thousands of dollar
 The key insight is precision: buy exactly the energy you need, at the best available price, exactly when you need it. Exact simulation eliminates waste from over-purchasing. Aggregation eliminates overpaying. Together, they reduce NFT minting costs by 85-90% compared to unoptimized approaches.
 
 Start building at [https://merx.exchange/docs](https://merx.exchange/docs) or explore the platform at [https://merx.exchange](https://merx.exchange).
+
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,6 +1,6 @@
-# 52 Tools for TRON: Inside the MERX MCP Server
+# 54 Tools for TRON: Inside the MERX MCP Server
 
-AI agents are entering the blockchain space, but most of them still cannot interact with TRON - the network that processes more USDT than any other chain. The MERX MCP server changes that by giving any AI agent a complete toolkit of 52 tools, 30 prompts, and 21 resources to operate on TRON autonomously, without requiring TronGrid API keys or custom blockchain integrations. This article walks through how it works, what it can do, and why it matters.
+AI agents are entering the blockchain space, but most of them still cannot interact with TRON - the network that processes more USDT than any other chain. The MERX MCP server changes that by giving any AI agent a complete toolkit of 54 tools, 30 prompts, and 21 resources to operate on TRON autonomously, without requiring TronGrid API keys or custom blockchain integrations. This article walks through how it works, what it can do, and why it matters.
 
 ## What Is MCP (Model Context Protocol)?
 
@@ -36,7 +36,7 @@ The MERX MCP server removes all of this friction. It exposes TRON operations as 
 
 The MERX MCP server provides:
 
-- **52 tools** for executing operations on TRON
+- **54 tools** for executing operations on TRON
 - **30 prompts** for guided workflows and multi-step tasks
 - **21 resources** for reading market data, provider information, and chain state
 
@@ -68,7 +68,7 @@ This design means the agent developer manages one credential instead of many, an
 
 ## Tool Categories: A Walkthrough of All 15 Categories
 
-The 52 tools are organized into 15 functional categories. Here is what each category covers, with examples.
+The 54 tools are organized into 15 functional categories. Here is what each category covers, with examples.
 
 ### 1. Authentication and Account Management
 
@@ -366,4 +366,23 @@ The fastest path from zero to a working TRON-capable AI agent:
 
 Full documentation is available at [merx.exchange/docs](https://merx.exchange/docs). The SDK is available for both [JavaScript](https://github.com/Hovsteder/merx-sdk-js) and [Python](https://github.com/Hovsteder/merx-sdk-python) if you prefer programmatic access without MCP.
 
-The TRON ecosystem has needed proper AI agent tooling for years. The MERX MCP server delivers it - 52 tools, production-ready, mainnet-verified, and available today.
+The TRON ecosystem has needed proper AI agent tooling for years. The MERX MCP server delivers it - 54 tools, production-ready, mainnet-verified, and available today.
+
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

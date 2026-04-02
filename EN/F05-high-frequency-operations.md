@@ -424,3 +424,22 @@ High-frequency TRON operations require a fundamentally different approach to ene
 For systems processing 100+ transactions daily, the difference between ad hoc energy purchasing and an optimized strategy can exceed $10,000 per month. The engineering investment to implement these patterns is measured in days; the return is measured in months of savings.
 
 Explore MERX's high-frequency capabilities at [https://merx.exchange/docs](https://merx.exchange/docs) or start at [https://merx.exchange](https://merx.exchange).
+
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

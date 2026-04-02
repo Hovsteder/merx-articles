@@ -180,3 +180,22 @@ MERX is a different category of tool. By aggregating TronSave alongside six othe
 The distinction is structural, not qualitative. TronSave is one provider doing its job well. MERX is a layer above that makes TronSave -- and six others -- work together automatically. For developers building automated systems, for businesses processing TRON transactions at scale, and for anyone who values both cost optimization and operational reliability, the aggregation model offers a clear structural advantage.
 
 Explore the API documentation at [https://merx.exchange/docs](https://merx.exchange/docs) or try the platform at [https://merx.exchange](https://merx.exchange).
+
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

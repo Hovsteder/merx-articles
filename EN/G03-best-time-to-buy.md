@@ -309,3 +309,22 @@ The data-driven approach is straightforward:
 MERX provides the tools -- price analysis, standing orders, and multi-provider aggregation -- to implement this strategy without building custom infrastructure. The system monitors seven providers continuously, captures price dips automatically, and ensures you consistently buy below the market average.
 
 Start analyzing prices at [https://merx.exchange](https://merx.exchange) or explore the analytics API at [https://merx.exchange/docs](https://merx.exchange/docs).
+
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

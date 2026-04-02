@@ -502,3 +502,22 @@ MERX is designed to fit into any technology stack through the integration method
 The choice is not exclusive -- combine integration points to match your needs. Start with the simplest option that solves your immediate problem, and expand as your requirements grow.
 
 API documentation at [https://merx.exchange/docs](https://merx.exchange/docs). MCP server at [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp). Platform at [https://merx.exchange](https://merx.exchange).
+
+
+## Try It Now with AI
+
+Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+
+```json
+{
+  "mcpServers": {
+    "merx": {
+      "url": "https://merx.exchange/mcp/sse"
+    }
+  }
+}
+```
+
+Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+
+Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
