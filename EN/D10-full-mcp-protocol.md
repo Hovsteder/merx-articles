@@ -12,13 +12,13 @@ Most MCP servers implement only tools. They expose a handful of callable functio
 
 Tools alone give the model actions but no guidance on when or how to use them. Without prompts, the model must figure out complex multi-step workflows from scratch every time. Without resources, the model has no structured data to reference - it must make tool calls just to read information that should be passively available.
 
-MERX implements all three primitives: 54 tools, 30 prompts, and 21 resources. This article explains what each primitive does, why all three matter, and how MERX uses them to create an MCP server that is qualitatively different from tools-only implementations.
+MERX implements all three primitives: 55 tools, 30 prompts, and 21 resources. This article explains what each primitive does, why all three matter, and how MERX uses them to create an MCP server that is qualitatively different from tools-only implementations.
 
 ## Primitive 1: Tools (Actions)
 
 Tools are the most intuitive primitive. A tool is a function the model can call to perform an action. It has a name, a description, typed parameters, and returns a structured response.
 
-MERX exposes 54 tools covering the full scope of TRON blockchain operations:
+MERX exposes 55 tools covering the full scope of TRON blockchain operations:
 
 ### Wallet Operations
 - `set_private_key` - Configure the wallet with a private key (derives address automatically)
@@ -456,7 +456,7 @@ MERX is the only MCP server where the model has a complete operational environme
 
 MERX by the numbers:
 
-- **54 tools** across 5 categories (wallet, energy market, DEX, automation, advanced)
+- **55 tools** across 5 categories (wallet, energy market, DEX, automation, advanced)
 - **30 prompts** across 10 categories (getting started, energy, transactions, automation, analysis, accounts, x402, network, troubleshooting, integration)
 - **21 resources** (14 static documentation, 7 dynamic data templates)
 - **72 total capabilities** exposed through a single MCP server

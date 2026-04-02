@@ -1,6 +1,6 @@
 # De la idea a produccion: construyendo MERX en 30 dias
 
-MERX went from concept to live production system in 30 days. Not a landing page. Not a prototype. A fully operational blockchain resource exchange with seven provider integrations, tiempo real price aggregation, en cadena ejecucion de ordenes, partida doble accounting, comprehensive documentation, SDKs in two languages, and an MCP server with 54 tools for AI agent integration.
+MERX went from concept to live production system in 30 days. Not a landing page. Not a prototype. A fully operational blockchain resource exchange with seven provider integrations, tiempo real price aggregation, en cadena ejecucion de ordenes, partida doble accounting, comprehensive documentation, SDKs in two languages, and an MCP server with 55 tools for AI agent integration.
 
 This article is the technical story of how it happened - the architecture decisions, the problems we solved, the shortcuts we deliberately did not take, and the lessons from building a financial platform at speed without compromising on the things that matter.
 
@@ -226,7 +226,7 @@ Fuente: [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovste
 
 The MCP (Model Context Protocol) server was perhaps the most forward-looking component. It exposes MERX functionality as tools that AI agents can use directly.
 
-The MCP server grew from 7 tools in its initial version to 54 tools by the end of the 30 days:
+The MCP server grew from 7 tools in its initial version to 55 tools by the end of the 30 days:
 
 ```
 Account management:    create_account, login, get_balance, get_deposit_info

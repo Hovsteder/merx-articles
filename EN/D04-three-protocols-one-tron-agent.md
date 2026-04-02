@@ -6,7 +6,7 @@ The AI agent ecosystem is fragmenting across protocols. Anthropic has MCP. Googl
 
 Three protocols now dominate the AI agent infrastructure:
 
-**MCP (Model Context Protocol)** -- created by Anthropic. A tool-based protocol where agents discover and call functions. 54 tools, 30 prompts, 21 resources. Used by Claude, Cursor, Windsurf, and hundreds of MCP-compatible clients. This is the most mature protocol for direct agent-to-tool interaction.
+**MCP (Model Context Protocol)** -- created by Anthropic. A tool-based protocol where agents discover and call functions. 55 tools, 30 prompts, 21 resources. Used by Claude, Cursor, Windsurf, and hundreds of MCP-compatible clients. This is the most mature protocol for direct agent-to-tool interaction.
 
 **A2A (Agent-to-Agent Protocol)** -- created by Google, now under the Linux Foundation. A task-based protocol where orchestrators submit tasks to specialist agents and receive results asynchronously. Used by LangChain, CrewAI, Vertex AI Agent Builder, AutoGen, and Mastra. Designed for multi-agent systems where one agent delegates work to another.
 
@@ -28,7 +28,7 @@ All three protocols share the same backend. When an A2A task calls `buy_energy`,
 
 ## MCP: 53 Tools for Direct Integration
 
-MCP is the deepest integration point. The MERX MCP server provides 54 tools organized into 15 categories:
+MCP is the deepest integration point. The MERX MCP server provides 55 tools organized into 15 categories:
 
 - **Price Intelligence** (5 tools): real-time prices from all 7 providers, best-price routing, historical data, market analysis
 - **Resource Trading** (4 tools): create orders, list orders, get order details, ensure resources
@@ -56,7 +56,7 @@ No installation. No API keys for read-only tools. 22 tools available immediately
 
 ## A2A: 6 Skills for Orchestrator Frameworks
 
-A2A exposes MERX as a specialist agent that orchestrators can delegate tasks to. The Agent Card at `/.well-known/agent.json` advertises 7 skills:
+A2A exposes MERX as a specialist agent that orchestrators can delegate tasks to. The Agent Card at `/.well-known/agent.json` advertises 8 skills:
 
 | Skill | Description | Auth Required |
 |-------|-------------|---------------|
@@ -77,7 +77,7 @@ The A2A protocol uses a task-based model. An orchestrator submits a task, MERX p
 curl https://merx.exchange/.well-known/agent.json
 ```
 
-This returns the Agent Card with all 7 skills, their input schemas, supported modes, and authentication requirements.
+This returns the Agent Card with all 8 skills, their input schemas, supported modes, and authentication requirements.
 
 **Step 2: Submit a task**
 
@@ -123,7 +123,7 @@ A2A tasks can use structured data or natural language. The task processor routes
 
 ## ACP: Run-Based Execution for Enterprise
 
-ACP uses a run-based model similar to A2A but with a different API surface. The manifest at `/.well-known/agent-manifest.json` declares the same 7 capabilities.
+ACP uses a run-based model similar to A2A but with a different API surface. The manifest at `/.well-known/agent-manifest.json` declares the same 8 capabilities.
 
 ```bash
 # Create a run
@@ -227,7 +227,7 @@ Discovery URL: `https://merx.exchange/.well-known/agent-manifest.json`
 ### Documentation
 
 - [Agent Protocols overview](https://merx.exchange/agents)
-- [MCP Server (54 tools)](https://merx.exchange/mcp)
+- [MCP Server (55 tools)](https://merx.exchange/mcp)
 - [A2A Protocol docs](https://merx.exchange/docs/tools/a2a)
 - [ACP Protocol docs](https://merx.exchange/docs/tools/acp)
 - [GitHub](https://github.com/Hovsteder/merx-mcp)

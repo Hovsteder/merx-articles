@@ -192,7 +192,7 @@ TronLink is strong for user-facing applications where browser wallet integration
 
 ### For Maximum Coverage
 
-MERX covers the most ground with 54 tools across energy, wallets, DEX, automation, and chain data. If you want a single MCP server that handles the widest range of TRON operations, MERX is the most complete option.
+MERX covers the most ground with 55 tools across energy, wallets, DEX, automation, and chain data. If you want a single MCP server that handles the widest range of TRON operations, MERX is the most complete option.
 
 ### For Specific Providers
 
@@ -221,7 +221,7 @@ This gives the agent access to MERX for energy operations and resource-aware tra
 
 ## Conclusion
 
-The TRON MCP server landscape is still young. MERX leads in breadth (54 tools, 30 prompts, 21 resources) and energy market coverage (7 providers). Sun Protocol leads in DEX depth. TronLink provides familiar wallet integration. Netts and PowerSun serve their respective platforms.
+The TRON MCP server landscape is still young. MERX leads in breadth (55 tools, 30 prompts, 21 resources) and energy market coverage (7 providers). Sun Protocol leads in DEX depth. TronLink provides familiar wallet integration. Netts and PowerSun serve their respective platforms.
 
 For most use cases -- especially those involving energy optimization, cost reduction, and general TRON operations -- MERX provides the most complete single-server solution. For specialized DeFi workflows, combining MERX with Sun Protocol covers nearly every TRON operation an agent might need.
 
