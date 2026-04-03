@@ -306,7 +306,7 @@ La idea clave no es que MERX sea siempre mas barato que cada proveedor individua
 
 Para comenzar a comparar precios entre todos los proveedores, visita [merx.exchange](https://merx.exchange). La plataforma muestra precios en tiempo real de todos los proveedores integrados.
 
-Para acceso programatico, la [documentacion de MERX](https://merx.exchange/docs) cubre autenticacion de API, creacion de ordenes y consultas de precios. Los SDKs estan disponibles para JavaScript y Python. Para integracion con agentes de IA, el [servidor MCP de MERX](https://github.com/Hovsteder/merx-mcp) proporciona 54 herramientas accesibles a traves del Model Context Protocol.
+Para acceso programatico, la [documentacion de MERX](https://merx.exchange/docs) cubre autenticacion de API, creacion de ordenes y consultas de precios. Los SDKs estan disponibles para JavaScript y Python. Para integracion con agentes de IA, el [servidor MCP de MERX](https://github.com/Hovsteder/merx-mcp) proporciona 55 herramientas accesibles a traves del Model Context Protocol.
 
 El mercado de energy de TRON es competitivo, y esa competencia beneficia a los compradores. Pero capturar esos beneficios requiere ver el mercado completo - no solo la lista de precios de un proveedor. Para eso es un agregador.
 

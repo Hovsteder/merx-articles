@@ -1,4 +1,4 @@
-# 54 Tools for TRON: Inside the MERX MCP Server
+# 55 Tools for TRON: Inside the MERX MCP Server
 
 AI agents are entering the blockchain space, but most of them still cannot interact with TRON - the network that processes more USDT than any other chain. The MERX MCP server changes that by giving any AI agent a complete toolkit of 55 tools, 30 prompts, and 21 resources to operate on TRON autonomously, without requiring TronGrid API keys or custom blockchain integrations. This article walks through how it works, what it can do, and why it matters.
 

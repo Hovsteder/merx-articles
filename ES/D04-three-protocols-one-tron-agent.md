@@ -6,7 +6,7 @@ El ecosistema de agentes de IA se esta fragmentando entre protocolos. Anthropic 
 
 Tres protocolos dominan ahora la infraestructura de agentes de IA:
 
-**MCP (Model Context Protocol)** -- creado por Anthropic. Un protocolo basado en herramientas donde los agentes descubren y llaman funciones. 54 herramientas, 30 prompts, 21 recursos. Utilizado por Claude, Cursor, Windsurf y cientos de clientes compatibles con MCP. Es el protocolo mas maduro para la interaccion directa entre agente y herramienta.
+**MCP (Model Context Protocol)** -- creado por Anthropic. Un protocolo basado en herramientas donde los agentes descubren y llaman funciones. 55 herramientas, 30 prompts, 21 recursos. Utilizado por Claude, Cursor, Windsurf y cientos de clientes compatibles con MCP. Es el protocolo mas maduro para la interaccion directa entre agente y herramienta.
 
 **A2A (Agent-to-Agent Protocol)** -- creado por Google, ahora bajo la Linux Foundation. Un protocolo basado en tareas donde los orquestadores envian tareas a agentes especialistas y reciben resultados de forma asincrona. Utilizado por LangChain, CrewAI, Vertex AI Agent Builder, AutoGen y Mastra. Disenado para sistemas multiagente donde un agente delega trabajo a otro.
 
@@ -26,9 +26,9 @@ Desde abril de 2026, MERX soporta los tres protocolos desde un unico despliegue:
 
 Los tres protocolos comparten el mismo backend. Cuando una tarea A2A llama a `buy_energy`, ejecuta exactamente la misma logica de enrutamiento de ordenes que una llamada a la herramienta MCP `create_order`. Los protocolos son diferentes puntos de entrada al mismo motor de agregacion MERX.
 
-## MCP: 53 herramientas para integracion directa
+## MCP: 55 herramientas para integracion directa
 
-MCP es el punto de integracion mas profundo. El servidor MCP de MERX proporciona 54 herramientas organizadas en 15 categorias:
+MCP es el punto de integracion mas profundo. El servidor MCP de MERX proporciona 55 herramientas organizadas en 15 categorias:
 
 - **Inteligencia de precios** (5 herramientas): precios en tiempo real de los 7 proveedores, enrutamiento al mejor precio, datos historicos, analisis de mercado
 - **Comercio de recursos** (4 herramientas): crear ordenes, listar ordenes, obtener detalles de ordenes, asegurar recursos
@@ -227,7 +227,7 @@ URL de descubrimiento: `https://merx.exchange/.well-known/agent-manifest.json`
 ### Documentacion
 
 - [Descripcion general de protocolos de agentes](https://merx.exchange/agents)
-- [Servidor MCP (54 herramientas)](https://merx.exchange/mcp)
+- [Servidor MCP (55 herramientas)](https://merx.exchange/mcp)
 - [Documentacion del protocolo A2A](https://merx.exchange/docs/tools/a2a)
 - [Documentacion del protocolo ACP](https://merx.exchange/docs/tools/acp)
 - [GitHub](https://github.com/Hovsteder/merx-mcp)

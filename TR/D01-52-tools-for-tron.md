@@ -1,4 +1,4 @@
-# TRON Icin 52 Arac: MERX MCP Sunucusunun Icinden
+# TRON Icin 55 Arac: MERX MCP Sunucusunun Icinden
 
 Yapay zeka ajanlari blokzincir dunyasina giriyor, ancak cogunlugu hala TRON ile etkilesim kuramiyor - diger tum zincirlerden daha fazla USDT isleyen ag. MERX MCP sunucusu, herhangi bir yapay zeka ajanina TronGrid API anahtarlari veya ozel blokzincir entegrasyonlari gerektirmeden TRON uzerinde otonom calismasi icin 52 arac, 30 prompt ve 21 kaynak iceren eksiksiz bir arac seti sunarak bunu degistirmektedir. Bu makale nasil calistigini, neler yapabildigini ve neden onemli oldugunu anlatmaktadir.
 

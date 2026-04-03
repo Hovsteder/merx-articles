@@ -1,6 +1,6 @@
-# 54 herramientas para TRON: dentro del servidor MCP de MERX
+# 55 herramientas para TRON: dentro del servidor MCP de MERX
 
-Los agentes de IA estan entrando al espacio blockchain, pero la mayoria aun no puede interactuar con TRON - la red que procesa mas USDT que cualquier otra cadena. El servidor MCP de MERX cambia eso al proporcionar a cualquier agente de IA un conjunto completo de 54 herramientas, 30 prompts y 21 recursos para operar en TRON de forma autonoma, sin necesidad de claves API de TronGrid ni integraciones blockchain personalizadas. Este articulo explica como funciona, que puede hacer y por que es importante.
+Los agentes de IA estan entrando al espacio blockchain, pero la mayoria aun no puede interactuar con TRON - la red que procesa mas USDT que cualquier otra cadena. El servidor MCP de MERX cambia eso al proporcionar a cualquier agente de IA un conjunto completo de 55 herramientas, 30 prompts y 21 recursos para operar en TRON de forma autonoma, sin necesidad de claves API de TronGrid ni integraciones blockchain personalizadas. Este articulo explica como funciona, que puede hacer y por que es importante.
 
 ## Que es MCP (Model Context Protocol)?
 
@@ -36,7 +36,7 @@ El servidor MCP de MERX elimina toda esta friccion. Expone las operaciones de TR
 
 El servidor MCP de MERX proporciona:
 
-- **54 herramientas** para ejecutar operaciones en TRON
+- **55 herramientas** para ejecutar operaciones en TRON
 - **30 prompts** para flujos de trabajo guiados y tareas de multiples pasos
 - **21 recursos** para leer datos de mercado, informacion de proveedores y estado de la cadena
 
@@ -68,7 +68,7 @@ Este diseno significa que el desarrollador del agente gestiona una sola credenci
 
 ## Categorias de herramientas: recorrido por las 15 categorias
 
-Las 54 herramientas estan organizadas en 15 categorias funcionales. A continuacion se describe lo que cubre cada categoria, con ejemplos.
+Las 55 herramientas estan organizadas en 15 categorias funcionales. A continuacion se describe lo que cubre cada categoria, con ejemplos.
 
 ### 1. Autenticacion y gestion de cuentas
 
@@ -366,7 +366,7 @@ La ruta mas rapida desde cero hasta un agente de IA funcional en TRON:
 
 La documentacion completa esta disponible en [merx.exchange/docs](https://merx.exchange/docs). El SDK esta disponible tanto para [JavaScript](https://github.com/Hovsteder/merx-sdk-js) como para [Python](https://github.com/Hovsteder/merx-sdk-python) si prefieres acceso programatico sin MCP.
 
-El ecosistema TRON ha necesitado herramientas adecuadas para agentes de IA durante anos. El servidor MCP de MERX las ofrece - 54 herramientas, listas para produccion, verificadas en mainnet, y disponibles hoy.
+El ecosistema TRON ha necesitado herramientas adecuadas para agentes de IA durante anos. El servidor MCP de MERX las ofrece - 55 herramientas, listas para produccion, verificadas en mainnet, y disponibles hoy.
 
 ## Try It Now with AI
 
