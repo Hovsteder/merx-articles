@@ -1,22 +1,22 @@
-# Condiciones de carrera en la delegacion de energia: como las resolvimos
+# Condiciones de carrera en delegación de energía: cómo las resolvimos
 
-This is a story about a bug that cost 19 TRX per transaction instead of saving 1.43 TRX. It is a story about a race condition that looked correct in tests, worked on testnet, and only revealed itself under mainnet conditions. And it is a story about the fix -- a polling mechanism that waits for en cadena confirmation before allowing a transaction to proceed.
+Esta es la historia de un error que costaba 19 TRX por transacción en lugar de ahorrar 1.43 TRX. Es la historia de una condición de carrera que parecía correcta en las pruebas, funcionaba en testnet y solo se reveló bajo condiciones de mainnet. Y es la historia de la solución: un mecanismo de sondeo que espera la confirmación en cadena antes de permitir que una transacción proceda.
 
-## The Setup
+## La configuración
 
-MERX buys energy from providers on behalf of users. The flow, in theory, is straightforward:
+MERX compra energía de proveedores en nombre de los usuarios. El flujo, en teoría, es directo:
 
-1. User requests energy for their address
-2. MERX selects el proveedor mas barato
-3. Provider delegates energy to the user's address
-4. User executes their transaction with the delegated energy
-5. Transaction consumes the rented energy instead of burning TRX
+1. El usuario solicita energía para su dirección
+2. MERX selecciona el proveedor más barato
+3. El proveedor delega energía a la dirección del usuario
+4. El usuario ejecuta su transacción con la energía delegada
+5. La transacción consume la energía alquilada en lugar de quemar TRX
 
-The critical word is "before." The user's transaction must execute after the delegation is confirmed en cadena. If the transaction broadcasts before the delegation arrives, the transaction will still succeed -- but it will burn TRX at the protocol tasa de quema instead of consuming the rented energy. The user pays twice: once for the rental, and once through the TRX burn.
+La palabra crítica es "antes". La transacción del usuario debe ejecutarse después de que la delegación se confirme en cadena. Si la transacción se transmite antes de que la delegación llegue, la transacción seguirá siendo exitosa, pero quemará TRX según la tasa de quema del protocolo en lugar de consumir la energía alquilada. El usuario paga dos veces: una por el alquiler y otra a través de la quema de TRX.
 
-## The Bug
+## El error
 
-The initial implementation followed a sequential pattern:
+La implementación inicial seguía un patrón secuencial:
 
 ```typescript
 async function executeWithEnergy(
@@ -41,17 +41,17 @@ async function executeWithEnergy(
 }
 ```
 
-This looks correct. Buy energy, wait for the order to be filled, then execute the transaction. The `waitForOrderStatus` function polled the MERX API until the estado de la orden changed to `FILLED`.
+Esto se ve correcto. Compra energía, espera a que el pedido se complete, luego ejecuta la transacción. La función `waitForOrderStatus` sondeaba la API de MERX hasta que el estado del pedido cambiaba a `FILLED`.
 
-The problem is what "FILLED" means. In the MERX system, an order is marked `FILLED` when the provider confirms that it has initiated the delegation. The provider returns a success response: "I have submitted the delegation transaction to the TRON network."
+El problema es qué significa "FILLED". En el sistema MERX, un pedido se marca como `FILLED` cuando el proveedor confirma que ha iniciado la delegación. El proveedor devuelve una respuesta de éxito: "He presentado la transacción de delegación a la red TRON".
 
-But "submitted" is not "confirmed." The delegation is a TRON transaction that must be included in a block and processed by the network. Between submission and confirmation, there is a window -- typically 3 to 6 seconds, but occasionally longer during network congestion.
+Pero "presentado" no es "confirmado". La delegación es una transacción TRON que debe incluirse en un bloque y ser procesada por la red. Entre la presentación y la confirmación hay una ventana: típicamente de 3 a 6 segundos, pero ocasionalmente más larga durante la congestión de la red.
 
-During that window, the target address does not yet have the delegated energy.
+Durante esa ventana, la dirección de destino aún no tiene la energía delegada.
 
-### What Happened on Mainnet
+### Qué sucedió en mainnet
 
-The bug manifested exactly as predicted by the race condition:
+El error se manifestó exactamente como predijo la condición de carrera:
 
 ```
 Timeline:
@@ -72,13 +72,13 @@ Timeline:
     - Expected cost: 1.82 TRX (rental only)
 ```
 
-The user paid 29.12 TRX instead of 1.82 TRX. The alquiler de energia was wasted because the delegation arrived one block too late.
+El usuario pagó 29.12 TRX en lugar de 1.82 TRX. El alquiler de energía se desperdició porque la delegación llegó un bloque demasiado tarde.
 
-### The Numbers
+### Los números
 
-On TRON mainnet, each block takes approximately 3 seconds. A delegation transaction submitted by the provider goes through the same block inclusion process as any other transaction. If the user's transaction and the delegation transaction are submitted within a few seconds of each other, they may end up in different blocks -- with no guarantee of ordering.
+En mainnet de TRON, cada bloque toma aproximadamente 3 segundos. Una transacción de delegación presentada por el proveedor pasa por el mismo proceso de inclusión de bloque que cualquier otra transacción. Si la transacción del usuario y la transacción de delegación se presentan dentro de unos segundos la una de la otra, pueden terminar en bloques diferentes, sin garantía de orden.
 
-The cost difference is stark:
+La diferencia de costo es dramática:
 
 ```
 Without delegation (TRX burn):
@@ -95,39 +95,39 @@ Money wasted per race condition occurrence:
   Overpayment: 27.3 TRX per incident
 ```
 
-On a bad day, this race condition could trigger on 10-20% of orders where the client executed immediately after receiving the FILLED status.
+En un día malo, esta condición de carrera podría ocurrir en el 10-20% de los pedidos donde el cliente se ejecutaba inmediatamente después de recibir el estado `FILLED`.
 
-## Why Testing Did Not Catch It
+## Por qué las pruebas no lo detectaron
 
-### Testnet Behavior
+### Comportamiento de testnet
 
-On Shasta testnet, block times are similar to mainnet, but network congestion is minimal. Delegation transactions are typically included in the very next block. The window between "submitted" and "confirmed" was consistently under 3 seconds on testnet, and our test harness had a built-in 2-second delay between steps that masked the race condition.
+En testnet Shasta, los tiempos de bloque son similares a mainnet, pero la congestión de la red es mínima. Las transacciones de delegación generalmente se incluyen en el siguiente bloque. La ventana entre "presentado" y "confirmado" fue consistentemente inferior a 3 segundos en testnet, y nuestro arnés de pruebas tenía un retraso incorporado de 2 segundos entre pasos que enmascaraba la condición de carrera.
 
-### Sequential Testing
+### Pruebas secuenciales
 
-Our integration tests were sequential. One test would buy energy, wait, execute a transaction, and verify. There was never concurrent load, never a race between delegation and execution, never the timing pressure that mainnet produced.
+Nuestras pruebas de integración eran secuenciales. Una prueba compraría energía, esperaría, ejecutaría una transacción y verificaría. Nunca hubo carga concurrente, nunca una carrera entre delegación y ejecución, nunca la presión de tiempo que mainnet produjo.
 
-### The Order Status Trap
+### La trampa del estado del pedido
 
-The most insidious aspect: the estado de la orden was technically correct. The order was FILLED -- the provider had accepted and initiated the delegation. The bug was not in the status tracking. It was in the assumption that FILLED meant "energy is available en cadena."
+El aspecto más insidioso: el estado del pedido era técnicamente correcto. El pedido fue `FILLED`: el proveedor aceptó e inició la delegación. El error no estaba en el seguimiento del estado. Estaba en la suposición de que `FILLED` significaba "la energía está disponible en cadena".
 
-## The Fix
+## La solución
 
-The fix has two parts: a verification step that checks the target address's en cadena resources, and a polling loop that waits until the delegation is actually confirmed.
+La solución tiene dos partes: un paso de verificación que comprueba los recursos en cadena de la dirección de destino, y un bucle de sondeo que espera hasta que la delegación sea realmente confirmada.
 
-### Part 1: check_address_resources
+### Parte 1: check_address_resources
 
-TRON provides an API to check the resources (energy and bandwidth) currently available to any address:
+TRON proporciona una API para verificar los recursos (energía y bandwidth) actualmente disponibles para cualquier dirección:
 
 ```
 GET https://api.trongrid.io/wallet/getaccountresource
 ```
 
-This returns the current energy limit, energy used, bandwidth limit, and bandwidth used for an address. Critically, this reflects the en cadena state -- if a delegation has been confirmed, the energy limit will reflect it. If the delegation is still pending, the energy limit will not include it.
+Esto devuelve el límite de energía actual, energía utilizada, límite de bandwidth y bandwidth utilizado para una dirección. Críticamente, esto refleja el estado en cadena: si una delegación ha sido confirmada, el límite de energía lo reflejará. Si la delegación aún está pendiente, el límite de energía no la incluirá.
 
-### Part 2: Poll Until Confirmed
+### Parte 2: Sondear hasta confirmar
 
-The fix replaces the single "wait for FILLED" check with a polling loop that verifies en cadena resources:
+La solución reemplaza la verificación única "esperar FILLED" con un bucle de sondeo que verifica los recursos en cadena:
 
 ```typescript
 async function executeWithEnergy(
@@ -215,27 +215,27 @@ async function checkAddressResources(
 }
 ```
 
-### Why 2-Second Intervals
+### Por qué intervalos de 2 segundos
 
-The intervalo de sondeo is 2 seconds. This is chosen based on TRON's 3-second block time:
+El intervalo de sondeo es de 2 segundos. Esto se elige basándose en el tiempo de bloque de 3 segundos de TRON:
 
-- Polling every 1 second would result in many redundant checks between blocks
-- Polling every 3 seconds would miss some blocks (clock drift, network latency)
-- Polling every 2 seconds ensures we check within every block cycle
+- Sondear cada 1 segundo resultaría en muchas verificaciones redundantes entre bloques
+- Sondear cada 3 segundos podría perder algunos bloques (desviación del reloj, latencia de red)
+- Sondear cada 2 segundos asegura que verificamos dentro de cada ciclo de bloque
 
-### Why 15 Attempts
+### Por qué 15 intentos
 
-15 attempts at 2-second intervals = 30-second maximum wait time. En la practica, the delegation confirms within 1-2 polls (3-6 seconds). The 30-second timeout handles extreme cases:
+15 intentos a intervalos de 2 segundos = tiempo de espera máximo de 30 segundos. En la práctica, la delegación se confirma dentro de 1-2 sondeos (3-6 segundos). El tiempo de espera de 30 segundos maneja casos extremos:
 
-- Network congestion delaying block inclusion
-- Provider submitting the delegation transaction late
-- Temporary RPC node lag
+- Congestión de red retrasando la inclusión de bloques
+- Proveedor presentando la transacción de delegación tarde
+- Retraso temporal del nodo RPC
 
-If the delegation is not confirmed after 30 seconds, something is genuinely wrong, and it is safer to fail loudly than to proceed and burn TRX.
+Si la delegación no se confirma después de 30 segundos, algo genuinamente está mal, y es más seguro fallar estrepitosamente que proceder y quemar TRX.
 
-## Real Mainnet Data
+## Datos reales de mainnet
 
-After deploying the fix, we measured the polling behavior over one week of production traffic:
+Después de desplegar la solución, medimos el comportamiento del sondeo durante una semana de tráfico de producción:
 
 ```
 Delegation confirmation timing:
@@ -252,9 +252,9 @@ Median: 2.8 seconds
 P99: 8.2 seconds
 ```
 
-The data confirms the race condition window: 3.1 seconds on average between the provider's "FILLED" response and en cadena confirmation. Without the polling fix, any transaction executed within that window would have burned TRX.
+Los datos confirman la ventana de condición de carrera: 3.1 segundos en promedio entre la respuesta "FILLED" del proveedor y la confirmación en cadena. Sin la solución de sondeo, cualquier transacción ejecutada dentro de esa ventana habría quemado TRX.
 
-### Cost Impact
+### Impacto de costos
 
 ```
 Before fix (30 days):
@@ -269,37 +269,37 @@ After fix (30 days):
     Orders refunded automatically
 ```
 
-The fix eliminated the race condition entirely. The two timeout failures were genuine provider-side issues where the delegation transaction was never submitted -- exactly the cases where you want to fail rather than proceed.
+La solución eliminó la condición de carrera completamente. Los dos fallos por tiempo de espera fueron problemas genuinos del lado del proveedor donde la transacción de delegación nunca fue presentada, exactamente los casos donde deseas fallar en lugar de proceder.
 
-## Lessons Learned
+## Lecciones aprendidas
 
-### "Submitted" Is Not "Confirmed"
+### "Presentado" no es "confirmado"
 
-This is the central lesson. In any system that interacts with a blockchain, there is always a gap between submitting a transaction and that transaction being confirmed en cadena. Any logic that treats submission as confirmation will eventually fail.
+Esta es la lección central. En cualquier sistema que interactúe con una blockchain, siempre hay una brecha entre presentar una transacción y que esa transacción sea confirmada en cadena. Cualquier lógica que trate la presentación como confirmación eventualmente fallará.
 
-### Check the Chain, Not the Service
+### Verifica la cadena, no el servicio
 
-The provider says the delegation is done. MERX says the order is filled. But neither of these statements means the delegation exists en cadena right now. The only authoritative source is the blockchain itself. Check the chain.
+El proveedor dice que la delegación está hecha. MERX dice que el pedido está completo. Pero ninguna de estas afirmaciones significa que la delegación existe en cadena en este momento. La única fuente autorizada es la blockchain misma. Verifica la cadena.
 
-### Testnet Hides Timing Bugs
+### Testnet oculta errores de tiempo
 
-Testnets have lower load, faster inclusion, and more predictable behavior. Timing-sensitive bugs that never trigger on testnet will appear on mainnet. If your logic depends on timing between two en cadena events, test it under realistic load conditions.
+Las testnets tienen menor carga, inclusión más rápida y comportamiento más predecible. Los errores sensibles al tiempo que nunca se disparan en testnet aparecerán en mainnet. Si tu lógica depende del tiempo entre dos eventos en cadena, pruébalo bajo condiciones de carga realistas.
 
-### Fail Loudly
+### Falla estrepitosamente
 
-When the polling loop times out, the fix throws an error and prevents the transaction from executing. This is the correct behavior. The alternative -- executing anyway and hoping the delegation arrived -- costs 19 TRX per failure. An error message costs nothing.
+Cuando el bucle de sondeo agota el tiempo de espera, la solución lanza un error e impide que la transacción se ejecute. Este es el comportamiento correcto. La alternativa, ejecutar de todas formas y esperar que la delegación haya llegado, cuesta 19 TRX por fallo. Un mensaje de error no cuesta nada.
 
-## The MERX Implementation
+## La implementación de MERX
 
-The `ensure_resources` tool in the MERX MCP server implements this pattern. When an AI agent calls `ensure_resources` before executing a contract call, the tool:
+La herramienta `ensure_resources` en el servidor MCP de MERX implementa este patrón. Cuando un agente de IA llama a `ensure_resources` antes de ejecutar una llamada de contrato, la herramienta:
 
-1. Checks current en cadena resources
-2. Calculates the deficit
-3. Purchases exactly the needed energy
-4. Polls until the delegation is confirmed en cadena
-5. Returns success only when resources are verified
+1. Verifica los recursos actuales en cadena
+2. Calcula el déficit
+3. Compra exactamente la energía necesaria
+4. Sondea hasta que la delegación se confirme en cadena
+5. Devuelve éxito solo cuando los recursos se verifican
 
-The agent never has to implement polling logic itself. The race condition is handled at the platform level.
+El agente nunca tiene que implementar lógica de sondeo él mismo. La condición de carrera se maneja a nivel de plataforma.
 
 ```
 Tool: ensure_resources
@@ -316,15 +316,16 @@ Response: {
 }
 ```
 
-The `confirmation_time_ms` field tells the agent how long the polling took. The `status: "confirmed"` means the energy is en cadena and safe to use.
+El campo `confirmation_time_ms` le indica al agente cuánto tiempo tomó el sondeo. El `status: "confirmed"` significa que la energía está en cadena y es segura para usar.
 
 Plataforma: [https://merx.exchange](https://merx.exchange)
-Documentacion: [https://merx.exchange/docs](https://merx.exchange/docs)
+Documentación: [https://merx.exchange/docs](https://merx.exchange/docs)
 Servidor MCP: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP — sin instalación, sin necesidad de clave API para herramientas de solo lectura:
 
 ```json
 {
@@ -336,6 +337,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía de TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

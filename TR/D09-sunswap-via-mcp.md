@@ -1,16 +1,16 @@
-# MCP Araciligiyla SunSwap: Yapay Zeka Ajanlari DEX'te Islem Yapiyor
+# MCP Aracılığıyla SunSwap: Bir DEX'te İşlem Yapan AI Aracıları
 
-## The Missing Bridge
+## Eksik Köprü
 
-Decentralized exchanges have been accessible through web interfaces, mobile wallets, and programmatic SDKs for years. What they have not been accessible through is natural language. An AI agent cannot click a swap button. It cannot navigate a web UI. And while an agent can technically call a smart contract through raw transaction construction, doing so requires the agent to understand ABI encoding, router contract addresses, liquidity pool mechanics, and the TRON resource model.
+Merkezi olmayan borsalar yıllardır web arayüzleri, mobil cüzdanlar ve programlı SDK'lar aracılığıyla erişilebilir durumdadır. Ancak doğal dil aracılığıyla erişilebilir değillerdir. Bir AI aracısı takas düğmesine tıklayamaz. Bir web kullanıcı arayüzünde gezinemeyen. Ve bir aracı teknik olarak ham işlem yapısı aracılığıyla akıllı bir sözleşmeyi çağırabilse de, bunun yapılması aracının ABI kodlaması, router sözleşme adreslerini, likidite havuzu mekaniklerini ve TRON kaynak modelini anlamasını gerektirir.
 
-MERX bridges this gap. Through the MCP server, an AI agent can request a swap quote, understand the expected output and costs, and execute the trade - all through structured tool calls that abstract away the protocol-level complexity while preserving full transparency into what is happening on-chain.
+MERX bu boşluğu kapatır. MCP sunucusu aracılığıyla, bir AI aracısı takas teklifi isteyebilir, beklenen çıktıyı ve maliyetleri anlayabilir ve işlemi gerçekleştirebilir - hepsi protokol düzeyindeki karmaşıklığı soyutlarken blok zincir üzerinde neler olduğu konusunda tam şeffaflığı koruyacak yapılandırılmış araç çağrıları aracılığıyla.
 
-This article covers the complete SunSwap integration: getting quotes, executing swaps, handling approvals, simulating energy costs, and understanding the real numbers from mainnet trades.
+Bu makale, tam SunSwap entegrasyonunu kapsamaktadır: teklif alma, takasları yürütme, onayları işleme, enerji maliyetlerini simüle etme ve mainnet işlemlerinden gerçek sayıları anlama.
 
-## Getting a Swap Quote
+## Takas Teklifi Alma
 
-The first step in any trade is understanding what you will get. The `get_swap_quote` tool queries SunSwap V2's router contract to calculate the expected output for a given input:
+Herhangi bir işlemdeki ilk adım, ne alacağınızı anlamaktır. `get_swap_quote` aracı, belirli bir giriş için beklenen çıktıyı hesaplamak amacıyla SunSwap V2'nin router sözleşmesini sorgular:
 
 ```
 Tool: get_swap_quote
@@ -43,42 +43,42 @@ Response:
 }
 ```
 
-Several important details in this response:
+Bu yanıtta birkaç önemli ayrıntı bulunmaktadır:
 
-### Price Impact
+### Fiyat Etkisi
 
-The `price_impact` field shows how much your trade moves the pool price. For the 0.1 TRX trade above, the impact is 0.001% - negligible. For larger trades, this number grows:
-
-```
-0.1 TRX swap:      0.001% impact
-1,000 TRX swap:    0.012% impact
-100,000 TRX swap:  1.2% impact
-1,000,000 TRX swap: 11.8% impact
-```
-
-Price impact is not a fee - it is a structural consequence of constant-product AMM mechanics. The larger your trade relative to the pool's liquidity, the worse your execution price.
-
-### Minimum Received
-
-The `minimum_received` field accounts for slippage protection. By default, MERX calculates a 1% slippage tolerance, meaning the swap will revert if the output is more than 1% below the quoted amount. This protects against front-running and rapid price movements between the quote and the execution.
-
-### Route
-
-The `route` field shows the token path. For TRX to USDT, the route passes through WTRX (Wrapped TRX) because SunSwap V2 pairs are between TRC20 tokens, and native TRX must be wrapped first. For token-to-token swaps without a direct pair, the route may include intermediate tokens:
+`price_impact` alanı, işleminizin havuz fiyatını ne kadar hareket ettirdiğini gösterir. Yukarıdaki 0.1 TRX işleminde etki 0.001% olup, ihmal edilebilirdir. Daha büyük işlemler için bu sayı artar:
 
 ```
-Token A -> WTRX -> Token B  (two-hop route)
+0.1 TRX takası:      0.001% etki
+1,000 TRX takası:    0.012% etki
+100,000 TRX takası:  1.2% etki
+1,000,000 TRX takası: 11.8% etki
 ```
 
-Multi-hop routes consume more energy due to additional contract interactions.
+Fiyat etkisi bir ücret değildir - sabit ürün AMM mekaniklerinin yapısal bir sonucudur. İşleminiz havuzun likiditesine kıyasla ne kadar büyük olursa, yürütme fiyatınız o kadar kötü olur.
 
-### Energy Required
+### Minimum Alınan Tutar
 
-This is the exact energy estimate from `triggerConstantContract` simulation. Not a hardcoded constant, not a range - the precise energy units this specific swap will consume with these specific parameters at the current blockchain state.
+`minimum_received` alanı slipaj korumasını hesaba katar. Varsayılan olarak, MERX %1'lik bir slipaj toleransı hesaplar, bu da takas, alınan miktar, teklif edilen tutarın %1'den fazla azalırsa geri alınır anlamına gelir. Bu, ön çalıştırmaya ve teklif ile yürütme arasındaki hızlı fiyat hareketlerine karşı koruma sağlar.
 
-## Executing the Swap
+### Rota
 
-Once the agent has reviewed the quote and decided to proceed, the `execute_swap` tool handles the entire execution pipeline:
+`route` alanı, token yolunu gösterir. TRX'den USDT'ye, rota WTRX (Sarılı TRX) üzerinden geçer çünkü SunSwap V2 çiftleri TRC20 tokenler arasındadır ve yerli TRX'in önce sarılması gerekir. Doğrudan çifti olmayan token'ten token'e takaslar için rota ara tokenler içerebilir:
+
+```
+Token A -> WTRX -> Token B  (iki atlama rotası)
+```
+
+Çok atlama rotaları, ek sözleşme etkileşimleri nedeniyle daha fazla enerji tüketir.
+
+### Gerekli Enerji
+
+Bu, `triggerConstantContract` simülasyonundan tam enerji tahminidir. Sabit kodlanmış bir sabit değil, bir aralık değil - bu spesifik takas, bu spesifik parametrelerle, mevcut blok zincir durumunda tüketecek olan kesin enerji birimleri.
+
+## Takası Yürütme
+
+Aracı teklifi inceledikten ve devam etmeye karar verdikten sonra, `execute_swap` aracı tüm yürütme boru hattını işler:
 
 ```
 Tool: execute_swap
@@ -110,64 +110,64 @@ Response:
 }
 ```
 
-### What Happens Inside execute_swap
+### execute_swap İçinde Neler Olur
 
-The `execute_swap` tool orchestrates the full resource-aware transaction pipeline:
+`execute_swap` aracı, tam kaynak farkında işlem boru hattını yönetir:
 
-1. **Simulate the swap** - `triggerConstantContract` with the exact swap parameters to get the precise energy requirement (223,354 in this case)
+1. **Takası simüle etme** - Tam takas parametreleriyle `triggerConstantContract` çalıştırarak tam enerji gereksinimini alma (bu durumda 223,354)
 
-2. **Check current resources** - Query the sender's address for available energy and bandwidth
+2. **Mevcut kaynakları kontrol etme** - Gönderenin adresini sorgulamak için mevcut enerji ve bandwidth'i sorgulamak
 
-3. **Purchase energy deficit** - Find the best provider price, place the order, and wait for delegation confirmation
+3. **Enerji eksikliğini satın alma** - En iyi sağlayıcı fiyatını bulmak, siparişi yerleştirmek ve delegasyon onayını beklemek
 
-4. **Build the swap transaction** - Construct the SunSwap V2 router call with the correct function selector, parameters, and call value
+4. **Takas işlemini oluşturma** - Doğru işlev seçiciyle, parametrelerle ve çağrı değeriyle SunSwap V2 router çağrısını yapılandırmak
 
-5. **Sign locally** - The private key signs the transaction on the agent's machine
+5. **Yerel olarak imzalama** - Özel anahtar, işlemi aracının makinesinde imzalar
 
-6. **Broadcast** - The signed transaction is sent to the TRON network
+6. **Yayınlama** - İmzalanan işlem TRON ağına gönderilir
 
-7. **Verify** - Poll for transaction confirmation and parse the result
+7. **Doğrulama** - İşlem onayı için yoklamak ve sonucu ayrıştırmak
 
-The agent calls one tool. Seven steps execute behind the scenes. The agent receives a single response with the complete result.
+Aracı bir araç çağırır. Arka planda yedi adım yürütülür. Aracı tam sonuç içeren tek bir yanıt alır.
 
-## Token Approvals
+## Token Onayları
 
-When swapping TRC20 tokens (as opposed to swapping native TRX), the SunSwap router needs permission to spend tokens on your behalf. This is the standard TRC20 `approve` mechanism.
+TRC20 token'lerini (yerel TRX'i değiştirmeye karşı) değiştirirken, SunSwap router'ı sizin adınıza token harcamak için izne ihtiyaç duyar. Bu standart TRC20 `approve` mekanizmasıdır.
 
-MERX handles this automatically. Before executing a TRC20-to-TRC20 or TRC20-to-TRX swap, the execute_swap tool checks whether the router contract has sufficient allowance for the input token:
+MERX bunu otomatik olarak işler. TRC20'den TRC20'ye veya TRC20'den TRX'e takas yürütülmeden önce, execute_swap aracı router sözleşmesinin giriş token'ı için yeterli izne sahip olup olmadığını kontrol eder:
 
 ```
-Approval check:
+Onay kontrolü:
   Token: USDT (TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t)
-  Spender: SunSwap V2 Router (TKzxdSv2FZKQrEkFPRQi4qeCokAFkrntVM)
-  Current allowance: 0
-  Required: 100,000,000 (100 USDT)
+  Harcayan: SunSwap V2 Router (TKzxdSv2FZKQrEkFPRQi4qeCokAFkrntVM)
+  Geçerli izin: 0
+  Gerekli: 100,000,000 (100 USDT)
 
-  -> Approval needed
+  -> Onay gerekli
 ```
 
-If approval is needed, MERX:
+Onay gerekiyorsa, MERX:
 
-1. Simulates the approval transaction to get its energy cost
-2. Adds the approval energy to the swap energy for a combined purchase
-3. Executes the approval transaction first
-4. Waits for confirmation
-5. Then executes the swap
+1. Onay işlemini simüle ederek enerji maliyetini alır
+2. Onay enerjisini takas enerjisine ekler, birleşik satın almaya
+3. Önce onay işlemini yürütür
+4. Onay bekler
+5. Ardından takası yürütür
 
 ```
-Combined energy requirement:
-  Approval: 46,312 energy
-  Swap: 223,354 energy
-  Total: 269,666 energy
+Birleşik enerji gereksinimi:
+  Onay: 46,312 enerji
+  Takas: 223,354 enerji
+  Toplam: 269,666 enerji
 
-  Purchased: 270,000 energy at 14.20 TRX
+  Satın alınan: 270,000 enerji, 14.20 TRX karşılığında
 ```
 
-The agent does not need to know about approvals. If one is needed, it happens. If the token is already approved, the step is skipped.
+Aracının onaylar hakkında bilgi sahibi olması gerekmez. Gerekiyorsa, olur. Token zaten onaylanmışsa, adım atlanır.
 
-### Approval Amount
+### Onay Miktarı
 
-By default, MERX approves the maximum uint256 value (unlimited approval). This means future swaps of the same token will not require another approval transaction, saving energy and time. If the agent prefers exact approvals (approving only the specific amount needed), this can be specified:
+Varsayılan olarak, MERX maksimum uint256 değerini onaylar (sınırsız onay). Bu, aynı token'in gelecekteki takaslarının başka bir onay işlemi gerektirmeyeceği anlamına gelir, enerji ve zaman tasarrufu sağlar. Aracı tam onayları tercih ederse (yalnızca gerekli belirli tutarı onaylamak), bunu belirtebilir:
 
 ```
 Tool: approve_trc20
@@ -178,164 +178,164 @@ Input: {
 }
 ```
 
-Exact approvals are more secure (limit exposure if the router contract is compromised) but cost energy on every swap.
+Tam onaylar daha güvenlidir (router sözleşmesi tehlikeye atılırsa maruziyeti sınırla) ancak her takas için enerji maliyeti.
 
-## Real Swap: 0.1 TRX to USDT
+## Gerçek Takas: 0.1 TRX'den USDT'ye
 
-Here are the complete details of a real mainnet swap executed through the MERX MCP sunucusu:
+MERX MCP sunucusu aracılığıyla yürütülen gerçek bir mainnet takasının tam ayrıntıları aşağıdadır:
 
-### Pre-Swap State
+### Takas Öncesi Durum
 
 ```
-Address: TWallet...
-TRX Balance: 523.456789 TRX
-USDT Balance: 0.00 USDT
-Energy Available: 0
-Bandwidth Available: 1,420 (free)
+Adres: TWallet...
+TRX Bakiyesi: 523.456789 TRX
+USDT Bakiyesi: 0.00 USDT
+Mevcut Enerji: 0
+Mevcut Bandwidth: 1,420 (ücretsiz)
 ```
 
-### Quote
+### Teklif
 
 ```
 get_swap_quote:
-  Input: 0.1 TRX (100,000 SUN)
-  Output: 0.032847 USDT
-  Price impact: 0.001%
-  Energy required: 223,354
-  Route: WTRX -> USDT
+  Giriş: 0.1 TRX (100,000 SUN)
+  Çıkış: 0.032847 USDT
+  Fiyat etkisi: 0.001%
+  Gerekli enerji: 223,354
+  Rota: WTRX -> USDT
 ```
 
-### Execution
+### Yürütme
 
 ```
 execute_swap:
-  Energy purchased: 225,000 at 11.84 TRX (provider: sohu)
-  Delegation confirmed: 4.1 seconds
-  Approval: Not needed (TRX -> USDT, native TRX does not require approval)
-  Swap TX broadcast: 9c7b3a2f...
-  Swap TX confirmed: Block 58,234,892
+  Satın alınan enerji: 225,000, 11.84 TRX (sağlayıcı: sohu)
+  Delegasyon onaylandı: 4.1 saniye
+  Onay: Gerekli değil (TRX -> USDT, yerli TRX onay gerektirmez)
+  Takas TX yayınlandı: 9c7b3a2f...
+  Takas TX onaylandı: Blok 58,234,892
 ```
 
-### Post-Swap State
+### Takas Sonrası Durum
 
 ```
-Address: TWallet...
-TRX Balance: 511.516789 TRX  (523.456789 - 0.1 swap - 11.84 energy)
-USDT Balance: 0.032847 USDT
-Energy Available: 1,646  (225,000 purchased - 223,354 used)
-Bandwidth Available: 1,000 (free, partially consumed by TX)
+Adres: TWallet...
+TRX Bakiyesi: 511.516789 TRX  (523.456789 - 0.1 takas - 11.84 enerji)
+USDT Bakiyesi: 0.032847 USDT
+Mevcut Enerji: 1,646  (225,000 satın alınan - 223,354 kullanılan)
+Mevcut Bandwidth: 1,000 (ücretsiz, TX tarafından kısmen tüketildi)
 ```
 
-### Cost Breakdown
+### Maliyet Ayrıntısı
 
 ```
-Energy purchase:      11.84 TRX
-Swap input:            0.10 TRX
-Total spent:          11.94 TRX
+Enerji satın alımı:      11.84 TRX
+Takas girdisi:            0.10 TRX
+Toplam harcanan:         11.94 TRX
 
-Without energy purchase (TRX burn):
-  Swap energy burn:   ~53.00 TRX
-  Swap input:           0.10 TRX
-  Total:              ~53.10 TRX
+Enerji satın alımı olmadan (TRX yakılması):
+  Takas enerji yakılması:   ~53.00 TRX
+  Takas girdisi:             0.10 TRX
+  Toplam:                   ~53.10 TRX
 
-Savings:              41.16 TRX (77.5%)
+Tasarruf:                41.16 TRX (%77.5)
 ```
 
-## Price Impact Estimation
+## Fiyat Etkisi Tahmini
 
-For agents making larger trades, understanding price impact is critical. The `get_swap_quote` tool provides this estimate, but understanding how it is calculated helps agents make better decisions.
+Daha büyük işlemler yapan aracılar için, fiyat etkisini anlamak kritiktir. `get_swap_quote` aracı bu tahmini sağlar, ancak nasıl hesaplandığını anlamak aracıların daha iyi kararlar almalarına yardımcı olur.
 
-SunSwap V2 uses the constant-product formula: `x * y = k`, where x and y are the token reserves in the pool. When you swap dx of token X for dy of token Y:
+SunSwap V2, sabit ürün formülünü kullanır: `x * y = k`, burada x ve y havuzdaki token rezervleridir. Token X'in dx'ini Token Y'nin dy'si için değiştirdiğinizde:
 
 ```
 dy = y * dx / (x + dx)
 ```
 
-The effective price you receive (dy/dx) is always worse than the spot price (y/x) because your trade increases the supply of X and decreases the supply of Y.
+Aldığınız etkili fiyat (dy/dx) her zaman spot fiyattan (y/x) daha kötüdür çünkü işleminiz X arzını artırır ve Y arzını azaltır.
 
-For a pool with 45 million TRX and 14.8 million USDT:
+45 milyon TRX ve 14.8 milyon USDT havuzu için:
 
 ```
-Spot price: 14,800,000 / 45,000,000 = 0.328889 USDT/TRX
+Spot fiyatı: 14,800,000 / 45,000,000 = 0.328889 USDT/TRX
 
-Swap 100 TRX:
-  Output: 14,800,000 * 100 / (45,000,000 + 100) = 0.032888 USDT/TRX
-  Impact: 0.0003%
+100 TRX takası:
+  Çıkış: 14,800,000 * 100 / (45,000,000 + 100) = 0.032888 USDT/TRX
+  Etki: 0.0003%
 
-Swap 100,000 TRX:
-  Output: 14,800,000 * 100,000 / (45,000,000 + 100,000) = 32.797 USDT
-  Effective price: 0.32797 USDT/TRX
-  Impact: 0.28%
+100,000 TRX takası:
+  Çıkış: 14,800,000 * 100,000 / (45,000,000 + 100,000) = 32.797 USDT
+  Etkili fiyat: 0.32797 USDT/TRX
+  Etki: 0.28%
 
-Swap 1,000,000 TRX:
-  Output: 14,800,000 * 1,000,000 / (45,000,000 + 1,000,000) = 321,739 USDT
-  Effective price: 0.32174 USDT/TRX
-  Impact: 2.17%
+1,000,000 TRX takası:
+  Çıkış: 14,800,000 * 1,000,000 / (45,000,000 + 1,000,000) = 321,739 USDT
+  Etkili fiyat: 0.32174 USDT/TRX
+  Etki: 2.17%
 ```
 
-MERX includes this impact calculation in every quote so the agent can assess whether the trade size is appropriate for the available liquidity.
+MERX bu etki hesaplamasını her teklife dahil ederek aracıya işlem boyutunun mevcut likidite için uygun olup olmadığını değerlendirmesine izin verir.
 
-## Multi-Hop Swaps
+## Çok Atlama Takasları
 
-Not all token pairs have direct liquidity pools. For tokens that trade against WTRX but not against each other, SunSwap V2 routes through an intermediate token:
+Tüm token çiftleri doğrudan likidite havuzlarına sahip değildir. WTRX'ye karşı işlem gören ancak birbirleri arasında işlem görmeyen token'ler için, SunSwap V2 ara bir token aracılığıyla yönlendirir:
 
 ```
 Token A -> WTRX -> Token B
 ```
 
-This requires two swap operations in a single transaction (handled by the router contract). Energy consumption is higher:
+Bu, tek bir işlemde iki takas işlemi gerektirir (router sözleşmesi tarafından işlenebilir). Enerji tüketimi daha yüksektir:
 
 ```
-Direct swap (e.g., TRX -> USDT): ~223,000 energy
-Two-hop swap (e.g., USDC -> USDT via WTRX): ~340,000 energy
-Three-hop swap: ~460,000 energy
+Doğrudan takas (ör. TRX -> USDT): ~223,000 enerji
+İki atlama takası (ör. USDC -> USDT, WTRX aracılığıyla): ~340,000 enerji
+Üç atlama takası: ~460,000 enerji
 ```
 
-The `get_swap_quote` tool automatically finds the optimal route and reports the total energy requirement for the complete path.
+`get_swap_quote` aracı otomatik olarak optimal rotayı bulur ve tam yol için toplam enerji gereksinimini raporlar.
 
-## Swap Strategies for Agents
+## Aracılar İçin Takas Stratejileri
 
-### Dollar-Cost Averaging
+### Dolar-Maliyet Ortalaması
 
-An agent tasked with accumulating USDT can use standing orders combined with swap execution:
-
-```
-Standing order:
-  Trigger: schedule "0 */4 * * *" (every 4 hours)
-  Action: Execute swap 100 TRX -> USDT at market price
-  Constraint: max 600 TRX/day
-```
-
-Six swaps per day, each for 100 TRX, smoothing out price volatility.
-
-### Threshold-Based Trading
+USDT biriktirmeyle görevlendirilen bir aracı, sabit emirleri takas yürütmesiyle birlikte kullanabilir:
 
 ```
-Standing order:
-  Trigger: TRX/USDT price above 0.35
-  Action: Swap 1000 TRX -> USDT
-  Constraint: max 1 execution/day
+Sabit emir:
+  Tetikleyici: program "0 */4 * * *" (her 4 saatte bir)
+  İşlem: 100 TRX -> USDT pazar fiyatında takas yürüt
+  Kısıtlama: günde maksimum 600 TRX
 ```
 
-The agent sells TRX when the price is favorable, accumulating USDT for operational expenses.
+Günde altı takas, her biri 100 TRX için, fiyat oynaklığını yumuşatır.
 
-### Rebalancing
+### Eşik Tabanlı İşlem
 
-An agent managing a portfolio can use intents to rebalance:
+```
+Sabit emir:
+  Tetikleyici: TRX/USDT fiyatı 0.35'in üzerinde
+  İşlem: 1000 TRX -> USDT takası yürüt
+  Kısıtlama: günde maksimum 1 yürütme
+```
+
+Aracı fiyat uygun olduğunda TRX satarak USDT biriktirir operasyonel giderler için.
+
+### Yeniden Dengeleme
+
+Portföy yöneten bir aracı, yeniden dengeleme için niyetleri kullanabilir:
 
 ```
 execute_intent:
-  Step 1: Swap 500 TRX -> USDT (if TRX allocation > 60%)
-  Step 2: Swap 200 USDT -> TRX (if TRX allocation < 40%)
-  Resource strategy: batch_cheapest
+  Adım 1: 500 TRX -> USDT takası yap (TRX tahsisi > 60% ise)
+  Adım 2: 200 USDT -> TRX takası yap (TRX tahsisi < 40% ise)
+  Kaynak stratejisi: batch_cheapest
 ```
 
-## Comparison: Raw TronWeb vs MERX MCP
+## Karşılaştırma: Ham TronWeb vs MERX MCP
 
-### Raw TronWeb (without MERX)
+### Ham TronWeb (MERX olmadan)
 
 ```javascript
-// 1. Estimate energy (manual)
+// 1. Enerjiyi tahmin et (manuel)
 const estimation = await tronWeb.transactionBuilder.triggerConstantContract(
   routerAddress, 'swapExactETHForTokens(uint256,address[],address,uint256)',
   { callValue: 100000 },
@@ -345,16 +345,16 @@ const estimation = await tronWeb.transactionBuilder.triggerConstantContract(
    { type: 'uint256', value: deadline }],
   myAddr
 );
-// 2. Buy energy somewhere (separate integration)
-// 3. Wait for delegation (manual polling)
-// 4. Build swap transaction
-// 5. Sign
-// 6. Broadcast
-// 7. Verify
-// ~50 lines of code, multiple API integrations
+// 2. Bir yere enerji satın al (ayrı entegrasyon)
+// 3. Delegasyonu bekle (manuel yoklama)
+// 4. Takas işlemini oluştur
+// 5. İmzala
+// 6. Yayınla
+// 7. Doğrula
+// ~50 satır kod, çoklu API entegrasyonları
 ```
 
-### MERX MCP (one tool call)
+### MERX MCP (tek araç çağrısı)
 
 ```
 Tool: execute_swap
@@ -364,43 +364,44 @@ Input: {
   "amount": "100000",
   "slippage": 1.0
 }
-// One call. Everything handled internally.
+// Bir çağrı. Her şey dahili olarak işlenir.
 ```
 
-The agent does not need to know about router addresses, WTRX wrapping, ABI encoding, energy markets, delegation mechanics, or transaction construction. It expresses intent ("swap TRX for USDT") and receives a result.
+Aracının router adreslerini, WTRX sarılmasını, ABI kodlamasını, enerji pazarlarını, delegasyon mekaniklerini veya işlem yapısını bilmesi gerekmez. Niyet ifade eder ("TRX'i USDT'ye dönüştür") ve bir sonuç alır.
 
-## Risks and Limitations
+## Riskler ve Sınırlamalar
 
-### Slippage
+### Slipaj
 
-Even with slippage protection, rapid price movements can cause swaps to revert. If the swap reverts, the energy used for the reverted transaction is lost (though the tokens are not). The agent can retry with a higher slippage tolerance or a smaller amount.
+Slipaj koruması olsa bile, hızlı fiyat hareketleri takasların geri alınmasına neden olabilir. Takas geri alınırsa, geri alınan işlem için kullanılan enerji kaybolur (token'ler olmasa da). Aracı daha yüksek bir slipaj toleransı veya daha küçük bir miktar ile yeniden deneyebilir.
 
-### MEV and Front-Running
+### MEV ve Ön Çalıştırma
 
-TRON's block production model is different from Ethereum's, and the MEV landscape is less developed. However, large swaps on SunSwap can still be front-run by sophisticated actors monitoring the mempool. For large trades, consider splitting into multiple smaller swaps across different blocks.
+TRON'un blok üretim modeli Ethereum'dan farklıdır ve MEV ortamı daha az gelişmiştir. Ancak, SunSwap'ta büyük takaslar hala mempool'u izleyen sofistike aktörlerin ön çalıştırması yapılabilir. Büyük işlemler için, birden fazla küçük takaslar içine bölmeyi farklı bloklar genelinde düşünün.
 
-### Liquidity
+### Likidite
 
-SunSwap V2 liquidity varies significantly between token pairs. Major pairs (TRX/USDT, TRX/USDC) have deep liquidity. Smaller tokens may have thin pools where even moderate trades cause significant price impact. Always check the quote before executing.
+SunSwap V2 likiditesi token çiftleri arasında önemli ölçüde değişir. Büyük çiftler (TRX/USDT, TRX/USDC) derin likiditeye sahiptir. Küçük tokenler ince havuzlara sahip olabilir ve burada bile orta ölçekli işlemler önemli fiyat etkisine neden olur. Yürütmeden önce her zaman teklifi kontrol edin.
 
-## Sonuc
+## Sonuç
 
-DEX trading through an AI agent is no longer a theoretical capability. MERX makes it operational with two tool calls: one to quote, one to execute. The energy simulation is exact. The resource purchasing is automatic. The token approvals are handled transparently.
+Bir AI aracısı aracılığıyla DEX ticareti artık teorik bir kapasite değildir. MERX bunu iki araç çağrısıyla operasyonel hale getirir: biri teklif etmek, biri yürütmek. Enerji simülasyonu tam. Kaynak satın alımı otomatik. Token onayları şeffaf olarak işlenir.
 
-For AI agents operating on TRON, SunSwap via MCP is the fastest path to on-chain trading. No web UI. No manual transaction construction. No resource management overhead.
+TRON'da faaliyet gösteren AI aracıları için, MCP aracılığıyla SunSwap, zincir üzerinde ticaret için en hızlı yoldur. Web UI yok. Hiçbir manuel işlem yapısı yok. Kaynak yönetimi ek yükü yok.
 
-Quote. Execute. Done.
+Teklif. Yürüt. Bitti.
 
 ---
 
-**Baglantilar:**
+**Bağlantılar:**
 - MERX Platformu: [https://merx.exchange](https://merx.exchange)
 - MCP Sunucusu (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - MCP Sunucusu (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır yükleme, salt okunur araçlar için API anahtarı gerekli değil:
 
 ```json
 {
@@ -412,6 +413,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI aracınıza sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatları alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

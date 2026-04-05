@@ -1,144 +1,144 @@
-# Como cambian los precios de energia en TRON: analisis de dinamica de precios
+# Cómo Cambian los Precios de Energía en TRON: Análisis de Dinámicas de Precios
 
-Energy prices on TRON are not fixed. They move throughout the day, week, and month in response to supply, demand, and competitive dynamics. If you buy energy regularly -- whether for a procesador de pagos, bot de trading, or manual operations -- understanding these price dynamics helps you buy at better rates and avoid overpaying.
+Los precios de energía en TRON no son fijos. Varían a lo largo del día, la semana y el mes en respuesta a la oferta, la demanda y la dinámica competitiva. Si compras energía regularmente -- ya sea para un procesador de pagos, un bot de trading u operaciones manuales -- comprender estas dinámicas de precios te ayuda a comprar a mejores tasas y evitar pagar de más.
 
-This article breaks down the forces that drive TRON precios de energia, explains the differences between P2P and fixed-price models, and shows how to use price analysis tools to make better purchasing decisions.
+Este artículo desglosa las fuerzas que impulsan los precios de energía en TRON, explica las diferencias entre modelos P2P y de precio fijo, y muestra cómo usar herramientas de análisis de precios para tomar mejores decisiones de compra.
 
-## What Determines Energy Price
+## Qué Determina el Precio de la Energía
 
-Energy price is ultimately a function of three things: the cost of producing energy, the demand for it, and competitive pressure among providers.
+El precio de la energía es en última instancia una función de tres cosas: el costo de producir energía, la demanda por ella, y la presión competitiva entre proveedores.
 
-### Production Cost
+### Costo de Producción
 
-Energy on TRON is produced by staking TRX. When a user freezes (stakes) TRX, the network allocates energy to that address proportional to their stake relative to the total network stake.
+La energía en TRON se produce mediante staking de TRX. Cuando un usuario congela (hace staking de) TRX, la red asigna energía a esa dirección proporcionalmente a su stake en relación con el stake total de la red.
 
-The cost of producing energy is por lo tanto the costo de oportunidad of staking TRX. That staked TRX could be earning yield elsewhere, used for trading, or deployed in DeFi protocols. The proveedor de energia's floor price must cover this costo de oportunidad plus operational overhead.
+El costo de producir energía es por lo tanto el costo de oportunidad de hacer staking de TRX. Ese TRX en staking podría estar generando rendimiento en otros lugares, usarse para trading o desplegarse en protocolos DeFi. El precio base del proveedor de energía debe cubrir este costo de oportunidad más la sobrecarga operacional.
 
-Factors that affect production cost:
+Factores que afectan el costo de producción:
 
-- **TRX price.** When TRX price rises, the dollar-denominated costo de oportunidad of staking increases, putting upward pressure on precios de energia.
-- **Alternative yields.** If DeFi protocols on TRON offer attractive staking yields, the costo de oportunidad of allocating TRX to energy production rises.
-- **Network proporcion de staking.** As more TRX is staked network-wide, each unit of staked TRX produces less energy (the pool is shared among more stakers). This increases the TRX required to produce a given amount of energy, raising costs.
-- **TRON governance parameters.** The network periodically adjusts parameters that affect energy pricing, such as the total energy pool size or the energy-to-TRX tasa de quema.
+- **Precio de TRX.** Cuando el precio de TRX sube, el costo de oportunidad denominado en dólares de hacer staking aumenta, ejerciendo presión alcista sobre los precios de energía.
+- **Rendimientos alternativos.** Si los protocolos DeFi en TRON ofrecen rendimientos de staking atractivos, el costo de oportunidad de asignar TRX a la producción de energía aumenta.
+- **Proporción de staking de la red.** Conforme más TRX se hace staking a nivel de red, cada unidad de TRX en staking produce menos energía (el fondo se comparte entre más stakers). Esto aumenta el TRX requerido para producir una cantidad determinada de energía, elevando costos.
+- **Parámetros de gobernanza de TRON.** La red ajusta periódicamente parámetros que afectan el precio de la energía, como el tamaño del fondo total de energía o la tasa de quema de energía a TRX.
 
-### Demand
+### Demanda
 
-Energy demand is driven by TRON transaction volume, which varies based on:
+La demanda de energía es impulsada por el volumen de transacciones en TRON, que varía según:
 
-- **USDT transfer volume.** The dominant source of energy demand. When USDT activity spikes (market volatility, end-of-month settlements, exchange movements), energy demand rises.
-- **DeFi activity.** DEX trading volume, lending protocol interactions, and yield farming operations all consume energy.
-- **Token events.** New token launches, airdrops, and NFT mints create burst demand.
-- **Time of day.** Activity follows global timezone patterns, with peak demand during Asian and European business hours.
+- **Volumen de transferencias de USDT.** La fuente dominante de demanda de energía. Cuando la actividad de USDT se dispara (volatilidad del mercado, liquidaciones de fin de mes, movimientos de exchanges), la demanda de energía aumenta.
+- **Actividad de DeFi.** El volumen de trading en DEX, las interacciones con protocolos de préstamo y las operaciones de yield farming consumen energía.
+- **Eventos de tokens.** Los lanzamientos de nuevos tokens, airdrops y mints de NFT crean demanda de ráfaga.
+- **Hora del día.** La actividad sigue patrones de zonas horarias globales, con demanda máxima durante las horas de negocios de Asia y Europa.
 
-### Competitive Pressure
+### Presión Competitiva
 
-With seven providers in the market, pricing is not set in isolation. Each provider responds to competitors' rates. When one provider lowers prices to attract volume, others must decide whether to match, undercut, or maintain their rates and accept lower market share.
+Con siete proveedores en el mercado, los precios no se establecen de forma aislada. Cada proveedor responde a las tasas de los competidores. Cuando un proveedor baja los precios para atraer volumen, otros deben decidir si igualan, undercut, o mantienen sus tasas y aceptan una menor cuota de mercado.
 
-This competition benefits buyers, particularly those using aggregators that route to the cheapest available provider. The competitive dynamics ensure that no provider can maintain significantly above-market rates for long.
+Esta competencia beneficia a los compradores, particularmente a los que usan agregadores que enrutan hacia el proveedor más barato disponible. La dinámica competitiva asegura que ningún proveedor pueda mantener tasas significativamente por encima del mercado durante mucho tiempo.
 
-## P2P vs Fixed-Price Dynamics
+## Dinámicas P2P vs Precio Fijo
 
-The two primary pricing models in the TRON mercado de energia respond differently to market conditions.
+Los dos modelos de precios principales en el mercado de energía de TRON responden de manera diferente a las condiciones del mercado.
 
-### P2P Marketplace Pricing (TronSave model)
+### Precios del Mercado P2P (modelo TronSave)
 
-In a P2P marketplace, individual sellers set their own prices. This creates a dynamic libro de ordenes where:
+En un mercado P2P, los vendedores individuales establecen sus propios precios. Esto crea un libro de órdenes dinámico donde:
 
-- **Prices adjust in tiempo real** as sellers respond to demand
-- **Spread exists** between the cheapest and most expensive listings
-- **Supply depth varies** -- the cheapest prices may only be available for small amounts
-- **Seller behavior drives volatility** -- individual sellers may adjust prices based on their personal liquidity needs, not just market conditions
+- **Los precios se ajustan en tiempo real** conforme los vendedores responden a la demanda
+- **Existe un diferencial** entre los listados más baratos y más caros
+- **La profundidad de oferta varía** -- los precios más baratos pueden solo estar disponibles para montos pequeños
+- **El comportamiento del vendedor impulsa volatilidad** -- los vendedores individuales pueden ajustar precios según sus necesidades personales de liquidez, no solo condiciones del mercado
 
-P2P pricing tends to be more volatile but can offer the lowest rates during low-demand periods when sellers compete aggressively for limited buyer interest.
+Los precios P2P tienden a ser más volátiles pero pueden ofrecer las tasas más bajas durante períodos de baja demanda cuando los vendedores compiten agresivamente por interés limitado de compradores.
 
-### Fixed-Price Provider Pricing (PowerSun model)
+### Precios de Proveedor de Precio Fijo (modelo PowerSun)
 
-Fixed-price providers set rates that remain stable for hours or days. Price changes are deliberate decisions, not automatic market responses.
+Los proveedores de precio fijo establecen tasas que permanecen estables durante horas o días. Los cambios de precio son decisiones deliberadas, no respuestas automáticas del mercado.
 
-- **Rates change infrequently** -- typically once per day or less
-- **Prices are predictable** for budgeting purposes
-- **May lag behind market movements** -- prices might not reflect current supply/demand
-- **Stability premium** -- fixed prices are generally slightly above the market average to compensate for the predictability they offer
+- **Las tasas cambian con poca frecuencia** -- típicamente una vez por día o menos
+- **Los precios son predecibles** para propósitos de presupuestación
+- **Pueden rezagarse detrás de movimientos del mercado** -- los precios podrían no reflejar la oferta/demanda actual
+- **Prima de estabilidad** -- los precios fijos generalmente están ligeramente por encima del promedio del mercado para compensar la previsibilidad que ofrecen
 
-Fixed-price providers are more expensive on average but provide certainty. For operations that need predictable costs, this premium is acceptable.
+Los proveedores de precio fijo son más caros en promedio pero proporcionan certeza. Para operaciones que necesitan costos predecibles, esta prima es aceptable.
 
-## Price Patterns
+## Patrones de Precios
 
-### Intraday Patterns
+### Patrones Intradía
 
-Energy prices follow a daily cycle driven by transaction activity in different time zones:
+Los precios de energía siguen un ciclo diario impulsado por la actividad de transacciones en diferentes zonas horarias:
 
-**UTC 00:00 - 06:00 (Asia morning/afternoon):** Moderate to high demand. This is peak TRON activity time as Asian markets (where TRON usage is concentrated) are active.
+**UTC 00:00 - 06:00 (mañana/tarde en Asia):** Demanda moderada a alta. Este es el tiempo de máxima actividad de TRON conforme los mercados asiáticos (donde el uso de TRON se concentra) están activos.
 
-**UTC 06:00 - 12:00 (Asia evening, Europe morning):** Transition period. Asian activity winds down, European activity picks up. Prices often soften during this window.
+**UTC 06:00 - 12:00 (tarde en Asia, mañana en Europa):** Período de transición. La actividad asiática disminuye, la actividad europea aumenta. Los precios a menudo se suavizan durante esta ventana.
 
-**UTC 12:00 - 18:00 (Europe afternoon, Americas morning):** Moderate demand. TRON activity is present but typically lower than Asian peak hours.
+**UTC 12:00 - 18:00 (tarde en Europa, mañana en América):** Demanda moderada. La actividad de TRON está presente pero típicamente más baja que las horas de máximo asiático.
 
-**UTC 18:00 - 00:00 (Americas afternoon/evening):** Generally the lowest-demand period. Energy prices often reach their daily minimum during this window.
+**UTC 18:00 - 00:00 (tarde/noche en América):** Generalmente el período de demanda más baja. Los precios de energía a menudo alcanzan su mínimo diario durante esta ventana.
 
-These patterns are tendencies, not rules. Market-moving events (exchange listings, DeFi exploits, regulatory news) can override timezone-based patterns.
+Estos patrones son tendencias, no reglas. Eventos que mueven el mercado (listados en exchanges, exploits de DeFi, noticias regulatorias) pueden anular los patrones basados en zonas horarias.
 
-### Weekly Patterns
+### Patrones Semanales
 
-Weekends typically see lower TRON transaction volume than weekdays, leading to softer precios de energia. Monday mornings in Asian time zones often see price increases as weekly business activity resumes.
+Los fines de semana típicamente ven un volumen de transacciones de TRON más bajo que los días de semana, llevando a precios de energía más suaves. Los lunes por la mañana en zonas horarias asiáticas a menudo ven aumentos de precios conforme se reanuda la actividad comercial semanal.
 
-### Event-Driven Spikes
+### Picos Impulsados por Eventos
 
-Certain events cause sharp, temporary price increases:
+Ciertos eventos causan aumentos de precios agudos y temporales:
 
-- **Large token airdrops:** Thousands of transfers in a short window
-- **Market crashes/rallies:** Increased trading volume across DEXs
-- **New DeFi protocol launches:** Users rushing to interact with new contracts
-- **Network upgrades:** Uncertainty around upgrades can affect staking behavior
+- **Airdrops de tokens grandes:** Miles de transferencias en una ventana corta
+- **Caídas/repuntes del mercado:** Mayor volumen de trading en DEX
+- **Lanzamientos de nuevos protocolos DeFi:** Usuarios apresurándose a interactuar con nuevos contratos
+- **Actualizaciones de red:** La incertidumbre alrededor de actualizaciones puede afectar el comportamiento de staking
 
-## How MERX Tracks Price Dynamics
+## Cómo MERX Rastrea Dinámicas de Precios
 
-MERX monitors prices across all seven providers continuously, providing tools to analyze and act on price movements:
+MERX monitorea precios en los siete proveedores continuamente, proporcionando herramientas para analizar y actuar sobre movimientos de precios:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// Get current prices across all providers
+// Obtener precios actuales en todos los proveedores
 const prices = await merx.getPrices({
   energy_amount: 65000,
   duration: '1h'
 });
 
-// See the spread
+// Ver el diferencial
 const lowest = prices.providers[0].price_sun;
 const highest =
   prices.providers[prices.providers.length - 1].price_sun;
-console.log(`Market spread: ${lowest} - ${highest} SUN`);
-console.log(`Best: ${prices.best.price_sun} SUN via ${prices.best.provider}`);
+console.log(`Diferencial del mercado: ${lowest} - ${highest} SUN`);
+console.log(`Mejor: ${prices.best.price_sun} SUN vía ${prices.best.provider}`);
 ```
 
-### Price History Analysis
+### Análisis de Historial de Precios
 
 ```typescript
-// Analyze historical price patterns
+// Analizar patrones históricos de precios
 const analysis = await merx.analyzePrices({
   energy_amount: 65000,
   duration: '1h',
   period: '7d'
 });
 
-console.log(`7-day average: ${analysis.mean_sun} SUN`);
-console.log(`Median: ${analysis.median_sun} SUN`);
-console.log(`10th percentile: ${analysis.p10_sun} SUN`);
-console.log(`90th percentile: ${analysis.p90_sun} SUN`);
-console.log(`Standard deviation: ${analysis.stddev_sun} SUN`);
+console.log(`Promedio de 7 días: ${analysis.mean_sun} SUN`);
+console.log(`Mediana: ${analysis.median_sun} SUN`);
+console.log(`Percentil 10: ${analysis.p10_sun} SUN`);
+console.log(`Percentil 90: ${analysis.p90_sun} SUN`);
+console.log(`Desviación estándar: ${analysis.stddev_sun} SUN`);
 ```
 
-This data reveals the typical range and volatility for your specific order profile. The percentile data is particularly useful for setting orden permanente targets.
+Estos datos revelan el rango típico y la volatilidad para tu perfil de orden específico. Los datos de percentil son particularmente útiles para establecer objetivos de orden permanente.
 
-### Standing Orders: Acting on Price Dynamics
+### Órdenes Permanentes: Actuando sobre Dinámicas de Precios
 
-Understanding price patterns enables smarter purchasing through orden permanentes:
+Comprender los patrones de precios permite compras más inteligentes a través de órdenes permanentes:
 
 ```typescript
-// Based on analysis showing 25th percentile at 24 SUN
+// Basado en análisis mostrando percentil 25 a 24 SUN
 const standing = await merx.createStandingOrder({
   energy_amount: 65000,
   max_price_sun: 24,
@@ -147,87 +147,87 @@ const standing = await merx.createStandingOrder({
   target_address: 'TYourAddress...'
 });
 
-// This order will fill approximately 75% of the time,
-// always at or below 24 SUN
+// Esta orden se completará aproximadamente el 75% del tiempo,
+// siempre a o por debajo de 24 SUN
 ```
 
-The orden permanente captures price dips automatically. When prices temporarily drop below your threshold -- whether due to timezone-based demand patterns, provider competition, or temporary supply increases -- your order executes without manual intervention.
+La orden permanente captura caídas de precios automáticamente. Cuando los precios caen temporalmente por debajo de tu umbral -- ya sea debido a patrones de demanda basados en zonas horarias, competencia entre proveedores o aumentos temporales de oferta -- tu orden se ejecuta sin intervención manual.
 
-## Supply-Side Dynamics
+## Dinámicas del Lado de la Oferta
 
-Understanding what drives the supply side helps predict price movements:
+Comprender lo que impulsa el lado de la oferta ayuda a predecir movimientos de precios:
 
-### Staking Incentives
+### Incentivos de Staking
 
-When TRX staking rewards are high relative to other yield opportunities, more TRX gets staked, increasing the total energy supply. This puts downward pressure on prices.
+Cuando las recompensas de staking de TRX son altas en relación con otras oportunidades de rendimiento, más TRX se hace staking, aumentando la oferta total de energía. Esto ejerce presión bajista sobre los precios.
 
-Conversely, when DeFi yields on TRON attract TRX away from simple staking, the energy supply contracts and prices rise.
+Inversamente, cuando los rendimientos de DeFi en TRON atraen TRX lejos del staking simple, la oferta de energía se contrae y los precios suben.
 
-### Provider Capital Allocation
+### Asignación de Capital del Proveedor
 
-Energy providers decide how much TRX to allocate to energy production versus other uses. This allocation shifts based on:
+Los proveedores de energía deciden cuánto TRX asignar a la producción de energía versus otros usos. Esta asignación cambia según:
 
-- Profitability of energy sales at current rates
-- Demand projections
-- Alternative investment opportunities
-- Competitive positioning
+- La rentabilidad de las ventas de energía a las tasas actuales
+- Proyecciones de demanda
+- Oportunidades alternativas de inversión
+- Posicionamiento competitivo
 
-When multiple providers simultaneously increase their staked TRX (expecting demand growth), a supply glut can temporarily depress prices. When providers reduce staking (perhaps due to better yields elsewhere), supply contracts and prices rise.
+Cuando múltiples proveedores aumentan simultáneamente su TRX en staking (esperando crecimiento de demanda), un exceso de oferta puede deprimir temporalmente los precios. Cuando los proveedores reducen staking (quizás debido a mejores rendimientos en otros lugares), la oferta se contrae y los precios suben.
 
-### Network-Level Changes
+### Cambios a Nivel de Red
 
-TRON's governance can adjust network parameters that affect the mercado de energia:
+La gobernanza de TRON puede ajustar parámetros de red que afecten el mercado de energía:
 
-- **Total energy pool size:** Increasing the pool means each staked TRX produces more energy, reducing provider costs and enabling lower prices.
-- **Energy-to-fee ratio:** Changes in how much TRX is burned per unit of energy consumed affect the floor price for alquiler de energia.
-- **Staking rules:** Changes to freezing periods, minimum stakes, or staking rewards affect provider economics.
+- **Tamaño del fondo total de energía:** Aumentar el fondo significa que cada TRX en staking produce más energía, reduciendo costos de proveedores y permitiendo precios más bajos.
+- **Proporción energía a tarifa:** Los cambios en cuánto TRX se quema por unidad de energía consumida afectan el precio base para alquilar energía.
+- **Reglas de staking:** Los cambios en períodos de congelación, stakes mínimos o recompensas de staking afectan la economía del proveedor.
 
-## Price Prediction Limitations
+## Limitaciones en la Predicción de Precios
 
-While patterns exist, predicting exact precios de energia is unreliable for the same reasons commodity price prediction is unreliable. Too many variables interact:
+Aunque existen patrones, predecir precios exactos de energía es poco confiable por las mismas razones que la predicción de precios de commodities es poco confiable. Demasiadas variables interactúan:
 
-- Network transaction volume depends on crypto market conditions, which are inherently unpredictable
-- Provider pricing decisions are private and competitive
-- Demand spikes from token launches and DeFi events are difficult to anticipate
-- Governance changes are infrequent but impactful
+- El volumen de transacciones de red depende de condiciones del mercado cripto, que son inherentemente impredecibles
+- Las decisiones de precios de proveedores son privadas y competitivas
+- Los picos de demanda de lanzamientos de tokens y eventos de DeFi son difíciles de anticipar
+- Los cambios de gobernanza son infrecuentes pero impactantes
 
-The practical approach is not to predict prices but to set target prices and let orden permanentes execute when the market reaches your target. This approach is robust to prediction errors because it does not require timing the market -- it requires only that prices occasionally reach your target level, which historical data can confirm.
+El enfoque práctico no es predecir precios sino establecer precios objetivo y dejar que órdenes permanentes se ejecuten cuando el mercado alcance tu objetivo. Este enfoque es robusto a errores de predicción porque no requiere sincronizar el mercado -- solo requiere que los precios ocasionalmente alcancen tu nivel objetivo, lo que datos históricos pueden confirmar.
 
-## Practical Recommendations
+## Recomendaciones Prácticas
 
-### For Regular Buyers
+### Para Compradores Regulares
 
-1. **Analyze your historial de precios** using MERX's analytics to understand typical ranges for your order profile
-2. **Set orden permanentes** at your target price (25th percentile is a good starting point)
-3. **Monitor utilization** -- if orden permanentes fill too rarely, raise the target price slightly
-4. **Avoid peak hours** for non-urgent purchases
+1. **Analiza tu historial de precios** usando analítica de MERX para comprender rangos típicos para tu perfil de orden
+2. **Establece órdenes permanentes** a tu precio objetivo (el percentil 25 es un buen punto de partida)
+3. **Monitorea la utilización** -- si las órdenes permanentes se completan muy raramente, sube el precio objetivo ligeramente
+4. **Evita horas pico** para compras no urgentes
 
-### For High-Volume Operators
+### Para Operadores de Alto Volumen
 
-1. **Build price-aware automation** that tracks costs per unit over time
-2. **Use duration optimization** to match energy purchases to your operational windows
-3. **Maintain a buffer** so orden permanentes can wait for optimal prices without disrupting operations
-4. **Track provider distribution** to understand which providers consistently win your order flow
+1. **Construye automatización consciente de precios** que rastree costos por unidad en el tiempo
+2. **Usa optimización de duración** para emparejar compras de energía con tus ventanas operacionales
+3. **Mantén un búfer** para que órdenes permanentes puedan esperar precios óptimos sin interrumpir operaciones
+4. **Rastrea distribución de proveedores** para entender qué proveedores ganan consistentemente tu flujo de órdenes
 
-### For Budget-Constrained Operations
+### Para Operaciones con Presupuesto Limitado
 
-1. **Use fixed-price providers** (via MERX) for predictable budgeting
-2. **Set conservative orden permanentes** that fill reliably, prioritizing certainty over optimization
-3. **Estimate monthly costs** using median prices from historical data, not best-case prices
+1. **Usa proveedores de precio fijo** (vía MERX) para presupuestación predecible
+2. **Establece órdenes permanentes conservadoras** que se completen confiablemente, priorizando certeza sobre optimización
+3. **Estima costos mensuales** usando precios medianos de datos históricos, no precios en el mejor caso
 
-## Conclusion
+## Conclusión
 
-TRON precios de energia are dynamic, driven by production costs, transaction demand, and competitive pressure among seven providers. Prices follow daily and weekly patterns, respond to network events, and vary by order size and duration.
+Los precios de energía en TRON son dinámicos, impulsados por costos de producción, demanda de transacciones y presión competitiva entre siete proveedores. Los precios siguen patrones diarios y semanales, responden a eventos de red, y varían según el tamaño y duración de la orden.
 
-Understanding these dynamics does not require becoming a market analyst. The practical application is simple: use price analysis tools to understand typical ranges, set orden permanentes at your target price, and let the system handle the timing. MERX's aggregation ensures you always access the best available rate, and orden permanentes capture price dips that manual purchasing cannot.
+Comprender estas dinámicas no requiere convertirse en analista de mercado. La aplicación práctica es simple: usa herramientas de análisis de precios para entender rangos típicos, establece órdenes permanentes a tu precio objetivo, y deja que el sistema maneje el timing. La agregación de MERX asegura que siempre accedas a la mejor tasa disponible, y las órdenes permanentes capturan caídas de precios que la compra manual no puede.
 
-The mercado de energia rewards patience and automation. Operators who buy at market rate whenever they need energy pay more than those who set targets and wait for the market to come to them.
+El mercado de energía recompensa la paciencia y la automatización. Los operadores que compran a precio de mercado siempre que necesitan energía pagan más que aquellos que establecen objetivos y esperan a que el mercado venga hacia ellos.
 
-Analyze current market conditions at [https://merx.exchange](https://merx.exchange) or explore the price analytics API at [https://merx.exchange/docs](https://merx.exchange/docs).
+Analiza condiciones de mercado actuales en [https://merx.exchange](https://merx.exchange) o explora la API de análisis de precios en [https://merx.exchange/docs](https://merx.exchange/docs).
 
-## Try It Now with AI
+## Pruébalo Ahora con IA
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP -- cero instalación, sin API key necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -239,6 +239,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía de TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,43 +1,43 @@
-# Capraz Platform Entegrasyonu: Mevcut Yigininizdaki MERX
+# Çapraz Platform Entegrasyonu: MERX'i Mevcut Yığınınıza Ekleme
 
-Every technology stack is different. Your backend might be Node.js, Go, Python, Ruby, or Java. Your architecture might be monolithic or microservices. Your communication patterns might be synchronous, event-driven, or a combination. The question is not whether MERX can fit into your stack -- it is which integration point gives you the most value with the least friction.
+Her teknoloji yığını farklıdır. Arka ucunuz Node.js, Go, Python, Ruby ya da Java olabilir. Mimariniz monolitik veya mikroservis olabilir. İletişim kalıplarınız senkron, olay tabanlı veya bunların kombinasyonu olabilir. Soru, MERX'in yığının içine sığıp sığmayacağı değil -- hangi entegrasyon noktasının size en az frikiyon ile en yüksek değeri sağlayacağıdır.
 
-MERX offers five integration methods: REST API, WebSocket, webhooks, language SDKs, and an MCP server for AI agents. This article explains when to use each, how they interact, and how to choose the right approach for your specific architecture.
+MERX beş entegrasyon yöntemi sunar: REST API, WebSocket, webhook'lar, dil SDK'ları ve yapay zeka ajanları için bir MCP sunucusu. Bu makale her birinin ne zaman kullanılacağını, birbirleriyle nasıl etkileşime girdiklerini ve spesifik mimariniz için doğru yaklaşımı nasıl seçeceğinizi açıklar.
 
-## Integration Methods Overview
+## Entegrasyon Yöntemlerine Genel Bakış
 
-| Method | Best For | Direction | Latency | Language |
+| Yöntem | En İyi Kullanım | Yön | Gecikme | Dil |
 |---|---|---|---|---|
-| REST API | Request-response operations | Client -> MERX | ~200ms | Any |
-| WebSocket | Real-time price feeds | MERX -> Client | Real-time | Any |
-| Webhooks | Async notifications | MERX -> Client | Event-driven | Any |
-| JS SDK | Node.js / browser apps | Bidirectional | ~200ms | JavaScript/TypeScript |
-| Python SDK | Python backends, scripts | Bidirectional | ~200ms | Python |
-| MCP Server | AI agent integration | Bidirectional | ~500ms | Any (via MCP protocol) |
+| REST API | İstek-yanıt işlemleri | İstemci -> MERX | ~200ms | Herhangi |
+| WebSocket | Gerçek zamanlı fiyat akışları | MERX -> İstemci | Gerçek zamanlı | Herhangi |
+| Webhook'lar | Asenkron bildirimler | MERX -> İstemci | Olay tabanlı | Herhangi |
+| JS SDK | Node.js / tarayıcı uygulamaları | Çift yönlü | ~200ms | JavaScript/TypeScript |
+| Python SDK | Python arka uçları, scriptler | Çift yönlü | ~200ms | Python |
+| MCP Sunucusu | Yapay zeka ajanı entegrasyonu | Çift yönlü | ~500ms | Herhangi (MCP protokolü aracılığıyla) |
 
-## REST API: The Universal Integration
+## REST API: Evrensel Entegrasyon
 
-The REST API works from any programming language with HTTP support. It is the lowest-common-denominator integration -- if your language can make HTTP requests, it can talk to MERX.
+REST API, HTTP desteğine sahip herhangi bir programlama dilinden çalışır. En düşük ortak paydadır -- dil HTTP istekleri yapabilirse, MERX ile konuşabilir.
 
-### When to Use REST
+### REST Ne Zaman Kullanılır?
 
-- Your backend is in a language without an SDK (Go, Java, Ruby, Rust, PHP)
-- You need occasional energy purchases, not continuous interaction
-- Your architecture prefers explicit HTTP calls over persistent connections
-- You are prototyping and want the simplest possible integration
+- Arka ucunuz SDK'sı olmayan bir dilde (Go, Java, Ruby, Rust, PHP)
+- Sürekli etkileşim değil, ara sıra enerji satın almanıza ihtiyacınız var
+- Mimariniz kalıcı bağlantılardan ziyade açık HTTP çağrılarını tercih ediyor
+- Prototip oluşturuyor ve en basit entegrasyonu istiyorsunuz
 
-### Implementation
+### Uygulama
 
-The API follows standard REST conventions with JSON payloads:
+API, JSON yükleriyle standart REST kurallarını takip eder:
 
 ```bash
-# Check prices
+# Fiyatları kontrol et
 curl -X POST https://merx.exchange/api/v1/prices \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"energy_amount": 65000, "duration": "1h"}'
 
-# Place an order
+# Sipariş ver
 curl -X POST https://merx.exchange/api/v1/orders \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
@@ -48,12 +48,12 @@ curl -X POST https://merx.exchange/api/v1/orders \
     "target_address": "TYourAddress..."
   }'
 
-# Check order status
+# Sipariş durumunu kontrol et
 curl https://merx.exchange/api/v1/orders/ORDER_ID \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
-### Go Example
+### Go Örneği
 
 ```go
 package main
@@ -107,9 +107,9 @@ func getBestPrice(amount int, duration string) (*PriceResponse, error) {
 }
 ```
 
-### Hata Yonetimi
+### Hata İşleme
 
-All API errors follow a consistent format:
+Tüm API hataları tutarlı bir biçimi takip eder:
 
 ```json
 {
@@ -124,20 +124,20 @@ All API errors follow a consistent format:
 }
 ```
 
-This consistency means your error handling logic works the same regardless of which endpoint you call or which provider is involved behind the scenes.
+Bu tutarlılık, hata işleme mantığınızın hangi uç noktayı aradığınız veya arka planda hangi sağlayıcıdan yararlanılıyor olursa olsun aynı şekilde çalışacağı anlamına gelir.
 
-## WebSocket: Real-Time Price Feeds
+## WebSocket: Gerçek Zamanlı Fiyat Akışları
 
-WebSocket connections provide real-time price updates without polling. Prices stream to your application as they change across all seven providers.
+WebSocket bağlantıları, yoklama (polling) yapmadan gerçek zamanlı fiyat güncellemeleri sağlar. Fiyatlar, yedi sağlayıcının tümü arasında değiştikçe uygulamanıza akış halinde gelir.
 
-### When to Use WebSocket
+### WebSocket Ne Zaman Kullanılır?
 
-- You need live price displays (dashboards, trading interfaces)
-- Your application makes purchasing decisions based on price movements
-- You want to trigger actions when prices cross thresholds
-- You are building real-time monitoring tools
+- Canlı fiyat gösterimlerine (panolar, ticaret arayüzleri) ihtiyacınız var
+- Uygulamanız fiyat hareketlerine göre satın alma kararları veriyor
+- Fiyatlar eşikleri aştığında eylem tetiklemek istiyorsunuz
+- Gerçek zamanlı izleme araçları oluşturuyorsunuz
 
-### Implementation
+### Uygulama
 
 ```typescript
 import WebSocket from 'ws';
@@ -148,7 +148,7 @@ const ws = new WebSocket(
 );
 
 ws.on('open', () => {
-  // Subscribe to price updates for specific parameters
+  // Belirli parametreler için fiyat güncellemelerine abone ol
   ws.send(JSON.stringify({
     type: 'subscribe',
     channel: 'prices',
@@ -178,18 +178,18 @@ ws.on('message', (data) => {
 });
 ```
 
-### Combining WebSocket with REST
+### WebSocket'i REST ile Birleştirme
 
-A common pattern: use WebSocket for price monitoring and REST for order placement:
+Yaygın bir desen: fiyat izleme için WebSocket ve sipariş yerleştirme için REST:
 
 ```typescript
-// WebSocket monitors prices
+// WebSocket fiyatları izler
 ws.on('message', async (data) => {
   const event = JSON.parse(data.toString());
 
   if (event.type === 'price_update' &&
       event.price_sun <= targetPrice) {
-    // REST API places the order
+    // REST API siparişi yerleştirir
     const response = await fetch(
       'https://merx.exchange/api/v1/orders',
       {
@@ -209,18 +209,18 @@ ws.on('message', async (data) => {
 });
 ```
 
-## Webhooks: Async Event Notifications
+## Webhook'lar: Asenkron Olay Bildirimleri
 
-Webhooks push notifications to your server when events occur. Unlike WebSocket (which requires a persistent connection), webhooks work with any server that can receive HTTP POST requests.
+Webhook'lar, olaylar oluştuğunda sunucunuza bildirimleri gönderir. WebSocket'ten farklı olarak (kalıcı bir bağlantı gerektiren), webhook'lar HTTP POST isteklerini alabilen herhangi bir sunucuda çalışır.
 
-### When to Use Webhooks
+### Webhook'lar Ne Zaman Kullanılır?
 
-- Your architecture is event-driven (message queues, serverless functions)
-- You cannot maintain persistent WebSocket connections
-- You need reliable delivery with retries
-- You want to decouple energy procurement from transaction execution
+- Mimariniz olay tabanlı (mesaj kuyrukları, sunucusuz işlevler)
+- Kalıcı WebSocket bağlantılarını koruyamıyorsunuz
+- Yeniden denemelerle güvenilir teslimat istiyorsunuz
+- Enerji tedarikini işlem yürütmeden ayırmak istiyorsunuz
 
-### Implementation
+### Uygulama
 
 ```typescript
 import express from 'express';
@@ -249,14 +249,14 @@ app.post('/webhooks/merx', (req, res) => {
       break;
   }
 
-  // Always respond 200 to acknowledge receipt
+  // Teslimatı onaylamak için her zaman 200 ile yanıt ver
   res.status(200).json({ received: true });
 });
 
 async function handleOrderFilled(
   data: OrderFilledEvent
 ): Promise<void> {
-  // Energy is available -- proceed with the transaction
+  // Enerji kullanılabilir -- işleme devam et
   const pendingTx = await db.getPendingTransaction(
     data.order_id
   );
@@ -266,13 +266,13 @@ async function handleOrderFilled(
 }
 ```
 
-### Webhook Reliability
+### Webhook'ların Güvenilirliği
 
-MERX retries failed webhook deliveries with exponential backoff. Your endpoint should:
+MERX, başarısız webhook teslimatlarını üstel geri alma (exponential backoff) ile yeniden dener. Uç noktanız şunları yapmalıdır:
 
-1. Respond with 200 status quickly (within 5 seconds)
-2. Process the event asynchronously if processing takes time
-3. Handle duplicate deliveries idempotently (use the event ID for deduplication)
+1. 200 durumuyla hızlı yanıt ver (5 saniye içinde)
+2. İşleme zaman alıyorsa olayı asenkron olarak işle
+3. Yinelenen teslimatları idempotent olarak işle (yineleme kaldırmak için olay kimliğini kullan)
 
 ```typescript
 const processedEvents = new Set<string>();
@@ -280,7 +280,7 @@ const processedEvents = new Set<string>();
 app.post('/webhooks/merx', async (req, res) => {
   const event = req.body;
 
-  // Idempotency check
+  // İdempotentlik kontrolü
   if (processedEvents.has(event.id)) {
     res.status(200).json({ received: true });
     return;
@@ -288,26 +288,26 @@ app.post('/webhooks/merx', async (req, res) => {
 
   processedEvents.add(event.id);
 
-  // Acknowledge immediately
+  // Hemen onayla
   res.status(200).json({ received: true });
 
-  // Process asynchronously
+  // Asenkron olarak işle
   processEvent(event).catch(console.error);
 });
 ```
 
 ## JavaScript SDK
 
-The JavaScript/TypeScript SDK wraps the REST API and WebSocket connections with typed interfaces and convenience methods.
+JavaScript/TypeScript SDK, REST API ve WebSocket bağlantılarını yazılı arayüzler ve kolaylık yöntemleriyle sarmalanır.
 
-### When to Use the JS SDK
+### JS SDK Ne Zaman Kullanılır?
 
-- Your backend is Node.js or your frontend is browser-based
-- You want TypeScript types and IDE autocompletion
-- You prefer method calls over raw HTTP requests
-- You need both REST and WebSocket in one package
+- Arka ucunuz Node.js veya ön ucunuz tarayıcı tabanlı
+- TypeScript türleri ve IDE otomatik tamamlamayı istiyorsunuz
+- Ham HTTP isteklerinden ziyade yöntem çağrılarını tercih ediyorsunuz
+- Bir pakette hem REST hem WebSocket'e ihtiyacınız var
 
-### Implementation
+### Uygulama
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -316,20 +316,20 @@ const merx = new MerxClient({
   apiKey: process.env.MERX_API_KEY!
 });
 
-// Prices
+// Fiyatlar
 const prices = await merx.getPrices({
   energy_amount: 65000,
   duration: '1h'
 });
 
-// Orders
+// Siparişler
 const order = await merx.createOrder({
   energy_amount: 65000,
   duration: '1h',
   target_address: 'TAddress...'
 });
 
-// Standing orders
+// Sabit siparişler
 const standing = await merx.createStandingOrder({
   energy_amount: 65000,
   max_price_sun: 25,
@@ -337,7 +337,7 @@ const standing = await merx.createStandingOrder({
   repeat: true
 });
 
-// Energy estimation
+// Enerji tahmini
 const estimate = await merx.estimateEnergy({
   contract_address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
   function_selector: 'transfer(address,uint256)',
@@ -345,59 +345,59 @@ const estimate = await merx.estimateEnergy({
   owner_address: sender
 });
 
-// WebSocket (built into the SDK)
+// WebSocket (SDK'ya yerleştirilmiş)
 const ws = merx.connectWebSocket();
 ws.on('price_update', (data) => {
   console.log(`${data.provider}: ${data.price_sun} SUN`);
 });
 ```
 
-The SDK handles authentication, request serialization, error parsing, and type validation automatically.
+SDK kimlik doğrulama, istek serileştirme, hata ayrıştırma ve tür doğrulamasını otomatik olarak işler.
 
 ## Python SDK
 
-The Python SDK provides the same functionality for Python backends, data analysis pipelines, and automation scripts.
+Python SDK, Python arka uçları, veri analizi işlem hatları ve otomasyon scriptleri için aynı işlevselliği sağlar.
 
-### When to Use the Python SDK
+### Python SDK Ne Zaman Kullanılır?
 
-- Your backend is Python (Django, Flask, FastAPI)
-- You are building data analysis or reporting tools
-- Your DevOps scripts are in Python
-- You are integrating with Python-based trading bots
+- Arka ucunuz Python (Django, Flask, FastAPI)
+- Veri analizi veya raporlama araçları oluşturuyorsunuz
+- DevOps scriptleriniz Python'da
+- Python tabanlı ticaret botları ile entegrasyonunuz var
 
-### Implementation
+### Uygulama
 
 ```python
 from merx import MerxClient
 
 merx = MerxClient(api_key="your-api-key")
 
-# Get prices
+# Fiyatları al
 prices = merx.get_prices(
     energy_amount=65000,
     duration="1h"
 )
-print(f"Best: {prices.best.price_sun} SUN "
+print(f"En iyi: {prices.best.price_sun} SUN "
       f"via {prices.best.provider}")
 
-# Place order
+# Sipariş ver
 order = merx.create_order(
     energy_amount=65000,
     duration="1h",
     target_address="TAddress..."
 )
 
-# Estimate energy for a contract call
+# Bir kontrat çağrısı için enerji tahmin et
 estimate = merx.estimate_energy(
     contract_address="TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
     function_selector="transfer(address,uint256)",
     parameter=[recipient, amount],
     owner_address=sender
 )
-print(f"Energy needed: {estimate.energy_required}")
+print(f"Gerekli enerji: {estimate.energy_required}")
 ```
 
-### Data Analysis Example
+### Veri Analizi Örneği
 
 ```python
 import pandas as pd
@@ -405,7 +405,7 @@ from merx import MerxClient
 
 merx = MerxClient(api_key="your-api-key")
 
-# Pull price history for analysis
+# Analiz için fiyat tarihçesini çek
 history = merx.get_price_history(
     energy_amount=65000,
     duration="1h",
@@ -413,36 +413,36 @@ history = merx.get_price_history(
 )
 
 df = pd.DataFrame(history.prices)
-print(f"Average price: {df['price_sun'].mean():.1f} SUN")
-print(f"Min price: {df['price_sun'].min()} SUN")
-print(f"Max price: {df['price_sun'].max()} SUN")
-print(f"Std dev: {df['price_sun'].std():.1f} SUN")
+print(f"Ortalama fiyat: {df['price_sun'].mean():.1f} SUN")
+print(f"Minimum fiyat: {df['price_sun'].min()} SUN")
+print(f"Maksimum fiyat: {df['price_sun'].max()} SUN")
+print(f"Standart sapma: {df['price_sun'].std():.1f} SUN")
 ```
 
-## MCP Sunucusu: AI Agent Integration
+## MCP Sunucusu: Yapay Zeka Ajanı Entegrasyonu
 
-The MERX MCP (Model Context Protocol) server allows AI agents to interact with the TRON energy market directly. This is the newest integration point and enables a fundamentally different interaction model.
+MERX MCP (Model Context Protocol) sunucusu, yapay zeka ajanlarının TRON enerji piyasası ile doğrudan etkileşim kurmasını sağlar. Bu yeni entegrasyon noktası ve temelde farklı bir etkileşim modelini sağlar.
 
-### When to Use MCP
+### MCP Ne Zaman Kullanılır?
 
-- You are building AI agents that manage TRON operations
-- You want conversational energy management
-- You are using Claude, ChatGPT, or other LLMs with tool-use capabilities
-- You want to prototype energy strategies quickly through natural language
+- TRON işlemlerini yöneten yapay zeka ajanları oluşturuyorsunuz
+- Konuşsal enerji yönetimi istiyorsunuz
+- Claude, ChatGPT veya araç kullanımı özellikleriyle diğer LLM'ler kullanıyorsunuz
+- Doğal dil aracılığıyla enerji stratejilerini hızlı bir şekilde prototiplemeniz gerekiyor
 
-### How It Works
+### Nasıl Çalışır?
 
-The MCP server at [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) exposes MERX capabilities as tools that AI agents can call:
+[github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) adresindeki MCP sunucusu MERX yeteneklerini yapay zeka ajanlarının çağırabileceği araçlar olarak sunar:
 
-- `get_prices` -- Check current energy prices
-- `create_order` -- Purchase energy
-- `analyze_prices` -- Get price statistics
-- `estimate_energy` -- Simulate transaction energy needs
-- `check_resources` -- Check wallet energy balance
+- `get_prices` -- Geçerli enerji fiyatlarını kontrol et
+- `create_order` -- Enerji satın al
+- `analyze_prices` -- Fiyat istatistiklerini al
+- `estimate_energy` -- İşlem enerji gereksinimlerini simüle et
+- `check_resources` -- Cüzdan enerji bakiyesini kontrol et
 
-An AI agent can use these tools to answer questions like "What is the cheapest energy available right now?" or execute commands like "Buy 65,000 energy for my wallet at the best price."
+Bir yapay zeka ajanı bu araçları "Şu anda mevcut olan en ucuz enerji nedir?" gibi soruları yanıtlamak veya "65.000 enerji satın al en iyi fiyattan cüzdanım için" gibi komutları yürütmek için kullanabilir.
 
-### Integration
+### Entegrasyon
 
 ```json
 {
@@ -458,54 +458,55 @@ An AI agent can use these tools to answer questions like "What is the cheapest e
 }
 ```
 
-## Choosing the Right Integration
+## Doğru Entegrasyonu Seçmek
 
-### Decision Matrix
+### Karar Matrisi
 
-| Your Situation | Recommended Integration |
+| Durumunuz | Önerilen Entegrasyon |
 |---|---|
-| Quick prototype, any language | REST API |
-| Node.js backend | JS SDK |
-| Python backend | Python SDK |
-| Real-time price display | WebSocket |
-| Event-driven architecture | Webhooks |
-| Serverless (Lambda, Cloud Functions) | REST API + Webhooks |
-| AI agent building | MCP Server |
-| Go / Java / Ruby backend | REST API |
-| Full-featured application | JS/Python SDK + Webhooks |
+| Hızlı prototip, herhangi bir dil | REST API |
+| Node.js arka ucu | JS SDK |
+| Python arka ucu | Python SDK |
+| Gerçek zamanlı fiyat gösterimi | WebSocket |
+| Olay tabanlı mimari | Webhook'lar |
+| Sunucusuz (Lambda, Cloud Functions) | REST API + Webhook'lar |
+| Yapay zeka ajanı oluşturma | MCP Sunucusu |
+| Go / Java / Ruby arka ucu | REST API |
+| Tam özellikli uygulama | JS/Python SDK + Webhook'lar |
 
-### Combining Integration Points
+### Entegrasyon Noktalarını Birleştirme
 
-Most production systems use multiple integration methods:
+Çoğu üretim sistemi birden fazla entegrasyon yöntemini kullanır:
 
-- **SDK + Webhooks**: Use the SDK for outbound requests (prices, orders) and webhooks for inbound notifications (order filled, price alerts)
-- **WebSocket + REST**: Use WebSocket for monitoring and REST for actions
-- **REST + Webhooks**: The language-agnostic full-featured stack
-- **MCP + SDK**: AI agent for strategy, SDK for execution
+- **SDK + Webhook'lar**: Giden istekler için SDK'yı (fiyatlar, siparişler) ve gelen bildirimler için webhook'ları (sipariş dolduruldu, fiyat uyarıları) kullan
+- **WebSocket + REST**: İzleme için WebSocket ve eylemler için REST
+- **REST + Webhook'lar**: Dil agnostik tam özellikli yığın
+- **MCP + SDK**: Strateji için yapay zeka ajanı, yürütme için SDK
 
-## Migration Path
+## Geçiş Yolu
 
-If you are currently using a single provider's API, migrating to MERX is straightforward:
+Şu anda tek bir sağlayıcının API'sini kullanıyorsanız, MERX'e geçiş doğrudandır:
 
-1. **Add the MERX SDK** to your project
-2. **Replace price checks** with `merx.getPrices()` -- same data, more providers
-3. **Replace order placement** with `merx.createOrder()` -- same flow, best price routing
-4. **Add webhooks** for order notifications (if not already event-driven)
-5. **Remove old provider code** once MERX integration is verified
+1. **MERX SDK'sını** projenize ekle
+2. **Fiyat kontrolleri**, `merx.getPrices()` ile değiştir -- aynı veriler, daha fazla sağlayıcı
+3. **Sipariş yerleştirmeyi**, `merx.createOrder()` ile değiştir -- aynı akış, en iyi fiyat yönlendirmesi
+4. **Webhook'ları** sipariş bildirimleri için ekle (zaten olay tabanlı değilse)
+5. **Eski sağlayıcı kodunu** MERX entegrasyonu doğrulandıktan sonra kaldır
 
-The migration can be done incrementally. Run both systems in parallel during testing, comparing prices and order results before fully switching.
+Geçiş artımlı olarak yapılabilir. Testler sırasında her iki sistemi de çalıştır, tam olarak geçişten önce fiyatları ve sipariş sonuçlarını karşılaştır.
 
-## Sonuc
+## Sonuç
 
-MERX is designed to fit into any technology stack through the integration method that matches your architecture. REST for universality, WebSocket for real-time, webhooks for events, SDKs for developer experience, and MCP for AI agents.
+MERX, mimarinizle eşleşen entegrasyon yöntemi aracılığıyla herhangi bir teknoloji yığınına sığacak şekilde tasarlanmıştır. Evrensellik için REST, gerçek zamanlı için WebSocket, olaylar için webhook'lar, geliştirici deneyimi için SDK'lar ve yapay zeka ajanları için MCP.
 
-The choice is not exclusive -- combine integration points to match your needs. Start with the simplest option that solves your immediate problem, and expand as your requirements grow.
+Seçim münhasır değildir -- ihtiyaçlarınıza uyacak şekilde entegrasyon noktalarını birleştir. Acil sorununuzu çözen en basit seçenek ile başla ve gereksinimler büyüdükçe genişlet.
 
-API documentation at [https://merx.exchange/docs](https://merx.exchange/docs). MCP server at [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp). Platform at [https://merx.exchange](https://merx.exchange).
+[https://merx.exchange/docs](https://merx.exchange/docs) adresinde API belgeleri. [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) adresinde MCP sunucusu. Platform: [https://merx.exchange](https://merx.exchange).
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi Yapay Zeka ile Deneyin
+
+MERX'i Claude Desktop veya herhangi bir MCP uyumlu istemciye ekle -- yükleme yok, yalnızca okunur araçlar için API anahtarı gerekli değil:
 
 ```json
 {
@@ -517,6 +518,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Yapay zeka ajanınıza şunu sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,90 +1,90 @@
-# Saglayici Guvenilirligi: Calisma Suresi, Hiz ve Doldurma Oranlari Karsilastirmasi
+# Sağlayıcı Güvenilirliği: Çalışma Süresi, Hız ve Doldurma Oranları Karşılaştırması
 
-Price is the most visible metric when choosing a TRON energy provider. But price alone does not tell the full story. A provider quoting 22 SUN is worthless if the order takes 10 minutes to fill, fails 15% of the time, or the delegation drops before the stated duration expires.
+TRON enerji sağlayıcısı seçerken fiyat en görünür ölçümdür. Ancak fiyat tek başına tam resmi göstermez. 22 SUN'dan fiyat veren bir sağlayıcı, siparişin 10 dakika sürmesi, %15 oranında başarısız olması veya devri belirtilen süre sona ermeden bitmesi durumunda işe yaramaz.
 
-This article examines the reliability dimensions that matter beyond price: uptime, fill speed, fill rates, and consistency. It explains how MERX tracks these metrics across all seven providers and how aggregation fundamentally improves reliability compared to single-provider dependence.
+Bu makale fiyatın ötesinde önemli olan güvenilirlik boyutlarını incelemektedir: çalışma süresi, doldurma hızı, doldurma oranları ve tutarlılık. MERX'in bu metrikleri yedi sağlayıcı arasında nasıl takip ettiğini ve agregrasyonun tek sağlayıcıya bağımlılığa kıyasla güvenilirliği nasıl temel olarak iyileştirdiğini açıklar.
 
-## Why Reliability Matters
+## Güvenilirlik Neden Önemlidir
 
-For a one-off energy purchase, reliability is a minor concern. If your order fails, you try again. If it takes 5 minutes instead of 30 seconds, you wait.
+Tek seferlik bir enerji satın alımı için güvenilirlik küçük bir endişedir. Siparişiniz başarısız olursa, tekrar deneyin. 30 saniye yerine 5 dakika sürerse, bekleyin.
 
-For automated systems -- payment processors, trading bots, distribution services -- reliability is a critical operational parameter. A failed energy order can cascade into a failed transaction, which cascades into a failed payment, which costs real money and erodes user trust.
+Otomatikleştirilmiş sistemler -- ödeme işlemcileri, ticaret botları, dağıtım hizmetleri -- için güvenilirlik kritik bir operasyonel parametredir. Başarısız bir enerji siparişi başarısız bir işleme dönüşebilir, bu da başarısız bir ödemeye dönüşebilir ve gerçek para maliyeti ile kullanıcı güvenini azaltır.
 
-### The True Cost of Unreliability
+### Güvenilmezliğin Gerçek Maliyeti
 
-Consider a payment processor handling 500 USDT transfers per day. Each transfer requires energy. If the energy provider has a 95% fill rate (which sounds high), 5% of orders fail. That is 25 failed energy purchases per day.
+Günde 500 USDT transferi işleyen bir ödeme işlemcisini düşünün. Her transfer enerji gerektirir. Enerji sağlayıcısının %95 doldurma oranı varsa (bu yüksek görünüyor), siparişlerin %5'i başarısız olur. Bu günde 25 başarısız enerji satın almadır.
 
-Each failure triggers a fallback: either retry (adding latency), buy from an alternative (requiring multi-provider integration), or fall back to TRX burn (paying 5-10x more for that transaction).
+Her başarısızlık bir yedek hareketi tetikler: ya yeniden dene (gecikme ekler), alternatif kaynaktan satın al (çok sağlayıcılı entegrasyon gerektirir) ya da TRX yakımına geri dön (o işlem için 5-10 kat daha fazla öde).
 
-At 25 failures per day, the annual cost of a "95% reliable" provider includes:
+Günde 25 başarısızlıkta, "% 95 güvenilir" bir sağlayıcının yıllık maliyeti şunları içerir:
 
-- 9,125 failed orders requiring manual or automated intervention
-- Additional latency on affected transactions
-- Higher cost on fallback transactions
-- Engineering time to build and maintain retry/fallback logic
+- El ile veya otomatik müdahale gerektiren 9.125 başarısız sipariş
+- Etkilenen işlemlerde ek gecikme
+- Yedek işlemlerde daha yüksek maliyet
+- Yeniden deneme/yedek mantığını oluşturmak ve bakımını yapmak için mühendislik zamanı
 
-A 99.5% fill rate reduces those 25 daily failures to 2.5 -- a 10x improvement in operational smoothness.
+%99,5 doldurma oranı günlük 25 başarısızlığı 2,5'e düşürür -- operasyonel pürüzsüzlükte 10 katlı iyileşme.
 
-## Reliability Dimensions
+## Güvenilirlik Boyutları
 
-### Uptime
+### Çalışma Süresi
 
-Uptime measures the percentage of time a provider's API is responsive and accepting orders. This is the most basic reliability metric -- if the API is down, nothing else matters.
+Çalışma süresi, bir sağlayıcının API'sinin yanıt veriş ve sipariş kabul etmesi yüzdesini ölçer. Bu en temel güvenilirlik metriğidir -- API kapalıysa, başka hiçbir şey önemli değildir.
 
-Causes of downtime include:
+Kapalı kalma nedenleri şunlardır:
 
-- **Planned maintenance**: Scheduled API updates or infrastructure changes
-- **Infrastructure failures**: Server crashes, network issues, database problems
-- **Supply exhaustion**: Some providers go offline when their energy supply is depleted rather than returning "unavailable" responses
-- **Rate limiting**: Aggressive rate limits can effectively create downtime for high-volume users
+- **Planlı bakım**: Zamanlanmış API güncellemeleri veya altyapı değişiklikleri
+- **Altyapı arızaları**: Sunucu çökmesi, ağ sorunları, veritabanı sorunları
+- **Arz tükenmesi**: Bazı sağlayıcılar "kullanılamıyor" yanıtları döndürmek yerine enerji arzı tükendiğinde çevrimdışı gider
+- **Hız sınırlaması**: Agresif hız sınırları, yüksek hacimli kullanıcılar için etkili bir şekilde kapalı kalma oluşturabilir
 
-An individual provider might maintain 98-99% uptime, which sounds excellent until you calculate the implications: 1% downtime is 87 hours per year, or roughly 15 minutes per day.
+Bireysel bir sağlayıcı %98-99 çalışma süresini koruyabilir; bu mükemmel görünür, ancak sonuçları hesapladığınızda: %1 kapalı kalma yılda 87 saattir, kabaca günde 15 dakika.
 
-### Fill Speed
+### Doldurma Hızı
 
-Fill speed measures the time from order placement to energy delegation appearing on the target address. This varies significantly across providers:
+Doldurma hızı, sipariş yerleştirmeden hedef adrese enerji devri görünmesine kadar geçen zamanı ölçer. Bu sağlayıcılar arasında önemli ölçüde farklılık gösterir:
 
-- **Fast providers**: 10-30 seconds. The order is processed, the delegation transaction is broadcast, and the target address receives energy within half a minute.
-- **Moderate providers**: 30-120 seconds. Processing takes longer, possibly due to batch delegation or manual approval steps.
-- **Slow providers**: 2-10 minutes. Some providers, particularly P2P marketplaces, require matching with a seller before the delegation can occur.
+- **Hızlı sağlayıcılar**: 10-30 saniye. Sipariş işlenir, devir işlemi yayınlanır ve hedef adres yarım dakika içinde enerji alır.
+- **Orta sağlayıcılar**: 30-120 saniye. İşleme daha uzun sürer, muhtemelen toplu devir veya manuel onay adımları nedeniyle.
+- **Yavaş sağlayıcılar**: 2-10 dakika. Bazı sağlayıcılar, özellikle P2P pazaryerleri, devir gerçekleşmeden önce bir satıcıyla eşleştirilmeyi gerektirir.
 
-For time-sensitive operations (user-facing payments, trading bots), the difference between 15-second and 5-minute fills is operationally significant.
+Zaman duyarlı işlemler (kullanıcı karşılı ödemeler, ticaret botları) için 15 saniyelik ve 5 dakikalık doldurma arasındaki fark operasyonel olarak anlamlıdır.
 
-### Fill Rate
+### Doldurma Oranı
 
-Fill rate measures the percentage of orders that successfully complete. An order can fail for several reasons:
+Doldurma oranı, başarıyla tamamlanan siparişlerin yüzdesini ölçer. Bir sipariş birkaç nedenden dolayı başarısız olabilir:
 
-- **Insufficient supply**: The provider accepted the order but cannot fulfill it
-- **Delegation failure**: The on-chain delegation transaction fails
-- **Timeout**: The order is not filled within the expected timeframe
-- **Payment issues**: Internal payment processing fails
+- **Yetersiz arz**: Sağlayıcı siparişi kabul etti ancak yerine getiremedi
+- **Devir başarısızlığı**: Zincir üzerindeki devir işlemi başarısız olur
+- **Zaman aşımı**: Sipariş beklenen zaman içinde doldurulmaz
+- **Ödeme sorunları**: İç ödeme işleme başarısız olur
 
-Fill rates vary by provider and by order parameters. A provider might have a 99% fill rate for 65,000-energy orders but only 85% for 5,000,000-energy orders due to supply constraints.
+Doldurma oranları sağlayıcıya ve sipariş parametrelerine göre değişir. Bir sağlayıcı 65.000 enerji siparişleri için %99 doldurma oranına sahip olabilir, ancak arz kısıtlamaları nedeniyle 5.000.000 enerji siparişleri için yalnızca %85 oranına sahip olabilir.
 
-### Delegation Consistency
+### Devir Tutarlılığı
 
-Consistency measures whether the energy delegation persists for the full stated duration. A provider selling "1-hour" energy should maintain the delegation for a full 60 minutes, not 45 minutes.
+Tutarlılık, enerji devri belirtilen tam süre boyunca devam edip etmediğini ölçer. "1 saatlik" enerji satan bir sağlayıcı devrini tam 60 dakika boyunca korumakla yükümlüdür, 45 dakika değil.
 
-Some providers have been observed to:
+Bazı sağlayıcılar şu şekilde gözlemlenmiştir:
 
-- End delegations early (particularly during supply crunches)
-- Fail to extend delegations on longer-duration orders
-- Reduce delegated amounts mid-duration
+- Devir erken sonlandırma (özellikle arz sıkıntısı sırasında)
+- Daha uzun süreli siparişlerde devir uzatma başarısızlığı
+- Devredilen miktarları süre içinde azaltma
 
-These consistency issues are difficult for individual buyers to detect but have real cost implications -- if your 1-hour energy disappears after 40 minutes, transactions in the remaining 20 minutes burn TRX.
+Bu tutarlılık sorunları bireysel alıcılar tarafından tespit edilmesi zordur, ancak gerçek maliyet sonuçları vardır -- 1 saatlik eneriniz 40 dakika sonra kaybolursa, kalan 20 dakikada işlemler TRX yakar.
 
-## How MERX Tracks Provider Health
+## MERX Sağlayıcı Sağlığını Nasıl Takip Eder
 
-MERX maintains continuous monitoring across all seven providers, tracking metrics that individual buyers cannot practically measure on their own.
+MERX, yedi sağlayıcı genelinde sürekli izleme yaparak, bireysel alıcıların pratik olarak ölçemediği metrikleri takip eder.
 
-### Health Monitoring
+### Sağlık İzlemesi
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// Compare providers for your specific order profile
+// Belirli sipariş profiliniz için sağlayıcıları karşılaştırın
 const comparison = await merx.compareProviders({
   energy_amount: 65000,
   duration: '1h'
@@ -92,65 +92,65 @@ const comparison = await merx.compareProviders({
 
 for (const provider of comparison.providers) {
   console.log(`${provider.name}:`);
-  console.log(`  Price: ${provider.price_sun} SUN`);
-  console.log(`  Available: ${provider.available}`);
-  console.log(`  Avg fill time: ${provider.avg_fill_seconds}s`);
-  console.log(`  Fill rate: ${provider.fill_rate}%`);
+  console.log(`  Fiyat: ${provider.price_sun} SUN`);
+  console.log(`  Mevcut: ${provider.available}`);
+  console.log(`  Ort. doldurma zamanı: ${provider.avg_fill_seconds}s`);
+  console.log(`  Doldurma oranı: ${provider.fill_rate}%`);
 }
 ```
 
-### What MERX Measures
+### MERX Ne Ölçer
 
-For each provider, MERX tracks:
+Her sağlayıcı için MERX şunları takip eder:
 
-- **API response time**: How quickly the provider's API responds to queries
-- **Order fill time**: Time from order placement to confirmed delegation
-- **Fill rate**: Percentage of orders that complete successfully
-- **Price accuracy**: Whether the filled price matches the quoted price
-- **Duration compliance**: Whether delegations persist for the stated period
-- **Error patterns**: Types and frequency of errors
+- **API yanıt süresi**: Sağlayıcının API'sinin sorgulara ne kadar hızlı yanıt verdiği
+- **Sipariş doldurma süresi**: Sipariş yerleştirmeden onaylanan devrime kadar geçen zaman
+- **Doldurma oranı**: Başarıyla tamamlanan siparişlerin yüzdesi
+- **Fiyat doğruluğu**: Doldurulmuş fiyatın teklif edilen fiyatla eşleşip eşleşmediği
+- **Devir süresi uyumluluğu**: Devirlerin belirtilen süre boyunca devam edip etmediği
+- **Hata desenleri**: Hataların türleri ve sıklığı
 
-This data feeds into MERX's routing algorithm. When prices are equal between two providers, the more reliable one gets the order.
+Bu veriler MERX'in yönlendirme algoritmasına beslenebilir. Fiyatlar iki sağlayıcı arasında eşit olduğunda, daha güvenilir olan siparişi alır.
 
-## Aggregation and Reliability
+## Agregasyon ve Güvenilirlik
 
-The most powerful reliability benefit of aggregation is not any single metric improvement -- it is the elimination of single-provider dependency.
+Agregasyonun en güçlü güvenilirlik avantajı, herhangi bir tekil metrik iyileştirmesi değil -- tek sağlayıcıya bağımlılığın ortadan kaldırılmasıdır.
 
-### Single Provider Reliability Model
+### Tek Sağlayıcı Güvenilirlik Modeli
 
-With one provider at 99% uptime and 97% fill rate:
+%99 çalışma süresi ve %97 doldurma oranı ile bir sağlayıcıda:
 
-- Effective success rate: 99% x 97% = 96.03%
-- Annual failed orders (at 500 orders/day): 7,244
-- Monthly failed orders: 604
+- Etkili başarı oranı: 99% x 97% = %96,03
+- Yıllık başarısız siparişler (günde 500 sipariş): 7.244
+- Aylık başarısız siparişler: 604
 
-### Aggregated Reliability Model (7 providers)
+### Agrege Güvenilirlik Modeli (7 sağlayıcı)
 
-With MERX routing across seven providers, the system fails only when all providers simultaneously fail. Even if each provider individually has 99% uptime:
+MERX yedi sağlayıcı arasında yönlendirme yaparak, sistem yalnızca tüm sağlayıcılar aynı anda başarısız olduğunda başarısız olur. Her sağlayıcının bireysel olarak %99 çalışma süresine sahip olsa bile:
 
-- Probability of all 7 being down simultaneously: 0.01^7 = 10^-14 (effectively zero)
-- Effective uptime: essentially 100% (limited only by MERX's own infrastructure)
+- Tümünün aynı anda kapalı olma olasılığı: 0,01^7 = 10^-14 (etkili olarak sıfır)
+- Etkili çalışma süresi: esasen %100 (yalnızca MERX'in kendi altyapısı ile sınırlı)
 
-For fill rate, the aggregated model means that if the primary provider cannot fill an order, it routes to the next available provider automatically:
+Doldurma oranı için, agrege model, birincil sağlayıcı siparişi dolduramazsa, otomatik olarak bir sonraki mevcut sağlayıcıya yönlendirildiği anlamına gelir:
 
 ```
-Order placed
+Sipariş yerleştirildi
   |
   v
-Provider 1 (cheapest): order failed
+Sağlayıcı 1 (en ucuz): sipariş başarısız
   |
   v
-Provider 2: order filled at slightly higher price
+Sağlayıcı 2: sipariş biraz daha yüksek fiyattan dolduruldu
   |
   v
-Energy delegated to target address
+Enerji hedef adrese devredildi
 ```
 
-The buyer experiences a slightly higher price (the second-cheapest instead of the cheapest) but the order fills. Without aggregation, the same scenario results in a complete failure requiring manual intervention.
+Alıcı biraz daha yüksek bir fiyat yaşar (en ucuz yerine ikinci en ucuz) ancak sipariş doldurulur. Agregasyon olmadan, aynı senaryo el ile müdahale gerektiren tam başarısızlıkla sonuçlanır.
 
-### Failover Transparency
+### Yedek Şeffaflığı
 
-MERX's failover is transparent to the buyer. The API response indicates which provider filled the order, but the buyer's code does not need to handle provider-specific failure cases:
+MERX'in yedek devresi alıcıya şeffaftır. API yanıtı siparişi kimin doldurduğunu gösterir, ancak alıcının kodu sağlayıcıya özgü başarısızlık durumlarını işlemesi gerekmez:
 
 ```typescript
 const order = await merx.createOrder({
@@ -159,15 +159,15 @@ const order = await merx.createOrder({
   target_address: wallet
 });
 
-// order.provider tells you who filled it
-// Your code never needs to handle provider failures
-console.log(`Filled by: ${order.provider}`);
+// order.provider size kim doldurduğunu söyler
+// Kodunuz asla sağlayıcı hatalarını işlemesi gerekmez
+console.log(`Doldurduğu: ${order.provider}`);
 ```
 
-Compare this with manual failover:
+Bunu el ile yedek devreyle karşılaştırın:
 
 ```typescript
-// Without aggregation: manual failover is complex
+// Agregasyon olmadan: el ile yedek devreye karmaşık
 let filled = false;
 for (const provider of [providerA, providerB, providerC]) {
   try {
@@ -175,47 +175,47 @@ for (const provider of [providerA, providerB, providerC]) {
     filled = true;
     break;
   } catch (error) {
-    // Handle provider-specific error
-    // Different error format for each provider
-    // Different retry logic for each provider
+    // Sağlayıcıya özgü hatayı işle
+    // Her sağlayıcı için farklı hata biçimi
+    // Her sağlayıcı için farklı yeniden deneme mantığı
     continue;
   }
 }
 if (!filled) {
-  // All providers failed -- handle the crisis
+  // Tüm sağlayıcılar başarısız -- krizi işle
 }
 ```
 
-The aggregated approach eliminates this entire failover codebase.
+Agrege yaklaşım bu tüm yedek devreyi kaldırır.
 
-## Provider Reliability Characteristics
+## Sağlayıcı Güvenilirlik Özellikleri
 
-Based on general market observations (specific metrics vary over time):
+Genel pazar gözlemlerine dayalı (belirli metrikler zamanla değişir):
 
-### P2P Providers (TronSave)
+### P2P Sağlayıcılar (TronSave)
 
-- **Uptime**: Generally high (99%+)
-- **Fill speed**: Variable (30 seconds to several minutes depending on seller matching)
-- **Fill rate**: Lower for large orders (supply depends on active sellers)
-- **Consistency**: Generally good once delegation is established
+- **Çalışma süresi**: Genellikle yüksek (%99+)
+- **Doldurma hızı**: Değişken (satıcı eşleştirmesine bağlı olarak 30 saniye ila birkaç dakika)
+- **Doldurma oranı**: Büyük siparişler için daha düşük (arz aktif satıcılara bağlıdır)
+- **Tutarlılık**: Devir kurulduktan sonra genellikle iyi
 
-### Fixed-Price Providers (PowerSun)
+### Sabit Fiyatlı Sağlayıcılar (PowerSun)
 
-- **Uptime**: High (99%+)
-- **Fill speed**: Typically fast (15-60 seconds)
-- **Fill rate**: High for standard orders within supply limits
-- **Consistency**: Excellent -- fixed model incentivizes reliable delivery
+- **Çalışma süresi**: Yüksek (%99+)
+- **Doldurma hızı**: Tipik olarak hızlı (15-60 saniye)
+- **Doldurma oranı**: Arz sınırları içindeki standart siparişler için yüksek
+- **Tutarlılık**: Mükemmel -- sabit model güvenilir teslimatı teşvik eder
 
-### Dynamic Providers (Feee, Catfee, Netts, iTRX, Sohu)
+### Dinamik Sağlayıcılar (Feee, Catfee, Netts, iTRX, Sohu)
 
-- **Uptime**: Varies by provider (97-99.5%)
-- **Fill speed**: Generally moderate (15-90 seconds)
-- **Fill rate**: Varies, generally 95-99% for standard orders
-- **Consistency**: Generally good, occasional early delegation termination
+- **Çalışma süresi**: Sağlayıcıya göre değişir (%97-99,5)
+- **Doldurma hızı**: Genellikle orta (15-90 saniye)
+- **Doldurma oranı**: Değişken, standart siparişler için genellikle %95-99
+- **Tutarlılık**: Genellikle iyi, ara sıra erken devir sonlandırması
 
-## Building Reliability-Aware Systems
+## Güvenilirlik Farkında Sistemler Oluşturma
 
-For systems where reliability is paramount, combine MERX aggregation with application-level resilience:
+Güvenilirliğin en üst düzey olduğu sistemler için MERX agregasyonunu uygulama düzeyinde esneklik ile birleştirin:
 
 ```typescript
 async function reliableEnergyPurchase(
@@ -231,7 +231,7 @@ async function reliableEnergyPurchase(
         target_address: wallet
       });
 
-      // Wait for fill confirmation
+      // Doldurma onayı bekle
       const filled = await waitForFill(order.id, {
         timeout: 60000
       });
@@ -240,32 +240,32 @@ async function reliableEnergyPurchase(
         return order;
       }
 
-      // Order timed out -- MERX may have already routed
-      // to another provider internally
+      // Sipariş zaman aşımına uğradı -- MERX halihazırda
+      // başka bir sağlayıcıya dahili olarak yönlendirilmiş olabilir
 
     } catch (error) {
       if (attempt === maxAttempts) {
-        // Final fallback: accept TRX burn
+        // Son yedek: TRX yakımı kabul et
         console.warn(
-          'Energy purchase failed after all attempts. ' +
-          'Transaction will burn TRX.'
+          'Enerji satın alımı tüm denemelerden sonra başarısız oldu. ' +
+          'İşlem TRX yakacak.'
         );
         throw error;
       }
-      // Brief pause before retry
+      // Yeniden denemeden önce kısa ara
       await delay(2000 * attempt);
     }
   }
 
-  throw new Error('Energy purchase failed');
+  throw new Error('Enerji satın alımı başarısız');
 }
 ```
 
-Note that even the retry logic here is simpler than manual multi-provider failover because MERX handles the provider routing internally. Your retry logic only needs to handle the rare case where the aggregation layer itself encounters issues.
+Buradaki yeniden deneme mantığının el ile çok sağlayıcılı yedek devreden daha basit olduğuna dikkat edin çünkü MERX sağlayıcı yönlendirmesini dahili olarak işler. Yeniden deneme mantığınız yalnızca agregasyon katmanının kendisinin sorunlarla karşılaştığı nadir durumu işlemek gerekir.
 
-## Measuring Your Own Reliability
+## Kendi Güvenilirliğinizi Ölçme
 
-Track these metrics for your specific operations:
+Belirli operasyonlarınız için bu metrikleri takip edin:
 
 ```typescript
 interface ReliabilityMetrics {
@@ -275,26 +275,27 @@ interface ReliabilityMetrics {
   averageFillTimeMs: number;
   medianFillTimeMs: number;
   p95FillTimeMs: number;
-  trxBurnEvents: number; // Times energy was insufficient
+  trxBurnEvents: number; // Enerji yetersiz olduğu zaman
   providerDistribution: Record<string, number>;
 }
 ```
 
-Monitor these over time. If your fill rate drops or fill times increase, it may indicate market-wide supply issues, and you should adjust your purchasing strategy (higher price targets, earlier purchasing, larger buffers).
+Bunları zamanla izleyin. Doldurma oranınız düşerse veya doldurma süreleri artarsa, pazar çapında arz sorunları gösterebilir ve satın alma stratejinizi ayarlamalısınız (daha yüksek fiyat hedefleri, erken satın alma, daha büyük tamponlar).
 
-## Sonuc
+## Sonuç
 
-Provider reliability encompasses far more than whether the API responds. Fill speed, fill rate, delegation consistency, and failover capability all determine whether your energy procurement actually supports your operations or introduces failure points.
+Sağlayıcı güvenilirliği, API'nin yanıt verip vermediğinden çok daha fazlasını kapsar. Doldurma hızı, doldurma oranı, devir tutarlılığı ve yedek devreye alma yeteneği, enerji tedarikinizin gerçekten operasyonlarınızı destekleyip desteklemediğini veya başarısızlık noktaları oluşturup oluşturmadığını belirler.
 
-No single provider guarantees perfect reliability. The aggregation model does not guarantee perfection either, but it achieves near-perfect practical reliability by eliminating single-provider dependency. When seven providers back your energy supply, the probability of complete failure drops to essentially zero.
+Hiçbir tek sağlayıcı mükemmel güvenilirliği garantilemez. Agregasyon modeli de mükemmelliği garantilemez, ancak tek sağlayıcıya bağımlılığı ortadan kaldırarak neredeyse mükemmel pratik güvenilirliği elde eder. Yedi sağlayıcı enerji arzınıza destek olduğunda, tam başarısızlık olasılığı etkili olarak sıfıra düşer.
 
-For any automated system where transaction throughput matters, the reliability improvement from aggregation is as valuable as the price optimization -- and often more valuable, because a single critical failure at the wrong moment can cost more than years of price savings.
+İşlem veriminin önemli olduğu herhangi bir otomatikleştirilmiş sistem için, agregasyondan kaynaklanan güvenilirlik iyileştirmesi fiyat optimizasyonu kadar değerlidir -- ve genellikle daha değerlidir, çünkü yanlış anda meydana gelen tek bir kritik başarısızlık, yıllarca fiyat tasarrufundan daha maliyetli olabilir.
 
-Explore MERX's provider comparison tools at [https://merx.exchange/docs](https://merx.exchange/docs) or test the platform at [https://merx.exchange](https://merx.exchange).
+MERX'in sağlayıcı karşılaştırma araçlarını [https://merx.exchange/docs](https://merx.exchange/docs) adresinde keşfedin veya platformu [https://merx.exchange](https://merx.exchange) adresinde test edin.
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- kurulum yok, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -306,6 +307,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

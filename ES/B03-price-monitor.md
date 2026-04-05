@@ -1,31 +1,31 @@
-# Monitor de precios de MERX: como rastreamos cada proveedor cada 30 segundos
+# Monitor de Precios MERX: Cómo Rastreamos Cada Proveedor Cada 30 Segundos
 
-The monitor de precios is the heartbeat of MERX. Every 30 seconds, it reaches out to every integrated proveedor de energia, fetches their current pricing, normalizes the data, and publishes it to the rest of the system. Without it, enrutamiento al mejor precio would be guessing. With it, every order is routed to the cheapest available provider based on data no older than 30 seconds.
+El monitor de precios es el corazón de MERX. Cada 30 segundos, se conecta con cada proveedor de energía integrado, obtiene sus precios actuales, normaliza los datos y los publica al resto del sistema. Sin él, el enrutamiento de mejor precio sería adivinanza. Con él, cada orden se enruta al proveedor más económico disponible basado en datos no más antiguos que 30 segundos.
 
-This article is a technical deep-dive into the monitor de precios's architecture: how it polls providers, how the patron adaptador keeps the system extensible, how Redis pub/sub distributes price data in tiempo real, and how historial de precios powers analytics and decision-making.
-
----
-
-## Why 30 Seconds
-
-The intervalo de sondeo is a deliberate design choice. Energy prices on TRON do not change every second - they are not like spot forex or crypto libro de ordeness. Provider pricing typically shifts a few times per hour, sometimes less. A 30-second interval captures every meaningful price change while avoiding several problems:
-
-- **Provider API limite de velocidads**: most providers allow 1-2 requests per second. At 30-second intervals, we stay well within limits even with retries.
-- **Network overhead**: polling 7+ providers creates HTTP traffic. At 30 seconds, this is trivial. At 1 second, it would be substantial.
-- **Data freshness vs noise**: sub-30-second cambios de precios on mercado de energias are almost always noise, not signal. 30 seconds filters noise while capturing real movements.
-- **System resource usage**: the monitor de precios runs alongside other services. Aggressive polling would compete for CPU and memory without adding value.
-
-The TTL on cached prices is set to 60 seconds - twice the intervalo de sondeo. If a poll fails, the previous price remains valid for one more cycle before being expired. This prevents a single failed poll from removing a provider from the libro de ordenes.
+Este artículo es un análisis técnico profundo de la arquitectura del monitor de precios: cómo sondea a los proveedores, cómo el patrón adapter mantiene el sistema extensible, cómo Redis pub/sub distribuye datos de precios en tiempo real, y cómo el historial de precios potencia análisis y toma de decisiones.
 
 ---
 
-## The Adapter Pattern
+## Por Qué 30 Segundos
 
-Each proveedor de energia has a different API. Different endpoints, different authentication methods, different response formats, different codigo de errors. The monitor de precios uses the patron adaptador to isolate these differences from the core polling logic.
+El intervalo de sondeo es una decisión de diseño deliberada. Los precios de energía en TRON no cambian cada segundo - no son como el forex al contado o libros de órdenes de criptomonedas. El precio de los proveedores típicamente se desplaza algunas veces por hora, a veces menos. Un intervalo de 30 segundos captura cada cambio de precio significativo mientras evita varios problemas:
 
-### The Provider Interface
+- **Límites de velocidad de la API del proveedor**: la mayoría de los proveedores permiten 1-2 solicitudes por segundo. Con intervalos de 30 segundos, nos mantenemos bien dentro de los límites incluso con reintentos.
+- **Sobrecarga de red**: sondear 7+ proveedores genera tráfico HTTP. En 30 segundos, esto es trivial. En 1 segundo, sería sustancial.
+- **Frescura de datos vs ruido**: cambios de precio sub-30-segundos en mercados de energía son casi siempre ruido, no señal. 30 segundos filtra el ruido mientras captura movimientos reales.
+- **Uso de recursos del sistema**: el monitor de precios se ejecuta junto a otros servicios. El sondeo agresivo compediría por CPU y memoria sin añadir valor.
 
-Every provider adapter implements a common interface:
+El TTL en precios en caché se establece en 60 segundos - el doble del intervalo de sondeo. Si un sondeo falla, el precio anterior permanece válido para un ciclo más antes de expirar. Esto previene que un único sondeo fallido elimine un proveedor del libro de órdenes.
+
+---
+
+## El Patrón Adapter
+
+Cada proveedor de energía tiene una API diferente. Diferentes puntos de conexión, diferentes métodos de autenticación, diferentes formatos de respuesta, diferentes códigos de error. El monitor de precios usa el patrón adapter para aislar estas diferencias de la lógica de sondeo central.
+
+### La Interfaz del Proveedor
+
+Cada adaptador de proveedor implementa una interfaz común:
 
 ```typescript
 interface IEnergyProvider {
@@ -51,9 +51,9 @@ interface ProviderPriceResponse {
 }
 ```
 
-### A Provider Adapter
+### Un Adaptador de Proveedor
 
-Each provider gets its own adapter file. Aqui esta a simplified example of what a provider adapter looks like:
+Cada proveedor obtiene su propio archivo adaptador. Aquí hay un ejemplo simplificado de cómo se ve un adaptador de proveedor:
 
 ```typescript
 // providers/tronsave/index.ts
@@ -100,22 +100,22 @@ export class TronSaveProvider implements IEnergyProvider {
 }
 ```
 
-### Adding a New Provider
+### Agregar un Nuevo Proveedor
 
-One of the key benefits of this architecture is that adding a new provider requires exactly one new file:
+Uno de los beneficios clave de esta arquitectura es que agregar un nuevo proveedor requiere exactamente un nuevo archivo:
 
-1. Create `providers/newprovider/index.ts` implementing `IEnergyProvider`.
-2. Register the provider in the configuration.
-3. The monitor de precios automatically starts polling it.
-4. The ejecutor de ordenes automatically includes it in routing decisions.
+1. Crear `providers/newprovider/index.ts` implementando `IEnergyProvider`.
+2. Registrar el proveedor en la configuración.
+3. El monitor de precios automáticamente comienza a sondearlo.
+4. El ejecutor de órdenes automáticamente lo incluye en decisiones de enrutamiento.
 
-No changes to the monitor de precios, no changes to the ejecutor de ordenes, no changes to the API. The patron adaptador ensures that provider-specific complexity is encapsulated.
+Sin cambios al monitor de precios, sin cambios al ejecutor de órdenes, sin cambios a la API. El patrón adapter asegura que la complejidad específica del proveedor esté encapsulada.
 
 ---
 
-## The Polling Loop
+## El Bucle de Sondeo
 
-The monitor de precios's core loop is straightforward but carefully designed for reliability:
+El bucle central del monitor de precios es directo pero cuidadosamente diseñado para confiabilidad:
 
 ```typescript
 class PriceMonitor {
@@ -192,21 +192,21 @@ class PriceMonitor {
 }
 ```
 
-### Key Design Decisions
+### Decisiones de Diseño Clave
 
-**Promise.allSettled, not Promise.all**: A single provider failure must not block updates from other providers. `allSettled` ensures every provider is polled independently.
+**Promise.allSettled, no Promise.all**: Un fallo de un solo proveedor no debe bloquear actualizaciones de otros proveedores. `allSettled` asegura que cada proveedor sea sondeado independientemente.
 
-**60-second TTL**: If a provider fails to respond for two consecutive cycles (60 seconds), its cached price expires automatically. The ejecutor de ordenes will not route to a provider with no cached price.
+**TTL de 60 segundos**: Si un proveedor falla al responder durante dos ciclos consecutivos (60 segundos), su precio en caché expira automáticamente. El ejecutor de órdenes no enrutará a un proveedor sin precio en caché.
 
-**Health metrics alongside prices**: Every poll records tiempo de respuesta and success/failure. This data feeds into the routing algorithm's reliability scoring.
+**Métricas de salud junto a precios**: Cada sondeo registra tiempo de respuesta y éxito/fallo. Estos datos alimentan la puntuación de confiabilidad del algoritmo de enrutamiento.
 
 ---
 
-## Redis Pub/Sub Distribution
+## Distribución de Redis Pub/Sub
 
-The monitor de precios does not serve prices directly to API consumers. Instead, it publishes to Redis, and other services subscribe to the updates they need.
+El monitor de precios no sirve precios directamente a consumidores de API. En cambio, publica a Redis, y otros servicios se suscriben a las actualizaciones que necesitan.
 
-### Channel Structure
+### Estructura de Canales
 
 ```
 Channel: price-updates
@@ -219,18 +219,18 @@ Channel: provider-health
   -> Health status changes (consumed by admin dashboard)
 ```
 
-### Why Pub/Sub Instead of Direct Calls
+### Por Qué Pub/Sub en Lugar de Llamadas Directas
 
-The monitor de precios and the API service are separate processes (separate Docker containers, in fact). They communicate exclusively through Redis - no direct imports, no function calls, no shared memory. This isolation means:
+El monitor de precios y el servicio de API son procesos separados (contenedores Docker separados, de hecho). Se comunican exclusivamente a través de Redis - sin importaciones directas, sin llamadas a funciones, sin memoria compartida. Este aislamiento significa:
 
-- The monitor de precios can be restarted without affecting the API.
-- The API can scale horizontally (multiple instances) and all receive the same actualizacion de precioss.
-- A bug in the monitor de precios cannot crash the API service.
-- Each service can be deployed independently.
+- El monitor de precios puede reiniciarse sin afectar la API.
+- La API puede escalar horizontalmente (múltiples instancias) y todas reciben las mismas actualizaciones de precios.
+- Un error en el monitor de precios no puede bloquear el servicio de API.
+- Cada servicio puede desplegarse independientemente.
 
-### WebSocket Broadcast
+### Transmisión WebSocket
 
-The API service subscribes to the `price-updates` channel and broadcasts updates to connected WebSocket clients:
+El servicio de API se suscribe al canal `price-updates` y transmite actualizaciones a clientes WebSocket conectados:
 
 ```
 Price Monitor -> Redis pub/sub -> API Service -> WebSocket -> Client
@@ -238,13 +238,13 @@ Price Monitor -> Redis pub/sub -> API Service -> WebSocket -> Client
 Latency: ~5ms from provider response to client notification
 ```
 
-Clients subscribing to the WebSocket feed receive actualizacion de precioss in near tiempo real, enabling live dashboards and responsive trading interfaces.
+Los clientes suscritos al flujo WebSocket reciben actualizaciones de precios casi en tiempo real, habilitando paneles en vivo e interfaces de trading responsivas.
 
 ---
 
-## Price History Storage
+## Almacenamiento de Historial de Precios
 
-Every price data point is stored in PostgreSQL for historical analysis. The schema captures the full price snapshot:
+Cada punto de datos de precio se almacena en PostgreSQL para análisis histórico. El esquema captura la instantánea de precio completa:
 
 ```sql
 CREATE TABLE price_history (
@@ -263,9 +263,9 @@ CREATE INDEX idx_price_history_provider_time
   ON price_history(provider, recorded_at DESC);
 ```
 
-### Data Volume
+### Volumen de Datos
 
-At 30-second intervals across 7 providers:
+A intervalos de 30 segundos en 7 proveedores:
 
 ```
 7 providers x 2 polls/minute x 60 minutes x 24 hours = 20,160 rows/day
@@ -273,11 +273,11 @@ Monthly: ~604,800 rows
 Yearly: ~7,257,600 rows
 ```
 
-Each row is small (roughly 100 bytes), so annual storage is under 1 GB. PostgreSQL handles this volume trivially with appropriate indexing.
+Cada fila es pequeña (aproximadamente 100 bytes), así que el almacenamiento anual es menos de 1 GB. PostgreSQL maneja este volumen trivialmente con indexación apropiada.
 
-### Analytics Queries
+### Consultas de Análisis
 
-The historial de precios enables several valuable analyses:
+El historial de precios habilita varios análisis valiosos:
 
 ```sql
 -- Average price by provider over the last 24 hours
@@ -300,15 +300,15 @@ GROUP BY hour
 ORDER BY hour;
 ```
 
-These queries power the MERX historial de precios API endpoint and the admin dashboard.
+Estas consultas potencian el punto de conexión de API del historial de precios de MERX y el panel de administración.
 
 ---
 
-## Handling Edge Cases
+## Manejo de Casos Especiales
 
-### Provider Returns Invalid Data
+### El Proveedor Devuelve Datos Inválidos
 
-The monitor de precios validates every response before caching:
+El monitor de precios valida cada respuesta antes de almacenarla en caché:
 
 ```typescript
 function validatePrice(price: ProviderPriceResponse): boolean {
@@ -327,34 +327,34 @@ function validatePrice(price: ProviderPriceResponse): boolean {
 }
 ```
 
-Invalid data is logged and discarded. The previous valid price remains in cache until it expires naturally.
+Los datos inválidos se registran y se descartan. El precio válido anterior permanece en caché hasta que expira naturalmente.
 
-### Provider API Changes
+### Cambios en la API del Proveedor
 
-Provider APIs change occasionally - new fields, deprecated endpoints, modified response formats. Because each provider has its own adapter, API changes are isolated to a single file. The adapter is updated, tested, and deployed without touching any other part of the system.
+Las APIs del proveedor cambian ocasionalmente - nuevos campos, puntos de conexión deprecados, formatos de respuesta modificados. Porque cada proveedor tiene su propio adaptador, los cambios de API están aislados a un solo archivo. El adaptador se actualiza, se prueba y se implementa sin tocar ninguna otra parte del sistema.
 
-### Network Partitions
+### Particiones de Red
 
-If the monitor de precios loses network connectivity, all provider polls fail simultaneously. The 60-second TTL ensures that cached prices expire within a minute, and the ejecutor de ordenes stops routing to all providers. When connectivity is restored, the next poll cycle repopulates the cache automatically.
+Si el monitor de precios pierde conectividad de red, todos los sondeos del proveedor fallan simultáneamente. El TTL de 60 segundos asegura que los precios en caché expiren dentro de un minuto, y el ejecutor de órdenes detiene el enrutamiento a todos los proveedores. Cuando la conectividad se restaura, el siguiente ciclo de sondeo repuebla el caché automáticamente.
 
-### Clock Drift
+### Desfase de Reloj
 
-The monitor de precios runs on a single server, so clock drift between services is not a concern for relative timing. Timestamps in historial de precios use `NOW()` from PostgreSQL, ensuring consistency. For absolute timestamps in API responses, the server runs NTP.
-
----
-
-## Monitoring the Monitor
-
-The monitor de precios itself is monitored through several mechanisms:
-
-- **Health endpoint**: the service exposes a `/health` endpoint that reports the last successful poll time for each provider.
-- **Alerting**: if no successful actualizacion de precios has been published for 5 minutes, an alert is triggered.
-- **Metrics**: poll count, success rate, average tiempo de respuesta, and cache hit rate are tracked.
-- **Logs**: every poll result (success or failure) is logged with structured JSON for analysis.
+El monitor de precios se ejecuta en un solo servidor, así que el desfase de reloj entre servicios no es una preocupación para tiempos relativos. Las marcas de tiempo en historial de precios usan `NOW()` de PostgreSQL, asegurando consistencia. Para marcas de tiempo absolutas en respuestas de API, el servidor ejecuta NTP.
 
 ---
 
-## Performance Characteristics
+## Monitoreo del Monitor
+
+El monitor de precios mismo se monitorea a través de varios mecanismos:
+
+- **Punto de conexión de salud**: el servicio expone un punto de conexión `/health` que reporta la última hora de sondeo exitosa para cada proveedor.
+- **Alertas**: si ninguna actualización de precio exitosa ha sido publicada durante 5 minutos, se dispara una alerta.
+- **Métricas**: el recuento de sondeos, tasa de éxito, tiempo de respuesta promedio, y tasa de acierto de caché se rastrean.
+- **Registros**: cada resultado de sondeo (éxito o fallo) se registra con JSON estructurado para análisis.
+
+---
+
+## Características de Rendimiento
 
 ```
 Typical poll cycle (7 providers):
@@ -366,25 +366,26 @@ Typical poll cycle (7 providers):
   CPU usage: < 2% average
 ```
 
-The monitor de precios is intentionally lightweight. It does one thing - fetch and distribute prices - and does it efficiently. The 30-second interval means the service is idle 90% of the time, leaving resources available for the more compute-intensive ejecutor de ordenes and API services.
+El monitor de precios es intencionalmente ligero. Hace una cosa - obtener y distribuir precios - y la hace eficientemente. El intervalo de 30 segundos significa que el servicio está inactivo el 90% del tiempo, dejando recursos disponibles para los servicios de ejecutor de órdenes y API más intensivos en cómputo.
 
 ---
 
-## Conclusion
+## Conclusión
 
-The monitor de precios is conceptually simple - poll providers, normalize data, publish updates. But the details matter. The patron adaptador makes adding providers trivial. Redis pub/sub decouples price collection from price consumption. 60-second TTLs automatically exclude stale data. Health metrics feed into routing decisions. And historial de precios enables analytics that help users make better decisions.
+El monitor de precios es conceptualmente simple - sondear proveedores, normalizar datos, publicar actualizaciones. Pero los detalles importan. El patrón adapter hace agregar proveedores trivial. Redis pub/sub desacopla la recopilación de precios del consumo de precios. Los TTLs de 60 segundos automáticamente excluyen datos obsoletos. Las métricas de salud alimentan decisiones de enrutamiento. Y el historial de precios habilita análisis que ayuda a usuarios a tomar mejores decisiones.
 
-Every price you see on MERX, every best-price recommendation, every automatic routing decision traces back to the monitor de precios's 30-second heartbeat. It is the foundation that makes aggregation possible.
+Cada precio que ves en MERX, cada recomendación de mejor precio, cada decisión de enrutamiento automático se remonta al latido de 30 segundos del monitor de precios. Es la fundación que hace posible la agregación.
 
-Explore precios en vivo y datos historicos en [https://merx.exchange](https://merx.exchange). Para acceso a la API, vea la documentacion en [https://merx.exchange/docs](https://merx.exchange/docs).
+Explora precios en vivo y datos históricos en [https://merx.exchange](https://merx.exchange). Para acceso a API, ver la documentación en [https://merx.exchange/docs](https://merx.exchange/docs).
 
 ---
 
-*Este articulo es parte de la serie tecnica de MERX. MERX es el primer exchange de recursos blockchain. Codigo fuente de los SDKs: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js), [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python).*
+*Este artículo es parte de la serie técnica de MERX. MERX es el primer intercambio de recursos blockchain. Código fuente para SDKs: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js), [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python).*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Agrega MERX a Claude Desktop o cualquier cliente compatible con MCP -- cero instalación, sin necesidad de clave API para herramientas de solo lectura:
 
 ```json
 {
@@ -396,6 +397,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía de TRON más barata ahora mismo?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

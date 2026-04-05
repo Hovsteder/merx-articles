@@ -1,16 +1,16 @@
-# API оценки стоимости energy MERX: узнайте стоимость до покупки
+# API оценки стоимости энергии MERX: узнайте стоимость перед покупкой
 
-Every TRON transaction consumes resources. A USDT transfer needs roughly 65,000 energy units. A smart contract approval burns around 15,000. A complex DeFi interaction might need 200,000 or more. The actual numbers depend on the contract, the operation, and current network parameters.
+Каждая транзакция TRON потребляет ресурсы. Передача USDT требует примерно 65 000 единиц энергии. Одобрение смарт-контракта сжигает около 15 000. Сложное DeFi взаимодействие может потребовать 200 000 или больше. Точные числа зависят от контракта, операции и текущих параметров сети.
 
-If you are building a product that handles TRON transactions on behalf of users - a wallet, a payment processor, a trading bot - you need to know the cost before you commit. How much energy is required? What will it cost to rent versus burn? How much does the user save?
+Если вы разрабатываете продукт, который обрабатывает транзакции TRON от имени пользователей — кошелек, платежный процессор, торговый бот — вам нужно знать стоимость перед тем, как взять на себя обязательство. Сколько энергии требуется? Какова будет стоимость аренды в сравнении со сжиганием? Сколько экономит пользователь?
 
-MERX provides two endpoints that answer these questions precisely: `POST /api/v1/estimate` for general cost estimation and `GET /api/v1/orders/preview` for order-specific cost preview. Together, they let you show users exact costs and savings before a single SUN changes hands.
+MERX предоставляет два endpoint'а, которые точно ответят на эти вопросы: `POST /api/v1/estimate` для общей оценки стоимости и `GET /api/v1/orders/preview` для предпросмотра стоимости конкретного заказа. Вместе они позволяют показать пользователям точные затраты и экономию до того, как изменится хотя бы один SUN.
 
-## Эндпоинт оценки
+## Endpoint оценки
 
-`POST /api/v1/estimate` calculates the energy and bandwidth requirements for a given transaction type and returns the cost comparison between renting energy through MERX and burning TRX at the protocol level.
+`POST /api/v1/estimate` вычисляет требования по энергии и bandwidth для определённого типа транзакции и возвращает сравнение стоимости между арендой энергии через MERX и сжиганием TRX на уровне протокола.
 
-### Basic Request
+### Базовый запрос
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/estimate \
@@ -22,7 +22,7 @@ curl -X POST https://merx.exchange/api/v1/estimate \
   }'
 ```
 
-### Response Format
+### Формат ответа
 
 ```json
 {
@@ -60,22 +60,22 @@ curl -X POST https://merx.exchange/api/v1/estimate \
 }
 ```
 
-The response tells you everything you need to know for a transaction cost decision:
+Ответ содержит всё необходимое для принятия решения о затратах на транзакцию:
 
-- **energy_required** - how much energy the operation needs. For a standard TRC-20 transfer, this is approximately 65,000 units, though the exact number depends on the contract and target address state.
-- **bandwidth_required** - how much bandwidth the transaction uses. Most simple transfers need 300-400 bandwidth points. New accounts (activating an address for the first time) need more.
-- **costs.burn** - what it costs if the user does nothing and lets the protocol burn TRX. This is the "default" cost.
-- **costs.rental** - the cheapest available rental option through MERX. Includes the provider, per-unit price, total cost, and rental duration.
-- **costs.savings** - the difference between burn and rental, expressed as absolute TRX saved, percentage saved, and USD equivalent.
-- **address_resources** - current energy and bandwidth on the target address. If the address already has energy from staking or a previous delegation, the deficit is reduced accordingly.
+- **energy_required** — сколько энергии требуется для операции. Для стандартной передачи TRC-20 это примерно 65 000 единиц, хотя точное число зависит от контракта и состояния целевого адреса.
+- **bandwidth_required** — сколько bandwidth использует транзакция. Большинство простых передач требуют 300–400 пунктов bandwidth. Новые аккаунты (активация адреса в первый раз) требуют больше.
+- **costs.burn** — какова стоимость, если пользователь ничего не делает и позволяет протоколу сжечь TRX. Это «стандартная» стоимость.
+- **costs.rental** — самый дешёвый доступный вариант аренды через MERX. Включает провайдера, цену за единицу, общую стоимость и длительность аренды.
+- **costs.savings** — разница между сжиганием и арендой, выраженная как абсолютный сэкономленный TRX, сэкономленный процент и эквивалент в USD.
+- **address_resources** — текущая энергия и bandwidth на целевом адресе. Если адрес уже имеет энергию от стейкинга или предыдущего делегирования, дефицит уменьшается соответственно.
 
-### Supported Operations
+### Поддерживаемые операции
 
-The `operation` field accepts several predefined types that cover the most common TRON transactions:
+Поле `operation` принимает несколько предопределённых типов, охватывающих наиболее распространённые транзакции TRON:
 
 #### trc20_transfer
 
-The standard TRC-20 token transfer. This is the most common operation - sending USDT, USDC, or any other TRC-20 token from one address to another.
+Стандартная передача токена TRC-20. Это наиболее распространённая операция — отправка USDT, USDC или любого другого токена TRC-20 с одного адреса на другой.
 
 ```json
 {
@@ -84,11 +84,11 @@ The standard TRC-20 token transfer. This is the most common operation - sending 
 }
 ```
 
-Energy required: approximately 64,895 units for USDT on a standard transfer (address already activated with a USDT balance). First-time transfers to an address that has never held the token cost more - up to 100,000 energy - because the contract must create a new storage slot.
+Требуемая энергия: примерно 64 895 единиц для USDT при стандартной передаче (адрес уже активирован с балансом USDT). Первые передачи на адрес, который никогда не владел токеном, требуют больше — до 100 000 энергии — потому что контракт должен создать новый слот хранилища.
 
 #### trc20_approve
 
-The TRC-20 approval transaction, used to allow a smart contract to spend tokens on your behalf. Required before interacting with DEX contracts, lending protocols, and most DeFi applications.
+Транзакция одобрения TRC-20, используется для разрешения смарт-контракту тратить токены от вашего имени. Требуется перед взаимодействием с контрактами DEX, протоколами кредитования и большинством DeFi приложений.
 
 ```json
 {
@@ -97,11 +97,11 @@ The TRC-20 approval transaction, used to allow a smart contract to spend tokens 
 }
 ```
 
-Energy required: approximately 15,000-18,000 units, significantly less than a transfer.
+Требуемая энергия: примерно 15 000–18 000 единиц, значительно меньше, чем при передаче.
 
 #### trx_transfer
 
-A simple TRX transfer. These primarily consume bandwidth, not energy, but the estimation endpoint handles them for completeness.
+Простая передача TRX. Эти операции в основном потребляют bandwidth, а не энергию, но endpoint оценки обрабатывает их для полноты.
 
 ```json
 {
@@ -110,11 +110,11 @@ A simple TRX transfer. These primarily consume bandwidth, not energy, but the es
 }
 ```
 
-Energy required: 0 (TRX transfers do not consume energy). Bandwidth required: approximately 270 bytes.
+Требуемая энергия: 0 (передачи TRX не потребляют энергию). Требуемый bandwidth: примерно 270 байт.
 
 #### custom
 
-For smart contract calls that do not fit the predefined types. Provide the contract address and function selector, and MERX estimates the energy consumption by simulating the call.
+Для вызовов смарт-контрактов, которые не подходят к предопределённым типам. Предоставьте адрес контракта и селектор функции, и MERX оценит потребление энергии путём симуляции вызова.
 
 ```json
 {
@@ -131,20 +131,20 @@ For smart contract calls that do not fit the predefined types. Provide the contr
 }
 ```
 
-The custom operation runs a simulation against the TRON network to determine the actual energy and bandwidth consumption. This is the most accurate method for non-standard transactions but takes slightly longer (200-500ms versus 50ms for predefined types).
+Операция custom запускает симуляцию против сети TRON для определения фактического потребления энергии и bandwidth. Это наиболее точный метод для нестандартных транзакций, но занимает немного больше времени (200–500 мс в сравнении с 50 мс для предопределённых типов).
 
-## Эндпоинт предварительного просмотра ордера
+## Endpoint предпросмотра заказа
 
-While `POST /estimate` gives you resource requirements and cost comparisons, `GET /api/v1/orders/preview` shows you exactly what a MERX order would look like - including which provider would be selected, the exact debit from your balance, and any applicable fees.
+Хотя `POST /estimate` даёт вам требования к ресурсам и сравнение затрат, `GET /api/v1/orders/preview` показывает вам точный вид заказа MERX — включая то, какой провайдер будет выбран, точный расход из вашего баланса и любые применяемые сборы.
 
-### Request
+### Запрос
 
 ```bash
 curl "https://merx.exchange/api/v1/orders/preview?energy_amount=65000&target_address=TTargetAddressHere&duration_hours=1" \
   -H "X-API-Key: your_api_key"
 ```
 
-### Response
+### Ответ
 
 ```json
 {
@@ -179,36 +179,36 @@ curl "https://merx.exchange/api/v1/orders/preview?energy_amount=65000&target_add
 }
 ```
 
-The preview includes:
+Предпросмотр включает:
 
-- **provider** - which provider MERX would route the order to at current prices.
-- **subtotal_sun** - the raw cost of energy at the provider's rate.
-- **fee_sun** - the MERX platform fee.
-- **total_sun** - the total amount that would be debited from your balance.
-- **balance_after_sun** - your balance after the order, so you can verify affordability.
-- **estimated_fill_time_seconds** - how long the delegation typically takes with this provider.
-- **alternatives** - other providers that could fill the order, sorted by price. Useful for showing users their options.
+- **provider** — какому провайдеру MERX маршрутизировала бы заказ при текущих ценах.
+- **subtotal_sun** — чистая стоимость энергии по ставке провайдера.
+- **fee_sun** — комиссия платформы MERX.
+- **total_sun** — общая сумма, которая будет снята с вашего баланса.
+- **balance_after_sun** — ваш баланс после заказа, чтобы вы могли проверить возможность.
+- **estimated_fill_time_seconds** — как долго обычно длится делегирование у этого провайдера.
+- **alternatives** — другие провайдеры, которые могли бы выполнить заказ, отсортированные по цене. Полезно для показа пользователям их вариантов.
 
-### Difference Between Estimate and Preview
+### Разница между Estimate и Preview
 
-| Feature | POST /estimate | GET /orders/preview |
-|---------|---------------|-------------------|
-| Purpose | General cost analysis | Exact order planning |
-| Auth required | Yes | Yes |
-| Shows savings vs burn | Yes | No |
-| Shows your balance | No | Yes |
-| Shows platform fees | No | Yes |
-| Shows alternatives | No | Yes |
-| Shows address resources | Yes | No |
-| Supports custom contracts | Yes | No |
+| Функция | POST /estimate | GET /orders/preview |
+|---------|---|---|
+| Назначение | Общий анализ стоимости | Точное планирование заказа |
+| Требуется авторизация | Да | Да |
+| Показывает экономию vs сжигание | Да | Нет |
+| Показывает ваш баланс | Нет | Да |
+| Показывает комиссии платформы | Нет | Да |
+| Показывает альтернативы | Нет | Да |
+| Показывает ресурсы адреса | Да | Нет |
+| Поддерживает пользовательские контракты | Да | Нет |
 
-Use `estimate` when you need to tell a user "this transaction will cost X if you burn TRX, or Y if you rent energy - saving you Z percent." Use `preview` when the user has decided to buy energy and you want to show the exact order before they confirm.
+Используйте `estimate`, когда нужно рассказать пользователю: «эта транзакция будет стоить X, если вы сожжёте TRX, или Y, если вы арендуете энергию — экономя Z процентов». Используйте `preview`, когда пользователь решил купить энергию и вы хотите показать точный заказ перед подтверждением.
 
-## Real-World Examples with Numbers
+## Примеры из реальной жизни с числами
 
-### Example 1: USDT Payment Processor
+### Пример 1: Обработчик платежей USDT
 
-You run a payment processor that sends USDT to merchants. Before each payout, you estimate the cost:
+Вы управляете обработчиком платежей, который отправляет USDT торговцам. Перед каждой выплатой вы оцениваете стоимость:
 
 ```javascript
 import { MerxClient } from 'merx-sdk';
@@ -237,7 +237,7 @@ async function estimatePayoutCost(senderAddress) {
 }
 ```
 
-Typical output:
+Типичный результат:
 
 ```
 Energy needed: 64895
@@ -246,11 +246,11 @@ Rental cost: 1.43 TRX
 Savings: 94.8%
 ```
 
-At current prices, renting energy almost always saves more than 90 percent compared to burning.
+При текущих ценах аренда энергии почти всегда экономит более 90 процентов в сравнении со сжиганием.
 
-### Example 2: Wallet Cost Display
+### Пример 2: Отображение стоимости в кошельке
 
-You build a TRON wallet and want to show the user the transaction cost before they confirm a send:
+Вы разрабатываете кошелек TRON и хотите показать пользователю стоимость транзакции перед подтверждением отправки:
 
 ```python
 from merx_sdk import MerxClient
@@ -284,7 +284,7 @@ def get_transfer_cost(sender_address: str, token: str = "usdt") -> dict:
     }
 ```
 
-The wallet UI can display something like:
+Интерфейс кошелька может отображать примерно следующее:
 
 ```
 Send 100 USDT to TRecipient...
@@ -297,9 +297,9 @@ Transaction cost:
 [ Rent Energy and Send ]    [ Send Without Energy ]
 ```
 
-### Example 3: Batch Transfer Cost Projection
+### Пример 3: Прогноз стоимости массовой передачи
 
-You need to send USDT to 500 addresses and want to know the total cost upfront:
+Вам нужно отправить USDT на 500 адресов и вы хотите узнать общую стоимость заранее:
 
 ```javascript
 async function estimateBatchCost(addresses) {
@@ -342,7 +342,7 @@ async function estimateBatchCost(addresses) {
 }
 ```
 
-For 500 transfers at current market rates:
+Для 500 передач при текущих рыночных ставках:
 
 ```
 Batch size: 500 transfers
@@ -352,11 +352,11 @@ Cost with MERX: 715.00 TRX
 Total savings: 12,970.00 TRX
 ```
 
-At approximately 0.08 USD per TRX, that is a savings of over 1,000 USD on a single batch.
+При примерно 0,08 USD за TRX это экономия более 1000 USD на одной партии.
 
-### Example 4: Custom Contract Call Estimation
+### Пример 4: Оценка вызова пользовательского контракта
 
-You interact with a custom staking contract and need to estimate the cost of a `stake()` call:
+Вы взаимодействуете с пользовательским контрактом стейкинга и нужно оценить стоимость вызова `stake()`:
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/estimate \
@@ -376,27 +376,27 @@ curl -X POST https://merx.exchange/api/v1/estimate \
   }'
 ```
 
-The response includes the simulated energy consumption, which for a complex staking contract might be 120,000 to 200,000 units - significantly more than a simple transfer.
+Ответ включает смоделированное потребление энергии, которое для сложного контракта стейкинга может быть 120 000–200 000 единиц — значительно больше, чем при простой передаче.
 
-## Integrating Estimates into Order Flow
+## Интеграция оценок в поток заказов
 
-The estimation and preview endpoints fit naturally into a user-facing order flow:
+Endpoints оценки и предпросмотра естественно встраиваются в ориентированный на пользователя процесс заказов:
 
-1. **User initiates a transaction** (e.g., send USDT).
-2. **Call POST /estimate** to get energy requirements and cost comparison.
-3. **Display burn cost versus rental cost** with savings percentage.
-4. **User chooses to rent energy.**
-5. **Call GET /orders/preview** to show exact order details with fees.
-6. **User confirms.**
-7. **Call POST /orders** with an idempotency key to create the order.
-8. **Poll or wait for webhook** confirming energy delegation.
-9. **Execute the original transaction** with the delegated energy.
+1. **Пользователь инициирует транзакцию** (например, отправка USDT).
+2. **Вызовите POST /estimate** для получения требований по энергии и сравнения затрат.
+3. **Отобразите стоимость сжигания в сравнении со стоимостью аренды** с процентом экономии.
+4. **Пользователь выбирает аренду энергии.**
+5. **Вызовите GET /orders/preview** для отображения точных деталей заказа с комиссиями.
+6. **Пользователь подтверждает.**
+7. **Вызовите POST /orders** с ключом идемпотентности для создания заказа.
+8. **Опрашивайте или ожидайте вебхука**, подтверждающего делегирование энергии.
+9. **Выполните исходную транзакцию** с делегированной энергией.
 
-Steps 2-3 are informational. No money moves. The user sees transparent pricing before committing. This builds trust and reduces support requests from users surprised by costs.
+Шаги 2–3 информационные. Деньги не движутся. Пользователь видит прозрачное ценообразование перед тем, как взять обязательство. Это строит доверие и сокращает поддержку запросов от пользователей, удивлённых затратами.
 
 ## Обработка ошибок
 
-Both endpoints return standard MERX error responses:
+Оба endpoints возвращают стандартные ошибочные ответы MERX:
 
 ```json
 {
@@ -410,38 +410,39 @@ Both endpoints return standard MERX error responses:
 }
 ```
 
-Common errors:
+Распространённые ошибки:
 
-| Code | Cause | Resolution |
-|------|-------|-----------|
-| `INVALID_ADDRESS` | Target address fails TRON address validation | Verify the address format (T-prefix, base58) |
-| `INVALID_OPERATION` | Unrecognized operation type | Use one of: trc20_transfer, trc20_approve, trx_transfer, custom |
-| `SIMULATION_FAILED` | Custom contract call simulation failed | Check contract address and function selector |
-| `NO_PROVIDERS` | No providers available for the required energy amount | Try again later or reduce the energy amount |
-| `INSUFFICIENT_BALANCE` | Balance too low for the previewed order (preview only) | Deposit more TRX to your MERX account |
+| Код | Причина | Решение |
+|---|---|---|
+| `INVALID_ADDRESS` | Целевой адрес не прошёл проверку валидности адреса TRON | Проверьте формат адреса (префикс T, base58) |
+| `INVALID_OPERATION` | Неизвестный тип операции | Используйте один из: trc20_transfer, trc20_approve, trx_transfer, custom |
+| `SIMULATION_FAILED` | Симуляция вызова пользовательского контракта не удалась | Проверьте адрес контракта и селектор функции |
+| `NO_PROVIDERS` | Нет доступных провайдеров для требуемого количества энергии | Повторите попытку позже или уменьшите количество энергии |
+| `INSUFFICIENT_BALANCE` | Баланс слишком низок для предпросмотренного заказа (только preview) | Пополните свой счёт MERX |
 
-## Вопросы кэширования
+## Соображения по кэшированию
 
-Estimation results are valid for a short window. Energy prices change as providers adjust rates, and network parameters can shift the burn cost. For most use cases:
+Результаты оценки действительны в течение короткого периода. Цены на энергию меняются по мере того, как провайдеры корректируют ставки, и параметры сети могут сдвинуть стоимость сжигания. Для большинства случаев:
 
-- **Cache estimates for 30-60 seconds** if you are displaying costs in a UI. Prices do not change faster than MERX polls providers (every 30 seconds).
-- **Always fetch a fresh preview** immediately before order creation. The preview reflects the exact cost at that moment.
-- **Do not cache custom contract simulations** if the contract state changes frequently. The simulation result depends on on-chain state at the time of execution.
+- **Кэшируйте оценки на 30–60 секунд**, если вы отображаете затраты в интерфейсе. Цены не меняются быстрее, чем MERX опрашивает провайдеров (каждые 30 секунд).
+- **Всегда получайте свежий предпросмотр** непосредственно перед созданием заказа. Предпросмотр отражает точную стоимость в этот момент.
+- **Не кэшируйте симуляции пользовательских контрактов**, если состояние контракта часто меняется. Результат симуляции зависит от состояния в сети на момент выполнения.
 
 ## Заключение
 
-The estimation and preview endpoints remove the guesswork from TRON energy purchasing. Instead of renting a fixed amount of energy and hoping it is enough, you know exactly how much you need. Instead of accepting whatever price is available, you see every option ranked by cost.
+Endpoints оценки и предпросмотра убирают неопределённость из покупки энергии TRON. Вместо аренды фиксированного количества энергии и надежды, что этого будет достаточно, вы знаете ровно столько, сколько вам нужно. Вместо принятия любой доступной цены вы видите каждый вариант, отранжированный по стоимости.
 
-For developers building products on TRON, these endpoints transform energy from an unpredictable cost into a known, optimizable line item. Check the cost, show the savings, let the user decide, then execute with confidence.
+Для разработчиков, создающих продукты на TRON, эти endpoints преобразуют энергию из непредсказуемой стоимости в известный, оптимизируемый элемент. Проверьте стоимость, покажите экономию, позвольте пользователю решить, затем выполняйте с уверенностью.
 
 - Платформа MERX: [merx.exchange](https://merx.exchange)
 - Полная документация API: [merx.exchange/docs](https://merx.exchange/docs)
 - JavaScript SDK: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 - Python SDK: [github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любого MCP-совместимого клиента — нулевая установка, ключ API не требуется для инструментов только для чтения:
 
 ```json
 {
@@ -453,6 +454,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите у вашего AI агента: «Какова самая дешёвая энергия TRON прямо сейчас?» и получайте живые цены от всех подключённых провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

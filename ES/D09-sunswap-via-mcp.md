@@ -1,16 +1,16 @@
-# SunSwap via MCP: agentes de IA operando en un DEX
+# SunSwap a través de MCP: Agentes de IA operando en un DEX
 
-## The Missing Bridge
+## El Puente Faltante
 
-Decentralized exchanges have been accessible through web interfaces, mobile wallets, and programmatic SDKs for years. What they have not been accessible through is natural language. An AI agent cannot click a swap button. It cannot navigate a web UI. And while an agent can technically call a contrato inteligente through raw transaction construction, doing so requires the agent to understand ABI encoding, router contract addresses, liquidity pool mechanics, and the TRON modelo de recursos.
+Los intercambios descentralizados han sido accesibles a través de interfaces web, billeteras móviles y SDK programáticos durante años. Lo que no ha sido accesible es el lenguaje natural. Un agente de IA no puede hacer clic en un botón de intercambio. No puede navegar una interfaz web. Y aunque un agente técnicamente puede llamar a un contrato inteligente mediante la construcción de transacciones sin procesar, esto requiere que el agente entienda la codificación ABI, las direcciones del contrato enrutador, la mecánica de los fondos de liquidez y el modelo de recursos de TRON.
 
-MERX bridges this gap. Through the MCP server, an AI agent can request a swap quote, understand the expected output and costs, and execute the trade - all through structured tool calls that abstract away the protocol-level complexity while preserving full transparency into what is happening en cadena.
+MERX cierra esta brecha. A través del servidor MCP, un agente de IA puede solicitar una cotización de intercambio, entender el resultado esperado y los costos, y ejecutar la operación, todo mediante llamadas de herramientas estructuradas que abstraen la complejidad a nivel de protocolo mientras preservan total transparencia en lo que está sucediendo en la cadena.
 
-This article covers the complete SunSwap integration: getting quotes, executing swaps, handling approvals, simulating costo de energias, and understanding the real numbers from mainnet trades.
+Este artículo cubre la integración completa de SunSwap: obtener cotizaciones, ejecutar intercambios, manejar aprobaciones, simular costos de energía y entender los números reales de operaciones en la red principal.
 
-## Getting a Swap Quote
+## Obtener una Cotización de Intercambio
 
-The first step in any trade is understanding what you will get. The `get_swap_quote` tool queries SunSwap V2's router contract to calculate the expected output for a given input:
+El primer paso en cualquier operación es entender qué obtendrás. La herramienta `get_swap_quote` consulta el contrato enrutador de SunSwap V2 para calcular el resultado esperado para una entrada dada:
 
 ```
 Tool: get_swap_quote
@@ -43,42 +43,42 @@ Response:
 }
 ```
 
-Several important details in this response:
+Varios detalles importantes en esta respuesta:
 
-### Price Impact
+### Impacto de Precio
 
-The `price_impact` field shows how much your trade moves the pool price. For the 0.1 TRX trade above, the impact is 0.001% - negligible. For larger trades, this number grows:
-
-```
-0.1 TRX swap:      0.001% impact
-1,000 TRX swap:    0.012% impact
-100,000 TRX swap:  1.2% impact
-1,000,000 TRX swap: 11.8% impact
-```
-
-Price impact is not a fee - it is a structural consequence of constant-product AMM mechanics. The larger your trade relative to the pool's liquidity, the worse your execution price.
-
-### Minimum Received
-
-The `minimum_received` field accounts for slippage protection. By default, MERX calculates a 1% slippage tolerance, meaning the swap will revert if the output is more than 1% below the quoted amount. This protects against front-running and rapid price movements between the quote and the execution.
-
-### Route
-
-The `route` field shows the token path. For TRX to USDT, the route passes through WTRX (Wrapped TRX) because SunSwap V2 pairs are between TRC20 tokens, and native TRX must be wrapped first. For token-to-token swaps without a direct pair, the route may include intermediate tokens:
+El campo `price_impact` muestra cuánto tu operación mueve el precio del fondo. Para el intercambio de 0,1 TRX anterior, el impacto es de 0,001%, negligible. Para operaciones más grandes, este número crece:
 
 ```
-Token A -> WTRX -> Token B  (two-hop route)
+Intercambio de 0,1 TRX:      0,001% impacto
+Intercambio de 1.000 TRX:    0,012% impacto
+Intercambio de 100.000 TRX:  1,2% impacto
+Intercambio de 1.000.000 TRX: 11,8% impacto
 ```
 
-Multi-hop routes consume more energy due to additional contract interactions.
+El impacto de precio no es una tarifa, es una consecuencia estructural de la mecánica AMM de producto constante. Cuanto mayor sea tu operación en relación con la liquidez del fondo, peor será tu precio de ejecución.
 
-### Energy Required
+### Mínimo Recibido
 
-This is the exact energy estimate from `triggerConstantContract` simulation. Not a hardcoded constant, not a range - the precise unidad de energias this specific swap will consume with these specific parameters at the current blockchain state.
+El campo `minimum_received` tiene en cuenta la protección contra deslizamiento. Por defecto, MERX calcula una tolerancia de deslizamiento del 1%, lo que significa que el intercambio se revertirá si el resultado es más del 1% por debajo de la cantidad cotizada. Esto protege contra front-running y movimientos rápidos de precios entre la cotización y la ejecución.
 
-## Executing the Swap
+### Ruta
 
-Once the agent has reviewed the quote and decided to proceed, the `execute_swap` tool handles the entire execution pipeline:
+El campo `route` muestra la ruta de tokens. Para TRX a USDT, la ruta pasa a través de WTRX (TRX envuelto) porque los pares de SunSwap V2 están entre tokens TRC20, y TRX nativo debe ser envuelto primero. Para intercambios de token a token sin un par directo, la ruta puede incluir tokens intermedios:
+
+```
+Token A -> WTRX -> Token B  (ruta de dos saltos)
+```
+
+Las rutas de múltiples saltos consumen más energía debido a interacciones adicionales con contratos.
+
+### Energía Requerida
+
+Esta es la estimación exacta de energía de la simulación `triggerConstantContract`. No es una constante codificada, no es un rango, es las unidades de energía precisas que este intercambio específico consumirá con estos parámetros específicos en el estado actual de la cadena de bloques.
+
+## Ejecutar el Intercambio
+
+Una vez que el agente ha revisado la cotización y decidido continuar, la herramienta `execute_swap` maneja el flujo de ejecución completo:
 
 ```
 Tool: execute_swap
@@ -110,64 +110,64 @@ Response:
 }
 ```
 
-### What Happens Inside execute_swap
+### Qué Sucede Dentro de execute_swap
 
-The `execute_swap` tool orchestrates the full resource-aware transaction pipeline:
+La herramienta `execute_swap` orquesta el flujo de transacción completo consciente de recursos:
 
-1. **Simulate the swap** - `triggerConstantContract` with the exact swap parameters to get the precise requisito de energia (223,354 in this case)
+1. **Simular el intercambio** - `triggerConstantContract` con los parámetros exactos del intercambio para obtener el requisito de energía preciso (223.354 en este caso)
 
-2. **Check current resources** - Query the sender's address for available energy and bandwidth
+2. **Verificar recursos actuales** - Consultar la dirección del remitente para obtener energía disponible y bandwidth
 
-3. **Purchase energy deficit** - Find the best provider price, place the order, and wait for delegation confirmation
+3. **Comprar déficit de energía** - Encontrar el mejor precio del proveedor, hacer el pedido y esperar la confirmación de delegación
 
-4. **Build the swap transaction** - Construct the SunSwap V2 router call with the correct function selector, parameters, and call value
+4. **Construir la transacción de intercambio** - Construir la llamada al enrutador de SunSwap V2 con el selector de función correcto, parámetros y valor de llamada
 
-5. **Sign locally** - The clave privada signs the transaction on the agent's machine
+5. **Firmar localmente** - La clave privada firma la transacción en la máquina del agente
 
-6. **Broadcast** - The signed transaction is sent to the TRON network
+6. **Difundir** - La transacción firmada se envía a la red TRON
 
-7. **Verify** - Poll for transaction confirmation and parse the result
+7. **Verificar** - Encuestar la confirmación de transacción y analizar el resultado
 
-The agent calls one tool. Seven steps execute behind the scenes. The agent receives a single response with the complete result.
+El agente llama a una herramienta. Siete pasos se ejecutan detrás de escenas. El agente recibe una sola respuesta con el resultado completo.
 
-## Token Approvals
+## Aprobaciones de Tokens
 
-When swapping TRC20 tokens (as opposed to swapping native TRX), the SunSwap router needs permission to spend tokens on your behalf. This is the standard TRC20 `approve` mechanism.
+Al intercambiar tokens TRC20 (en lugar de intercambiar TRX nativo), el enrutador de SunSwap necesita permiso para gastar tokens en tu nombre. Este es el mecanismo estándar de TRC20 `approve`.
 
-MERX handles this automatically. Before executing a TRC20-to-TRC20 or TRC20-to-TRX swap, the execute_swap tool checks whether the router contract has sufficient allowance for the input token:
+MERX maneja esto automáticamente. Antes de ejecutar un intercambio TRC20 a TRC20 o TRC20 a TRX, la herramienta execute_swap verifica si el contrato enrutador tiene una asignación suficiente para el token de entrada:
 
 ```
-Approval check:
+Verificación de aprobación:
   Token: USDT (TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t)
-  Spender: SunSwap V2 Router (TKzxdSv2FZKQrEkFPRQi4qeCokAFkrntVM)
-  Current allowance: 0
-  Required: 100,000,000 (100 USDT)
+  Gastador: Enrutador SunSwap V2 (TKzxdSv2FZKQrEkFPRQi4qeCokAFkrntVM)
+  Asignación actual: 0
+  Requerida: 100.000.000 (100 USDT)
 
-  -> Approval needed
+  -> Aprobación necesaria
 ```
 
-If approval is needed, MERX:
+Si se necesita aprobación, MERX:
 
-1. Simulates the approval transaction to get its costo de energia
-2. Adds the approval energy to the swap energy for a combined purchase
-3. Executes the approval transaction first
-4. Waits for confirmation
-5. Then executes the swap
+1. Simula la transacción de aprobación para obtener su costo de energía
+2. Agrega la energía de aprobación a la energía del intercambio para una compra combinada
+3. Ejecuta la transacción de aprobación primero
+4. Espera la confirmación
+5. Luego ejecuta el intercambio
 
 ```
-Combined energy requirement:
-  Approval: 46,312 energy
-  Swap: 223,354 energy
-  Total: 269,666 energy
+Requisito de energía combinada:
+  Aprobación: 46.312 energía
+  Intercambio: 223.354 energía
+  Total: 269.666 energía
 
-  Purchased: 270,000 energy at 14.20 TRX
+  Comprada: 270.000 energía a 14,20 TRX
 ```
 
-The agent does not need to know about approvals. If one is needed, it happens. If the token is already approved, the step is skipped.
+El agente no necesita saber sobre aprobaciones. Si se necesita una, sucede. Si el token ya está aprobado, el paso se omite.
 
-### Approval Amount
+### Cantidad de Aprobación
 
-By default, MERX approves the maximum uint256 value (unlimited approval). Esto significa future swaps of the same token will not require another approval transaction, saving energy and time. If the agent prefers exact approvals (approving only the specific amount needed), this can be specified:
+Por defecto, MERX aprueba el valor máximo uint256 (aprobación ilimitada). Esto significa que futuros intercambios del mismo token no requerirán otra transacción de aprobación, ahorrando energía y tiempo. Si el agente prefiere aprobaciones exactas (aprobar solo la cantidad específica necesaria), esto puede especificarse:
 
 ```
 Tool: approve_trc20
@@ -178,164 +178,164 @@ Input: {
 }
 ```
 
-Exact approvals are more secure (limit exposure if the router contract is compromised) but cost energy on every swap.
+Las aprobaciones exactas son más seguras (limitan la exposición si el contrato enrutador se ve comprometido) pero cuestan energía en cada intercambio.
 
-## Real Swap: 0.1 TRX to USDT
+## Intercambio Real: 0,1 TRX a USDT
 
-Aqui estan the complete details of a real mainnet swap executed through the MERX Servidor MCP:
+Aquí están los detalles completos de un intercambio real en la red principal ejecutado a través del servidor MERX MCP:
 
-### Pre-Swap State
+### Estado Previo al Intercambio
 
 ```
-Address: TWallet...
-TRX Balance: 523.456789 TRX
-USDT Balance: 0.00 USDT
-Energy Available: 0
-Bandwidth Available: 1,420 (free)
+Dirección: TWallet...
+Saldo TRX: 523,456789 TRX
+Saldo USDT: 0,00 USDT
+Energía Disponible: 0
+Bandwidth Disponible: 1.420 (libre)
 ```
 
-### Quote
+### Cotización
 
 ```
 get_swap_quote:
-  Input: 0.1 TRX (100,000 SUN)
-  Output: 0.032847 USDT
-  Price impact: 0.001%
-  Energy required: 223,354
-  Route: WTRX -> USDT
+  Entrada: 0,1 TRX (100.000 SUN)
+  Salida: 0,032847 USDT
+  Impacto de precio: 0,001%
+  Energía requerida: 223.354
+  Ruta: WTRX -> USDT
 ```
 
-### Execution
+### Ejecución
 
 ```
 execute_swap:
-  Energy purchased: 225,000 at 11.84 TRX (provider: sohu)
-  Delegation confirmed: 4.1 seconds
-  Approval: Not needed (TRX -> USDT, native TRX does not require approval)
-  Swap TX broadcast: 9c7b3a2f...
-  Swap TX confirmed: Block 58,234,892
+  Energía comprada: 225.000 a 11,84 TRX (proveedor: sohu)
+  Delegación confirmada: 4,1 segundos
+  Aprobación: No necesaria (TRX -> USDT, TRX nativo no requiere aprobación)
+  TX de intercambio difundida: 9c7b3a2f...
+  TX de intercambio confirmada: Bloque 58.234.892
 ```
 
-### Post-Swap State
+### Estado Posterior al Intercambio
 
 ```
-Address: TWallet...
-TRX Balance: 511.516789 TRX  (523.456789 - 0.1 swap - 11.84 energy)
-USDT Balance: 0.032847 USDT
-Energy Available: 1,646  (225,000 purchased - 223,354 used)
-Bandwidth Available: 1,000 (free, partially consumed by TX)
+Dirección: TWallet...
+Saldo TRX: 511,516789 TRX  (523,456789 - 0,1 intercambio - 11,84 energía)
+Saldo USDT: 0,032847 USDT
+Energía Disponible: 1.646  (225.000 comprada - 223.354 usada)
+Bandwidth Disponible: 1.000 (libre, parcialmente consumido por TX)
 ```
 
-### Cost Breakdown
+### Desglose de Costos
 
 ```
-Energy purchase:      11.84 TRX
-Swap input:            0.10 TRX
-Total spent:          11.94 TRX
+Compra de energía:       11,84 TRX
+Entrada de intercambio:   0,10 TRX
+Total gastado:           11,94 TRX
 
-Without energy purchase (TRX burn):
-  Swap energy burn:   ~53.00 TRX
-  Swap input:           0.10 TRX
-  Total:              ~53.10 TRX
+Sin compra de energía (quema de TRX):
+  Quema de energía de intercambio: ~53,00 TRX
+  Entrada de intercambio:           0,10 TRX
+  Total:                           ~53,10 TRX
 
-Savings:              41.16 TRX (77.5%)
+Ahorros:                 41,16 TRX (77,5%)
 ```
 
-## Price Impact Estimation
+## Estimación de Impacto de Precio
 
-For agents making larger trades, understanding price impact is critical. The `get_swap_quote` tool provides this estimate, but understanding how it is calculated helps agents make better decisions.
+Para agentes que realizan operaciones más grandes, entender el impacto de precio es crítico. La herramienta `get_swap_quote` proporciona esta estimación, pero entender cómo se calcula ayuda a los agentes a tomar mejores decisiones.
 
-SunSwap V2 uses the constant-product formula: `x * y = k`, where x and y are the token reserves in the pool. When you swap dx of token X for dy of token Y:
+SunSwap V2 usa la fórmula de producto constante: `x * y = k`, donde x e y son las reservas de tokens en el fondo. Cuando cambias dx de token X por dy de token Y:
 
 ```
 dy = y * dx / (x + dx)
 ```
 
-The effective price you receive (dy/dx) is always worse than the spot price (y/x) because your trade increases the supply of X and decreases the supply of Y.
+El precio efectivo que recibes (dy/dx) siempre es peor que el precio spot (y/x) porque tu operación aumenta la oferta de X y disminuye la oferta de Y.
 
-For a pool with 45 million TRX and 14.8 million USDT:
+Para un fondo con 45 millones de TRX y 14,8 millones de USDT:
 
 ```
-Spot price: 14,800,000 / 45,000,000 = 0.328889 USDT/TRX
+Precio spot: 14.800.000 / 45.000.000 = 0,328889 USDT/TRX
 
-Swap 100 TRX:
-  Output: 14,800,000 * 100 / (45,000,000 + 100) = 0.032888 USDT/TRX
-  Impact: 0.0003%
+Intercambio de 100 TRX:
+  Salida: 14.800.000 * 100 / (45.000.000 + 100) = 0,032888 USDT/TRX
+  Impacto: 0,0003%
 
-Swap 100,000 TRX:
-  Output: 14,800,000 * 100,000 / (45,000,000 + 100,000) = 32.797 USDT
-  Effective price: 0.32797 USDT/TRX
-  Impact: 0.28%
+Intercambio de 100.000 TRX:
+  Salida: 14.800.000 * 100.000 / (45.000.000 + 100.000) = 32.797 USDT
+  Precio efectivo: 0,32797 USDT/TRX
+  Impacto: 0,28%
 
-Swap 1,000,000 TRX:
-  Output: 14,800,000 * 1,000,000 / (45,000,000 + 1,000,000) = 321,739 USDT
-  Effective price: 0.32174 USDT/TRX
-  Impact: 2.17%
+Intercambio de 1.000.000 TRX:
+  Salida: 14.800.000 * 1.000.000 / (45.000.000 + 1.000.000) = 321.739 USDT
+  Precio efectivo: 0,32174 USDT/TRX
+  Impacto: 2,17%
 ```
 
-MERX includes this impact calculation in every quote so the agent can assess whether the trade size is appropriate for the available liquidity.
+MERX incluye el cálculo de este impacto en cada cotización para que el agente pueda evaluar si el tamaño de la operación es apropiado para la liquidez disponible.
 
-## Multi-Hop Swaps
+## Intercambios de Múltiples Saltos
 
-Not all token pairs have direct liquidity pools. For tokens that trade against WTRX but not against each other, SunSwap V2 routes through an intermediate token:
+No todos los pares de tokens tienen fondos de liquidez directa. Para tokens que operan contra WTRX pero no entre sí, SunSwap V2 enruta a través de un token intermedio:
 
 ```
 Token A -> WTRX -> Token B
 ```
 
-This requires two swap operations in a single transaction (handled by the router contract). Energy consumption is higher:
+Esto requiere dos operaciones de intercambio en una sola transacción (manejada por el contrato enrutador). El consumo de energía es mayor:
 
 ```
-Direct swap (e.g., TRX -> USDT): ~223,000 energy
-Two-hop swap (e.g., USDC -> USDT via WTRX): ~340,000 energy
-Three-hop swap: ~460,000 energy
+Intercambio directo (p. ej., TRX -> USDT): ~223.000 energía
+Intercambio de dos saltos (p. ej., USDC -> USDT vía WTRX): ~340.000 energía
+Intercambio de tres saltos: ~460.000 energía
 ```
 
-The `get_swap_quote` tool automatically finds the optimal route and reports the total requisito de energia for the complete path.
+La herramienta `get_swap_quote` encuentra automáticamente la ruta óptima e informa el requisito de energía total para la ruta completa.
 
-## Swap Strategies for Agents
+## Estrategias de Intercambio para Agentes
 
-### Dollar-Cost Averaging
+### Promedio de Costo en Dólares
 
-An agent tasked with accumulating USDT can use orden permanentes combined with swap execution:
-
-```
-Standing order:
-  Trigger: schedule "0 */4 * * *" (every 4 hours)
-  Action: Execute swap 100 TRX -> USDT at market price
-  Constraint: max 600 TRX/day
-```
-
-Six swaps per day, each for 100 TRX, smoothing out price volatility.
-
-### Threshold-Based Trading
+Un agente encargado de acumular USDT puede usar órdenes permanentes combinadas con ejecución de intercambios:
 
 ```
-Standing order:
-  Trigger: TRX/USDT price above 0.35
-  Action: Swap 1000 TRX -> USDT
-  Constraint: max 1 execution/day
+Orden permanente:
+  Disparador: programar "0 */4 * * *" (cada 4 horas)
+  Acción: Ejecutar intercambio 100 TRX -> USDT a precio de mercado
+  Restricción: máximo 600 TRX/día
 ```
 
-The agent sells TRX when the price is favorable, accumulating USDT for operational expenses.
+Seis intercambios por día, cada uno de 100 TRX, suavizando la volatilidad de precios.
 
-### Rebalancing
+### Operación Basada en Umbral
 
-An agent managing a portfolio can use intents to rebalance:
+```
+Orden permanente:
+  Disparador: Precio TRX/USDT por encima de 0,35
+  Acción: Intercambiar 1.000 TRX -> USDT
+  Restricción: máximo 1 ejecución/día
+```
+
+El agente vende TRX cuando el precio es favorable, acumulando USDT para gastos operativos.
+
+### Reequilibrio
+
+Un agente que gestiona una cartera puede usar intenciones para reequilibrar:
 
 ```
 execute_intent:
-  Step 1: Swap 500 TRX -> USDT (if TRX allocation > 60%)
-  Step 2: Swap 200 USDT -> TRX (if TRX allocation < 40%)
-  Resource strategy: batch_cheapest
+  Paso 1: Intercambiar 500 TRX -> USDT (si asignación de TRX > 60%)
+  Paso 2: Intercambiar 200 USDT -> TRX (si asignación de TRX < 40%)
+  Estrategia de recursos: batch_cheapest
 ```
 
-## Comparison: Raw TronWeb vs MERX MCP
+## Comparación: TronWeb sin Procesar vs MERX MCP
 
-### Raw TronWeb (without MERX)
+### TronWeb sin Procesar (sin MERX)
 
 ```javascript
-// 1. Estimate energy (manual)
+// 1. Estimar energía (manual)
 const estimation = await tronWeb.transactionBuilder.triggerConstantContract(
   routerAddress, 'swapExactETHForTokens(uint256,address[],address,uint256)',
   { callValue: 100000 },
@@ -345,16 +345,16 @@ const estimation = await tronWeb.transactionBuilder.triggerConstantContract(
    { type: 'uint256', value: deadline }],
   myAddr
 );
-// 2. Buy energy somewhere (separate integration)
-// 3. Wait for delegation (manual polling)
-// 4. Build swap transaction
-// 5. Sign
-// 6. Broadcast
-// 7. Verify
-// ~50 lines of code, multiple API integrations
+// 2. Comprar energía en algún lugar (integración separada)
+// 3. Esperar delegación (encuesta manual)
+// 4. Construir transacción de intercambio
+// 5. Firmar
+// 6. Difundir
+// 7. Verificar
+// ~50 líneas de código, múltiples integraciones API
 ```
 
-### MERX MCP (one tool call)
+### MERX MCP (una llamada de herramienta)
 
 ```
 Tool: execute_swap
@@ -364,43 +364,44 @@ Input: {
   "amount": "100000",
   "slippage": 1.0
 }
-// One call. Everything handled internally.
+// Una llamada. Todo manejado internamente.
 ```
 
-The agent does not need to know about router addresses, WTRX wrapping, ABI encoding, mercado de energias, delegation mechanics, or transaction construction. It expresses intent ("swap TRX for USDT") and receives a result.
+El agente no necesita saber sobre direcciones de enrutador, envolvimiento de WTRX, codificación ABI, mercados de energía, mecánica de delegación o construcción de transacciones. Expresa intención ("intercambiar TRX por USDT") y recibe un resultado.
 
-## Risks and Limitations
+## Riesgos y Limitaciones
 
-### Slippage
+### Deslizamiento
 
-Even with slippage protection, rapid price movements can cause swaps to revert. If the swap reverts, the energy used for the reverted transaction is lost (though the tokens are not). The agent can retry with a higher slippage tolerance or a smaller amount.
+Incluso con protección contra deslizamiento, los movimientos rápidos de precios pueden causar que los intercambios se reviertan. Si el intercambio se revierte, la energía utilizada para la transacción revertida se pierde (aunque los tokens no). El agente puede reintentar con una tolerancia de deslizamiento más alta o una cantidad menor.
 
-### MEV and Front-Running
+### MEV y Front-Running
 
-TRON's block production model is different from Ethereum's, and the MEV landscape is less developed. However, large swaps on SunSwap can still be front-run by sophisticated actors monitoring the mempool. For large trades, consider splitting into multiple smaller swaps across different blocks.
+El modelo de producción de bloques de TRON es diferente al de Ethereum, y el panorama de MEV es menos desarrollado. Sin embargo, los intercambios grandes en SunSwap todavía pueden ser adelantados por actores sofisticados que monitorean el mempool. Para operaciones grandes, considera dividir en múltiples intercambios más pequeños en diferentes bloques.
 
-### Liquidity
+### Liquidez
 
-SunSwap V2 liquidity varies significantly between token pairs. Major pairs (TRX/USDT, TRX/USDC) have deep liquidity. Smaller tokens may have thin pools where even moderate trades cause significant price impact. Always check the quote before executing.
+La liquidez de SunSwap V2 varía significativamente entre pares de tokens. Los pares principales (TRX/USDT, TRX/USDC) tienen liquidez profunda. Los tokens más pequeños pueden tener fondos delgados donde incluso operaciones moderadas causan un impacto de precio significativo. Siempre verifica la cotización antes de ejecutar.
 
-## Conclusion
+## Conclusión
 
-DEX trading through an AI agent is no longer a theoretical capability. MERX makes it operational with two tool calls: one to quote, one to execute. The energy simulation is exact. The resource purchasing is automatic. The token approvals are handled transparently.
+El operador DEX a través de un agente de IA ya no es una capacidad teórica. MERX la hace operacional con dos llamadas de herramienta: una para cotizar, una para ejecutar. La simulación de energía es exacta. La compra de recursos es automática. Las aprobaciones de tokens se manejan de forma transparente.
 
-For AI agents operating on TRON, SunSwap via MCP is the fastest path to en cadena trading. No web UI. No manual transaction construction. No gestion de recursos overhead.
+Para agentes de IA que operan en TRON, SunSwap a través de MCP es la ruta más rápida hacia el operador en la cadena. Sin interfaz web. Sin construcción de transacciones manual. Sin sobrecarga de gestión de recursos.
 
-Quote. Execute. Done.
+Cotiza. Ejecuta. Hecho.
 
 ---
 
 **Enlaces:**
-- MERX Plataforma: [https://merx.exchange](https://merx.exchange)
+- Plataforma MERX: [https://merx.exchange](https://merx.exchange)
 - Servidor MCP (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - Servidor MCP (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Agrega MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -412,6 +413,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía de TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

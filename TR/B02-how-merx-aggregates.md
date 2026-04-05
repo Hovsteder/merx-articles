@@ -1,80 +1,80 @@
-# MERX Tum Energy Saglayicilarini Tek Bir API'de Nasil Toplar
+# MERX Tüm Enerji Sağlayıcılarını Tek Bir API'de Nasıl Toplar
 
-The TRON energy market in 2026 has a fragmentation problem. At least seven major providers offer energy delegation services, each with their own API, pricing model, and availability patterns. If you want the best price, you need to integrate with all of them, monitor their prices continuously, handle their individual quirks, and build failover logic for when one goes down.
+2026 yılında TRON enerji pazarında bir parçalanma sorunu vardır. En az yedi büyük sağlayıcı enerji delegasyon hizmetleri sunmakta, her birinin kendi API'si, fiyatlandırma modeli ve kullanılabilirlik deseni vardır. En iyi fiyatı almak istiyorsanız, hepsinin tümüyle entegrasyon sağlamanız, fiyatlarını sürekli izlemeniz, bireysel özelliklerini yönetmeniz ve bir tanesi indiğinde yedek mantığı kurmanız gerekir.
 
-Or you can make one API call to MERX.
+Ya da MERX'e tek bir API çağrısı yapabilirsiniz.
 
-This article explains how MERX aggregates all major energy providers into a single API - the architecture behind price monitoring, best-price routing, automatic failover, and the operational simplification that comes from replacing seven integrations with one.
-
----
-
-## The Provider Landscape
-
-The TRON energy market includes multiple providers, each operating independently. As of early 2026, the major providers include:
-
-- **TronSave** - one of the earliest energy rental services
-- **Feee** - competitive pricing with API access
-- **itrx** - focus on bulk energy orders
-- **CatFee** - mid-market positioning
-- **Netts** - newer entrant with aggressive pricing
-- **SoHu** - provider with Chinese market focus
-- **PowerSun** - direct staking and delegation
-
-Each provider has their own:
-
-- API format and authentication method
-- Pricing structure (some charge per energy unit, others per TRX)
-- Minimum and maximum order sizes
-- Available durations (1h, 1d, 3d, 7d, etc.)
-- Supported payment methods
-- Status pages and uptime characteristics
-
-### The Integration Tax
-
-Integrating with a single provider is straightforward. Integrating with all of them to get best pricing is a significant engineering undertaking:
-
-```
-Per provider:
-  - API client implementation:    2-3 days
-  - Price normalization:          1 day
-  - Error handling:               1 day
-  - Testing:                      1-2 days
-  - Ongoing maintenance:          2-4 hours/month
-
-7 providers x 5-7 days = 35-49 days of initial integration
-7 providers x 3 hours/month = 21 hours/month ongoing maintenance
-```
-
-This is the integration tax that MERX eliminates. Instead of maintaining seven provider integrations, you maintain one MERX integration. MERX handles the rest.
+Bu makale, MERX'in tüm büyük enerji sağlayıcılarını tek bir API'de nasıl topladığını açıklamaktadır - fiyat izleme, en iyi fiyata yönlendirme, otomatik yedekleme mimarisinin ardındaki mimari ve yedi entegrasyonu biriyle değiştirmekten kaynaklanan operasyonel basitleştirmeyi anlatan bir rehber.
 
 ---
 
-## The MERX Architecture
+## Sağlayıcı Ortamı
 
-MERX sits between your application and the provider ecosystem. The architecture has three core components:
+TRON enerji pazarı bağımsız olarak çalışan birden fazla sağlayıcıyı içerir. 2026 başı itibarıyla, büyük sağlayıcılar şunları içerir:
 
-### 1. Price Monitor
+- **TronSave** - en erken enerji kiralama hizmetlerinden birisi
+- **Feee** - API erişimi ile rekabetçi fiyatlandırma
+- **itrx** - toplu enerji siparişlerine odaklanmış
+- **CatFee** - orta pazar konumlandırması
+- **Netts** - agresif fiyatlandırma ile yeni katılımcı
+- **SoHu** - Çin pazarına odaklı sağlayıcı
+- **PowerSun** - doğrudan stake ve delegasyon
 
-The price monitor is a dedicated service that continuously polls every integrated provider for current pricing. Every 30 seconds, it queries each provider's API, normalizes the response into a standard format, and publishes the result to a Redis pub/sub channel.
+Her sağlayıcının kendi özellikleri vardır:
+
+- API formatı ve kimlik doğrulama yöntemi
+- Fiyatlandırma yapısı (bazıları enerji birimi başına ücret alır, diğerleri TRX başına)
+- Minimum ve maksimum sipariş büyüklükleri
+- Mevcut süreler (1h, 1d, 3d, 7d, vb.)
+- Desteklenen ödeme yöntemleri
+- Durum sayfaları ve çalışma süresi özellikleri
+
+### Entegrasyon Vergisi
+
+Tek bir sağlayıcı ile entegrasyon basittir. En iyi fiyatlandırmayı elde etmek için tümünün tümüyle entegrasyonu önemli bir mühendislik çabası gerektirmektedir:
 
 ```
-Every 30 seconds:
-  For each provider:
-    1. Query provider API for current prices
-    2. Normalize to standard format (SUN per energy unit)
-    3. Validate response (reject outliers, stale data)
-    4. Publish to Redis: channel "prices:{provider}"
-    5. Store in price history (PostgreSQL)
+Sağlayıcı başına:
+  - API istemci uygulaması:       2-3 gün
+  - Fiyat normalizasyonu:         1 gün
+  - Hata işleme:                  1 gün
+  - Test etme:                    1-2 gün
+  - Devam eden bakım:             2-4 saat/ay
+
+7 sağlayıcı x 5-7 gün = 35-49 gün başlangıç entegrasyonu
+7 sağlayıcı x 3 saat/ay = 21 saat/ay devam eden bakım
 ```
 
-The 30-second interval is deliberately chosen. Faster polling would stress provider APIs and add minimal value (prices rarely change second-to-second). Slower polling would risk serving stale prices.
+Bu, MERX'in ortadan kaldırdığı entegrasyon vergisidir. Yedi sağlayıcı entegrasyonunu korumak yerine, bir MERX entegrasyonunu korursunuz. MERX geri kalanını halleder.
 
-### 2. Redis Price Cache
+---
 
-Redis serves as the real-time price cache. Every price update from the price monitor is stored in Redis with a TTL (time-to-live) of 60 seconds - twice the polling interval. If a provider's price data is older than 60 seconds, it is automatically expired and excluded from routing decisions.
+## MERX Mimarisi
+
+MERX, uygulamanız ile sağlayıcı ekosistemi arasında yer almaktadır. Mimari üç temel bileşenden oluşur:
+
+### 1. Fiyat İzleyicisi
+
+Fiyat izleyicisi, her entegre sağlayıcıyı sürekli olarak geçerli fiyatlandırma için sorgulayan özel bir hizmettir. Her 30 saniyede bir, her sağlayıcının API'sini sorgular, yanıtı standart bir biçime normalleştirir ve sonucu bir Redis pub/sub kanalına yayınlar.
 
 ```
-Redis key structure:
+Her 30 saniye:
+  Her sağlayıcı için:
+    1. Sağlayıcı API'sini geçerli fiyatlar için sorgula
+    2. Standart biçime normalleştir (SUN başına enerji birimi)
+    3. Yanıtı doğrula (aykırı değerleri, eski verileri reddet)
+    4. Redis'e yayınla: kanal "prices:{provider}"
+    5. Fiyat geçmişinde depola (PostgreSQL)
+```
+
+30 saniye aralığı bilinçli olarak seçilmiştir. Daha hızlı polling sağlayıcı API'larını strese sokacak ve minimal değer katacaktır (fiyatlar nadiren saniye bazında değişir). Daha yavaş polling eski fiyatları sunma riski taşır.
+
+### 2. Redis Fiyat Önbelleği
+
+Redis, gerçek zamanlı fiyat önbelleği olarak görev yapar. Fiyat izleyicisinden her fiyat güncellemesi Redis'te 60 saniyelik TTL (yaşam süresi) ile saklanır - polling aralığının iki katı. Bir sağlayıcının fiyat verileri 60 saniyeden eski ise, otomatik olarak sona erer ve yönlendirme kararlarından hariç tutulur.
+
+```
+Redis anahtar yapısı:
   prices:tronsave     -> { energy: 88, bandwidth: 2, updated: 1711756800 }
   prices:feee         -> { energy: 92, bandwidth: 3, updated: 1711756800 }
   prices:itrx         -> { energy: 85, bandwidth: 2, updated: 1711756800 }
@@ -84,211 +84,211 @@ Redis key structure:
   prices:best         -> { provider: "itrx", energy: 85, updated: 1711756800 }
 ```
 
-The `prices:best` key is recomputed on every price update, giving the API instant access to the current best price without scanning all providers.
+`prices:best` anahtarı her fiyat güncellemesinde yeniden hesaplanır ve API'ye tüm sağlayıcıları taramadan geçerli en iyi fiyata anında erişim sağlar.
 
-### 3. Order Executor
+### 3. Sipariş Yürütücüsü
 
-When you place an order through the MERX API, the order executor receives it and determines the optimal routing:
+MERX API'si aracılığıyla bir sipariş verdiğinizde, sipariş yürütücüsü bunu alır ve optimal yönlendirmeyi belirler:
 
 ```
-Order received: 65,000 energy for TBuyerAddress
+Sipariş alındı: TBuyerAddress için 65.000 enerji
 
-1. Read prices:best from Redis -> itrx at 85 SUN/unit
-2. Check itrx availability for 65,000 energy -> available
-3. Submit order to itrx
-4. Monitor for on-chain delegation confirmation
-5. Verify energy arrived at TBuyerAddress
-6. Notify buyer (webhook + WebSocket)
+1. Redis'ten prices:best oku -> itrx at 85 SUN/unit
+2. itrx tarafından 65.000 enerji kullanılabilirliğini kontrol et -> mevcut
+3. Siparişi itrx'e gönder
+4. Zincir üstü delegasyon onayını izle
+5. Enerjinin TBuyerAddress'e ulaştığını doğrula
+6. Alıcıyı bilgilendir (webhook + WebSocket)
 ```
 
-If the cheapest provider cannot fill the order (insufficient stock, API error, timeout), the executor automatically falls through to the next cheapest provider.
+En ucuz sağlayıcı siparişi dolduramaz ise (yetersiz stok, API hatası, zaman aşımı), yürütücü otomatik olarak sonraki en ucuz sağlayıcıya düşer.
 
 ---
 
-## Price Normalization
+## Fiyat Normalizasyonu
 
-Different providers quote prices in different formats. Some quote in SUN per energy unit. Some quote total TRX for a given energy amount. Some include bandwidth in the price; others charge separately.
+Farklı sağlayıcılar fiyatları farklı biçimlerde fiyatlandırır. Bazıları SUN başına enerji birimi olarak fiyatlandırır. Bazıları belirli bir enerji miktarı için toplam TRX olarak fiyatlandırır. Bazıları bandwidth'i fiyata dahil eder; diğerleri ayrı olarak ücret alır.
 
-MERX normalizes everything to a single format:
+MERX her şeyi tek bir biçime normalleştirir:
 
 ```typescript
 interface NormalizedPrice {
   provider: string;
-  energyPricePerUnit: number;    // SUN per energy unit
-  bandwidthPricePerUnit: number; // SUN per bandwidth unit
-  minOrder: number;              // Minimum energy units
-  maxOrder: number;              // Maximum energy units
-  availableEnergy: number;       // Currently available
-  durations: string[];           // Supported durations
-  lastUpdated: number;           // Unix timestamp
+  energyPricePerUnit: number;    // SUN başına enerji birimi
+  bandwidthPricePerUnit: number; // SUN başına bandwidth birimi
+  minOrder: number;              // Minimum enerji birimleri
+  maxOrder: number;              // Maksimum enerji birimleri
+  availableEnergy: number;       // Şu anda mevcut
+  durations: string[];           // Desteklenen süreler
+  lastUpdated: number;           // Unix zaman damgası
 }
 ```
 
-This normalization is critical. Without it, comparing prices across providers would require the consumer to understand each provider's pricing model. With it, price comparison is a simple numerical sort.
+Bu normalizasyon kritiktir. Olmaksızın, sağlayıcılar arasında fiyat karşılaştırması, tüketicinin her sağlayıcının fiyatlandırma modelini anlaması gerekir. Bununla birlikte, fiyat karşılaştırması basit bir sayısal sıralamadır.
 
 ---
 
-## Best-Price Routing in Detail
+## Ayrıntıda En İyi Fiyata Yönlendirme
 
-The routing algorithm is not just "pick the cheapest." Several factors influence the routing decision:
+Yönlendirme algoritması sadece "en ucuzunu seç" değildir. Birkaç faktör yönlendirme kararını etkiler:
 
-### Factor 1: Price
+### Faktör 1: Fiyat
 
-The primary factor. All else being equal, the cheapest provider wins.
+Birincil faktör. Diğer her şey eşit ise, en ucuz sağlayıcı kazanır.
 
-### Factor 2: Availability
+### Faktör 2: Kullanılabilirlik
 
-A provider quoting 80 SUN but with only 10,000 energy available cannot fill a 65,000 energy order. The router must check available inventory.
+80 SUN fiyatlandıran ancak sadece 10.000 enerji mevcut olan bir sağlayıcı 65.000 enerji siparişini dolduramaz. Yönlendirici mevcut envanteri kontrol etmelidir.
 
-### Factor 3: Reliability
+### Faktör 3: Güvenilirlik
 
-MERX tracks each provider's historical fill rate, response time, and failure rate. A provider with a 95% fill rate is penalized relative to one with a 99% fill rate, even if the 95% provider is slightly cheaper.
-
-```
-Effective price = quoted_price / fill_rate
-
-Provider A: 85 SUN, 99% fill rate -> 85.86 effective
-Provider B: 82 SUN, 94% fill rate -> 87.23 effective
-Winner: Provider A despite higher quoted price
-```
-
-### Factor 4: Duration Support
-
-Not all providers support all durations. If you need a 1-hour delegation, providers that only offer daily minimums are excluded.
-
-### Order Splitting
-
-For large orders that exceed any single provider's capacity, the router splits the order across multiple providers:
+MERX her sağlayıcının tarihsel doldurma oranını, yanıt süresini ve başarısızlık oranını izler. %95 doldurma oranına sahip bir sağlayıcı, %99 doldurma oranına sahip biriyle karşılaştırıldığında cezalandırılır, %95 sağlayıcı biraz daha ucuz bile olsa.
 
 ```
-Order: 500,000 energy
+Etkili fiyat = alıntı_fiyat / doldurma_oranı
 
-Provider A: 200,000 available at 85 SUN -> fill 200,000
-Provider B: 180,000 available at 87 SUN -> fill 180,000
-Provider C: 300,000 available at 92 SUN -> fill 120,000
-
-Total filled: 500,000 energy
-Blended rate: 87.28 SUN/unit
+Sağlayıcı A: 85 SUN, %99 doldurma oranı -> 85.86 etkili
+Sağlayıcı B: 82 SUN, %94 doldurma oranı -> 87.23 etkili
+Kazanan: Daha yüksek alıntılı fiyata rağmen Sağlayıcı A
 ```
 
-The buyer sees a single order with a blended rate. The complexity of multi-provider execution is entirely hidden.
+### Faktör 4: Süre Desteği
+
+Tüm sağlayıcılar tüm süreleri desteklemez. 1 saatlik delegasyon gerekiyorsa, sadece günlük minimumlar sunan sağlayıcılar hariç tutulur.
+
+### Sipariş Bölme
+
+Herhangi bir sağlayıcının kapasitesini aşan büyük siparişler için, yönlendirici siparişi birden fazla sağlayıcıya böler:
+
+```
+Sipariş: 500.000 enerji
+
+Sağlayıcı A: 85 SUN'da 200.000 mevcut -> 200.000 doldur
+Sağlayıcı B: 87 SUN'da 180.000 mevcut -> 180.000 doldur
+Sağlayıcı C: 92 SUN'da 300.000 mevcut -> 120.000 doldur
+
+Toplam dolduruldu: 500.000 enerji
+Karışık oran: 87.28 SUN/unit
+```
+
+Alıcı tek bir sipariş ile karışık bir oran görür. Çok sağlayıcılı yürütmenin karmaşıklığı tamamen gizlenmiştir.
 
 ---
 
-## Automatic Failover
+## Otomatik Yedekleme
 
-Failover is where aggregation truly earns its value. When you integrate directly with a provider and they go down, your application stops functioning. With MERX, provider failures are handled transparently.
+Yedekleme, toplamlaştırmanın gerçekten değer kazandığı yerdir. Doğrudan bir sağlayıcı ile entegrasyon sağladığınız ve indikleri zaman, uygulamanız çalışmayı durdurur. MERX ile sağlayıcı arızaları şeffaf olarak işlenir.
 
-### Failover Chain
-
-```
-Primary provider fails
-  |
-  v
-Mark provider as unhealthy (exclude from routing for 5 minutes)
-  |
-  v
-Retry with next-cheapest provider
-  |
-  v
-If second provider fails, try third
-  |
-  v
-If all providers fail, return error to buyer with retry guidance
-```
-
-### Health Tracking
-
-The price monitor maintains a health score for each provider:
+### Yedekleme Zinciri
 
 ```
-Health score components:
-  - Last successful price fetch: must be within 60s
-  - API response time: penalize > 2 seconds
-  - Recent order fill rate: penalize < 95%
-  - Recent error rate: penalize > 5%
+Birincil sağlayıcı başarısız oluyor
+  |
+  v
+Sağlayıcıyı sağlıksız olarak işaretle (5 dakika boyunca yönlendirmeden hariç tut)
+  |
+  v
+Sonraki en ucuz sağlayıcı ile yeniden dene
+  |
+  v
+İkinci sağlayıcı başarısız olur ise, üçüncüyü dene
+  |
+  v
+Tüm sağlayıcılar başarısız olur ise, alıcıya yeniden deneme rehberi ile hata döndür
 ```
 
-Unhealthy providers are excluded from routing until they recover. Recovery is detected automatically when the price monitor successfully fetches prices from them again.
+### Sağlık İzleme
 
-### Zero-Downtime for Buyers
+Fiyat izleyicisi her sağlayıcı için bir sağlık puanı tutar:
 
-From the buyer's perspective, provider failures are invisible. Their API call succeeds as long as at least one provider is operational. In practice, having seven or more providers means that total market outage is essentially impossible - the odds of all providers being down simultaneously are negligible.
+```
+Sağlık puanı bileşenleri:
+  - Son başarılı fiyat getirme: 60s içinde olmalı
+  - API yanıt süresi: > 2 saniye ise cezalandır
+  - Son sipariş doldurma oranı: < %95 ise cezalandır
+  - Son hata oranı: > %5 ise cezalandır
+```
+
+Sağlıksız sağlayıcılar, kurtulana kadar yönlendirmeden hariç tutulur. Kurtarma, fiyat izleyicisi onlardan başarıyla fiyatları getirdiğinde otomatik olarak algılanır.
+
+### Alıcılar için Sıfır Kapalı Kalma Süresi
+
+Alıcı perspektifinden, sağlayıcı arızaları görünmezdir. API çağrıları, en az bir sağlayıcı çalıştığı sürece başarılı olur. Pratikte, yedi veya daha fazla sağlayıcıya sahip olmak, toplam pazar kesintisinin esasen imkansız olduğu anlamına gelir - tüm sağlayıcıların aynı anda inme olasılığı önemsizdir.
 
 ---
 
-## One API Replaces Many
+## Bir API Birçok Şeyi Değiştirir
 
-Here is what your integration looks like with MERX versus direct provider integration:
+MERX ile doğrudan sağlayıcı entegrasyonu ile karşı karşıya entegrasyon şu şekildedir:
 
-### Without MERX
+### MERX Olmadan
 
 ```typescript
-// Pseudo-code: direct multi-provider integration
+// Pseudo-kod: doğrudan çok sağlayıcılı entegrasyon
 
-// Initialize 7 provider clients
+// 7 sağlayıcı istemcisini başlat
 const tronsave = new TronSaveClient(apiKey1);
 const feee = new FeeeClient(apiKey2);
 const itrx = new ItrxClient(apiKey3);
-// ... 4 more
+// ... 4 daha fazla
 
-// Fetch prices from all providers
+// Tüm sağlayıcılardan fiyatları getir
 const prices = await Promise.allSettled([
   tronsave.getPrice(65000),
   feee.getPrice(65000),
   itrx.getPrice(65000),
-  // ... 4 more
+  // ... 4 daha fazla
 ]);
 
-// Normalize different response formats
+// Farklı yanıt biçimlerini normalleştir
 const normalized = prices
   .filter(p => p.status === 'fulfilled')
-  .map(p => normalizePrice(p.value)); // complex per-provider logic
+  .map(p => normalizePrice(p.value)); // sağlayıcı başına karmaşık mantık
 
-// Sort by price, check availability, handle errors...
+// Fiyata göre sırala, kullanılabilirliği kontrol et, hataları işle...
 const best = normalized.sort((a, b) => a.price - b.price)[0];
 
-// Place order with best provider
+// En iyi sağlayıcı ile sipariş ver
 try {
   const order = await getClient(best.provider).createOrder({
     energy: 65000,
     target: buyerAddress,
-    // Provider-specific parameters...
+    // Sağlayıcıya özel parametreler...
   });
 } catch (e) {
-  // Failover to next provider...
-  // More provider-specific error handling...
+  // Sonraki sağlayıcıya yedekle...
+  // Daha fazla sağlayıcıya özel hata işleme...
 }
 ```
 
-### With MERX
+### MERX ile
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-merx-key' });
 
-// Get best price across all providers
+// Tüm sağlayıcılar arasında en iyi fiyatı al
 const prices = await client.getPrices({ energy: 65000 });
 console.log(`Best: ${prices.bestPrice.provider} at ${prices.bestPrice.perUnit} SUN`);
 
-// Place order - automatically routed to best provider
+// Sipariş ver - otomatik olarak en iyi sağlayıcıya yönlendir
 const order = await client.createOrder({
   energy: 65000,
   targetAddress: buyerAddress,
   duration: '1h'
 });
 
-// Done. Failover, retries, verification handled automatically.
+// Bitti. Yedekleme, yeniden denemeler, doğrulama otomatik olarak işlenir.
 ```
 
-Seven integrations become one. Hundreds of lines of routing and failover code become four lines. Ongoing maintenance of provider API changes drops to zero.
+Yedi entegrasyon bire dönüşür. Yüzlerce satır yönlendirme ve yedekleme kodu dört satıra dönüşür. Sağlayıcı API değişikliklerinin devam eden bakımı sıfıra düşer.
 
 ---
 
-## Real-Time Price Feed
+## Gerçek Zamanlı Fiyat Beslemesi
 
-For applications that want to display live prices or make real-time routing decisions, MERX provides a WebSocket price feed:
+Canlı fiyatları görüntülemek veya gerçek zamanlı yönlendirme kararları almak isteyenler, MERX WebSocket fiyat beslemesi sağlamaktadır:
 
 ```typescript
 const client = new MerxClient({ apiKey: 'your-key' });
@@ -299,13 +299,13 @@ client.onPriceUpdate((update) => {
 });
 ```
 
-The WebSocket feed publishes every price update from the price monitor - roughly every 30 seconds per provider. This enables applications to show live pricing without polling.
+WebSocket beslemesi, fiyat izleyicisinden her fiyat güncellemesini yayınlar - kabaca sağlayıcı başına her 30 saniye. Bu, uygulamaların yoklamadan canlı fiyatlandırmayı göstermesini etkinleştirir.
 
 ---
 
-## Provider Transparency
+## Sağlayıcı Saydamlığı
 
-MERX does not hide which provider filled your order. Every order response includes the provider name, the price paid, and the on-chain delegation transaction hash:
+MERX, hangi sağlayıcının siparişinizi doldurduğunu gizlemez. Her sipariş yanıtı sağlayıcı adını, ödenen fiyatı ve zincir üstü delegasyon işlem kodunu içerir:
 
 ```json
 {
@@ -320,28 +320,29 @@ MERX does not hide which provider filled your order. Every order response includ
 }
 ```
 
-You always know where your energy came from, what you paid, and can verify the delegation on-chain independently.
+Her zaman enerjinizin nereden geldiğini, ne ödediğinizi bilirsiniz ve delegasyonu zincirde bağımsız olarak doğrulayabilirsiniz.
 
 ---
 
-## Baslangic
+## Başlama
 
-MERX aggregation is available through the REST API, the JavaScript SDK, the Python SDK, and the Yapay zeka ajan entegrasyonu icin MCP sunucusu:
+MERX toplamlaştırması REST API'si, JavaScript SDK'sı, Python SDK'sı ve yapay zeka ajanları için MCP sunucusu aracılığıyla kullanılabilir:
 
-- **API documentation**: [https://merx.exchange/docs](https://merx.exchange/docs)
+- **API belgelendirmesi**: [https://merx.exchange/docs](https://merx.exchange/docs)
 - **JavaScript SDK**: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 - **Python SDK**: [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
-- **MCP Server**: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+- **MCP Sunucusu**: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-Hesap olusturmak icin [https://merx.exchange](https://merx.exchange), get an API key, and start routing energy orders to the best available price with a single API call.
+[https://merx.exchange](https://merx.exchange) adresinde bir hesap oluşturun, bir API anahtarı alın ve enerji siparişlerini tek bir API çağrısı ile mevcut en iyi fiyata yönlendirmeye başlayın.
 
 ---
 
-*Bu makale, MERX teknik serisinin bir parcasidir. MERX, en iyi fiyat yonlendirmesi ve otomatik yedek gecis ile tum buyuk TRON energy saglayicilarini tek bir API'de toplayan ilk blokzincir kaynak borsasidir.*
+*Bu makale, MERX teknik serisinin bir parçasıdır. MERX, tüm büyük TRON enerji sağlayıcılarını en iyi fiyata yönlendirme ve otomatik yedekleme ile tek bir API'de topladığı ilk blockchain kaynak borsasıdır.*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+Claude Desktop veya herhangi bir MCP uyumlu istemciye MERX ekleyin -- kurulum olmaksızın, salt okunur araçlar için API anahtarına gerek yok:
 
 ```json
 {
@@ -353,6 +354,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Yapay zeka ajanınızdan şunu isteyin: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgelendirmesi: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

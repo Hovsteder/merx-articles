@@ -1,50 +1,50 @@
-# Снижение затрат на торговлю через DEX с помощью агрегации energy
+# Снижение затрат на торговлю на DEX с помощью агрегации энергии
 
-Decentralized exchange trading on TRON is expensive -- not because of the trades themselves, but because of the energy consumed by smart contract interactions. A single token swap on SunSwap can consume 120,000 to 223,000 energy depending on the token pair, liquidity pool routing, and slippage conditions. Without energy delegation, those costs translate directly into TRX burned from your wallet.
+Торговля на децентрализованных биржах в сети TRON дорога -- не из-за самих сделок, а из-за энергии, потребляемой при взаимодействии со смарт-контрактами. Один своп токенов на SunSwap может потребить от 120 000 до 223 000 энергии в зависимости от пары токенов, маршрутизации пула ликвидности и условий проскальзывания. Без делегирования энергии эти затраты напрямую переводятся в сжигание TRX из вашего кошелька.
 
-This article breaks down the energy economics of DEX trading on TRON, shows how exact simulation prevents overspending, and demonstrates how MERX energy aggregation can cut trading costs by 80% or more.
+В этой статье разбираются энергетические показатели торговли на DEX в TRON, показывается, как точное моделирование предотвращает перерасходование, и демонстрируется, как агрегация энергии MERX может снизить затраты на торговлю на 80% и более.
 
-## Understanding DEX Energy Costs
+## Понимание энергетических затрат DEX
 
-When you execute a swap on SunSwap (TRON's primary DEX), you are calling a smart contract function. The energy cost depends on the computational complexity of that call.
+Когда вы выполняете своп на SunSwap (главной DEX TRON), вы вызываете функцию смарт-контракта. Затраты энергии зависят от вычислительной сложности этого вызова.
 
-### Single-Hop Swaps
+### Своп с одним переходом
 
-A direct swap between two tokens that share a liquidity pool consumes approximately 120,000-150,000 energy. For example, swapping TRX for USDT through the TRX/USDT pool is a single-hop operation.
+Прямой своп между двумя токенами, имеющими пул ликвидности, потребляет примерно 120 000-150 000 энергии. Например, своп TRX на USDT через пул TRX/USDT — это операция с одним переходом.
 
-### Multi-Hop Swaps
+### Своп с несколькими переходами
 
-When no direct liquidity pool exists between your token pair, the DEX router splits the trade across multiple pools. A swap from Token A to Token B might route through TRX: Token A -> TRX -> Token B. Each hop adds approximately 50,000-70,000 energy.
+Когда между вашей парой токенов не существует прямого пула ликвидности, маршрутизатор DEX разделяет сделку между несколькими пулами. Своп из токена A в токен B может маршрутизироваться через TRX: Token A -> TRX -> Token B. Каждый переход добавляет примерно 50 000-70 000 энергии.
 
-### Complex Routes
+### Сложные маршруты
 
-Some swaps require three or more hops, pushing energy consumption above 200,000. Add price impact calculations, slippage protection, and other contract logic, and a single swap can reach 223,000 energy.
+Некоторые свопы требуют трех или более переходов, что повышает потребление энергии выше 200 000. Добавьте расчеты влияния цены, защиту от проскальзывания и другую логику контракта, и один своп может достичь 223 000 энергии.
 
-### Cost Without Energy
+### Затраты без энергии
 
-At current network rates, 200,000 energy burned as TRX costs approximately 41 TRX (~$4.90). For active traders executing 10-20 swaps per day, that is $49-$98 daily in fees -- before counting the trades themselves.
+При текущих сетевых ставках 200 000 сожженной энергии в виде TRX обходится примерно в 41 TRX (~$4,90). Для активных трейдеров, выполняющих 10-20 свопов в день, это стоит $49-$98 в день в комиссиях -- не считая самих сделок.
 
-| Swap Type | Energy | TRX Burn Cost | USD Cost |
+| Тип свопа | Энергия | Затраты на сжигание TRX | Стоимость в USD |
 |---|---|---|---|
-| Simple swap (single hop) | ~130,000 | ~27 TRX | ~$3.24 |
-| Two-hop swap | ~180,000 | ~37 TRX | ~$4.44 |
-| Complex route (3+ hops) | ~223,000 | ~46 TRX | ~$5.52 |
+| Простой своп (один переход) | ~130 000 | ~27 TRX | ~$3,24 |
+| Своп с двумя переходами | ~180 000 | ~37 TRX | ~$4,44 |
+| Сложный маршрут (3+ переходов) | ~223 000 | ~46 TRX | ~$5,52 |
 
-## Проблема with Hardcoded Estimates
+## Проблема жестко заданных оценок
 
-Most DEX interfaces and trading bots use hardcoded energy estimates. They assume a swap costs 200,000 energy (or some other fixed number) and purchase or allocate accordingly.
+Большинство интерфейсов DEX и торговых ботов используют жестко заданные оценки энергии. Они предполагают, что своп стоит 200 000 энергии (или какого-то другого фиксированного числа) и покупают или выделяют энергию соответственно.
 
-This creates two problems:
+Это создает две проблемы:
 
-**Over-purchasing.** If your swap only needs 130,000 energy but you buy 200,000, you waste 70,000 energy units. At 28 SUN per unit, that is 1,960,000 SUN (1.96 TRX) wasted per trade.
+**Переизбыток покупок.** Если ваш своп требует всего 130 000 энергии, но вы покупаете 200 000, вы теряете 70 000 единиц энергии. При 28 SUN за единицу, это 1 960 000 SUN (1,96 TRX) потрачено впустую за одну сделку.
 
-**Under-purchasing.** If your swap needs 223,000 energy but you only buy 200,000, the shortfall of 23,000 energy gets covered by TRX burn at the full network rate. You end up paying premium rates for the remainder.
+**Недостаток покупок.** Если ваш своп требует 223 000 энергии, но вы покупаете только 200 000, дефицит в 23 000 энергии покрывается сжиганием TRX по полной сетевой ставке. В итоге вы платите премиальные ставки за остаток.
 
-Both scenarios cost you money. The solution is exact simulation.
+Обе сценарии стоят вам денег. Решение — точное моделирование.
 
-## Exact Simulation with MERX
+## Точное моделирование с MERX
 
-MERX uses the TRON network's `triggerConstantContract` endpoint to simulate your specific swap before execution. This dry-run tells you exactly how much energy the swap will consume -- not an estimate, not an average, but the precise number for your specific transaction.
+MERX использует endpoint `triggerConstantContract` сети TRON для моделирования вашего конкретного свопа перед выполнением. Этот пробный запуск показывает вам точно, сколько энергии потребует своп -- не оценка, не среднее значение, а точное число для вашей конкретной транзакции.
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -76,23 +76,23 @@ const order = await merx.createOrder({
 });
 ```
 
-The simulation returns the actual energy consumption for your specific swap, with your specific parameters, at the current state of the liquidity pools. No guessing, no hardcoded buffers.
+Моделирование возвращает фактическое потребление энергии для вашего конкретного свопа с вашими конкретными параметрами в текущем состоянии пулов ликвидности. Никаких предположений, никаких жестко заданных буферов.
 
-### Savings from Exact Simulation
+### Экономия от точного моделирования
 
-Compare the cost of exact simulation versus hardcoded estimates over 100 trades:
+Сравните затраты на точное моделирование и жестко заданные оценки на 100 сделок:
 
-| Approach | Energy per trade | Total energy (100 trades) | Cost at 28 SUN |
+| Подход | Энергия за сделку | Общая энергия (100 сделок) | Стоимость при 28 SUN |
 |---|---|---|---|
-| Hardcoded 200K | 200,000 | 20,000,000 | 560 TRX |
-| Exact simulation (avg 155K) | 155,000 | 15,500,000 | 434 TRX |
-| **Savings** | | **4,500,000** | **126 TRX (~$15)** |
+| Жестко заданная 200K | 200 000 | 20 000 000 | 560 TRX |
+| Точное моделирование (средн. 155K) | 155 000 | 15 500 000 | 434 TRX |
+| **Экономия** | | **4 500 000** | **126 TRX (~$15)** |
 
-Over a month of active trading (500+ trades), exact simulation saves hundreds of TRX.
+На протяжении месяца активной торговли (более 500 сделок) точное моделирование сэкономит сотни TRX.
 
-## Batch Energy for Multiple Swaps
+## Пакетная энергия для нескольких свопов
 
-If you are executing multiple swaps in sequence -- rebalancing a portfolio, for example -- buying energy individually for each swap is inefficient. Instead, estimate all swaps and buy energy in a single batch:
+Если вы выполняете несколько свопов подряд -- переструктурируете портфель, например -- покупка энергии индивидуально для каждого свопа неэффективна. Вместо этого оцените все свопы и купите энергию одной партией:
 
 ```typescript
 async function batchSwaps(
@@ -131,14 +131,14 @@ async function batchSwaps(
 }
 ```
 
-Batch purchasing provides two advantages:
+Пакетная покупка предоставляет два преимущества:
 
-1. **Better rates.** Larger energy amounts often qualify for better per-unit pricing from providers.
-2. **Single transaction overhead.** One energy purchase instead of N reduces API calls and processing time.
+1. **Лучшие ставки.** Большие объемы энергии часто дают право на лучшие цены за единицу у поставщиков.
+2. **Единые накладные расходы транзакции.** Одна покупка энергии вместо N снижает вызовы API и время обработки.
 
-## Trading Bot Integration
+## Интеграция торгового бота
 
-For automated trading bots, energy management needs to be seamless. The bot should focus on trading logic, not energy procurement. Here is a pattern for integrating MERX into a SunSwap trading bot:
+Для автоматизированных торговых ботов управление энергией должно быть прозрачным. Бот должен сосредоточиться на логике торговли, а не на закупке энергии. Вот паттерн для интеграции MERX в торгового бота SunSwap:
 
 ```typescript
 class EnergyAwareTrader {
@@ -184,11 +184,11 @@ class EnergyAwareTrader {
 }
 ```
 
-This pattern checks existing energy before purchasing, buying only the deficit. If the wallet already has energy from a previous purchase or from staking, the bot does not waste money buying what it already has.
+Этот паттерн проверяет существующую энергию перед покупкой, закупая только дефицит. Если кошелек уже имеет энергию от предыдущей покупки или из стейкинга, бот не тратит деньги на покупку того, что он уже имеет.
 
-## Standing Orders for Active Traders
+## Постоянные ордера для активных трейдеров
 
-Active traders benefit from standing orders that pre-purchase energy at favorable prices:
+Активные трейдеры получают пользу от постоянных ордеров, которые предварительно закупают энергию по выгодным ценам:
 
 ```typescript
 // Maintain a reserve of energy for trading
@@ -201,39 +201,39 @@ const standing = await merx.createStandingOrder({
 });
 ```
 
-This ensures your trading wallet always has energy available when a trading opportunity appears. Without pre-purchased energy, you might miss a time-sensitive trade while waiting for energy delegation to complete.
+Это гарантирует, что ваш торговый кошелек всегда имеет доступную энергию, когда появляется торговая возможность. Без предварительно закупленной энергии вы можете пропустить время-критичную сделку, пока ждете завершения делегирования энергии.
 
-## Real-World Cost Comparison
+## Сравнение затрат в реальном мире
 
-Let us model a realistic active trading scenario:
+Давайте смоделируем реалистичный сценарий активной торговли:
 
-**Profile: Active DEX trader, 15 swaps per day, mix of simple and complex routes.**
+**Профиль: активный трейдер DEX, 15 свопов в день, микс простых и сложных маршрутов.**
 
-Average energy per swap: 165,000 (based on exact simulation)
+Средняя энергия за своп: 165 000 (на основе точного моделирования)
 
-### Without Energy Optimization
+### Без оптимизации энергии
 
-15 swaps x 165,000 energy x ~0.206 TRX per 1,000 energy burn = 509 TRX/day = $61/day = **$1,830/month**
+15 свопов x 165 000 энергии x ~0,206 TRX за 1 000 сожженной энергии = 509 TRX/день = $61/день = **$1 830/месяц**
 
-### With MERX Energy at 28 SUN Average
+### С энергией MERX при среднем уровне 28 SUN
 
-15 swaps x 165,000 energy x 28 SUN = 69,300,000 SUN = 69.3 TRX/day = $8.32/day = **$250/month**
+15 свопов x 165 000 энергии x 28 SUN = 69 300 000 SUN = 69,3 TRX/день = $8,32/день = **$250/месяц**
 
-### Monthly Savings: $1,580
+### Ежемесячная экономия: $1 580
 
-Over a year, that is $18,960 in savings -- likely exceeding the trading profits for many retail traders.
+За год это $18 960 в экономии -- вероятно, превышает торговые прибыли для многих розничных трейдеров.
 
-### With Standing Orders at 23 SUN Average
+### С постоянными ордерами при среднем уровне 23 SUN
 
-Using standing orders to capture price dips reduces the average cost further:
+Использование постоянных ордеров для захвата падений цен снижает среднюю стоимость дополнительно:
 
-15 swaps x 165,000 energy x 23 SUN = 56,925,000 SUN = 56.9 TRX/day = $6.83/day = **$205/month**
+15 свопов x 165 000 энергии x 23 SUN = 56 925 000 SUN = 56,9 TRX/день = $6,83/день = **$205/месяц**
 
-**Annual savings vs no optimization: $19,500.**
+**Годовая экономия против отсутствия оптимизации: $19 500.**
 
-## Monitoring Trading Costs
+## Мониторинг затрат на торговлю
 
-Track your energy efficiency over time to optimize your strategy:
+Отслеживайте вашу энергоэффективность с течением времени, чтобы оптимизировать вашу стратегию:
 
 ```typescript
 interface TradeMetrics {
@@ -264,29 +264,29 @@ async function logTradeEnergy(
 }
 ```
 
-## Multi-DEX Considerations
+## Рассмотрения мультиплатформности DEX
 
-TRON has multiple DEX platforms beyond SunSwap. Each has different energy profiles:
+TRON имеет несколько платформ DEX помимо SunSwap. Каждая имеет различные энергетические профили:
 
-- **SunSwap V2**: Standard AMM, 120K-200K+ energy per swap
-- **SunSwap V3**: Concentrated liquidity, potentially different energy patterns
-- **Other DEXs**: Various smart contract implementations with different energy footprints
+- **SunSwap V2**: стандартный AMM, 120K-200K+ энергии за своп
+- **SunSwap V3**: концентрированная ликвидность, потенциально другие энергетические паттерны
+- **Другие DEXs**: различные реализации смарт-контрактов с разными энергетическими затратами
 
-MERX's exact simulation works with any smart contract on TRON. You provide the contract address and function call, and it returns the precise energy requirement regardless of which DEX you are using.
+Точное моделирование MERX работает с любым смарт-контрактом на TRON. Вы предоставляете адрес контракта и вызов функции, и он возвращает точные энергетические требования независимо от того, какой DEX вы используете.
 
 ## Заключение
 
-DEX trading on TRON without energy optimization is unnecessarily expensive. The combination of exact energy simulation and multi-provider aggregation through MERX can reduce trading costs by 80-90% compared to raw TRX burn.
+Торговля на DEX в TRON без оптимизации энергии ненужно дорога. Комбинация точного моделирования энергии и агрегации по нескольким поставщикам через MERX может снизить затраты на торговлю на 80-90% по сравнению с прямым сжиганием TRX.
 
-For active traders, the monthly savings easily reach four figures. For trading bots operating at scale, the savings are the difference between profitability and running at a loss.
+Для активных трейдеров ежемесячная экономия легко достигает четырехзначных цифр. Для торговых ботов, работающих в масштабе, экономия — это разница между прибыльностью и работой с убытками.
 
-The integration is straightforward: simulate before trading, buy exactly what you need, and let the aggregator find the best price across seven providers. Your trading logic stays clean, your costs stay low.
+Интеграция простая: моделируйте перед торговлей, покупайте ровно столько, сколько вам нужно, и дайте агрегатору найти лучшую цену среди семи поставщиков. Ваша логика торговли остается чистой, ваши затраты остаются низкими.
 
-Explore the API at [https://merx.exchange/docs](https://merx.exchange/docs) or start optimizing at [https://merx.exchange](https://merx.exchange).
+Изучите API на [https://merx.exchange/docs](https://merx.exchange/docs) или начните оптимизацию на [https://merx.exchange](https://merx.exchange).
 
-## Try It Now with AI
+## Попробуйте прямо сейчас с AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+Добавьте MERX в Claude Desktop или любого другого MCP-совместимого клиента -- ноль установки, API ключ не нужен для инструментов только для чтения:
 
 ```json
 {
@@ -298,6 +298,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите вашего AI агента: "What is the cheapest TRON energy right now?" и получите актуальные цены от всех подключенных поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

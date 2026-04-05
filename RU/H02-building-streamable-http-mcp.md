@@ -1,38 +1,38 @@
-# Создание MCP-сервера с потоковым HTTP для продакшна
+# Создание Streamable HTTP MCP сервера для production
 
-The Model Context Protocol originally supported two transports: stdio (for local processes) and SSE (for hosted servers). In 2025, the protocol added a third transport -- Streamable HTTP -- that combines the simplicity of HTTP with the real-time capabilities of server-sent events and proper session management.
+Model Context Protocol изначально поддерживал два транспорта: stdio (для локальных процессов) и SSE (для размещённых серверов). В 2025 году протокол получил третий транспорт — Streamable HTTP — который объединяет простоту HTTP с возможностями real-time сервер-инициированных событий и правильным управлением сессиями.
 
-This article is a technical guide to building a production-ready Streamable HTTP MCP server. We cover Express.js setup, SSE streaming, session management with the Mcp-Session-Id header, OAuth discovery via well-known endpoints, connection lifecycle, and deployment with Docker. The examples are drawn from the MERX MCP server implementation, which serves as a working reference.
+Эта статья — техническое руководство по созданию production-ready Streamable HTTP MCP сервера. Мы охватываем настройку Express.js, потоковую передачу SSE, управление сессиями с помощью заголовка Mcp-Session-Id, обнаружение OAuth через well-known endpoints, жизненный цикл соединения и развёртывание с Docker. Примеры взяты из реализации MERX MCP сервера, который служит рабочей ссылкой.
 
-## Why Streamable HTTP
+## Почему Streamable HTTP
 
-The stdio transport works well for local development but does not scale to hosted deployments. A hosted MCP server needs to serve multiple clients simultaneously, maintain state across requests, and handle disconnections gracefully.
+Транспорт stdio хорошо работает для локальной разработки, но не масштабируется для размещённых развёртываний. Размещённый MCP сервер должен одновременно обслуживать нескольких клиентов, сохранять состояние между запросами и корректно обрабатывать отключения.
 
-The original SSE transport addressed hosting but had limitations: it used a single long-lived connection for all communication, making it difficult to implement proper request-response patterns. Error handling was awkward. Session state was implicit rather than explicit.
+Исходный транспорт SSE решил проблему размещения, но имел ограничения: он использовал одно долгоживущее соединение для всех коммуникаций, что затрудняло реализацию правильных паттернов request-response. Обработка ошибок была неудобной. Состояние сессии было неявным, а не явным.
 
-Streamable HTTP solves these problems:
+Streamable HTTP решает эти проблемы:
 
-- **Standard HTTP endpoints** for request-response operations (tool calls, resource reads)
-- **SSE channels** for server-initiated events (notifications, progress updates)
-- **Explicit session management** via the Mcp-Session-Id header
-- **OAuth integration** for authentication and authorization
-- **Stateless request handling** with optional stateful sessions
+- **Стандартные HTTP endpoints** для операций request-response (вызовы инструментов, чтение ресурсов)
+- **SSE каналы** для сервер-инициированных событий (уведомления, обновления прогресса)
+- **Явное управление сессиями** через заголовок Mcp-Session-Id
+- **Интеграция OAuth** для аутентификации и авторизации
+- **Stateless обработка запросов** с опциональными stateful сессиями
 
-The result is an MCP transport that behaves like a well-designed REST API with an optional real-time channel.
+Результат — MCP транспорт, который ведёт себя как хорошо спроектированное REST API с опциональным real-time каналом.
 
-## Server Architecture
+## Архитектура сервера
 
-A Streamable HTTP MCP server exposes three endpoint types:
+Streamable HTTP MCP сервер предоставляет три типа endpoints:
 
 ```
-POST   /mcp         - Main RPC endpoint (tool calls, resource reads)
-GET    /mcp         - SSE event stream (server-to-client notifications)
-DELETE /mcp         - Session termination
+POST   /mcp         - Главный RPC endpoint (вызовы инструментов, чтение ресурсов)
+GET    /mcp         - Поток событий SSE (сервер-клиент уведомления)
+DELETE /mcp         - Завершение сессии
 ```
 
-All three use the same path. The HTTP method determines the operation type. This is a deliberate design choice in the MCP specification -- it simplifies configuration and routing.
+Все три используют один и тот же путь. HTTP метод определяет тип операции. Это целенаправленный выбор дизайна в спецификации MCP — он упрощает конфигурацию и маршрутизацию.
 
-### Express.js Setup
+### Настройка Express.js
 
 ```typescript
 import express from 'express';
@@ -41,7 +41,7 @@ import { randomUUID } from 'crypto';
 const app = express();
 app.use(express.json());
 
-// Session store
+// Хранилище сессий
 const sessions = new Map<string, SessionState>();
 
 interface SessionState {
@@ -53,7 +53,7 @@ interface SessionState {
   context: Record<string, unknown>;
 }
 
-// Main MCP endpoint
+// Главный MCP endpoint
 app.post('/mcp', handleMcpPost);
 app.get('/mcp', handleMcpSse);
 app.delete('/mcp', handleMcpDelete);
@@ -63,13 +63,13 @@ app.listen(3100, () => {
 });
 ```
 
-## Session Management
+## Управление сессиями
 
-Sessions are the core state management mechanism. Every client interaction is associated with a session, identified by the `Mcp-Session-Id` header.
+Сессии — это основной механизм управления состоянием. Каждое взаимодействие клиента связано с сессией, идентифицируемой заголовком `Mcp-Session-Id`.
 
-### Session Creation
+### Создание сессии
 
-When a client sends its first request without a session ID, the server creates a new session:
+Когда клиент отправляет свой первый запрос без ID сессии, сервер создаёт новую сессию:
 
 ```typescript
 async function handleMcpPost(
@@ -80,7 +80,7 @@ async function handleMcpPost(
   let session: SessionState;
 
   if (!sessionId || !sessions.has(sessionId)) {
-    // New session
+    // Новая сессия
     sessionId = randomUUID();
     session = {
       id: sessionId,
@@ -96,51 +96,51 @@ async function handleMcpPost(
     session.lastActivity = Date.now();
   }
 
-  // Include session ID in response
+  // Включить ID сессии в ответ
   res.setHeader('Mcp-Session-Id', sessionId);
 
-  // Process the MCP request
+  // Обработать MCP запрос
   const result = await processRequest(req.body, session);
   res.json(result);
 }
 ```
 
-### The Mcp-Session-Id Header
+### Заголовок Mcp-Session-Id
 
-The `Mcp-Session-Id` header serves multiple purposes:
+Заголовок `Mcp-Session-Id` служит нескольким целям:
 
-1. **Client identification**: The server knows which client is making each request
-2. **State continuity**: Tool results, context, and preferences persist across requests
-3. **SSE association**: The server knows which SSE channel to push notifications to
-4. **Security**: Requests with invalid session IDs are rejected
+1. **Идентификация клиента**: Сервер знает, какой клиент делает каждый запрос
+2. **Непрерывность состояния**: Результаты инструментов, контекст и предпочтения сохраняются между запросами
+3. **Связь SSE**: Сервер знает, какой SSE канал использовать для push уведомлений
+4. **Безопасность**: Запросы с неверными ID сессий отклоняются
 
-The header is returned in every response. The client must include it in all subsequent requests:
+Заголовок возвращается в каждом ответе. Клиент должен включить его во все последующие запросы:
 
 ```
-Request:
+Запрос:
   POST /mcp HTTP/1.1
   Content-Type: application/json
   Mcp-Session-Id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
 
-Response:
+Ответ:
   HTTP/1.1 200 OK
   Content-Type: application/json
   Mcp-Session-Id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
-### Session Expiration
+### Истечение сессии
 
-Sessions should expire after a period of inactivity. Without expiration, the server accumulates dead sessions indefinitely:
+Сессии должны истекать после периода неактивности. Без истечения сервер накапливает неиспользуемые сессии бесконечно:
 
 ```typescript
-const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const SESSION_TTL_MS = 30 * 60 * 1000; // 30 минут
 
-// Run every 5 minutes
+// Запуск каждые 5 минут
 setInterval(() => {
   const now = Date.now();
   for (const [id, session] of sessions) {
     if (now - session.lastActivity > SESSION_TTL_MS) {
-      // Close SSE connection if open
+      // Закрыть SSE соединение, если оно открыто
       if (session.sseResponse) {
         session.sseResponse.end();
       }
@@ -150,9 +150,9 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 ```
 
-## SSE Event Stream
+## Поток событий SSE
 
-The GET endpoint establishes a server-sent events channel. The client opens this connection to receive real-time notifications from the server.
+GET endpoint устанавливает канал server-sent events. Клиент открывает это соединение для получения real-time уведомлений от сервера.
 
 ```typescript
 async function handleMcpSse(
@@ -169,7 +169,7 @@ async function handleMcpSse(
     return;
   }
 
-  // Set SSE headers
+  // Установить SSE заголовки
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
@@ -177,18 +177,18 @@ async function handleMcpSse(
     'Mcp-Session-Id': sessionId
   });
 
-  // Store the response object for sending events later
+  // Сохранить объект ответа для отправки событий позже
   session.sseResponse = res;
 
-  // Send initial keepalive
+  // Отправить начальный keepalive
   res.write('event: ping\ndata: {}\n\n');
 
-  // Keepalive every 30 seconds
+  // Keepalive каждые 30 секунд
   const keepalive = setInterval(() => {
     res.write('event: ping\ndata: {}\n\n');
   }, 30000);
 
-  // Handle client disconnect
+  // Обработать отключение клиента
   req.on('close', () => {
     clearInterval(keepalive);
     session.sseResponse = null;
@@ -196,9 +196,9 @@ async function handleMcpSse(
 }
 ```
 
-### Sending Notifications
+### Отправка уведомлений
 
-When the server needs to push data to the client -- for example, a price update or an order status change -- it writes to the stored SSE response:
+Когда серверу нужно отправить данные клиенту — например, обновление цены или изменение статуса заказа — он пишет в сохранённый SSE ответ:
 
 ```typescript
 function sendNotification(
@@ -213,7 +213,7 @@ function sendNotification(
   }
 }
 
-// Example: notify client of a price change
+// Пример: уведомить клиента об изменении цены
 sendNotification(session, 'price_update', {
   provider: 'feee',
   price_sun: 28,
@@ -221,9 +221,9 @@ sendNotification(session, 'price_update', {
 });
 ```
 
-### SSE Reconnection
+### Переподключение SSE
 
-Clients will lose SSE connections due to network issues, server restarts, or load balancer timeouts. The EventSource API handles reconnection automatically, but you should design your server to handle re-establishment gracefully:
+Клиенты потеряют SSE соединения из-за проблем с сетью, перезагрузок сервера или таймаутов балансировщика нагрузки. API EventSource обрабатывает переподключение автоматически, но вы должны спроектировать сервер для правильного восстановления соединения:
 
 ```typescript
 app.get('/mcp', async (req, res) => {
@@ -231,7 +231,7 @@ app.get('/mcp', async (req, res) => {
   const session = sessions.get(sessionId);
 
   if (!session) {
-    // Session expired during disconnect -- client must re-initialize
+    // Сессия истекла во время отключения — клиент должен переинициализироваться
     res.status(404).json({
       error: {
         code: 'SESSION_EXPIRED',
@@ -241,22 +241,22 @@ app.get('/mcp', async (req, res) => {
     return;
   }
 
-  // Reconnection: close old SSE if still open
+  // Переподключение: закрыть старое SSE, если оно ещё открыто
   if (session.sseResponse) {
     session.sseResponse.end();
   }
 
-  // Establish new SSE connection for existing session
-  // ... (same SSE setup as above)
+  // Установить новое SSE соединение для существующей сессии
+  // ... (та же настройка SSE, что выше)
 });
 ```
 
-## OAuth Well-Known Endpoints
+## Well-Known endpoints OAuth
 
-For production deployments, MCP servers should support OAuth 2.0 for authentication. The MCP specification defines well-known endpoints for OAuth discovery:
+Для production развёртываний MCP серверы должны поддерживать OAuth 2.0 для аутентификации. Спецификация MCP определяет well-known endpoints для обнаружения OAuth:
 
 ```typescript
-// OAuth authorization server metadata
+// Метаданные сервера авторизации OAuth
 app.get('/.well-known/oauth-authorization-server', (req, res) => {
   res.json({
     issuer: 'https://mcp.merx.exchange',
@@ -270,7 +270,7 @@ app.get('/.well-known/oauth-authorization-server', (req, res) => {
   });
 });
 
-// MCP server metadata (optional but recommended)
+// Метаданные MCP сервера (опционально, но рекомендуется)
 app.get('/.well-known/mcp-configuration', (req, res) => {
   res.json({
     mcp_endpoint: 'https://mcp.merx.exchange/mcp',
@@ -287,9 +287,9 @@ app.get('/.well-known/mcp-configuration', (req, res) => {
 });
 ```
 
-### API Key Authentication (Simpler Alternative)
+### Аутентификация по API ключу (более простая альтернатива)
 
-For many production use cases, OAuth is more complexity than needed. A simpler approach is API key authentication via a custom header:
+Для многих случаев production использования OAuth — это большая сложность, чем требуется. Более простой подход — аутентификация по API ключу через кастомный заголовок:
 
 ```typescript
 function authenticateRequest(
@@ -317,40 +317,40 @@ function authenticateRequest(
 }
 ```
 
-The MERX MCP server supports both: OAuth for automated agent registration and API key authentication for direct integration.
+MERX MCP сервер поддерживает оба варианта: OAuth для автоматической регистрации агентов и аутентификацию по API ключу для прямой интеграции.
 
-## Connection Lifecycle
+## Жизненный цикл соединения
 
-The full lifecycle of a Streamable HTTP MCP connection:
+Полный жизненный цикл Streamable HTTP MCP соединения:
 
 ```
-1. Client sends POST /mcp with { method: "initialize" }
-   Server creates session, returns Mcp-Session-Id
-   Response includes server capabilities (tools, prompts, resources)
+1. Клиент отправляет POST /mcp с { method: "initialize" }
+   Сервер создаёт сессию, возвращает Mcp-Session-Id
+   Ответ включает возможности сервера (инструменты, подсказки, ресурсы)
 
-2. Client sends GET /mcp with Mcp-Session-Id header
-   Server opens SSE channel for this session
-   Keepalive pings sent every 30 seconds
+2. Клиент отправляет GET /mcp с заголовком Mcp-Session-Id
+   Сервер открывает SSE канал для этой сессии
+   Keepalive ping отправляется каждые 30 секунд
 
-3. Client sends POST /mcp with { method: "tools/list" }
-   Server returns available tools for this session
+3. Клиент отправляет POST /mcp с { method: "tools/list" }
+   Сервер возвращает доступные инструменты для этой сессии
 
-4. Client sends POST /mcp with { method: "tools/call", params: {...} }
-   Server executes tool, returns result
-   If long-running, progress sent via SSE channel
+4. Клиент отправляет POST /mcp с { method: "tools/call", params: {...} }
+   Сервер выполняет инструмент, возвращает результат
+   Если долгоживущий, прогресс отправляется через SSE канал
 
-5. Client sends POST /mcp with { method: "resources/read", params: {...} }
-   Server returns requested resource data
+5. Клиент отправляет POST /mcp с { method: "resources/read", params: {...} }
+   Сервер возвращает запрошенные данные ресурса
 
-6. (Repeat steps 4-5 for ongoing interaction)
+6. (Повторить шаги 4-5 для продолжающегося взаимодействия)
 
-7. Client sends DELETE /mcp with Mcp-Session-Id header
-   Server cleans up session state and closes SSE
+7. Клиент отправляет DELETE /mcp с заголовком Mcp-Session-Id
+   Сервер очищает состояние сессии и закрывает SSE
 ```
 
-### The Initialize Handshake
+### Handshake инициализации
 
-The first request must be an `initialize` call. This establishes protocol version compatibility and exchanges capabilities:
+Первый запрос должен быть вызовом `initialize`. Это устанавливает совместимость версии протокола и обменивает возможности:
 
 ```typescript
 async function handleInitialize(
@@ -374,9 +374,9 @@ async function handleInitialize(
 }
 ```
 
-## Request Processing
+## Обработка запросов
 
-The POST endpoint handles JSON-RPC 2.0 formatted requests:
+POST endpoint обрабатывает JSON-RPC 2.0 форматированные запросы:
 
 ```typescript
 async function processRequest(
@@ -423,9 +423,9 @@ async function processRequest(
 }
 ```
 
-## Session Termination
+## Завершение сессии
 
-When a client disconnects, clean up the session:
+Когда клиент отключается, очистите сессию:
 
 ```typescript
 async function handleMcpDelete(
@@ -442,7 +442,7 @@ async function handleMcpDelete(
     return;
   }
 
-  // Close SSE if open
+  // Закрыть SSE, если оно открыто
   if (session.sseResponse) {
     session.sseResponse.end();
   }
@@ -452,9 +452,9 @@ async function handleMcpDelete(
 }
 ```
 
-## Deployment with Docker
+## Развёртывание с Docker
 
-For production deployment, containerize the MCP server:
+Для production развёртывания упакуйте MCP сервер в контейнер:
 
 ```dockerfile
 FROM node:20-alpine
@@ -475,7 +475,7 @@ USER node
 CMD ["node", "dist/server.js"]
 ```
 
-### Docker Compose Integration
+### Интеграция Docker Compose
 
 ```yaml
 services:
@@ -498,9 +498,9 @@ services:
           memory: 256M
 ```
 
-### Load Balancer Considerations
+### Рассмотрения для балансировщика нагрузки
 
-If you deploy behind a reverse proxy or load balancer (nginx, Caddy, AWS ALB), configure it for SSE:
+Если вы развёртываете за обратным прокси или балансировщиком нагрузки (nginx, Caddy, AWS ALB), настройте его для SSE:
 
 ```nginx
 location /mcp {
@@ -511,22 +511,22 @@ location /mcp {
     proxy_buffering off;
     proxy_cache off;
 
-    # SSE connections can be long-lived
+    # SSE соединения могут быть долгоживущими
     proxy_read_timeout 3600s;
     proxy_send_timeout 3600s;
 }
 ```
 
-Key settings:
-- `proxy_buffering off` -- required for SSE to stream properly
-- `proxy_read_timeout` -- prevent the proxy from killing idle SSE connections
-- `Connection ''` -- prevent the proxy from adding `Connection: close`
+Ключевые параметры:
+- `proxy_buffering off` — требуется для правильной потоковой передачи SSE
+- `proxy_read_timeout` — предотвратить завершение idle SSE соединений прокси
+- `Connection ''` — предотвратить добавление прокси `Connection: close`
 
-### Session Affinity
+### Affinity сессии
 
-If you run multiple MCP server instances behind a load balancer, you need session affinity (sticky sessions). The `Mcp-Session-Id` header should route all requests from the same session to the same server instance.
+Если вы запускаете несколько экземпляров MCP сервера за балансировщиком нагрузки, вам нужна affinity сессии (sticky sessions). Заголовок `Mcp-Session-Id` должен маршрутизировать все запросы из одной сессии на один и тот же экземпляр сервера.
 
-Alternatively, store session state in Redis instead of in-memory:
+Или храните состояние сессии в Redis вместо памяти:
 
 ```typescript
 import Redis from 'ioredis';
@@ -541,17 +541,17 @@ async function getSession(id: string): Promise<SessionState | null> {
 async function saveSession(session: SessionState): Promise<void> {
   await redis.setex(
     `mcp:session:${session.id}`,
-    1800, // 30 min TTL
+    1800, // 30 мин TTL
     JSON.stringify(session)
   );
 }
 ```
 
-Redis-backed sessions enable horizontal scaling without sticky sessions.
+Сессии, поддерживаемые Redis, обеспечивают горизонтальное масштабирование без sticky sessions.
 
-## Health and Monitoring
+## Здоровье и мониторинг
 
-Production MCP servers need health checks and monitoring:
+Production MCP серверы нуждаются в проверках здоровья и мониторинге:
 
 ```typescript
 app.get('/health', (req, res) => {
@@ -564,33 +564,34 @@ app.get('/health', (req, res) => {
 });
 ```
 
-Monitor:
-- Active session count
-- Request latency per method type
-- SSE connection count
-- Tool call success/failure rates
-- Memory usage (watch for session leaks)
+Мониторьте:
+- Количество активных сессий
+- Задержку запроса по типу метода
+- Количество SSE соединений
+- Скорости успеха/неудачи вызова инструмента
+- Использование памяти (следите за утечками сессии)
 
-## Итоги
+## Резюме
 
-Building a Streamable HTTP MCP server for production requires attention to session management, SSE lifecycle, authentication, and deployment infrastructure. The key components:
+Создание production Streamable HTTP MCP сервера требует внимания к управлению сессиями, жизненному циклу SSE, аутентификации и инфраструктуре развёртывания. Ключевые компоненты:
 
-1. **POST /mcp** for request-response tool calls
-2. **GET /mcp** for SSE event streaming
-3. **DELETE /mcp** for session cleanup
-4. **Mcp-Session-Id** for state continuity
-5. **OAuth well-known endpoints** for discovery
-6. **Docker deployment** with proper proxy configuration
-7. **Redis session store** for horizontal scaling
+1. **POST /mcp** для request-response вызовов инструментов
+2. **GET /mcp** для потоковой передачи событий SSE
+3. **DELETE /mcp** для очистки сессии
+4. **Mcp-Session-Id** для непрерывности состояния
+5. **Well-known endpoints OAuth** для обнаружения
+6. **Развёртывание Docker** с правильной конфигурацией прокси
+7. **Хранилище сессии Redis** для горизонтального масштабирования
 
-The MERX MCP server implements all of these patterns in production, serving AI agents that need to interact with the TRON blockchain. The full source is available at [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).
+MERX MCP сервер реализует все эти паттерны в production, обслуживая AI агентов, которым нужно взаимодействовать с блокчейном TRON. Полный исходный код доступен на [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).
 
-Documentation: [https://merx.exchange/docs](https://merx.exchange/docs)
-Platform: [https://merx.exchange](https://merx.exchange)
+Документация: [https://merx.exchange/docs](https://merx.exchange/docs)
+Платформа: [https://merx.exchange](https://merx.exchange)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — без установки, без API ключа для read-only инструментов:
 
 ```json
 {
@@ -602,6 +603,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите у вашего AI агента: "What is the cheapest TRON energy right now?" и получите live цены от всех подключённых провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

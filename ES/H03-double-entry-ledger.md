@@ -1,28 +1,28 @@
-# Libro mayor de partida doble para blockchain: arquitectura contable de MERX
+# Libro Mayor de Doble Entrada para Blockchain: Arquitectura Contable de MERX
 
-Double-entry bookkeeping was invented in 13th-century Italy. It has survived every financial innovation since -- paper currency, stock exchanges, central banking, electronic funds transfer, and now blockchain. Hay a reason it has endured: it works. Every transaction produces a balanced pair of entries, and any imbalance signals an error immediately.
+La contabilidad por partida doble fue inventada en la Italia del siglo XIII. Ha sobrevivido a cada innovación financiera desde entonces: moneda de papel, bolsas de valores, banca central, transferencias electrónicas de fondos, y ahora blockchain. Hay una razón por la que ha perdurado: funciona. Cada transacción produce un par equilibrado de asientos, y cualquier desequilibrio señala un error inmediatamente.
 
-When we built the accounting system for MERX -- a platform that handles TRX deposits, energy purchases, provider settlements, and withdrawals -- we chose partida doble ledger design without debate. The alternative, single-entry tracking with running balance updates, is how most crypto platforms handle accounting. It is also how most crypto platforms end up with unexplainable balance discrepancies.
+Cuando construimos el sistema contable para MERX —una plataforma que maneja depósitos de TRX, compras de energía, liquidaciones a proveedores y retiros— elegimos el diseño de libro mayor de doble entrada sin debate. La alternativa, el seguimiento de entrada única con actualizaciones de saldo corriente, es cómo la mayoría de plataformas criptográficas manejan la contabilidad. También es cómo la mayoría de plataformas criptográficas terminan con discrepancias de saldo inexplicables.
 
-This article explains the ledger architecture behind MERX: why partida doble matters for blockchain platforms, how the ledger table is designed, why records are immutable, how debit and credit accounts interact, and how we reconcile balances using SELECT FOR UPDATE.
+Este artículo explica la arquitectura del libro mayor detrás de MERX: por qué la doble entrada es importante para plataformas blockchain, cómo se diseña la tabla del libro mayor, por qué los registros son inmutables, cómo interactúan las cuentas de débito y crédito, y cómo reconciliamos saldos usando SELECT FOR UPDATE.
 
-## Why Double-Entry for Crypto
+## Por qué Doble Entrada para Criptomonedas
 
-A single-entry system works like a bank statement: one column, one running total. When a user deposits 100 TRX, you add 100 to their balance. When they spend 5 TRX, you subtract 5. Simple.
+Un sistema de entrada única funciona como un extracto bancario: una columna, un saldo corriente. Cuando un usuario deposita 100 TRX, sumas 100 a su saldo. Cuando gasta 5 TRX, restas 5. Simple.
 
-The problems with single-entry appear under stress:
+Los problemas con la entrada única aparecen bajo estrés:
 
-**Concurrent modifications.** Two orders execute simultaneously. Both read the user's balance as 100 TRX. Both deduct 5 TRX. Both write 95 TRX. The user has been charged once instead of twice. Or worse: one write overwrites the other, and the platform loses track of a transaction entirely.
+**Modificaciones concurrentes.** Dos órdenes se ejecutan simultáneamente. Ambas leen el saldo del usuario como 100 TRX. Ambas deducen 5 TRX. Ambas escriben 95 TRX. Al usuario se le ha cobrado una vez en lugar de dos. O peor: una escritura sobrescribe la otra, y la plataforma pierde completamente el rastro de una transacción.
 
-**Missing audit trail.** A user's balance is 47.3 TRX. How did it get there? With single-entry, you have to reconstruct the balance from individual transaction records -- which may or may not be complete, and which have no built-in integrity check.
+**Falta de rastro de auditoría.** El saldo de un usuario es 47,3 TRX. ¿Cómo llegó allí? Con entrada única, tienes que reconstruir el saldo a partir de registros de transacciones individuales, que pueden o no estar completos, y que no tienen una verificación de integridad incorporada.
 
-**Reconciliation failure.** The sum of all user balances should equal the platform's TRX holdings. With single-entry, verifying this requires aggregating every user's balance and comparing it to the treasury. If the numbers do not match, there is no systematic way to find the discrepancy.
+**Fallo de reconciliación.** La suma de todos los saldos de los usuarios debe ser igual a las tenencias de TRX de la plataforma. Con entrada única, verificar esto requiere agregar el saldo de cada usuario y compararlo con la tesorería. Si los números no coinciden, no hay una forma sistemática de encontrar la discrepancia.
 
-Double-entry solves all of these problems structurally. Every mutacion de saldo creates two entries that must sum to zero. The integrity check is built into every operation.
+La doble entrada resuelve todos estos problemas estructuralmente. Cada mutación de saldo crea dos asientos que deben sumar cero. La verificación de integridad está incorporada en cada operación.
 
-## The Ledger Table
+## La Tabla del Libro Mayor
 
-The MERX ledger is a single PostgreSQL table:
+El libro mayor de MERX es una única tabla PostgreSQL:
 
 ```sql
 CREATE TABLE ledger (
@@ -43,41 +43,41 @@ CREATE INDEX idx_ledger_reference ON ledger(reference_id);
 CREATE INDEX idx_ledger_created ON ledger(created_at);
 ```
 
-### Column Design
+### Diseño de Columnas
 
-**amount_sun**: All amounts stored in SUN (1 TRX = 1,000,000 SUN). Using the smallest unit eliminates floating-point arithmetic entirely. Hay no decimal amounts, no rounding errors, no precision loss. Every calculation is integer arithmetic.
+**amount_sun**: Todos los montos se almacenan en SUN (1 TRX = 1.000.000 SUN). Usar la unidad más pequeña elimina la aritmética de punto flotante por completo. No hay montos decimales, no hay errores de redondeo, no hay pérdida de precisión. Cada cálculo es aritmética de enteros.
 
-**direction**: Either DEBIT or CREDIT. The meaning depends on the account type:
+**direction**: Ya sea DEBIT o CREDIT. El significado depende del tipo de cuenta:
 
-- For user accounts: CREDIT increases the balance, DEBIT decreases it
-- For settlement accounts: DEBIT increases the balance, CREDIT decreases it
-- For revenue accounts: CREDIT increases the balance
+- Para cuentas de usuario: CREDIT aumenta el saldo, DEBIT lo disminuye
+- Para cuentas de liquidación: DEBIT aumenta el saldo, CREDIT lo disminuye
+- Para cuentas de ingresos: CREDIT aumenta el saldo
 
-**entry_type**: Categorizes the entrada del libro mayor. Examples:
+**entry_type**: Categoriza el asiento del libro mayor. Ejemplos:
 
 ```
-DEPOSIT              User deposits TRX to their MERX account
-WITHDRAWAL           User withdraws TRX from their MERX account
-ORDER_PAYMENT        User pays for an energy order
-ORDER_REFUND         Order fails, payment returned to user
-PROVIDER_SETTLEMENT  Payment to energy provider for fulfilled order
-X402_PAYMENT         On-chain payment received via x402 protocol
+DEPOSIT              El usuario deposita TRX en su cuenta de MERX
+WITHDRAWAL           El usuario retira TRX de su cuenta de MERX
+ORDER_PAYMENT        El usuario paga una orden de energía
+ORDER_REFUND         La orden falla, el pago se devuelve al usuario
+PROVIDER_SETTLEMENT  Pago al proveedor de energía por orden cumplida
+X402_PAYMENT         Pago en cadena recibido vía protocolo x402
 ```
 
-**reference_id** and **reference_type**: Link the entrada del libro mayor to the business object that caused it (an order, a deposit, a withdrawal). This creates a bidirectional audit trail: from the entrada del libro mayor you can find the order, and from the order you can find its entradas del libro mayor.
+**reference_id** y **reference_type**: Vinculan el asiento del libro mayor al objeto comercial que lo causó (una orden, un depósito, un retiro). Esto crea un rastro de auditoría bidireccional: desde el asiento del libro mayor puedes encontrar la orden, y desde la orden puedes encontrar sus asientos en el libro mayor.
 
-**idempotency_key**: Prevents duplicate entries. If the same operation is processed twice (due to a retry, a network timeout, a duplicate webhook), the unique constraint on idempotency_key ensures only one entry is created.
+**idempotency_key**: Previene asientos duplicados. Si la misma operación se procesa dos veces (debido a un reintento, un tiempo de espera de red, un webhook duplicado), la restricción única en idempotency_key asegura que solo se cree un asiento.
 
-## The Immutability Rule
+## La Regla de Inmutabilidad
 
-Ledger records are never updated. They are never deleted. This is enforced at the database level:
+Los registros del libro mayor nunca se actualizan. Nunca se eliminan. Esto se fuerza a nivel de base de datos:
 
 ```sql
--- Prevent any updates to ledger records
+-- Prevenir cualquier actualización de registros del libro mayor
 CREATE OR REPLACE FUNCTION prevent_ledger_update()
 RETURNS TRIGGER AS $$
 BEGIN
-  RAISE EXCEPTION 'Ledger records cannot be updated';
+  RAISE EXCEPTION 'Los registros del libro mayor no pueden ser actualizados';
 END;
 $$ LANGUAGE plpgsql;
 
@@ -86,11 +86,11 @@ CREATE TRIGGER no_ledger_update
   FOR EACH ROW
   EXECUTE FUNCTION prevent_ledger_update();
 
--- Prevent any deletes from ledger
+-- Prevenir cualquier eliminación del libro mayor
 CREATE OR REPLACE FUNCTION prevent_ledger_delete()
 RETURNS TRIGGER AS $$
 BEGIN
-  RAISE EXCEPTION 'Ledger records cannot be deleted';
+  RAISE EXCEPTION 'Los registros del libro mayor no pueden ser eliminados';
 END;
 $$ LANGUAGE plpgsql;
 
@@ -100,29 +100,29 @@ CREATE TRIGGER no_ledger_delete
   EXECUTE FUNCTION prevent_ledger_delete();
 ```
 
-These triggers make the immutability rule unbreakable at the database level. Not even an administrator running direct SQL can modify or remove a entrada del libro mayor without first disabling the trigger -- an operation that would be visible in database audit logs.
+Estos disparadores hacen que la regla de inmutabilidad sea inquebrantable a nivel de base de datos. Ni siquiera un administrador ejecutando SQL directo puede modificar o eliminar un asiento del libro mayor sin antes deshabilitar el disparador, una operación que sería visible en los registros de auditoría de la base de datos.
 
-### Why Immutability Matters
+### Por qué la Inmutabilidad es Importante
 
-**Audit integrity.** If ledger records can be modified, an attacker (or a bug) can alter the financial history of the platform. Immutable records mean the history is permanent and tamper-evident.
+**Integridad de auditoría.** Si los registros del libro mayor pueden ser modificados, un atacante (o un bug) puede alterar el historial financiero de la plataforma. Los registros inmutables significan que el historial es permanente y resistente a manipulaciones.
 
-**Regulatory compliance.** Financial record-keeping regulations universally require that transaction records be preserved. Deleting or altering them is a compliance violation.
+**Cumplimiento regulatorio.** Las regulaciones de mantenimiento de registros financieros universalmente requieren que los registros de transacciones se preserven. Eliminarlos o alterarlos es una violación de cumplimiento.
 
-**Debugging.** When something goes wrong -- and in a system processing real money, things will go wrong -- immutable records provide a complete, unaltered timeline of events. You can replay history exactly as it happened.
+**Depuración.** Cuando algo sale mal —y en un sistema que procesa dinero real, las cosas saldrán mal— los registros inmutables proporcionan una línea de tiempo completa e inalterada de eventos. Puedes reproducir el historial exactamente como sucedió.
 
-### Corrections and Reversals
+### Correcciones y Reversiones
 
-If a entrada del libro mayor needs to be "corrected" (por ejemplo, a refund), you do not update the original entry. You create a new entry with the opposite direction:
+Si un asiento del libro mayor necesita ser "corregido" (por ejemplo, un reembolso), no actualizas el asiento original. Creas un nuevo asiento con la dirección opuesta:
 
 ```sql
--- Original order payment
+-- Pago de orden original
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($user_id, 'ORDER_PAYMENT', 1820000, 'DEBIT', $order_id);
 
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($provider_settlement, 'ORDER_PAYMENT', 1820000, 'CREDIT', $order_id);
 
--- Order failed, issue refund (new entries, originals remain)
+-- La orden falló, emitir reembolso (nuevos asientos, los originales permanecen)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($user_id, 'ORDER_REFUND', 1820000, 'CREDIT', $order_id);
 
@@ -130,15 +130,15 @@ INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($provider_settlement, 'ORDER_REFUND', 1820000, 'DEBIT', $order_id);
 ```
 
-After the refund, the original payment entries still exist. The user's calculated balance reflects both the payment and the refund: net zero. The audit trail shows exactly what happened and when.
+Después del reembolso, los asientos de pago originales siguen existiendo. El saldo calculado del usuario refleja tanto el pago como el reembolso: neto cero. El rastro de auditoría muestra exactamente qué sucedió y cuándo.
 
-## Debit and Credit Accounts
+## Cuentas de Débito y Crédito
 
-MERX uses several account types, each with its own role in the partida doble system:
+MERX usa varios tipos de cuenta, cada uno con su propio rol en el sistema de doble entrada:
 
-### User Accounts
+### Cuentas de Usuario
 
-Every MERX user has an account. Their balance is calculated from entradas del libro mayor:
+Cada usuario de MERX tiene una cuenta. Su saldo se calcula a partir de asientos del libro mayor:
 
 ```sql
 SELECT
@@ -149,37 +149,37 @@ FROM ledger
 WHERE account_id = $user_id;
 ```
 
-Credits increase the balance (deposits, refunds). Debits decrease it (order payments, withdrawals).
+Los créditos aumentan el saldo (depósitos, reembolsos). Los débitos lo disminuyen (pagos de órdenes, retiros).
 
-### Provider Settlement Account
+### Cuenta de Liquidación de Proveedores
 
-When a user buys energy, the payment needs to reach the provider. The provider settlement account tracks what MERX owes to each provider:
-
-```
-User pays for order:
-  User account:               DEBIT  1,820,000 SUN
-  Provider settlement (Feee): CREDIT 1,820,000 SUN
-
-MERX settles with provider:
-  Provider settlement (Feee): DEBIT  1,820,000 SUN
-  Treasury:                   CREDIT 1,820,000 SUN
-```
-
-At any point, the provider settlement account balance shows the total amount MERX owes to that provider and has not yet settled.
-
-### Treasury Account
-
-The treasury account represents MERX's en cadena TRX holdings. Deposits credit the treasury (TRX received). Withdrawals and provider settlements debit the treasury (TRX sent out).
-
-### The Fundamental Equation
-
-At all times:
+Cuando un usuario compra energía, el pago necesita llegar al proveedor. La cuenta de liquidación de proveedores rastrea lo que MERX debe a cada proveedor:
 
 ```
-Sum of all CREDITS = Sum of all DEBITS
+El usuario paga por la orden:
+  Cuenta de usuario:                DEBIT  1.820.000 SUN
+  Liquidación de proveedor (Feee): CREDIT 1.820.000 SUN
+
+MERX liquida con el proveedor:
+  Liquidación de proveedor (Feee): DEBIT  1.820.000 SUN
+  Tesorería:                        CREDIT 1.820.000 SUN
 ```
 
-If this equation fails, the system has a bug. MERX runs a reconciliation check periodically:
+En cualquier momento, el saldo de la cuenta de liquidación del proveedor muestra el monto total que MERX debe a ese proveedor y aún no ha liquidado.
+
+### Cuenta de Tesorería
+
+La cuenta de tesorería representa las tenencias de TRX en cadena de MERX. Los depósitos acreditan la tesorería (TRX recibido). Los retiros y las liquidaciones de proveedores debitan la tesorería (TRX enviado).
+
+### La Ecuación Fundamental
+
+En todo momento:
+
+```
+Suma de todos los CRÉDITOS = Suma de todos los DÉBITOS
+```
+
+Si esta ecuación falla, el sistema tiene un bug. MERX ejecuta una verificación de reconciliación periódicamente:
 
 ```sql
 SELECT
@@ -187,151 +187,151 @@ SELECT
   SUM(CASE WHEN direction = 'DEBIT' THEN amount_sun ELSE 0 END) AS total_debits
 FROM ledger;
 
--- total_credits MUST equal total_debits
--- If not, alert immediately
+-- total_credits DEBE ser igual a total_debits
+-- Si no, alertar inmediatamente
 ```
 
-## The Complete Transaction Flow
+## El Flujo de Transacción Completo
 
-Aqui esta how a typical energy purchase flows through the ledger:
+Aquí está cómo una compra típica de energía fluye a través del libro mayor:
 
-### 1. User Deposits TRX
+### 1. El Usuario Deposita TRX
 
-The deposit monitor detects an incoming TRX transfer to the MERX deposit address:
+El monitor de depósito detecta una transferencia de TRX entrante a la dirección de depósito de MERX:
 
 ```sql
 BEGIN;
 
--- Credit the user's account (their balance increases)
+-- Acreditar la cuenta del usuario (su saldo aumenta)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id, reference_type, idempotency_key)
 VALUES ($user_id, 'DEPOSIT', 100000000, 'CREDIT', $deposit_id, 'DEPOSIT', $tx_hash);
 
--- Debit the treasury (TRX received, treasury acknowledges the liability)
+-- Debitar la tesorería (TRX recibido, tesorería reconoce la responsabilidad)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id, reference_type, idempotency_key)
 VALUES ($treasury_id, 'DEPOSIT', 100000000, 'DEBIT', $deposit_id, 'DEPOSIT', $tx_hash || '_treasury');
 
 COMMIT;
 ```
 
-### 2. User Buys Energy
+### 2. El Usuario Compra Energía
 
-The user places an order for 65,000 energy at 28 SUN/unit:
+El usuario coloca una orden de 65.000 energía a 28 SUN/unidad:
 
 ```sql
 BEGIN;
 
--- Check balance with row lock
+-- Verificar saldo con bloqueo de fila
 SELECT balance_sun FROM account_balances
 WHERE account_id = $user_id
 FOR UPDATE;
 
--- Verify sufficient balance
--- 65,000 * 28 = 1,820,000 SUN = 1.82 TRX
+-- Verificar saldo suficiente
+-- 65.000 * 28 = 1.820.000 SUN = 1,82 TRX
 
--- Debit user account (balance decreases)
+-- Debitar la cuenta del usuario (el saldo disminuye)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id, reference_type, idempotency_key)
 VALUES ($user_id, 'ORDER_PAYMENT', 1820000, 'DEBIT', $order_id, 'ORDER', $idempotency_key);
 
--- Credit provider settlement (MERX now owes the provider)
+-- Acreditar la liquidación del proveedor (MERX ahora debe al proveedor)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id, reference_type, idempotency_key)
 VALUES ($provider_settlement_id, 'ORDER_PAYMENT', 1820000, 'CREDIT', $order_id, 'ORDER', $idempotency_key || '_settlement');
 
 COMMIT;
 ```
 
-### 3. Order Fails (Refund)
+### 3. La Orden Falla (Reembolso)
 
-If the provider fails to delegate the energy, the order is refunded:
+Si el proveedor no delega la energía, la orden se reembolsa:
 
 ```sql
 BEGIN;
 
--- Credit user account (balance restored)
+-- Acreditar la cuenta del usuario (saldo restaurado)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id, reference_type)
 VALUES ($user_id, 'ORDER_REFUND', 1820000, 'CREDIT', $order_id, 'ORDER');
 
--- Debit provider settlement (MERX no longer owes the provider)
+-- Debitar la liquidación del proveedor (MERX ya no debe al proveedor)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id, reference_type)
 VALUES ($provider_settlement_id, 'ORDER_REFUND', 1820000, 'DEBIT', $order_id, 'ORDER');
 
 COMMIT;
 ```
 
-The original payment entries remain. The refund entries are new records. The user's net balance change for this order is zero: 1,820,000 SUN debited, then 1,820,000 SUN credited.
+Los asientos de pago originales permanecen. Los asientos de reembolso son nuevos registros. El cambio de saldo neto del usuario para esta orden es cero: 1.820.000 SUN debitados, luego 1.820.000 SUN acreditados.
 
-## Balance Reconciliation with SELECT FOR UPDATE
+## Reconciliación de Saldos con SELECT FOR UPDATE
 
-The most dangerous moment in any financial system is the verificacion de saldo before a deduction. Without proper locking, concurrent requests can both pass the verificacion de saldo and both deduct, resulting in a negative balance.
+El momento más peligroso en cualquier sistema financiero es la verificación de saldo antes de una deducción. Sin bloqueo adecuado, las solicitudes concurrentes pueden pasar ambas la verificación de saldo y ambas deducir, resultando en un saldo negativo.
 
-### The Race Condition
+### La Condición de Carrera
 
 ```
-Thread A: SELECT balance WHERE user_id = 1  -> 10 TRX
-Thread B: SELECT balance WHERE user_id = 1  -> 10 TRX
-Thread A: Deduct 8 TRX, new balance = 2 TRX
-Thread B: Deduct 8 TRX, new balance = 2 TRX
-Result: User had 10 TRX, spent 16 TRX, balance shows 2 TRX
+Hilo A: SELECT balance WHERE user_id = 1  -> 10 TRX
+Hilo B: SELECT balance WHERE user_id = 1  -> 10 TRX
+Hilo A: Deducir 8 TRX, nuevo saldo = 2 TRX
+Hilo B: Deducir 8 TRX, nuevo saldo = 2 TRX
+Resultado: El usuario tenía 10 TRX, gastó 16 TRX, el saldo muestra 2 TRX
 ```
 
-The platform just lost 6 TRX.
+La plataforma acaba de perder 6 TRX.
 
-### The Fix: SELECT FOR UPDATE
+### La Solución: SELECT FOR UPDATE
 
 ```sql
 BEGIN;
 
--- Lock the row. Any other transaction trying to read this row
--- with FOR UPDATE will block until this transaction completes.
+-- Bloquear la fila. Cualquier otra transacción que intente leer esta fila
+-- con FOR UPDATE se bloqueará hasta que esta transacción se complete.
 SELECT balance_sun FROM account_balances
 WHERE account_id = $user_id
 FOR UPDATE;
 
--- Now we have an exclusive lock. Check balance safely.
--- If insufficient, ROLLBACK.
--- If sufficient, proceed with ledger entries.
+-- Ahora tenemos un bloqueo exclusivo. Verificar el saldo de forma segura.
+-- Si insuficiente, ROLLBACK.
+-- Si suficiente, proceder con asientos del libro mayor.
 
 INSERT INTO ledger ...;
 
 COMMIT;
--- Lock released. Next waiting transaction can proceed.
+-- Bloqueo liberado. La siguiente transacción esperando puede proceder.
 ```
 
-With `FOR UPDATE`, the scenario becomes:
+Con `FOR UPDATE`, el escenario se convierte en:
 
 ```
-Thread A: SELECT ... FOR UPDATE  -> 10 TRX (row locked)
-Thread B: SELECT ... FOR UPDATE  -> BLOCKED (waiting for A's lock)
-Thread A: Deduct 8 TRX, COMMIT  -> balance = 2 TRX (lock released)
-Thread B: SELECT ... FOR UPDATE  -> 2 TRX (lock acquired)
-Thread B: Deduct 8 TRX?         -> INSUFFICIENT BALANCE, ROLLBACK
+Hilo A: SELECT ... FOR UPDATE  -> 10 TRX (fila bloqueada)
+Hilo B: SELECT ... FOR UPDATE  -> BLOQUEADO (esperando el bloqueo de A)
+Hilo A: Deducir 8 TRX, COMMIT  -> saldo = 2 TRX (bloqueo liberado)
+Hilo B: SELECT ... FOR UPDATE  -> 2 TRX (bloqueo adquirido)
+Hilo B: ¿Deducir 8 TRX?         -> SALDO INSUFICIENTE, ROLLBACK
 ```
 
-No overspend. No lost funds. The serialization guarantee of `SELECT FOR UPDATE` ensures that verificacion de saldos and deductions are atomic.
+Sin gasto excesivo. Sin fondos perdidos. La garantía de serialización de `SELECT FOR UPDATE` asegura que las verificaciones de saldo y las deducciones sean atómicas.
 
-### Performance Implications
+### Implicaciones de Rendimiento
 
-`SELECT FOR UPDATE` serializes transactions per account. Two users can transact simultaneously without blocking each other (they lock different rows). But two concurrent orders for the same user must wait in line.
+`SELECT FOR UPDATE` serializa transacciones por cuenta. Dos usuarios pueden realizar transacciones simultáneamente sin bloquearse mutuamente (bloquean filas diferentes). Pero dos órdenes concurrentes del mismo usuario deben esperar en la cola.
 
-En la practica, this is not a bottleneck. Individual users rarely submit truly concurrent requests. When they do (e.g., a misconfigured bot), serialization is the correct behavior -- you want those requests processed sequentially, not in parallel.
+En la práctica, esto no es un cuello de botella. Los usuarios individuales raramente envían solicitudes verdaderamente concurrentes. Cuando lo hacen (p. ej., un bot mal configurado), la serialización es el comportamiento correcto: quieres que esas solicitudes se procesen secuencialmente, no en paralelo.
 
-## Periodic Reconciliation
+## Reconciliación Periódica
 
-Beyond per-transaction integrity, MERX runs a periodic reconciliation that verifies the entire ledger:
+Más allá de la integridad por transacción, MERX ejecuta una reconciliación periódica que verifica todo el libro mayor:
 
 ```sql
--- 1. Verify global balance equation
+-- 1. Verificar ecuación de saldo global
 SELECT
   SUM(CASE WHEN direction = 'CREDIT' THEN amount_sun ELSE 0 END) AS credits,
   SUM(CASE WHEN direction = 'DEBIT' THEN amount_sun ELSE 0 END) AS debits
 FROM ledger;
--- credits MUST equal debits
+-- credits DEBE ser igual a debits
 
--- 2. Verify per-account balances against on-chain state
--- Sum of all user balances should equal treasury holdings
--- minus pending provider settlements
+-- 2. Verificar saldos por cuenta contra estado en cadena
+-- La suma de todos los saldos de usuario debe ser igual a las tenencias de tesorería
+-- menos liquidaciones de proveedores pendientes
 
--- 3. Check for orphaned references
--- Every reference_id should point to a valid order, deposit, or withdrawal
+-- 3. Verificar referencias huérfanas
+-- Cada reference_id debe apuntar a una orden, depósito o retiro válido
 SELECT l.reference_id, l.reference_type
 FROM ledger l
 LEFT JOIN orders o ON l.reference_id = o.id AND l.reference_type = 'ORDER'
@@ -339,26 +339,27 @@ LEFT JOIN deposits d ON l.reference_id = d.id AND l.reference_type = 'DEPOSIT'
 WHERE o.id IS NULL AND d.id IS NULL AND l.reference_type IS NOT NULL;
 ```
 
-If any check fails, the system alerts immediately. The response is investigation and correction (via new entradas del libro mayor), never modification of existing records.
+Si alguna verificación falla, el sistema alerta inmediatamente. La respuesta es investigación y corrección (a través de nuevos asientos del libro mayor), nunca modificación de registros existentes.
 
 ## Resumen
 
-The MERX partida doble ledger provides:
+El libro mayor de doble entrada de MERX proporciona:
 
-1. **Integrity**: Every transaction is a balanced pair. Imbalances are detected immediately.
-2. **Immutability**: Records cannot be modified or deleted. History is permanent.
-3. **Concurrency safety**: SELECT FOR UPDATE prevents race conditions on verificacion de saldos.
-4. **Auditability**: Complete financial history with bidirectional references.
-5. **Reconciliation**: Periodic checks verify the entire system state.
+1. **Integridad**: Cada transacción es un par equilibrado. Los desequilibrios se detectan inmediatamente.
+2. **Inmutabilidad**: Los registros no pueden ser modificados ni eliminados. El historial es permanente.
+3. **Seguridad de concurrencia**: SELECT FOR UPDATE previene condiciones de carrera en verificaciones de saldo.
+4. **Auditabilidad**: Historial financiero completo con referencias bidireccionales.
+5. **Reconciliación**: Verificaciones periódicas verifican todo el estado del sistema.
 
-This is not novel. It is a 700-year-old accounting technique applied to a blockchain platform. The novelty is that most crypto platforms skip it -- and pay the price in lost funds, unexplainable discrepancies, and auditor nightmares.
+Esto no es novedoso. Es una técnica contable de 700 años aplicada a una plataforma blockchain. La novedad es que la mayoría de plataformas criptográficas lo omiten —y pagan el precio en fondos perdidos, discrepancias inexplicables, y pesadillas de auditoría.
 
 Plataforma: [https://merx.exchange](https://merx.exchange)
-Documentacion: [https://merx.exchange/docs](https://merx.exchange/docs)
+Documentación: [https://merx.exchange/docs](https://merx.exchange/docs)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP —sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -370,6 +371,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregúntale a tu agente de IA: "¿Cuál es la energía de TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

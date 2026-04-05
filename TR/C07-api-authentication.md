@@ -1,61 +1,61 @@
-# MERX API Kimlik Dogrulama: Anahtarlar, Izinler ve Hiz Sinirlari
+# MERX API Kimlik Doğrulaması: Anahtarlar, İzinler ve Hız Sınırları
 
-Every API integration starts with authentication. Get it right, and your automated energy trading runs smoothly around the clock. Get it wrong, and you are dealing with leaked credentials, unexplained 403 errors, or rate limit bans that halt your production systems at the worst possible moment.
+Her API entegrasyonu kimlik doğrulamayla başlar. Doğru yaparsanız, otomatik enerji ticaretiniz günün 24 saati sorunsuz çalışır. Yanlış yaparsanız, sızdırılan kimlik bilgileri, açıklanamayan 403 hataları veya en kötü zamanımızda üretim sistemlerinizi durduran hız sınırı yasaklamalarıyla uğraşırsınız.
 
-MERX provides two authentication methods, each designed for a different use case. This article covers both in detail - how they work, when to use each, how to manage permissions granularly, and what rate limits apply across the API surface.
+MERX iki kimlik doğrulama yöntemi sağlar; her biri farklı bir kullanım durumu için tasarlanmıştır. Bu makale her ikisini detaylıca kapsar - nasıl çalıştıkları, her birini ne zaman kullanacağınız, izinleri nasıl ayrıntılı olarak yöneteceğiniz ve API yüzeyinde hangi hız sınırlarının geçerli olduğu.
 
-## Two Authentication Methods
+## İki Kimlik Doğrulama Yöntemi
 
-MERX supports two ways to authenticate API requests: API keys and JWT tokens. They serve different purposes and are not interchangeable.
+MERX, API isteklerinin kimliğini doğrulamak için iki yolu destekler: API anahtarları ve JWT belirteçleri. Farklı amaçlara hizmet ederler ve birbirinin yerine kullanılamaz.
 
-### API Key Authentication
+### API Anahtarı Kimlik Doğrulaması
 
-API keys are long-lived credentials designed for server-to-server communication. You create them through the API or admin panel, assign specific permissions, and include them in every request via the `X-API-Key` header.
+API anahtarları, sunucudan sunucuya iletişim için tasarlanmış uzun ömürlü kimlik bilgileridir. API aracılığıyla veya yönetici panelinde oluşturursunuz, belirli izinler atarsınız ve her isteğe `X-API-Key` başlığı aracılığıyla dahil edersiniz.
 
 ```bash
 curl https://merx.exchange/api/v1/prices \
   -H "X-API-Key: merx_live_k7x9m2p4..."
 ```
 
-API keys are the right choice when:
+API anahtarları şu durumlarda doğru seçimdir:
 
-- Your backend service calls MERX on behalf of your users.
-- You run scheduled jobs that create orders or check balances.
-- You want fine-grained permission control (an order-creation key that cannot withdraw funds).
-- You need credentials that work without an interactive login flow.
+- Arka uç hizmetiniz MERX'i kullanıcılarınız adına çağırır.
+- Siparişler oluşturan veya bakiyeleri kontrol eden planlanmış işler çalıştırırsınız.
+- İnce ayarlı izin kontrolü isteyebilirsiniz (para çekemeyen ancak siparişler oluşturabilen bir anahtar).
+- Etkileşimli bir oturum açma akışı olmadan çalışan kimlik bilgileri gerekir.
 
-API keys never expire on their own. They remain valid until you explicitly revoke them. This makes them convenient for long-running services but demands careful management.
+API anahtarları kendi başlarına hiçbir zaman sona ermez. Açıkça iptal edene kadar geçerli kalırlar. Bu, uzun süreli hizmetler için uygun olsa da dikkatli yönetim gerektirir.
 
-### JWT Token Authentication
+### JWT Belirteci Kimlik Doğrulaması
 
-JWT tokens are short-lived credentials issued after a login. You authenticate with your email and password (or via OAuth), receive a JWT, and include it in requests via the `Authorization` header with a `Bearer` prefix.
+JWT belirteçleri, oturum açtıktan sonra verilen kısa ömürlü kimlik bilgileridir. E-posta ve şifreniz (veya OAuth aracılığıyla) ile kimlik doğrularsınız, JWT alırsınız ve `Bearer` önekiyle `Authorization` başlığı aracılığıyla isteklere dahil edersiniz.
 
 ```bash
 curl https://merx.exchange/api/v1/balance \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
 ```
 
-JWTs are the right choice when:
+JWT'ler şu durumlarda doğru seçimdir:
 
-- A human user interacts with a frontend that calls the API.
-- You want time-limited access that expires automatically.
-- You are building a web or mobile application with a login flow.
+- İnsan kullanıcı, API'yi çağıran bir ön uçla etkileşime girer.
+- Otomatik olarak süresi dolan sınırlı süreli erişim istiyorsunuz.
+- Oturum açma akışı olan bir web veya mobil uygulama oluşturuyorsunuz.
 
-JWT tokens issued by MERX expire after 24 hours. After expiration, the client must re-authenticate to get a new token. Refresh tokens extend sessions without requiring the user to log in again.
+MERX tarafından verilen JWT belirteçleri 24 saat sonra sona erer. Süresi dolduktan sonra, istemci yeni bir belirteç almak için yeniden kimlik doğrulaması yapmalıdır. Yenileme belirteçleri, kullanıcının yeniden oturum açmasını gerektirmeden oturumları uzatır.
 
-### Which One to Use
+### Hangisini Kullanmalı
 
-For programmatic integrations - payment bots, automated trading, backend services - use API keys. They are simpler to manage, support granular permissions, and do not require a login flow.
+Programlı entegrasyonlar (ödeme botları, otomatik ticaret, arka uç hizmetleri) için API anahtarları kullanın. Yönetimi daha basit, ayrıntılı izinleri destekler ve oturum açma akışı gerektirmez.
 
-For user-facing applications where a human logs in, use JWT tokens. They provide session-based access with automatic expiration, reducing the risk of credential leakage from client-side code.
+İnsan oturum açışının olduğu kullanıcıya yönelik uygulamalar için JWT belirteçleri kullanın. Oturum tabanlı erişim sağlarlar ve otomatik olarak sona ererler; bu da istemci taraflı koddan kimlik bilgisi sızıntısı riskini azaltır.
 
-You can use both in the same system. A common pattern: JWT authentication for your admin panel (human operators log in to manage settings), API key authentication for your backend services (automated order creation, balance monitoring).
+Aynı sistemde her ikisini de kullanabilirsiniz. Yaygın bir desen: Yönetici paneliniz için JWT kimlik doğrulaması (insan operatörleri ayarları yönetmek için oturum açarlar), arka uç hizmetleriniz için API anahtarı kimlik doğrulaması (otomatik sipariş oluşturma, denge izleme).
 
-## Creating and Managing API Keys
+## API Anahtarları Oluşturma ve Yönetme
 
-### Creating a Key
+### Anahtar Oluşturma
 
-Create API keys via the API itself or through the MERX web dashboard. The API endpoint is `POST /api/v1/keys`:
+API anahtarlarını API'nin kendisi aracılığıyla veya MERX web panosundan oluşturun. API uç noktası `POST /api/v1/keys`:
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/keys \
@@ -67,7 +67,7 @@ curl -X POST https://merx.exchange/api/v1/keys \
   }'
 ```
 
-The response includes the full API key. This is the only time the complete key is returned. Store it immediately in your secrets manager.
+Yanıt, tam API anahtarını içerir. Bu, tam anahtarın döndürüldüğü tek seeferdir. Hemen sırlar yöneticinize saklayın.
 
 ```json
 {
@@ -79,9 +79,9 @@ The response includes the full API key. This is the only time the complete key i
 }
 ```
 
-Note: the key creation endpoint requires JWT authentication. You must log in first to create API keys. This is a deliberate security decision - API keys cannot create other API keys.
+Not: anahtar oluşturma uç noktası JWT kimlik doğrulaması gerektirir. API anahtarları oluşturmak için önce oturum açmalısınız. Bu kasıtlı bir güvenlik kararıdır - API anahtarları diğer API anahtarları oluşturamaz.
 
-### Using the JavaScript SDK
+### JavaScript SDK'yı Kullanma
 
 ```javascript
 import { MerxClient } from 'merx-sdk';
@@ -91,12 +91,12 @@ const merx = new MerxClient({
   baseUrl: 'https://merx.exchange/api/v1',
 });
 
-// The SDK automatically includes the X-API-Key header
+// SDK otomatik olarak X-API-Key başlığını dahil eder
 const prices = await merx.prices.list();
 const balance = await merx.account.getBalance();
 ```
 
-### Using the Python SDK
+### Python SDK'yı Kullanma
 
 ```python
 from merx_sdk import MerxClient
@@ -110,48 +110,48 @@ prices = client.get_prices()
 balance = client.get_balance()
 ```
 
-### Listing and Revoking Keys
+### Anahtarları Listeleme ve İptal Etme
 
-List all active keys for your account:
+Hesabınızın tüm etkin anahtarlarını listeleyin:
 
 ```bash
 curl https://merx.exchange/api/v1/keys \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
 ```
 
-Revoke a key immediately:
+Bir anahtarı hemen iptal edin:
 
 ```bash
 curl -X DELETE https://merx.exchange/api/v1/keys/key_8f3k2m9x \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
 ```
 
-Revocation is instant. Any request using the revoked key returns 401 immediately. There is no grace period.
+İptal etme anlıktır. İptal edilen anahtarı kullanan herhangi bir istek hemen 401 döndürür. Bir uyum süresi yoktur.
 
-## Permission Types
+## İzin Türleri
 
-MERX API keys support granular permissions. When creating a key, you specify exactly which operations it can perform. A key without a required permission receives a 403 Forbidden response.
+MERX API anahtarları ayrıntılı izinleri destekler. Bir anahtar oluştururken, tam olarak hangi işlemleri gerçekleştirebileceğini belirtirsiniz. Gerekli izni olmayan bir anahtar, 403 Yasak yanıtı alır.
 
-### Available Permissions
+### Mevcut İzinler
 
-| Permission | Description | Typical Use Case |
+| İzin | Açıklama | Tipik Kullanım Durumu |
 |-----------|-------------|-----------------|
-| `view_balance` | Read account balance and transaction history | Monitoring dashboards, alerting |
-| `view_orders` | Read order status and order history | Order tracking, reporting |
-| `create_orders` | Create new energy and bandwidth orders | Automated trading bots |
-| `broadcast` | Submit signed transactions for broadcast | Custom transaction workflows |
+| `view_balance` | Hesap bakiyesini ve işlem geçmişini oku | İzleme panoları, uyarılar |
+| `view_orders` | Sipariş durumunu ve sipariş geçmişini oku | Sipariş izleme, raporlama |
+| `create_orders` | Yeni enerji ve bandwidth siparişleri oluştur | Otomatik ticaret botları |
+| `broadcast` | İmzalı işlemleri yayın için gönder | Özel işlem iş akışları |
 
-### Permission Design Principles
+### İzin Tasarım İlkeleri
 
-**Least privilege.** Give each key only the permissions it needs. A monitoring dashboard does not need `create_orders`. A price display widget does not need `view_balance`.
+**En az ayrıcalık.** Her anahtara yalnızca gerekli olan izinleri verin. İzleme panosu `create_orders`'a ihtiyaç duymaz. Fiyat görüntüleme widget'ı `view_balance`'a ihtiyaç duymaz.
 
-**Separate keys for separate concerns.** Use one key for your order bot (`create_orders`, `view_orders`, `view_balance`) and a different key for your monitoring system (`view_balance`, `view_orders`). If the monitoring key leaks, the attacker cannot create orders.
+**Farklı kaygılar için ayrı anahtarlar.** Sipariş botunuz için bir anahtar (`create_orders`, `view_orders`, `view_balance`) ve izleme sisteminiz için farklı bir anahtar (`view_balance`, `view_orders`) kullanın. İzleme anahtarı sızarsa, saldırgan siparişler oluşturamaz.
 
-**No withdrawal permission on API keys.** Withdrawals require JWT authentication. This is intentional. An API key, even with full permissions, cannot withdraw funds from your account. This adds a layer of protection for the highest-risk operation.
+**API anahtarlarında para çekme izni yok.** Para çekme işlemleri JWT kimlik doğrulaması gerektirir. Bu kasıtlıdır. Tam izinlere sahip bir API anahtarı bile, hesabınızdan para çekemez. Bu, en yüksek riskli işlem için bir koruma katmanı ekler.
 
-### Example: Minimal Key for a Price Widget
+### Örnek: Fiyat Widget'ı İçin Minimal Anahtar
 
-A public-facing price widget only needs to fetch prices. It does not need authentication at all since the prices endpoint is public, but if you want to track usage:
+Herkese açık bir fiyat widget'ı yalnızca fiyatları getirmeye ihtiyaç duyar. Fiyatlar uç noktası herkese açık olduğundan hiçbir kimlik doğrulamaya ihtiyaç duymaz, ancak kullanımı izlemek isterseniz:
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/keys \
@@ -163,9 +163,9 @@ curl -X POST https://merx.exchange/api/v1/keys \
   }'
 ```
 
-A key with an empty permissions array can access public endpoints (prices, provider list) while allowing you to track request volume and apply rate limits per key.
+Boş izinler dizisine sahip bir anahtar, herkese açık uç noktalara (fiyatlar, sağlayıcı listesi) erişebilirken, istek hacmini izlemenizi ve anahtar başına hız sınırlarını uygulamanızı sağlar.
 
-### Example: Full Trading Bot Key
+### Örnek: Tam Ticaret Botu Anahtarı
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/keys \
@@ -177,24 +177,24 @@ curl -X POST https://merx.exchange/api/v1/keys \
   }'
 ```
 
-## Rate Limits
+## Hız Sınırları
 
-MERX applies rate limits per endpoint category, not per key. All rate limits are measured in requests per minute from the same authenticated identity (API key or JWT session).
+MERX, anahtar başına değil, uç nokta kategorisi başına hız sınırları uygular. Tüm hız sınırları, aynı kimliğini doğrulanmış (API anahtarı veya JWT oturumu) kimlik tarafından dakika başına istekler cinsinden ölçülür.
 
-### Rate Limit Table
+### Hız Sınırı Tablosu
 
-| Endpoint Category | Rate Limit | Examples |
+| Uç Nokta Kategorisi | Hız Sınırı | Örnekler |
 |------------------|-----------|---------|
-| Price data | 300/min | `GET /prices`, `GET /prices/history` |
-| Order creation | 10/min | `POST /orders` |
-| Order queries | 60/min | `GET /orders`, `GET /orders/:id` |
-| Withdrawals | 5/min | `POST /withdraw` |
-| Account data | 60/min | `GET /balance`, `GET /keys` |
-| Key management | 10/min | `POST /keys`, `DELETE /keys/:id` |
+| Fiyat verileri | 300/dak | `GET /prices`, `GET /prices/history` |
+| Sipariş oluşturma | 10/dak | `POST /orders` |
+| Sipariş sorguları | 60/dak | `GET /orders`, `GET /orders/:id` |
+| Para çekme | 5/dak | `POST /withdraw` |
+| Hesap verileri | 60/dak | `GET /balance`, `GET /keys` |
+| Anahtar yönetimi | 10/dak | `POST /keys`, `DELETE /keys/:id` |
 
-### Rate Limit Headers
+### Hız Sınırı Başlıkları
 
-Every response includes rate limit information in HTTP headers:
+Her yanıt, HTTP başlıklarında hız sınırı bilgisini içerir:
 
 ```
 X-RateLimit-Limit: 300
@@ -202,13 +202,13 @@ X-RateLimit-Remaining: 287
 X-RateLimit-Reset: 1711785660
 ```
 
-- `X-RateLimit-Limit` - maximum requests allowed in the current window.
-- `X-RateLimit-Remaining` - requests remaining before the limit is reached.
-- `X-RateLimit-Reset` - Unix timestamp when the window resets.
+- `X-RateLimit-Limit` - geçerli pencerede izin verilen maksimum istek.
+- `X-RateLimit-Remaining` - sınıra ulaşılmadan önce kalan istek.
+- `X-RateLimit-Reset` - pencere sıfırlandığında Unix zaman damgası.
 
-### When You Hit the Limit
+### Sınıra Ulaştığınızda
 
-Exceeding the rate limit returns HTTP 429 Too Many Requests with a `Retry-After` header indicating how many seconds to wait:
+Hız sınırını aşmak, beklenecek saniye sayısını belirten `Retry-After` başlığı ile HTTP 429 Çok Fazla İstek döndürür:
 
 ```json
 {
@@ -224,19 +224,19 @@ Exceeding the rate limit returns HTTP 429 Too Many Requests with a `Retry-After`
 }
 ```
 
-### Handling Rate Limits in Code
+### Koddaki Hız Sınırlarını İşleme
 
-The SDKs handle rate limits automatically with configurable retry behavior:
+SDK'lar, yapılandırılabilir yeniden deneme davranışı ile hız sınırlarını otomatik olarak işler:
 
 ```javascript
 const merx = new MerxClient({
   apiKey: process.env.MERX_API_KEY,
   maxRetries: 3,
-  retryOnRateLimit: true, // Automatically wait and retry on 429
+  retryOnRateLimit: true, // 429'de otomatik olarak bekle ve yeniden dene
 });
 ```
 
-For raw HTTP clients, implement backoff based on the `Retry-After` header:
+Ham HTTP istemcileri için, `Retry-After` başlığına dayalı geri alma uygulayın:
 
 ```python
 import requests
@@ -261,48 +261,48 @@ def merx_request(method, path, **kwargs):
     raise Exception("Rate limit retries exhausted")
 ```
 
-## Security Best Practices
+## Güvenlik En İyi Uygulamaları
 
-### Store Keys in Environment Variables
+### Anahtarları Ortam Değişkenlerinde Depolayın
 
-Never hardcode API keys in source code. Use environment variables or a secrets manager:
+API anahtarlarını asla kaynak kodunda değil, ortam değişkenlerinde veya bir sırlar yöneticisinde saklayın:
 
 ```bash
-# .env file (never commit this)
+# .env dosyası (bunu asla işlemek yok)
 MERX_API_KEY=merx_live_k7x9m2p4q8r1s5t3u7v2w6x0y4z...
 ```
 
 ```javascript
-// Load from environment
+// Ortamdan yükleyin
 const merx = new MerxClient({
   apiKey: process.env.MERX_API_KEY,
 });
 ```
 
-### Rotate Keys Periodically
+### Anahtarları Düzenli Olarak Döndürün
 
-Create a new key, update your services to use it, then revoke the old key. MERX supports multiple active keys simultaneously, so you can rotate without downtime:
+Yeni bir anahtar oluşturun, hizmetlerinizi onu kullanacak şekilde güncelleyin, ardından eski anahtarı iptal edin. MERX aynı anda birden fazla etkin anahtarı destekler, böylece kapalı kalma süresi olmadan döndürebilirsiniz:
 
-1. Create a new key with the same permissions.
-2. Deploy the new key to your services.
-3. Verify the new key works in production.
-4. Revoke the old key.
+1. Aynı izinlere sahip yeni bir anahtar oluşturun.
+2. Yeni anahtarı hizmetlerinize dağıtın.
+3. Yeni anahtarın üretimde çalıştığını doğrulayın.
+4. Eski anahtarı iptal edin.
 
-### Monitor Key Usage
+### Anahtar Kullanımını İzleyin
 
-Review your API key list periodically. Revoke keys that are no longer in use. Each key has a `last_used_at` timestamp - if a key has not been used in months, it is a candidate for revocation.
+API anahtar listenizi periyodik olarak inceleyin. Artık kullanılmayan anahtarları iptal edin. Her anahtarın bir `last_used_at` zaman damgası vardır - eğer bir anahtar aylar boyunca kullanılmadıysa, iptal edilmesi için bir adayıdır.
 
-### Never Expose Keys in Client-Side Code
+### Anahtarları Asla İstemci Taraflı Kodda Açıklamayın
 
-API keys should never appear in JavaScript running in a browser, mobile app bundles, or any code that end users can inspect. If you need to call MERX from a frontend, proxy the requests through your backend, which holds the API key server-side.
+API anahtarları hiçbir zaman bir tarayıcıda çalışan JavaScript'te, mobil uygulama paketlerinde veya son kullanıcıların inceleyebileceği herhangi bir kodda görünmemelidir. Bir ön uçtan MERX'i çağırmanız gerekiyorsa, istekleri API anahtarını sunucu taraflında tutan arka uçunuz aracılığıyla iletin.
 
 ```
-Browser -> Your Backend (holds API key) -> MERX API
+Tarayıcı -> Arka Uçunuz (API anahtarını tutar) -> MERX API
 ```
 
-### Use Separate Keys for Separate Environments
+### Farklı Ortamlar İçin Ayrı Anahtarlar Kullanın
 
-Maintain distinct keys for development, staging, and production. If a development key leaks, it cannot affect production. MERX does not currently have environment-scoped keys, but naming conventions help:
+Geliştirme, hazırlık ve üretim için ayrı anahtarlar koruyun. Bir geliştirme anahtarı sızarsa, üretimi etkileyemez. MERX şu anda ortam kapsamlı anahtarları desteklemiyor, ancak adlandırma kuralları yardımcı olur:
 
 ```
 dev-price-monitor
@@ -311,32 +311,33 @@ prod-order-bot
 prod-balance-alerter
 ```
 
-### Audit on Suspicion
+### Şüphe Durumunda Denetim Yapın
 
-If you suspect a key has been compromised, revoke it immediately and create a replacement. Check your recent order and withdrawal history for unauthorized activity. MERX logs all API key usage with IP addresses, which can help identify the source of unauthorized access.
+Bir anahtarın tehlikede olduğunu düşünürseniz, hemen iptal edin ve bir değişim oluşturun. Son sipariş ve para çekme geçmişinizi yetkisiz etkinlik açısından kontrol edin. MERX, tüm API anahtarı kullanımını IP adresleriyle günlüğe kaydeder; bu, yetkisiz erişim kaynağını belirlemeye yardımcı olabilir.
 
-## Putting It All Together
+## Hepsini Bir Araya Getirmek
 
-A complete authentication setup for a production system typically looks like this:
+Üretim sistemi için tipik bir tam kimlik doğrulama kurulumu şöyle görünür:
 
-1. Log in via the web dashboard to get a JWT session.
-2. Create separate API keys for each service: order bot, monitoring, reporting.
-3. Assign minimal permissions to each key.
-4. Store keys in your secrets manager or environment variables.
-5. Implement rate limit handling with automatic retry.
-6. Set up key rotation on a regular schedule (quarterly is reasonable).
-7. Monitor key usage and revoke unused keys.
+1. Web panosu aracılığıyla oturum açarak JWT oturumu alın.
+2. Her hizmet için ayrı API anahtarları oluşturun: sipariş botu, izleme, raporlama.
+3. Her anahtara minimum izinler atayın.
+4. Anahtarları sırlar yöneticinizde veya ortam değişkenlerinde saklayın.
+5. Otomatik yeniden deneme ile hız sınırı işlemeyi uygulayın.
+6. Düzenli bir programa göre anahtar döndürme ayarlayın (üç aylık makuldür).
+7. Anahtar kullanımını izleyin ve kullanılmayan anahtarları iptal edin.
 
-Authentication is the foundation of every MERX integration. Spending an hour getting it right saves days of debugging and security incidents down the line.
+Kimlik doğrulama, her MERX entegrasyonunun temeldir. Bunu doğru yapmak için bir saat harcamak, hata ayıklamada ve güvenlik olaylarında günler kaydeder.
 
-- Platform ve kontrol paneli: [merx.exchange](https://merx.exchange)
-- Tam API referansi: [merx.exchange/docs](https://merx.exchange/docs)
+- Platform ve pano: [merx.exchange](https://merx.exchange)
+- Tam API referansı: [merx.exchange/docs](https://merx.exchange/docs)
 - JavaScript SDK: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 - Python SDK: [github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+Claude Desktop'a veya herhangi bir MCP uyumlu istemciye MERX ekleyin -- kurulum yok, yalnızca okunur araçlar için API anahtarı gerekli değildir:
 
 ```json
 {
@@ -348,6 +349,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI aracınıza sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgelendirmesi: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

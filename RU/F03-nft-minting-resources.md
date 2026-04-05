@@ -1,52 +1,52 @@
-# Автоматизация минтинга NFT с ресурсно-осведомленными транзакциями
+# Автоматизация минтинга NFT с учетом расхода ресурсов
 
-NFT minting on TRON is a smart contract operation, and every smart contract operation consumes energy. Whether you are minting a single collectible or launching a 10,000-piece collection, energy costs are a significant and often underestimated line item. A single NFT mint can consume 100,000 to 300,000 energy depending on the contract's complexity, metadata handling, and on-chain storage requirements.
+Минтинг NFT на TRON — это операция смарт-контракта, а каждая операция смарт-контракта потребляет energy. Независимо от того, минтите ли вы одно коллекционное изделие или запускаете коллекцию из 10 000 штук, затраты на energy — это значительная и часто недооцениваемая статья расходов. Один минт NFT может потребить 100 000–300 000 energy в зависимости от сложности контракта, обработки метаданных и требований к хранению на цепи.
 
-This article examines the energy economics of NFT minting on TRON, demonstrates how to build resource-aware minting pipelines, and shows how MERX aggregation reduces per-mint costs while maintaining high throughput.
+В этой статье рассматривается экономика energy при минтинге NFT на TRON, показывается, как создавать конвейеры минтинга с учетом ресурсов, и демонстрируется, как агрегация MERX снижает стоимость за один минт при сохранении высокой пропускной способности.
 
-## Energy Cost Anatomy of an NFT Mint
+## Анатомия затрат energy при минтинге NFT
 
-When you call a mint function on a TRC-721 contract, several things happen at the EVM level:
+Когда вы вызываете функцию mint на контракте TRC-721, на уровне EVM происходит несколько вещей:
 
-1. **Storage allocation**: A new token ID is created and mapped to an owner address. This is the most energy-expensive operation because writing to blockchain storage costs significantly more than computation.
-2. **Metadata assignment**: If the contract stores a token URI on-chain, this is another storage write.
-3. **Counter increment**: The total supply counter updates.
-4. **Event emission**: A Transfer event is logged.
-5. **Access control checks**: Ownership verification, minting limits, whitelist checks.
+1. **Выделение памяти**: создается новый ID токена и сопоставляется с адресом владельца. Это наиболее затратная по energy операция, так как запись в память блокчейна стоит значительно дороже, чем вычисления.
+2. **Присвоение метаданных**: если контракт хранит URI токена в цепи, это еще одна запись в память.
+3. **Увеличение счетчика**: обновляется счетчик общего предложения.
+4. **Эмиссия события**: логируется событие Transfer.
+5. **Проверки контроля доступа**: проверка владения, ограничения по минтингу, проверка вайтлиста.
 
-Simple mint functions (single storage write, counter increment, event) consume approximately 100,000-120,000 energy. Complex mints with on-chain metadata, royalty configuration, and enumerable tracking can reach 250,000-300,000 energy.
+Простые функции mint (одна запись в память, увеличение счетчика, событие) потребляют примерно 100 000–120 000 energy. Сложные минты с метаданными в цепи, конфигурацией роялти и отслеживанием перечисления могут достигать 250 000–300 000 energy.
 
-### Cost Without Energy
+### Стоимость без energy
 
-| Mint Complexity | Energy | TRX Burn | USD Cost |
+| Сложность минта | Energy | Сжигание TRX | Стоимость в USD |
 |---|---|---|---|
-| Simple (counter + owner) | ~100,000 | ~21 TRX | ~$2.50 |
-| Standard (+ metadata URI) | ~150,000 | ~31 TRX | ~$3.70 |
-| Complex (+ royalties, enum) | ~250,000 | ~52 TRX | ~$6.20 |
+| Простой (счетчик + владелец) | ~100,000 | ~21 TRX | ~$2.50 |
+| Стандартный (+ URI метаданных) | ~150,000 | ~31 TRX | ~$3.70 |
+| Сложный (+ роялти, enum) | ~250,000 | ~52 TRX | ~$6.20 |
 
-For a 10,000-piece collection with standard minting complexity, the total energy cost without optimization is approximately 310,000 TRX ($37,000). With energy purchased through MERX at market rates, that drops to approximately 42,000 TRX ($5,040) -- an 86% reduction.
+Для коллекции из 10 000 штук со стандартной сложностью минтинга общая стоимость energy без оптимизации составляет примерно 310 000 TRX ($37 000). При покупке energy через MERX по рыночным ставкам это снижается до примерно 42 000 TRX ($5 040) — сокращение на 86%.
 
-## Why Fixed Energy Estimates Fail for NFTs
+## Почему фиксированные оценки energy не работают для NFT
 
-NFT contracts are particularly problematic for fixed energy estimates because the cost per mint is not constant. The energy consumed can vary based on:
+NFT контракты особенно проблематичны для фиксированных оценок energy, потому что затраты на один минт не являются постоянными. Потребляемая energy может варьироваться в зависимости от:
 
-- **Token ID**: Larger token IDs require more bytes to store, marginally increasing energy
-- **First-time minting to an address**: If the recipient has never held a token from this contract, creating the balance mapping costs more than incrementing an existing one
-- **On-chain randomness**: Contracts with randomized attributes perform additional computation
-- **Batch size**: Batch minting N tokens in a single transaction does not cost N times a single mint
+- **ID токена**: более крупные ID токенов требуют больше байтов для хранения, незначительно увеличивая energy
+- **Первого минта на адресе**: если получатель никогда не владел токеном из этого контракта, создание сопоставления баланса стоит дороже, чем увеличение существующего
+- **Случайность в цепи**: контракты со случайными атрибутами выполняют дополнительные вычисления
+- **Размер пакета**: минтинг N токенов в одной транзакции не стоит N раз стоимости одного минта
 
-These variations mean that a hardcoded estimate of 150,000 energy per mint will sometimes over-purchase (wasting money) and sometimes under-purchase (causing partial TRX burn).
+Эти вариации означают, что жестко закодированная оценка 150 000 energy за один минт иногда будет переплачивать (тратить деньги впустую), а иногда недоплачивать (вызывая частичное сжигание TRX).
 
-## Exact Simulation for NFT Minting
+## Точное моделирование для минтинга NFT
 
-MERX's energy estimation uses `triggerConstantContract` to simulate the exact mint operation before execution:
+Оценка energy в MERX использует `triggerConstantContract` для моделирования точной операции минта перед выполнением:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// Simulate the exact mint call
+// Смоделировать точный вызов минта
 const estimate = await merx.estimateEnergy({
   contract_address: NFT_CONTRACT_ADDRESS,
   function_selector: 'mint(address,string)',
@@ -58,23 +58,23 @@ const estimate = await merx.estimateEnergy({
 });
 
 console.log(`Energy required for this mint: ${estimate.energy_required}`);
-// Output might be: 143,287
+// Результат может быть: 143,287
 ```
 
-This returns the exact energy for your specific mint, with the current contract state. No guessing.
+Это возвращает точную energy для вашего конкретного минта с текущим состоянием контракта. Никаких предположений.
 
-## Building a Resource-Aware Minting Pipeline
+## Построение конвейера минтинга с учетом ресурсов
 
-For collection launches or ongoing minting operations, you need a pipeline that handles energy procurement automatically.
+Для запуска коллекций или текущих операций минтинга вам нужен конвейер, который автоматически обрабатывает закупки energy.
 
-### Single Mint with Energy
+### Одиночный минт с energy
 
 ```typescript
 async function mintWithEnergy(
   recipient: string,
   metadataURI: string
 ): Promise<string> {
-  // 1. Estimate exact energy
+  // 1. Оценить точную energy
   const estimate = await merx.estimateEnergy({
     contract_address: NFT_CONTRACT,
     function_selector: 'mint(address,string)',
@@ -82,11 +82,11 @@ async function mintWithEnergy(
     owner_address: MINTER_WALLET
   });
 
-  // 2. Check existing energy
+  // 2. Проверить существующую energy
   const resources = await merx.checkResources(MINTER_WALLET);
   const deficit = estimate.energy_required - resources.energy.available;
 
-  // 3. Buy energy if needed
+  // 3. Купить energy если нужна
   if (deficit > 0) {
     const order = await merx.createOrder({
       energy_amount: deficit,
@@ -96,15 +96,15 @@ async function mintWithEnergy(
     await waitForOrderFill(order.id);
   }
 
-  // 4. Execute the mint with zero TRX burn
+  // 4. Выполнить минт без сжигания TRX
   const tx = await mintNFT(recipient, metadataURI);
   return tx;
 }
 ```
 
-### Batch Minting Pipeline
+### Конвейер пакетного минтинга
 
-For collection launches where you are minting many NFTs in sequence:
+Для запуска коллекций, когда вы минтите много NFT последовательно:
 
 ```typescript
 async function batchMint(
@@ -113,11 +113,11 @@ async function batchMint(
 ): Promise<MintResult[]> {
   const results: MintResult[] = [];
 
-  // Process in batches
+  // Обработать в пакетах
   for (let i = 0; i < mintRequests.length; i += batchSize) {
     const batch = mintRequests.slice(i, i + batchSize);
 
-    // Estimate energy for each mint in the batch
+    // Оценить energy для каждого минта в пакете
     let totalEnergy = 0;
     for (const req of batch) {
       const estimate = await merx.estimateEnergy({
@@ -129,11 +129,11 @@ async function batchMint(
       totalEnergy += estimate.energy_required;
     }
 
-    // Add 5% buffer for state changes between estimation
-    // and execution
+    // Добавить буфер в 5% для изменений состояния между оценкой
+    // и выполнением
     totalEnergy = Math.ceil(totalEnergy * 1.05);
 
-    // Buy energy for the entire batch
+    // Купить energy для всего пакета
     const order = await merx.createOrder({
       energy_amount: totalEnergy,
       duration: '30m',
@@ -141,7 +141,7 @@ async function batchMint(
     });
     await waitForOrderFill(order.id);
 
-    // Execute all mints in the batch
+    // Выполнить все минты в пакете
     for (const req of batch) {
       try {
         const tx = await mintNFT(req.recipient, req.metadataURI);
@@ -161,25 +161,25 @@ async function batchMint(
 }
 ```
 
-The batch approach provides several advantages:
+Подход с пакетами обеспечивает несколько преимуществ:
 
-- **Better pricing**: Larger energy purchases often get better per-unit rates
-- **Fewer API calls**: One energy purchase per batch instead of per mint
-- **Predictable timing**: Energy is available for the entire batch
-- **State awareness**: The 5% buffer accounts for minor energy variations between estimation and execution
+- **Лучшие цены**: более крупные покупки energy часто получают лучшие цены за единицу
+- **Меньше вызовов API**: одна закупка energy на пакет вместо одной на минт
+- **Предсказуемое время**: energy доступна для всего пакета
+- **Осведомленность о состоянии**: буфер в 5% учитывает незначительные колебания energy между оценкой и выполнением
 
-## Collection Launch Strategy
+## Стратегия запуска коллекции
 
-Launching a large NFT collection requires planning around energy costs. Here is a strategy for a 10,000-piece collection:
+Запуск крупной коллекции NFT требует планирования затрат на energy. Вот стратегия для коллекции из 10 000 штук:
 
-### Pre-Launch: Cost Estimation
+### Предварительный запуск: оценка стоимости
 
 ```typescript
 async function estimateCollectionCost(
   totalMints: number,
   sampleSize: number = 20
 ): Promise<CostEstimate> {
-  // Simulate a sample of mints to get average energy
+  // Смоделировать выборку минтов для получения средней energy
   let totalEnergy = 0;
 
   for (let i = 0; i < sampleSize; i++) {
@@ -194,7 +194,7 @@ async function estimateCollectionCost(
 
   const avgEnergy = totalEnergy / sampleSize;
 
-  // Get current best energy price
+  // Получить текущую лучшую цену energy
   const prices = await merx.getPrices({
     energy_amount: Math.round(avgEnergy),
     duration: '5m'
@@ -213,7 +213,7 @@ async function estimateCollectionCost(
 }
 ```
 
-### During Launch: Adaptive Batch Processing
+### Во время запуска: адаптивная обработка пакетов
 
 ```typescript
 async function launchCollection(
@@ -234,8 +234,8 @@ async function launchCollection(
     const batchMeta = metadata.slice(start, end);
     const batchRecipients = recipients.slice(start, end);
 
-    // Use standing order logic: if price is above threshold,
-    // wait for a dip
+    // Использовать логику постоянного заказа: если цена выше порога,
+    // подождать понижения
     const prices = await merx.getPrices({
       energy_amount: 150000 * batchMeta.length,
       duration: '1h'
@@ -246,10 +246,10 @@ async function launchCollection(
         `Price at ${prices.best.price_sun} SUN. ` +
         `Waiting for better rate...`
       );
-      // Implement wait logic or use standing order
+      // Реализовать логику ожидания или использовать постоянный заказ
     }
 
-    // Proceed with batch minting
+    // Продолжить пакетный минтинг
     await processBatch(batchMeta, batchRecipients);
 
     console.log(
@@ -260,59 +260,59 @@ async function launchCollection(
 }
 ```
 
-## Cost Per Mint Comparison
+## Сравнение стоимости за один минт
 
-| Method | Energy per Mint | Cost per Mint (TRX) | Cost per Mint (USD) | 10K Collection (USD) |
+| Метод | Energy за минт | Стоимость за минт (TRX) | Стоимость за минт (USD) | Коллекция из 10K (USD) |
 |---|---|---|---|---|
-| No optimization (TRX burn) | 150,000 | 30.9 | $3.71 | $37,100 |
-| Fixed estimate + single provider | 200,000 (over-buy) | 5.6 | $0.67 | $6,700 |
-| Exact simulation + MERX (28 SUN) | 143,000 (exact) | 4.0 | $0.48 | $4,800 |
-| Exact + standing orders (23 SUN) | 143,000 (exact) | 3.3 | $0.40 | $3,960 |
+| Без оптимизации (сжигание TRX) | 150,000 | 30.9 | $3.71 | $37,100 |
+| Фиксированная оценка + один поставщик | 200,000 (переплата) | 5.6 | $0.67 | $6,700 |
+| Точное моделирование + MERX (28 SUN) | 143,000 (точно) | 4.0 | $0.48 | $4,800 |
+| Точно + постоянные заказы (23 SUN) | 143,000 (точно) | 3.3 | $0.40 | $3,960 |
 
-The difference between no optimization and full MERX integration is $33,000 on a 10,000-piece collection. Even compared to using a single provider with fixed estimates, MERX saves approximately $2,000 through exact simulation and price aggregation.
+Разница между отсутствием оптимизации и полной интеграцией MERX составляет $33 000 на коллекции из 10 000 штук. Даже по сравнению с использованием одного поставщика с фиксированными оценками, MERX экономит примерно $2 000 благодаря точному моделированию и агрегации цен.
 
-## Auto-Energy for Ongoing Minting
+## Авто-Energy для непрерывного минтинга
 
-If your platform supports continuous minting (user-driven mints, not a fixed collection), configure auto-energy on your minting wallet:
+Если ваша платформа поддерживает непрерывный минтинг (минты, управляемые пользователями, а не фиксированная коллекция), настройте авто-energy на вашем кошельке для минтинга:
 
 ```typescript
 await merx.enableAutoEnergy({
   address: MINTER_WALLET,
-  min_energy: 300000,    // ~2 mints buffer
-  target_energy: 1000000, // ~6-7 mints buffer
+  min_energy: 300000,    // ~2 буфера минтов
+  target_energy: 1000000, // ~6-7 буферов минтов
   max_price_sun: 30,
   duration: '1h'
 });
 ```
 
-This ensures the minting wallet always has enough energy for at least two mints, automatically replenishing when the buffer drops. User-facing minting experiences stay fast because energy is pre-purchased rather than acquired on demand.
+Это гарантирует, что кошелек для минтинга всегда имеет достаточно energy как минимум для двух минтов, автоматически пополняясь при падении буфера. Пользовательский опыт минтинга остается быстрым, потому что energy предварительно закупается, а не приобретается по требованию.
 
-## Webhook-Driven Minting
+## Минтинг, управляемый вебхуками
 
-For platforms where minting is triggered by user actions (purchases, claims), use a webhook-driven architecture:
+Для платформ, где минтинг инициируется пользовательскими действиями (покупки, требования), используйте архитектуру на основе вебхуков:
 
 ```typescript
-// When a user requests a mint
+// Когда пользователь запрашивает минт
 app.post('/api/mint', async (req, res) => {
   const { recipient, tokenId } = req.body;
 
-  // Queue the mint request
+  // Поставить запрос на минт в очередь
   const mintJob = await queueMint(recipient, tokenId);
 
-  // Request energy
+  // Запросить energy
   const order = await merx.createOrder({
     energy_amount: 150000,
     duration: '5m',
     target_address: MINTER_WALLET
   });
 
-  // Associate energy order with mint job
+  // Связать заказ energy с работой минта
   await linkOrderToMint(order.id, mintJob.id);
 
   res.json({ status: 'processing', mintId: mintJob.id });
 });
 
-// MERX webhook: energy is ready
+// Вебхук MERX: energy готова
 app.post('/webhooks/merx', async (req, res) => {
   const event = req.body;
 
@@ -330,17 +330,18 @@ app.post('/webhooks/merx', async (req, res) => {
 
 ## Заключение
 
-NFT minting on TRON does not need to be expensive. The combination of exact energy simulation and multi-provider aggregation through MERX transforms minting from a high-cost operation into a manageable expense.
+Минтинг NFT на TRON не должен быть дорогостоящим. Сочетание точного моделирования energy и агрегации от нескольких поставщиков через MERX превращает минтинг из дорогостоящей операции в управляемые расходы.
 
-For collection launches, the savings are measured in tens of thousands of dollars. For ongoing minting platforms, auto-energy and webhook integration keep per-mint costs at their minimum while maintaining a responsive user experience.
+Для запуска коллекций сбережения измеряются десятками тысяч долларов. Для платформ непрерывного минтинга авто-energy и интеграция вебхуков держат затраты за один минт на минимуме при сохранении отзывчивого пользовательского опыта.
 
-The key insight is precision: buy exactly the energy you need, at the best available price, exactly when you need it. Exact simulation eliminates waste from over-purchasing. Aggregation eliminates overpaying. Together, they reduce NFT minting costs by 85-90% compared to unoptimized approaches.
+Ключевое понимание — это точность: купите ровно столько energy, сколько вам нужно, по лучшей доступной цене, точно когда вам это нужно. Точное моделирование устраняет отходы от переплаты. Агрегация устраняет переплату. Вместе они снижают затраты на минтинг NFT на 85–90% по сравнению с неоптимизированными подходами.
 
-Start building at [https://merx.exchange/docs](https://merx.exchange/docs) or explore the platform at [https://merx.exchange](https://merx.exchange).
+Начните строить на [https://merx.exchange/docs](https://merx.exchange/docs) или исследуйте платформу на [https://merx.exchange](https://merx.exchange).
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — нулевая установка, не требуется API ключ для инструментов только для чтения:
 
 ```json
 {
@@ -352,6 +353,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Попросите вашего AI агента: "What is the cheapest TRON energy right now?" и получите live цены от всех подключенных поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

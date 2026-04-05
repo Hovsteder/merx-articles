@@ -1,24 +1,24 @@
-# Kaynak Duyarli Islemler: MERX Her TX'i Otomatik Olarak Nasil Optimize Eder
+# Kaynağa Duyarlı İşlemler: MERX Her TX'i Otomatik Olarak Nasıl Optimize Eder
 
-## The Hidden Cost of Ignoring TRON Resources
+## TRON Kaynaklarını Göz Ardı Etmenin Gizli Maliyeti
 
-Every transaction on the TRON network consumes two types of resources: energy and bandwidth. Energy powers smart contract execution - every opcode, every storage write, every token transfer. Bandwidth covers the raw bytes of the transaction itself. When you do not have these resources delegated or staked, the network burns your TRX to cover the cost.
+TRON ağındaki her işlem iki tür kaynağı tüketir: enerji ve bant genişliği. Enerji akıllı kontrat yürütmesini güçlendirir - her opcode, her depolama yazması, her token transferi. Bant genişliği işlemin kendisinin ham baytlarını kapsar. Bu kaynakların size devredilmesi veya stake edilmesi yoksa, ağ maliyeti karşılamak için TRX'inizi yakıyor.
 
-For a simple USDT transfer, this burn can reach 27 TRX - roughly $7 at current prices. For a DEX swap, it can exceed 50 TRX. Most wallets and SDKs simply let this happen. They broadcast the transaction, the network burns your TRX, and you pay the maximum possible fee without ever being told there was a cheaper option.
+Basit bir USDT transferi için bu yakma 27 TRX'e ulaşabilir - şu anki fiyatlarla kabaca 7 dolar. Bir DEX swap'ı için 50 TRX'i aşabilir. Çoğu cüzdan ve SDK bunu olmuş gibi görmezden gelir. İşlemi yayınlarlar, ağ TRX'inizi yakar ve daha ucuz bir seçenek olduğundan hiç haberdar olmadan maksimum olası ücreti ödersiniz.
 
-MERX takes a fundamentally different approach. Every transaction that passes through the MERX MCP server goes through a resource-aware pipeline that estimates costs, checks existing resources, purchases only the deficit, waits for delegation, and only then signs and broadcasts. The result is consistent 80-90% savings on every transaction.
+MERX temelden farklı bir yaklaşım benimser. MERX MCP sunucusundan geçen her işlem, maliyetleri tahmin eden, mevcut kaynakları kontrol eden, yalnızca eksik kısmı satın alan, devredilmeyi bekleyen ve ancak ardından imzalayan ve yayınlayan bir kaynağa duyarlı bir boru hattından geçer. Sonuç her işlemde tutarlı %80-90 tasarruf eder.
 
-This article explains exactly how that pipeline works.
+Bu makale tam olarak bu boru hattının nasıl çalıştığını açıklar.
 
-## The Resource-Aware Transaction Pipeline
+## Kaynağa Duyarlı İşlem Boru Hattı
 
-The pipeline has six stages. Each stage must complete before the next begins. Skipping a stage or reordering them creates race conditions that can result in failed transactions or wasted resource purchases.
+Boru hattının altı aşaması vardır. Her aşama bir sonrakine başlamadan önce tamamlanmalıdır. Bir aşamayı atlamak veya yeniden sıralamak, başarısız işlemlere veya israf edilmiş kaynak satın alımlarına neden olabilecek yarış koşulları oluşturur.
 
-### Stage 1: Estimate Energy and Bandwidth
+### Aşama 1: Enerji ve Bant Genişliğini Tahmin Edin
 
-Before doing anything, MERX needs to know exactly how many resources this specific transaction will consume. This is not a lookup table or a hardcoded constant. MERX uses `triggerConstantContract` to simulate the exact transaction with the exact parameters against the current state of the blockchain.
+Hiçbir şey yapmadan önce, MERX bu belirli işlemin tam olarak kaç kaynak tüketeceğini bilmesi gerekir. Bu bir arama tablosu veya sabit kodlanmış bir sabit değildir. MERX, tam parametrelerle tam işlemi blockchain'in mevcut durumuna karşı simüle etmek için `triggerConstantContract` kullanır.
 
-For a USDT transfer of 100 USDT from address A to address B:
+A adresinden B adresine 100 USDT transferi için:
 
 ```
 Tool: estimate_transaction_cost
@@ -40,9 +40,9 @@ Response:
 }
 ```
 
-The simulation runs against the live blockchain state. If the recipient has never held USDT before, the energy cost will be higher (because the contract needs to create a new storage slot). If the sender's allowance needs updating, that adds energy. Every variable is accounted for.
+Simülasyon canlı blockchain durumuna karşı çalışır. Alıcı daha önce hiç USDT tutmadıysa, enerji maliyeti daha yüksek olur (çünkü kontrat yeni bir depolama yuvası oluşturması gerekir). Gönderenin izni güncellenmesi gerekiyorsa, bu enerji ekler. Her değişken dikkate alınır.
 
-For a SunSwap trade, the simulation captures the exact routing, slippage calculation, and liquidity pool state:
+Bir SunSwap işlemi için simülasyon tam yönlendirmeyi, kayma hesaplamasını ve likidite havuzu durumunu yakalar:
 
 ```
 Simulation result for SunSwap V2:
@@ -51,11 +51,11 @@ Simulation result for SunSwap V2:
 - Router path: TRX -> USDT via pool 0x...
 ```
 
-This precision is critical. Overestimating wastes money on unused energy. Underestimating causes the transaction to fail, and you lose both the energy purchase cost and the failed transaction's bandwidth.
+Bu hassasiyet kritiktir. Aşırı tahmin etmek kullanılmayan enerji için para harcaması getirir. Yetersiz tahmin etmek işlemin başarısız olmasına neden olur ve hem enerji satın alma maliyetini hem de başarısız işlemin bant genişliğini kaybedersiniz.
 
-### Stage 2: Check Current Resources
+### Aşama 2: Mevcut Kaynakları Kontrol Edin
 
-The agent's address may already have some resources from previous delegations, staking, or the daily free bandwidth allowance. MERX checks what is already available:
+Ajanın adresi önceki delegasyonlardan, stake etmeden veya günlük ücretsiz bant genişliği limitinden bazı kaynakları zaten sahibi olabilir. MERX nelerin zaten kullanılabilir olduğunu kontrol eder:
 
 ```
 Tool: check_address_resources
@@ -78,11 +78,11 @@ Response:
 }
 ```
 
-In this example, the address has 12,000 energy available and 1,400 bandwidth from the daily free allocation.
+Bu örnekte, adres 12.000 enerji ve günlük ücretsiz dağıtımdan 1.400 bant genişliğine sahiptir.
 
-### Stage 3: Calculate the Deficit
+### Aşama 3: Açığı Hesaplayın
 
-MERX subtracts available resources from required resources to determine exactly what needs to be purchased:
+MERX mevcut kaynakları gerekli kaynaklardan çıkararak tam olarak neyin satın alınması gerektiğini belirler:
 
 ```
 Energy needed:     64,895
@@ -95,15 +95,15 @@ Bandwidth available: 1,400
 Bandwidth deficit:     0 (sufficient)
 ```
 
-Two important rules apply here:
+Burada iki önemli kural geçerlidir:
 
-**Energy minimum: 65,000 units.** The TRON energy delegation market operates in minimum blocks of approximately 65,000 energy. If the deficit is less than 65,000, MERX rounds up to 65,000. If the deficit is 0 (the address already has enough energy), no purchase is made.
+**Enerji minimum: 65.000 birim.** TRON enerji delegasyonu pazarı yaklaşık 65.000 enerjinin minimum blokları içinde çalışır. Açık 65.000'den azsa, MERX 65.000'e yuvarlar. Açık 0 ise (adres zaten yeterli energiye sahipse), satın alma yapılmaz.
 
-**Bandwidth threshold: 1,500 units.** If the bandwidth deficit is less than 1,500, MERX skips the bandwidth purchase entirely. Every TRON address gets 1,500 free bandwidth per day, which regenerates continuously. For most single transactions, the free allocation is sufficient. Purchasing bandwidth only makes sense for high-frequency operations that exhaust the daily allowance.
+**Bant genişliği eşiği: 1.500 birim.** Bant genişliği açığı 1.500'den azsa, MERX bant genişliği satın almayı tamamen atlar. Her TRON adresi günde 1.500 ücretsiz bant genişliği alır ve bu sürekli yenilenir. Çoğu tek işlem için ücretsiz tahsis yeterlidir. Bant genişliği satın alma yalnızca günlük tahsisi tüketen yüksek frekans işlemleri için mantıklıdır.
 
-### Stage 4: Purchase the Deficit
+### Aşama 4: Açığı Satın Alın
 
-With the exact deficit calculated, MERX queries all available energy providers for the best price:
+Tam açık hesaplandığında, MERX en iyi fiyat için tüm mevcut enerji sağlayıcılarını sorgular:
 
 ```
 Tool: get_best_price
@@ -125,7 +125,7 @@ Response:
 }
 ```
 
-MERX places the order with the cheapest provider:
+MERX siparişi en ucuz sağlayıcıyla yerleştirir:
 
 ```
 Tool: create_order
@@ -136,13 +136,13 @@ Input: {
 }
 ```
 
-The order is placed, and the provider begins the delegation process.
+Sipariş yerleştirilir ve sağlayıcı delegasyon sürecini başlatır.
 
-### Stage 5: Poll Until Delegation Arrives
+### Aşama 5: Delegasyon Gelinceye Kadar Yokla
 
-This is the stage most implementations get wrong. Energy delegation on TRON is not instant. After the provider broadcasts the delegation transaction, it must be confirmed by the network. This typically takes 3-6 seconds but can take longer during network congestion.
+Bu, çoğu uygulamanın yanlış yaptığı aşamadır. TRON'da enerji delegasyonu anlık değildir. Sağlayıcı delegasyon işlemini yayınladıktan sonra, ağ tarafından doğrulanması gerekir. Bu tipik olarak 3-6 saniye sürer ancak ağ tıkanıklığı sırasında daha uzun sürebilir.
 
-MERX polls the target address's resource balance at regular intervals:
+MERX hedef adresin kaynak bakiyesini düzenli aralıklarla yoklar:
 
 ```
 Polling cycle:
@@ -152,13 +152,13 @@ Polling cycle:
   -> Proceed to Stage 6
 ```
 
-The polling uses exponential backoff starting at 3 seconds, with a maximum wait of 60 seconds before timing out. If the delegation does not arrive within the timeout window, the pipeline reports an error rather than broadcasting a transaction that would burn TRX.
+Yoklama, 3 saniyeden başlayan ve zamanı dolmadan 60 saniye maksimum bekleme ile üstel geri çekilme kullanır. Delegasyon zaman penceresi içinde gelmezse, boru hattı, yine de TRX'i yakacak bir işlemi yayınlamak yerine bir hata bildirir.
 
-This polling stage is what prevents the race condition that plagues naive implementations. Without it, the sequence would be: buy energy, immediately broadcast transaction, transaction executes before delegation confirms, TRX is burned anyway, and you have paid for both the energy and the burn.
+Bu yoklama aşaması, naif uygulamaları rahatsız eden yarış koşulunu önleyen şeydir. Onsuz, dizi şöyle olur: enerji satın al, hemen işlemi yayınla, işlem delegasyon doğrulanmadan önce yürütülür, TRX'e yine de yakılır ve hem enerji hem de yakma için ödeme yaptınız.
 
-### Stage 6: Sign Locally and Broadcast
+### Aşama 6: Yerel Olarak İmzala ve Yayınla
 
-Only after confirming that the delegated energy is available on-chain does MERX sign and broadcast the actual transaction:
+Yalnızca devredilen enerjinin zincir üzerinde mevcut olduğu doğrulandıktan sonra MERX gerçek işlemi imzalar ve yayınlar:
 
 ```
 1. Build transaction object with TronWeb
@@ -167,11 +167,11 @@ Only after confirming that the delegated energy is available on-chain does MERX 
 4. Return transaction hash
 ```
 
-The transaction now executes using the delegated energy, consuming approximately 65,000 energy units instead of burning 27 TRX.
+İşlem artık devredilen enerjiyi kullanarak yürütülür, 27 TRX yakma yerine yaklaşık 65.000 enerji birimi tüketir.
 
-## The ensure_resources Tool: The Pipeline in One Call
+## ensure_resources Aracı: Bir Çağrıda Boru Hattı
 
-For agents that want to use the pipeline without managing each stage individually, MERX provides `ensure_resources`:
+Her aşamayı ayrı ayrı yönetmek istemeden boru hattını kullanmak isteyen ajanlar için, MERX `ensure_resources` sağlar:
 
 ```
 Tool: ensure_resources
@@ -182,13 +182,13 @@ Input: {
 }
 ```
 
-This single tool call executes Stages 2 through 5 internally. It checks current resources, calculates the deficit, finds the best price, places the order, and polls until delegation arrives. The agent receives a response only when the address is fully provisioned and ready for the transaction.
+Bu tek araç çağrısı Aşamalar 2 ile 5'i dahili olarak çalıştırır. Mevcut kaynakları kontrol eder, açığı hesaplar, en iyi fiyatı bulur, siparişi yerleştirir ve delegasyon gelinceye kadar yoklar. Ajan, yalnızca adres tamamen donatılmış ve işlem için hazır olduğunda bir yanıt alır.
 
-## Real Example: A SunSwap Trade
+## Gerçek Örnek: Bir SunSwap İşlemi
 
-Here is the complete pipeline for a real SunSwap V2 trade - swapping 0.1 TRX for USDT.
+İşte gerçek bir SunSwap V2 işlemi için tam boru hattı - 0.1 TRX'i USDT için takas etme.
 
-**Stage 1 - Simulation:**
+**Aşama 1 - Simülasyon:**
 
 ```
 triggerConstantContract(
@@ -201,7 +201,7 @@ triggerConstantContract(
 Result: energy_estimate = 223,354
 ```
 
-**Stage 2 - Check resources:**
+**Aşama 2 - Kaynakları kontrol et:**
 
 ```
 Address resources:
@@ -209,7 +209,7 @@ Address resources:
   Bandwidth: 1,420 (free)
 ```
 
-**Stage 3 - Calculate deficit:**
+**Aşama 3 - Açığı hesapla:**
 
 ```
 Energy deficit: 223,354
@@ -217,7 +217,7 @@ Energy deficit: 223,354
 Bandwidth deficit: 0 (free allocation covers 345 needed)
 ```
 
-**Stage 4 - Purchase:**
+**Aşama 4 - Satın al:**
 
 ```
 Best price for 225,000 energy / 1 hour:
@@ -225,14 +225,14 @@ Best price for 225,000 energy / 1 hour:
   Price: 11.82 TRX
 ```
 
-**Stage 5 - Poll:**
+**Aşama 5 - Yokla:**
 
 ```
 Delegation confirmed after 4.2 seconds
 Address now has 225,000 energy available
 ```
 
-**Stage 6 - Execute:**
+**Aşama 6 - Yürütün:**
 
 ```
 Swap transaction broadcast
@@ -243,33 +243,33 @@ Net cost: 11.82 TRX instead of ~53 TRX burned
 Savings: 78%
 ```
 
-The entire pipeline executed autonomously. The agent asked to swap TRX for USDT, and MERX handled every resource calculation, purchase, and timing issue behind the scenes.
+Tüm boru hattı otonomik olarak yürütüldü. Ajan TRX'i USDT için takas etmesini istedi ve MERX sahnenin arkasında her kaynak hesaplaması, satın alımı ve zamanlama sorununun işini yaptı.
 
-## Why the Order of Operations Matters
+## Operasyonlar Sırası Neden Önemlidir
 
-The pipeline's strict ordering prevents three categories of failures:
+Boru hattının sıkı sırası üç başarısızlık kategorisini önler:
 
-### Race Condition: Buy Then Immediately Broadcast
+### Yarış Koşulu: Satın Al Sonra Hemen Yayınla
 
-If you buy energy and broadcast the transaction in the same block, the delegation may not have been processed yet. The transaction executes without delegated energy, burns TRX, and you have paid twice - once for the energy (which goes unused) and once for the TRX burn.
+Enerji satın alırsan ve işlemi aynı blokta yayınlarsan, delegasyon henüz işlemmiş olmayabilir. İşlem devredilen enerji olmadan yürütülür, TRX'i yakar ve iki kez ödeme yaptınız - bir kez enerji için (kullanılmamaz) ve bir kez TRX yakması için.
 
-MERX prevents this by polling until delegation is confirmed on-chain before proceeding.
+MERX bunu devredilmeyi zincir üzerinde doğrulama bitmeden yoklayarak önler.
 
-### Overestimation: Hardcoded Energy Values
+### Aşırı Tahmin: Sabit Kodlanmış Enerji Değerleri
 
-Many tools use hardcoded energy estimates (e.g., "USDT transfers always cost 65,000 energy"). But the actual cost depends on the specific addresses involved, their token holding history, the contract's internal state, and even the block number. A transfer to a new address costs more than a transfer to an address that already holds the token.
+Birçok araç sabit enerji tahminleri kullanır (örn. "USDT transferleri her zaman 65.000 enerji maliyeti"). Ancak gerçek maliyet söz konusu adreslere, onların token tutma geçmişine, kontratın iç durumuna ve hatta blok numarasına bağlıdır. Yeni bir adrese transfer mevcut tokeni tutan bir adrese transferden daha pahalıdır.
 
-MERX prevents this by simulating the exact transaction with real parameters against live blockchain state.
+MERX bunu tam parametrelerle tam işlemi canlı blockchain durumuna karşı simüle ederek önler.
 
-### Underestimation: Insufficient Resources
+### Yetersiz Tahmin: Yetersiz Kaynaklar
 
-If you underestimate energy requirements and the transaction runs out of energy mid-execution, it fails. You lose the bandwidth for the transaction attempt, and the energy you purchased is wasted on a failed transaction.
+Enerji gereksinimlerini yetersiz tahmin ederseniz ve işlem yürütme sırasında enerjinin bitmesi durumunda başarısız olur. İşlem denemesinin bant genişliğini kaybedersiniz ve satın aldığınız enerji başarısız bir işlemde boşa gider.
 
-MERX prevents this by using `triggerConstantContract` for exact simulation and adding a small buffer when ordering.
+MERX bunu `triggerConstantContract` kullanarak tam simülasyon yaparak ve sipariş verirken küçük bir tampon ekleyerek önler.
 
-## The Difference in Practice
+## Uygulamada Fark
 
-Without resource-aware transactions (standard wallet behavior):
+Kaynağa duyarlı işlemler olmadan (standart cüzdan davranışı):
 
 ```
 USDT transfer: 27 TRX burned (~$7.00)
@@ -277,7 +277,7 @@ SunSwap trade: 53 TRX burned (~$13.75)
 Approve + Swap: 68 TRX burned (~$17.65)
 ```
 
-With MERX resource-aware pipeline:
+MERX kaynağa duyarlı boru hattıyla:
 
 ```
 USDT transfer: 3.42 TRX (energy purchase)
@@ -285,13 +285,13 @@ SunSwap trade: 11.82 TRX (energy purchase)
 Approve + Swap: 14.93 TRX (energy purchase)
 ```
 
-For an agent executing 100 USDT transfers per day, that is the difference between $700/day and $342/day - over $130,000 in annual savings.
+Günde 100 USDT transferi yürüten bir ajan için, bu günde 700 dolar ile günde 342 dolar arasındaki farktır - yıllık 130.000 dolardan fazla tasarruf.
 
-## Integration for Developers
+## Geliştiriciler İçin Entegrasyon
 
-If you are building an application that interacts with TRON, integrating the MERX resource-aware pipeline requires no architectural changes. The MCP server handles the entire pipeline internally.
+TRON ile etkileşime giren bir uygulama oluşturuyorsanız, MERX kaynağa duyarlı boru hattını entegre etmek mimari değişiklik gerektirmez. MCP sunucusu tüm boru hattını dahili olarak işler.
 
-For direct API integration:
+Doğrudan API entegrasyonu için:
 
 ```bash
 # Step 1: Get estimation
@@ -308,26 +308,27 @@ curl -X POST https://merx.exchange/api/v1/ensure-resources \
 # Step 3: Broadcast your transaction (signed client-side)
 ```
 
-The `ensure-resources` endpoint handles price comparison, order placement, and delegation polling. Your application receives a response only when the address is ready.
+`ensure-resources` uç noktası fiyat karşılaştırması, sipariş yerleştirme ve delegasyon yoklamasını işler. Uygulamanız yalnızca adres hazır olduğunda yanıt alır.
 
-## Sonuc
+## Sonuç
 
-Resource-aware transactions are not an optimization. They are the correct way to interact with the TRON network. Broadcasting transactions without first ensuring adequate resources is the equivalent of sending an HTTP request without checking if the server is reachable - it might work, but when it fails, you pay the price.
+Kaynağa duyarlı işlemler bir optimizasyon değildir. TRON ağı ile etkileşime girmek için doğru yoldur. Önce yeterli kaynakları sağlamadan işlem yayınlamak, sunucuya erişilebilir olup olmadığını kontrol etmeden HTTP isteği göndermek eşdeğerdir - çalışabilir ancak başarısız olduğunda, fiyatı siz ödersiniz.
 
-MERX makes the correct approach the default approach. Every transaction goes through the pipeline. Every resource deficit is calculated precisely. Every purchase is made at the best available price. Every delegation is confirmed before the transaction is broadcast.
+MERX doğru yaklaşımı varsayılan yaklaşımın yapır. Her işlem boru hattından geçer. Her kaynak açığı tam olarak hesaplanır. Her satın alma en iyi mevcut fiyattan yapılır. Her delegasyon işlem yayınlanmadan önce doğrulanır.
 
-The result is predictable, minimal-cost transactions on every single interaction with the TRON blockchain.
+Sonuç TRON blockchain'e karşı her etkileşimde öngörülebilir, minimum maliyetli işlemlerdir.
 
 ---
 
-**Baglantilar:**
+**Bağlantılar:**
 - MERX Platformu: [https://merx.exchange](https://merx.exchange)
 - MCP Sunucusu (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - MCP Sunucusu (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şu Anda AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin - sıfır kurulum, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -339,6 +340,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlantılı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgesi: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

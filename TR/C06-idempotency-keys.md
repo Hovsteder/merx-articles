@@ -1,84 +1,84 @@
-# Idempotency Key'ler: TRON Energy Siparislerinde Guvenli Yeniden Denemeler
+# İdempotency Anahtarları: TRON Energy Siparişleri için Güvenli Yeniden Denemeler
 
-Network requests fail. Connections time out. Load balancers drop packets. Mobile clients lose signal mid-request. In any distributed system, the question is not whether failures will happen but how you handle them when they do.
+Ağ istekleri başarısız olur. Bağlantılar zaman aşımına uğrar. Yük dengeleyiciler paketleri düşürür. Mobil istemciler isteğin ortasında sinyal kaybeder. Herhangi bir dağıtılmış sistemde, soru başarısızlığın olup olmayacağı değil, olduğunda bunu nasıl ele alacağınızdır.
 
-For most API calls, the answer is straightforward: retry the request. But when the request involves money - creating an order that debits your balance, or initiating a withdrawal that moves funds on-chain - a naive retry can be catastrophic. You send the request, the server processes it, but the response never reaches you. You retry. The server processes it again. You just paid twice for the same order, or worse, triggered two on-chain withdrawals.
+Çoğu API çağrısı için, cevap basittir: isteği yeniden deneyin. Ancak istek para içerdiğinde - bakiyenizi borçlandıran bir sipariş oluşturmak veya fonları blok zincirinde hareket ettiren bir çekimi başlatmak - naif bir yeniden deneme yıkıcı olabilir. İsteği gönderirsiniz, sunucu onu işler, ancak yanıt size asla ulaşmaz. Yeniden denersiniz. Sunucu onu tekrar işler. Aynı sipariş için iki kez ödeme yaptınız, hatta daha kötüsü, iki tane blok zinciri çekişini tetiklediniz.
 
-This is the problem that idempotency keys solve. MERX implements idempotency on every financial endpoint, making it safe to retry any request without risk of duplicate execution.
+Bu, idempotency anahtarlarının çözdüğü problemdir. MERX, her finansal uç noktada idempotency uygulayarak, herhangi bir isteği yinelenen yürütme riski olmadan yeniden denemeyi güvenli hale getirir.
 
-## What Idempotency Means in Practice
+## İdempotency Pratikte Ne Anlama Gelir
 
-An operation is idempotent if performing it multiple times produces the same result as performing it once. HTTP GET is naturally idempotent - fetching the same URL ten times returns the same data. HTTP DELETE is idempotent by convention - deleting an already-deleted resource is a no-op.
+Bir işlem idempotent'tir eğer birden fazla kez gerçekleştirilmesi, bir kez gerçekleştirilmişle aynı sonucu üretirse. HTTP GET doğal olarak idempotent'tir - aynı URL'yi on kez getirmek aynı veriyi döndürür. HTTP DELETE kural gereği idempotent'tir - zaten silinmiş bir kaynağı silmek işlem yapmamaktır.
 
-HTTP POST is not idempotent. Each POST to `/api/v1/orders` creates a new order. Send it three times, get three orders, pay three times.
+HTTP POST idempotent değildir. `/api/v1/orders` adresine üç kez POST göndermek üç sipariş oluşturur, üç kez ödeme yaparsınız.
 
-Idempotency keys make POST requests behave idempotently. The client generates a unique identifier and sends it with the request. The server uses this key to detect duplicates. If the same key arrives again, the server returns the result from the first execution instead of processing the request again.
+İdempotency anahtarları POST isteklerini idempotent davranması sağlar. İstemci benzersiz bir tanımlayıcı oluşturur ve isteğin yanına gönderir. Sunucu bu anahtarı kullanarak çoğaltmalar tespit eder. Aynı anahtar tekrar gelirse, sunucu isteği yeniden işlemek yerine ilk yürütmeden elde edilen sonucu döndürür.
 
-The distinction matters: the server does not simply reject duplicates. It returns the original response. From the client's perspective, the retry behaves exactly like a successful first attempt. This is critical for automation - your code does not need to distinguish between "first successful call" and "successful retry."
+Ayrım önemlidir: sunucu çoğaltmaları reddetmez. Orijinal yanıtı döndürür. İstemci perspektifinden, yeniden deneme tam olarak başarılı bir ilk girişim gibi davranır. Bu otomasyon için kritiktir - kodunuz "ilk başarılı çağrı" ile "başarılı yeniden deneme" arasında ayrım yapmak zorunda değildir.
 
-## Why This Matters for TRON Energy Trading
+## TRON Energy Ticareti için Neden Bu Önemlidir
 
-TRON energy orders involve real money moving through real systems. When you create an order through MERX, several things happen in sequence:
+TRON energy siparişleri gerçek para ve gerçek sistemler içerir. MERX aracılığıyla bir sipariş oluşturduğunuzda, sırayla birkaç şey olur:
 
-1. Your account balance is debited.
-2. The order is routed to the cheapest available provider.
-3. The provider delegates energy on-chain to your target address.
-4. The order status is updated and webhooks fire.
+1. Hesap bakiyeniz borçlandırılır.
+2. Sipariş en ucuz mevcut sağlayıcıya yönlendirilir.
+3. Sağlayıcı hedef adresinize blok zincirde energy delegesi verir.
+4. Sipariş durumu güncellenir ve web kancaları çalışır.
 
-If the connection drops after step 1 but before you receive confirmation, you have no way to know whether the order was created. Without idempotency, your options are bad:
+Bağlantı 1. adımdan sonra ancak onay almadan önce koparsa, siparişin oluşturulup oluşturulmadığını bilmenin hiçbir yolu yoktur. İdempotency olmadan, seçenekleriniz kötüdür:
 
-- **Do not retry.** You might have a pending order you do not know about, or you might have lost a request that never reached the server. You have to poll the orders list to find out, adding complexity.
-- **Retry blindly.** If the first request did go through, you now have two orders and two balance debits. For an automated system processing hundreds of orders per day, this adds up fast.
-- **Retry with idempotency key.** The server recognizes the duplicate, returns the existing order, and your code continues as normal. No double-spend. No manual reconciliation.
+- **Yeniden denemeyin.** Hakkında bilgi sahibi olmadığınız bekleyen bir siparişiniz olabilir veya sunucuya hiç ulaşmayan bir isteği kaybetmiş olabilirsiniz. Bunu öğrenmek için sipariş listesini yoklamanız gerekir, bu da karmaşıklık ekler.
+- **Körlü bir şekilde yeniden deneyin.** İlk istek gerçekten gittiyse, artık iki siparişiniz ve iki bakiye borçlandırmanız var. Günde yüzlerce sipariş işleyen otomatik bir sistem için, bu hızla birikir.
+- **İdempotency anahtarıyla yeniden deneyin.** Sunucu çoğaltmayı tanır, mevcut siparişi döndürür ve kodunuz normal devam eder. Çift harcama yok. El ile mutabakat yok.
 
-The same logic applies to withdrawals. A duplicate withdrawal request could move funds on-chain twice. With idempotency keys, the retry returns the existing withdrawal record.
+Aynı mantık çekişlere de uygulanır. Yinelenen bir çekim isteği fonları blok zincirde iki kez hareket ettirebilir. İdempotency anahtarlarıyla, yeniden deneme mevcut çekim kaydını döndürür.
 
-## How MERX Implements Idempotency
+## MERX İdempotency Uygulamasını Nasıl Yapıyor
 
-MERX supports the `Idempotency-Key` header on two endpoints:
+MERX, `Idempotency-Key` başlığını iki uç noktada destekler:
 
-- `POST /api/v1/orders` - energy and bandwidth order creation
-- `POST /api/v1/withdraw` - balance withdrawals
+- `POST /api/v1/orders` - energy ve bandwidth sipariş oluşturma
+- `POST /api/v1/withdraw` - bakiye çekilişleri
 
-The implementation follows a straightforward lifecycle.
+Uygulama, basit bir yaşam döngüsü izler.
 
-### Key Format and Generation
+### Anahtar Format ve Oluşturma
 
-The idempotency key is a client-generated string, up to 64 characters. MERX does not enforce a specific format, but best practice is to use UUIDs (v4) or structured identifiers that encode context:
+İdempotency anahtarı, istemci tarafından oluşturulan, 64 karaktere kadar bir dizedir. MERX belirli bir biçim uygulamaz, ancak en iyi uygulama UUIDler (v4) veya bağlam kodlayan yapılandırılmış tanımlayıcılar kullanmaktır:
 
 ```
 Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
 ```
 
-Or with business context:
+Veya işletme bağlamı ile:
 
 ```
 Idempotency-Key: order-user42-2026-03-30-batch7-item3
 ```
 
-The key must be unique per distinct operation. Reusing a key with different request parameters (different amount, different target address) returns an error rather than silently ignoring the new parameters.
+Anahtar, her ayrı işlem için benzersiz olmalıdır. Farklı istek parametreleriyle bir anahtarı yeniden kullanmak (farklı miktar, farklı hedef adres) yeni parametreleri sessizce görmezden gelmek yerine bir hata döndürür.
 
-### Server-Side Behavior
+### Sunucu Tarafı Davranışı
 
-When MERX receives a request with an `Idempotency-Key` header, the following logic runs:
+MERX bir `Idempotency-Key` başlığı içeren bir istek aldığında, aşağıdaki mantık çalışır:
 
-1. **First request with this key.** The server processes the request normally - validates parameters, debits balance, creates the order. It stores the key, the request hash, and the response. Returns the response with HTTP 201.
+1. **Bu anahtarla ilk istek.** Sunucu isteği normal şekilde işler - parametreleri doğrular, bakiye borçlandırır, sipariş oluşturur. Anahtarı, istek karmasını ve yanıtı saklar. HTTP 201 ile yanıt döndürür.
 
-2. **Duplicate request with the same key and same parameters.** The server skips all processing and returns the stored response from the first execution. The response is identical, including the same order ID, status, and timestamps. Returns HTTP 200 (not 201) so the client can distinguish if needed.
+2. **Aynı anahtar ve aynı parametrelerle yinelenen istek.** Sunucu tüm işlemeyi atlar ve ilk yürütmeden saklanan yanıtı döndürür. Yanıt aynıdır, aynı sipariş ID'si, durum ve zaman damgaları dahil olmak üzere. HTTP 200 döndürür (201 değil), böylece istemci gerekirse ayırt edebilir.
 
-3. **Duplicate request with the same key but different parameters.** The server returns HTTP 409 Conflict. This prevents a subtle bug where a key collision causes an unrelated order to be returned.
+3. **Aynı anahtar ancak farklı parametrelerle yinelenen istek.** Sunucu HTTP 409 Çatışma döndürür. Bu, bir anahtar çarpışmasının ilgisiz bir siparişin döndürülmesine neden olduğu hafif bir hatayı önler.
 
-4. **Request while the first is still processing.** The server returns HTTP 409 with a message indicating the original request is still in progress. This handles the race condition where a retry arrives before the first request finishes.
+4. **İlk hala işleniyorken istek.** Sunucu HTTP 409 ile orijinal isteğin hala devam etmekte olduğunu gösteren bir mesaj döndürür. Bu, yeniden denemenin ilk istek bitmeden önce geldiği yarış durumunu ele alır.
 
-### Key Expiration
+### Anahtar Süresi Dolması
 
-Idempotency keys are stored for 24 hours. After that, the same key can be reused for a new request. In practice, retries happen within seconds or minutes, not days. The 24-hour window is generous enough to cover any realistic retry scenario while preventing unbounded storage growth.
+İdempotency anahtarları 24 saat boyunca saklanır. Bundan sonra, aynı anahtar yeni bir istek için yeniden kullanılabilir. Pratikte, yeniden denemeler saniye veya dakika içinde olur, gün içinde değil. 24 saatlik pencere, herhangi bir gerçekçi yeniden deneme senaryosunu kapsayacak kadar cömerttir, ancak sınırsız depolama büyümesini önler.
 
-## Code Examples
+## Kod Örnekleri
 
-### JavaScript SDK - Retry-Safe Order Creation
+### JavaScript SDK - Yeniden Deneme Güvenli Sipariş Oluşturma
 
-The MERX JavaScript SDK handles idempotency keys automatically when you pass the `idempotencyKey` option. Here is a complete example with retry logic:
+MERX JavaScript SDK, `idempotencyKey` seçeneğini geçtiğinizde idempotency anahtarlarını otomatik olarak ele alır. Yeniden deneme mantığıyla tam bir örnek aşağıdadır:
 
 ```javascript
 import { MerxClient } from 'merx-sdk';
@@ -132,15 +132,15 @@ const order = await createOrderSafe({
 });
 ```
 
-Key points in this implementation:
+Bu uygulamadaki önemli noktalar:
 
-- The idempotency key is generated once, before the retry loop. Every retry sends the same key.
-- Exponential backoff prevents hammering the server during transient failures.
-- The 409 conflict on parameter mismatch is treated as a non-retryable error because it indicates a logic bug, not a network issue.
+- İdempotency anahtarı bir kez, yeniden deneme döngüsünden önce oluşturulur. Her yeniden deneme aynı anahtarı gönderir.
+- Katlanarak geri alma, geçici arızalar sırasında sunucuya vurmayı önler.
+- Parametre uyumsuzluğu üzerinde 409 çatışması, bir ağ sorunu değil bir mantık hatası gösterdiği için yeniden denenemez bir hata olarak ele alınır.
 
-### Python SDK - Retry-Safe Withdrawal
+### Python SDK - Yeniden Deneme Güvenli Çekme
 
-The Python SDK follows the same pattern. Here is an example for withdrawals:
+Python SDK aynı deseni izler. İşte çekimler için bir örnek:
 
 ```python
 import uuid
@@ -189,9 +189,9 @@ result = withdraw_safe(
 )
 ```
 
-### Raw HTTP - Direct API Call with curl
+### Ham HTTP - curl ile Doğrudan API Çağrısı
 
-If you are not using an SDK, the `Idempotency-Key` header is a standard HTTP header:
+SDK kullanmıyorsanız, `Idempotency-Key` başlığı standart bir HTTP başlığıdır:
 
 ```bash
 IDEMPOTENCY_KEY=$(uuidgen)
@@ -207,19 +207,19 @@ curl -X POST https://merx.exchange/api/v1/orders \
   }'
 ```
 
-Retry the exact same curl command (with the same `IDEMPOTENCY_KEY` value) and you will get the original order back instead of a new one.
+Tamamen aynı curl komutunu (`Idempotency-Key` değeriyle) yeniden deneyin ve yeni bir tane yerine orijinal siparişi geri alacaksınız.
 
-## En Iyi Uygulamalar for Production Systems
+## Üretim Sistemleri için En İyi Uygulamalar
 
-### Generate Keys at the Right Level
+### Anahtarları Doğru Seviyede Oluşturun
 
-The idempotency key should represent the business intent, not the HTTP request. If a user clicks "Buy Energy" once, that is one business operation with one key - regardless of how many HTTP retries it takes.
+İdempotency anahtarı, HTTP isteğini değil, işletme amacını temsil etmelidir. Bir kullanıcı bir kez "Energy Satın Al" seçeneğini tıklarsa, bu bir işletme işlemidir - kaç HTTP yeniden denemesi alacağından bağımsız olarak.
 
-Do not generate a new key on each retry. That defeats the purpose entirely.
+Her yeniden denemede yeni bir anahtar üretmeyin. Bu amacı tamamen bozar.
 
-### Store Keys Before Sending
+### Gönderilmeden Önce Anahtarları Saklayın
 
-In a system that processes orders in a queue, write the idempotency key to your database before making the API call. If your process crashes and restarts, it picks up the same key from the database and retries safely.
+Bir kuyrukta sipariş işleyen bir sistemde, API çağrısını yapmadan önce idempotency anahtarını veritabanınıza yazın. İşleminiz kilitlense ve yeniden başlarsa, veritabanından aynı anahtarı alır ve güvenli bir şekilde yeniden dener.
 
 ```javascript
 // Write the intent to your database first
@@ -243,59 +243,60 @@ await db.orderIntents.update(intent.id, {
 });
 ```
 
-### Handle All Response Codes
+### Tüm Yanıt Kodlarını İşleyin
 
-Your retry logic should handle these cases:
+Yeniden deneme mantığınız bu durumları ele almalıdır:
 
-| HTTP Status | Meaning | Action |
-|------------|---------|--------|
-| 201 | First successful creation | Store result, continue |
-| 200 | Duplicate key, same params | Treat as success (same result) |
-| 409 | Key conflict or still processing | Do not retry - investigate |
-| 429 | Rate limited | Retry after delay |
-| 500+ | Server error | Retry with backoff |
+| HTTP Durum | Anlam | İşlem |
+|------------|-------|-------|
+| 201 | İlk başarılı oluşturma | Sonuç saklayın, devam edin |
+| 200 | Yinelenen anahtar, aynı parametreler | Başarı olarak ele alın (aynı sonuç) |
+| 409 | Anahtar çatışması veya hala işlenme | Yeniden denemeyin - araştırın |
+| 429 | Hız sınırlı | Gecikmeden sonra yeniden deneyin |
+| 500+ | Sunucu hatası | Geri almayla yeniden deneyin |
 
-### Use Structured Keys for Debugging
+### Hata Ayıklama için Yapılandırılmış Anahtarlar Kullanın
 
-While UUIDs work perfectly, structured keys make debugging easier:
+UUID'ler mükemmel şekilde çalışırken, yapılandırılmış anahtarlar hata ayıklamayı kolaylaştırır:
 
 ```
 order-{userId}-{date}-{sequenceNumber}
 withdraw-{userId}-{timestamp}-{nonce}
 ```
 
-When investigating a support case, a structured key immediately tells you who initiated the operation and when.
+Bir destek durumunu araştırırken, yapılandırılmış bir anahtar size hemen kim tarafından ve ne zaman işlem başlatıldığını söyler.
 
-### Set Reasonable Retry Limits
+### Makul Yeniden Deneme Sınırları Belirleyin
 
-Three to five retries with exponential backoff covers the vast majority of transient failures. If the server is genuinely down, retrying 50 times will not help and will only generate noise in your logs.
+Üç ile beş yeniden deneme, katlanarak geri alma ile geçici arızaların büyük çoğunluğunu kapsar. Sunucu gerçekten düştüyse, 50 kez yeniden deneme yardımcı olmaz ve sadece günlüklerde gürültü üretir.
 
-A sensible ceiling: retry up to 3 times, with delays of 1 second, 2 seconds, and 4 seconds. If all three fail, surface the error to a monitoring system rather than retrying indefinitely.
+Makul bir üst sınır: 3 kez yeniden deneyin, gecikmeler 1 saniye, 2 saniye ve 4 saniye. Hepsi başarısız olursa, hatayı sınırsız yeniden denemek yerine bir izleme sistemine sunun.
 
-## Yaygin Hatalar
+## Yaygın Hatalar
 
-**Generating a new key on each retry.** This is the most common mistake. If each retry has a new key, the server treats each as a unique request. You get duplicate orders.
+**Her yeniden denemede yeni bir anahtar oluşturma.** Bu en yaygın hatadır. Her yeniden denemenin yeni bir anahtarı varsa, sunucu her birini benzersiz bir istek olarak ele alır. Yinelenen siparişler alırsınız.
 
-**Sharing keys across different operations.** Each distinct business operation needs its own key. If you use the same key for two different orders (different amounts, different addresses), the second will fail with a 409.
+**Anahtarları farklı işlemler arasında paylaşma.** Her ayrı işletme işleminin kendi anahtarı gerekir. Aynı anahtarı iki farklı sipariş için kullanırsanız (farklı miktarlar, farklı adresler), ikinci bir 409 ile başarısız olur.
 
-**Not handling the 200 vs 201 distinction.** While both indicate success, the status code tells you whether this was the first execution or a replay. This can be useful for logging and metrics - knowing how often retries hit duplicates tells you something about your network reliability.
+**200 vs 201 ayrımını işlememek.** Her ikisi de başarıyı gösterirken, durum kodu bunun ilk yürütme veya tekrar oynatma olup olmadığını söyler. Bu, günlüğe kaydetme ve ölçümler için yararlı olabilir - yeniden denemelerin duplikatlara ne sıklıkla çarptığını bilmek, ağ güvenilirliğiniz hakkında bir şeyler söyler.
 
-**Ignoring idempotency for webhooks.** MERX sends webhooks on order status changes. Your webhook handler should be idempotent too - if you receive the same `order.filled` event twice, processing it twice should not cause problems. Use the order ID as a natural idempotency key for your own processing.
+**Web kancaları için idempotency görmezden gelme.** MERX, sipariş durumu değişikliklerinde web kancaları gönderir. Web kanca işleyiciniz de idempotent olmalıdır - aynı `order.filled` etkinliğini iki kez alırsanız, onu iki kez işlemek sorun yaratmamalıdır. Kendi işlemeniz için idempotency anahtarı olarak sipariş ID'sini kullanın.
 
-## Sonuc
+## Sonuç
 
-Idempotency keys are a small addition to your API calls - one header, one UUID - but they eliminate an entire class of financial bugs. For any system that creates TRON energy orders or initiates withdrawals programmatically, they are not optional. They are the difference between a system that handles network failures gracefully and one that creates support tickets every time a connection drops.
+İdempotency anahtarları, API çağrılarınıza küçük bir eklentidir - bir başlık, bir UUID - ancak tüm finansal hata sınıfını ortadan kaldırırlar. TRON energy siparişleri oluşturan veya programlı olarak çekişleri başlatan herhangi bir sistem için, isteğe bağlı değildirler. Ağ arızalarını zarif bir şekilde işleyen bir sistem ile bağlantı koparıldığında her seferinde destek biletleri oluşturan bir sistem arasındaki fark budur.
 
-MERX supports idempotency keys on all financial endpoints. The JavaScript SDK and Python SDK both provide built-in support. Start using them from day one - retrofitting idempotency into a production system that has already experienced duplicate orders is considerably more painful than building it in from the start.
+MERX tüm finansal uç noktalarda idempotency anahtarlarını destekler. JavaScript SDK ve Python SDK ikisi de yerleşik destek sağlar. Birinci günden itibaren bunları kullanmaya başlayın - idempotency'yi zaten yinelenen siparişleri yaşamış bir üretim sistemine geriye dönük olarak eklemek, başlangıçtan itibaren inşa etmekten önemli ölçüde daha acılıdır.
 
-- MERX platform: [merx.exchange](https://merx.exchange)
-- API dokumantasyonu: [merx.exchange/docs](https://merx.exchange/docs)
+- MERX platformu: [merx.exchange](https://merx.exchange)
+- API belgeleri: [merx.exchange/docs](https://merx.exchange/docs)
 - JavaScript SDK: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 - Python SDK: [github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Yapay Zeka ile Şimdi Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin - kurulum, salt okunur araçlar için API anahtarı gerekli değildir:
 
 ```json
 {
@@ -307,6 +308,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Yapay zeka aracınıza sorun: "Şu anda en ucuz TRON energy nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

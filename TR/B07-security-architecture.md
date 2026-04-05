@@ -1,75 +1,75 @@
-# MERX Guvenlik Mimarisi: Fonlarinizi Nasil Koruyoruz
+# MERX Güvenlik Mimarisi: Fonlarınız Nasıl Korunur
 
-When a platform handles financial transactions, security is not a feature - it is the foundation everything else sits on. A single vulnerability can destroy user trust permanently. At MERX, security considerations shaped every architectural decision from day one, not as an afterthought bolted on after the fact.
+Bir platform finansal işlemleri yönettiğinde, güvenlik bir özellik değildir - her şeyin oturduğu temeldir. Tek bir zafiyet kullanıcı güvenini kalıcı olarak yok edebilir. MERX'te güvenlik hususları, ilk günden itibaren her mimari kararı şekillendirmiştir; sonradan eklenen bir düşünce değil.
 
-This article details the security architecture of MERX: how funds are protected, how data integrity is maintained, how the system defends against common attack vectors, and the design principles that make the platform resilient.
-
----
-
-## Principle 1: No Custody of Private Keys
-
-MERX never holds, stores, or has access to your TRON private keys. This is a fundamental design decision that eliminates an entire class of attacks.
-
-### How It Works
-
-When you use MERX to purchase energy, the delegation happens from the provider's address to your address. MERX orchestrates this transaction but never needs access to your wallet. Your private key stays on your device, in your hardware wallet, or wherever you manage it.
-
-The flow:
-
-```
-1. You tell MERX: "Delegate 65,000 energy to TMyAddress"
-2. MERX tells the provider: "Delegate 65,000 energy to TMyAddress"
-3. The provider delegates from TProviderAddress to TMyAddress
-4. MERX verifies the delegation on-chain
-5. Your private key was never involved
-```
-
-### Why This Matters
-
-If MERX were compromised, attackers could not steal your TRX or tokens because MERX does not have your keys. Compare this with platforms that require you to deposit tokens to a platform-controlled address - those platforms hold your keys (or keys to your funds), creating a single point of failure.
-
-### The Treasury Exception
-
-MERX does manage its own treasury address for receiving deposits and processing withdrawals. The treasury private key is stored as a Docker secret, accessible only to the `treasury-signer` service. It is never exposed to the API service, the web frontend, or any other component. More on this isolation below.
+Bu makale MERX'in güvenlik mimarisini detaylandırır: fonlar nasıl korunur, veri bütünlüğü nasıl sağlanır, sistem yaygın saldırı vektörlerine nasıl karşı koyar ve platformu esnek kılan tasarım ilkeleri.
 
 ---
 
-## Principle 2: Double-Entry Ledger
+## İlke 1: Özel Anahtarların Saklanmaması
 
-Every financial operation on MERX creates a paired ledger entry. This is the same accounting principle used by every bank and financial institution for the last 700 years. It works.
+MERX hiçbir zaman TRON özel anahtarlarınızı tutmaz, depolamaz veya erişim sağlamaz. Bu, tüm bir saldırı sınıfını ortadan kaldıran temel bir tasarım kararıdır.
 
-### How It Works
+### Nasıl Çalışır
 
-Every transaction creates two entries: a debit and a credit. The sum of all debits always equals the sum of all credits. If they do not, something is wrong, and the system detects it immediately.
+MERX'i enerji satın almak için kullandığınızda, delegasyon sağlayıcının adresinden sizin adresinize gerçekleşir. MERX bu işlemi yönetir ancak hiçbir zaman özel anahtarınıza erişmesi gerekmez. Özel anahtarınız cihazınızda, donanım cüzdanınızda veya yönettiğiniz başka yerde kalır.
+
+Akış şöyledir:
+
+```
+1. MERX'e şunu söylersiniz: "65.000 enerjiyi TMyAddress'e deleget et"
+2. MERX sağlayıcıya şunu söyler: "65.000 enerjiyi TMyAddress'e deleget et"
+3. Sağlayıcı TProviderAddress'ten TMyAddress'e delegasyon yapar
+4. MERX delegasyonu zincirde doğrular
+5. Özel anahtarınız hiçbir zaman işin içinde değildir
+```
+
+### Neden Bu Önemli
+
+MERX'in güvenliği ihlal edilse, saldırganlar TRX veya jetonlarınızı çalamazlar çünkü MERX'in anahtarlarınız yok. Bunu, tokenleri platform tarafından kontrol edilen bir adrese yatırmanız gereken platformlarla karşılaştırın - bu platformlar anahtarlarınızı (veya fonlarınıza giden anahtarları) tutar, bu da tek bir başarısızlık noktası oluşturur.
+
+### Hazine İstisnası
+
+MERX depozito almak ve para çekme işlemlerini işlemek için kendi hazine adresini yönetir. Hazine özel anahtarı, Docker secret olarak saklanır ve yalnızca `treasury-signer` hizmeti tarafından erişilebilir. API hizmetine, web ön ucuna veya başka herhangi bir bileşene hiçbir zaman açıklanmaz. Bu izolasyon hakkında aşağıda daha fazla bilgi.
+
+---
+
+## İlke 2: Çift Giriş Defteri
+
+MERX'teki her finansal işlem, eşleştirilmiş bir defter girişi oluşturur. Bu, son 700 yılın her bankası ve finansal kurumu tarafından kullanılan aynı muhasebe ilkesidir. Çalışır.
+
+### Nasıl Çalışır
+
+Her işlem iki giriş oluşturur: bir borç ve bir alacak. Tüm borçların toplamı her zaman tüm alacakların toplamına eşittir. Eğer yoksa, bir şey yanlış demektir ve sistem bunu hemen algılar.
 
 ```sql
--- Order payment example
+-- Sipariş ödeme örneği
 INSERT INTO ledger (account_id, type, amount_sun, direction)
 VALUES
   ($user_id, 'ORDER_PAYMENT', 5525000, 'DEBIT'),
   ($provider_settlement, 'ORDER_PAYMENT', 5525000, 'CREDIT');
 ```
 
-### Immutability
+### Değişmezlik
 
-Ledger records are never updated or deleted. If a transaction needs to be reversed (e.g., a refund), a new ledger entry is created with the opposite direction:
+Defter kayıtları hiçbir zaman güncellenmez veya silinmez. Bir işlemin tersine çevrilmesi gerekirse (örn. geri ödeme), ters yönde yeni bir defter girişi oluşturulur:
 
 ```sql
--- Refund: new entries, original entries remain
+-- Geri ödeme: yeni giriş, orijinal giriş kalır
 INSERT INTO ledger (account_id, type, amount_sun, direction, reference_id)
 VALUES
   ($user_id, 'REFUND', 5525000, 'CREDIT', $original_order_id),
   ($provider_settlement, 'REFUND', 5525000, 'DEBIT', $original_order_id);
 ```
 
-The original debit entry is never modified. The refund credit entry explicitly references the original, creating a complete audit trail.
+Orijinal borç girişi hiçbir zaman değiştirilmez. Geri ödeme alacak girişi açıkça orijinal girişe referans verir, tam bir denetim izi oluşturur.
 
-### Why This Matters
+### Neden Bu Önemli
 
-If an attacker compromises the application layer and attempts to inflate a user's balance, the ledger entries will not balance. Regular reconciliation checks detect this immediately:
+Saldırganlar uygulama katmanının güvenliğini ihlal eder ve kullanıcının bakiyesini artırmaya çalışırsa, defter girişleri dengelenmiş olmayacaktır. Düzenli mutabakat kontrolleri bunu hemen algılar:
 
 ```sql
--- Reconciliation query: should always return 0
+-- Mutabakat sorgusu: her zaman 0 döndürmelidir
 SELECT SUM(CASE direction
   WHEN 'DEBIT' THEN amount_sun
   WHEN 'CREDIT' THEN -amount_sun
@@ -77,71 +77,71 @@ END) as imbalance
 FROM ledger;
 ```
 
-Any non-zero result triggers an immediate alert and investigation.
+Sıfır olmayan herhangi bir sonuç anında bir uyarı ve araştırma tetikler.
 
 ---
 
-## Principle 3: Atomic Balance Operations
+## İlke 3: Atomik Bakiye İşlemleri
 
-Every balance mutation uses `SELECT FOR UPDATE` to prevent race conditions. This is not optional - it is enforced at the database level.
+Her bakiye değişikliği, yarış koşullarını önlemek için `SELECT FOR UPDATE` kullanır. Bu isteğe bağlı değildir - veritabanı düzeyinde uygulanır.
 
-### The Race Condition Problem
+### Yarış Koşulu Sorunu
 
-Without proper locking, a user with a 10 TRX balance could submit two simultaneous orders for 8 TRX each:
+Uygun kilitlemek olmadan, 10 TRX bakiyesi olan bir kullanıcı 8 TRX'lik iki eş zamanlı sipariş sunabilir:
 
 ```
 Thread 1: SELECT balance WHERE user_id = 1    -> 10 TRX
 Thread 2: SELECT balance WHERE user_id = 1    -> 10 TRX
-Thread 1: balance (10) >= order (8)? YES       -> proceed
-Thread 2: balance (10) >= order (8)? YES       -> proceed
+Thread 1: balance (10) >= order (8)? EVET     -> devam et
+Thread 2: balance (10) >= order (8)? EVET     -> devam et
 Thread 1: UPDATE balance = 10 - 8 = 2 TRX
 Thread 2: UPDATE balance = 10 - 8 = 2 TRX
 
-Result: User spent 16 TRX with only 10 TRX balance
+Sonuç: Kullanıcı 10 TRX'le 16 TRX harcadı
 ```
 
-### The Solution
+### Çözüm
 
 ```sql
 BEGIN;
 
--- Lock the row - second transaction waits here
+-- Satırı kilitle - ikinci işlem burada bekler
 SELECT balance_sun FROM accounts
 WHERE user_id = $1
 FOR UPDATE;
 
--- Check balance
--- If insufficient: ROLLBACK
--- If sufficient: proceed
+-- Bakiyeyi kontrol et
+-- Yetersiz: ROLLBACK yap
+-- Yeterli: devam et
 
 UPDATE accounts
 SET balance_sun = balance_sun - $order_amount
 WHERE user_id = $1
-  AND balance_sun >= $order_amount;  -- Double-check in UPDATE
+  AND balance_sun >= $order_amount;  -- UPDATE'de tekrar kontrol
 
 COMMIT;
 ```
 
-`FOR UPDATE` acquires a row-level lock. The second transaction blocks until the first commits or rolls back. After the first transaction commits (reducing balance to 2 TRX), the second transaction reads the updated balance (2 TRX) and correctly rejects the insufficient-funds order.
+`FOR UPDATE` satır düzeyinde bir kilit alır. İkinci işlem, ilk işlem işlenene veya geri alınana kadar bekler. İlk işlem tamamlandıktan sonra (bakiye 2 TRX'ye düşer), ikinci işlem güncellenmiş bakiyeyi (2 TRX) okur ve yetersiz fon siparişini doğru şekilde reddeder.
 
 ---
 
-## Principle 4: Input Validation
+## İlke 4: Girdi Doğrulaması
 
-All inputs are validated with Zod schemas before processing. This includes API requests, webhook payloads, provider responses, and internal service messages.
+Tüm girdiler işlenmeden önce Zod şemaları ile doğrulanır. Buna API istekleri, webhook yükleri, sağlayıcı yanıtları ve iç hizmet iletileri dahildir.
 
-### API Input Validation
+### API Girdi Doğrulaması
 
 ```typescript
 const CreateOrderSchema = z.object({
   energy: z.number()
-    .int('Energy must be an integer')
-    .min(10000, 'Minimum order is 10,000 energy')
-    .max(100000000, 'Maximum order is 100,000,000 energy'),
+    .int('Enerji bir tamsayı olmalıdır')
+    .min(10000, 'Minimum sipariş 10.000 enerjidir')
+    .max(100000000, 'Maksimum sipariş 100.000.000 enerjidir'),
 
   targetAddress: z.string()
-    .regex(/^T[1-9A-HJ-NP-Za-km-z]{33}$/, 'Invalid TRON address format')
-    .refine(isValidTronAddress, 'Invalid TRON address checksum'),
+    .regex(/^T[1-9A-HJ-NP-Za-km-z]{33}$/, 'Geçersiz TRON adresi formatı')
+    .refine(isValidTronAddress, 'Geçersiz TRON adresi sağlama toplamı'),
 
   duration: z.enum(['1h', '1d', '3d', '7d', '14d', '30d']),
 
@@ -155,115 +155,115 @@ const CreateOrderSchema = z.object({
 });
 ```
 
-Every field is typed, bounded, and validated. No raw user input reaches business logic or database queries.
+Her alan türünü belirtilmiş, sınırlandırılmış ve doğrulanmıştır. Ham kullanıcı girdisi hiçbir zaman iş mantığına veya veritabanı sorgularına ulaşmaz.
 
-### SQL Injection Prevention
+### SQL Enjeksiyonu Önleme
 
-All database queries use parameterized statements. String concatenation is never used to build SQL:
+Tüm veritabanı sorguları parametreli ifadeleri kullanır. Dize birleştirme hiçbir zaman SQL oluşturmak için kullanılmaz:
 
 ```typescript
-// Never this:
-const query = `SELECT * FROM users WHERE id = '${userId}'`;  // SQL injection
+// Hiçbir zaman bunu yapma:
+const query = `SELECT * FROM users WHERE id = '${userId}'`;  // SQL enjeksiyonu
 
-// Always this:
+// Her zaman bunu yap:
 const query = 'SELECT * FROM users WHERE id = $1';
 const result = await db.query(query, [userId]);
 ```
 
-This is enforced by code review and linting rules. There is no mechanism for raw SQL string interpolation in the codebase.
+Bu kod incelemesi ve linting kuralları tarafından uygulanır. Kodda ham SQL dize interpolasyonu için hiçbir mekanizma yoktur.
 
-### TRON Address Validation
+### TRON Adresi Doğrulaması
 
-TRON addresses are validated at multiple levels:
+TRON adresleri birden fazla seviyede doğrulanır:
 
-1. **Format check**: must match the TRON address regex (starts with T, 34 characters, base58).
-2. **Checksum verification**: the address includes a checksum that detects typos.
-3. **On-chain verification** (optional): confirm the address exists and is activated.
+1. **Format kontrolü**: TRON adresi regex'i ile eşleşmelidir (T ile başlar, 34 karakter, base58).
+2. **Sağlama toplamı doğrulaması**: adres yazım hatalarını tespit eden bir sağlama toplamı içerir.
+3. **Zincir üstü doğrulama** (isteğe bağlı): adresi doğrulayın ve etkinleştirilip etkinleştirilmediğini onaylayın.
 
-Sending energy to an invalid address wastes resources and cannot be reversed on-chain. Strict validation prevents this.
+Enerjiyi geçersiz bir adrese göndermek kaynakları boşa harcatır ve zincirde tersine çevrilemez. Kesin doğrulama bunu önler.
 
 ---
 
-## Principle 5: Service Isolation
+## İlke 5: Hizmet İzolasyonu
 
-MERX runs as a set of isolated Docker containers, each with minimal permissions and no unnecessary access.
+MERX, her biri minimal izinler ve gereksiz erişim olmadan izole edilmiş Docker kapsayıcıları seti olarak çalışır.
 
-### Container Architecture
+### Kapsayıcı Mimarisi
 
 ```
-Docker network:
+Docker ağı:
   |
-  |-- api           (port 3000, public-facing)
-  |-- price-monitor (no external ports)
-  |-- order-executor (no external ports)
-  |-- ledger        (no external ports)
-  |-- treasury-signer (no external ports, Docker secret access)
-  |-- deposit-monitor (no external ports)
-  |-- withdrawal-executor (no external ports)
+  |-- api           (port 3000, herkese açık)
+  |-- price-monitor (harici port yok)
+  |-- order-executor (harici port yok)
+  |-- ledger        (harici port yok)
+  |-- treasury-signer (harici port yok, Docker secret erişimi)
+  |-- deposit-monitor (harici port yok)
+  |-- withdrawal-executor (harici port yok)
   |
-  |-- postgresql    (port 5432, internal only)
-  |-- redis         (port 6379, internal only)
+  |-- postgresql    (port 5432, sadece dahili)
+  |-- redis         (port 6379, sadece dahili)
 ```
 
-### Key Isolation Properties
+### Temel İzolasyon Özellikleri
 
-- **The API service cannot access the treasury private key.** Only the `treasury-signer` container can read the Docker secret containing the key.
-- **The price monitor cannot modify balances.** It only has read access to provider APIs and write access to Redis price channels.
-- **The order executor cannot directly modify the ledger.** It publishes settlement events to Redis, which the ledger service consumes.
-- **PostgreSQL and Redis are not exposed externally.** They are only accessible from within the Docker network.
+- **API hizmeti hazine özel anahtarına erişemez.** Yalnızca `treasury-signer` kapsayıcısı anahtarı içeren Docker secret'ı okuyabilir.
+- **Fiyat monitörü bakiyeleri değiştiremez.** Yalnızca sağlayıcı API'lerine okuma erişimi ve Redis fiyat kanallarına yazma erişimi vardır.
+- **Sipariş yürütücüsü defteri doğrudan değiştiremez.** Kapatma olaylarını Redis'e yayınlar, bu da defter hizmeti tarafından tüketilir.
+- **PostgreSQL ve Redis harici olarak açıklanmamıştır.** Yalnızca Docker ağı içinden erişilebilir.
 
-### Why This Matters
+### Neden Bu Önemli
 
-If an attacker compromises the API service (the most exposed component), they cannot:
-- Access the treasury private key (different container, Docker secret).
-- Directly modify ledger entries (different service, no database write access to ledger tables).
-- Bypass balance checks (enforced at database level with FOR UPDATE).
+Saldırganlar API hizmetinin (en açık bileşen) güvenliğini ihlal etseler de, şunları yapamaz:
+- Hazine özel anahtarına erişim (farklı kapsayıcı, Docker secret).
+- Defter giriş doğrudan değiştir (farklı hizmet, defter tablolarına yazma erişimi yok).
+- Bakiye kontrollerini atla (veritabanı düzeyinde SELECT FOR UPDATE ile uygulanır).
 
-The blast radius of any single-service compromise is limited by design.
+Herhangi bir hizmet düzeyinde ihlal yapmanın hasar alanı tasarım gereği sınırlıdır.
 
 ---
 
-## Principle 6: Rate Limiting and Abuse Prevention
+## İlke 6: Hız Sınırlandırması ve Suistimal Önleme
 
-### API Rate Limits
+### API Hız Sınırları
 
-Every API endpoint has rate limits appropriate to its purpose:
+Her API uç noktasının amacına uygun hız sınırları vardır:
 
 ```
-Public endpoints (prices, health):     100 requests/minute
-Authenticated reads (orders, balance): 60 requests/minute
-Authenticated writes (create order):   30 requests/minute
-Withdrawals:                           5 requests/minute
+Genel uç noktalar (fiyatlar, sağlık):     100 istek/dakika
+Doğrulanmış okumalar (siparişler, bakiye): 60 istek/dakika
+Doğrulanmış yazımlar (sipariş oluştur):   30 istek/dakika
+Para çekme:                                5 istek/dakika
 ```
 
-Rate limits are enforced per API key, tracked in Redis with sliding windows.
+Hız sınırları API anahtarı başına uygulanır, Redis'te kayan pencereler ile izlenir.
 
-### Withdrawal Safeguards
+### Para Çekme Güvenlik Önlemleri
 
-Withdrawals are the highest-risk operation (moving real assets off-platform). Additional safeguards include:
+Para çekme en yüksek riskli işlemdir (gerçek varlıkları platformdan çıkarmak). Ek güvenlik önlemleri şunları içerir:
 
-- **Rate limiting**: maximum 5 withdrawal requests per minute.
-- **Amount limits**: daily withdrawal limits per account.
-- **Confirmation delay**: large withdrawals trigger a cooldown period.
-- **Balance verification**: `SELECT FOR UPDATE` ensures sufficient balance.
-- **Idempotency**: duplicate withdrawal requests (same idempotency key) return the original result.
+- **Hız sınırlandırması**: dakikada maksimum 5 çekme isteği.
+- **Miktar sınırları**: hesap başına günlük çekme sınırları.
+- **Doğrulama gecikmesi**: büyük çekmeler bir bekleme süresini tetikler.
+- **Bakiye doğrulaması**: `SELECT FOR UPDATE` yeterli bakiyeyi sağlar.
+- **İdempotanslık**: yinelenen çekme istekleri (aynı idempotency anahtarı) orijinal sonucu döndürür.
 
 ---
 
-## Principle 7: Webhook Security
+## İlke 7: Webhook Güvenliği
 
-MERX sends webhook notifications for order status updates, deposits, and other events. Webhooks are signed with HMAC-SHA256 to prevent forgery.
+MERX sipariş durumu güncellemeleri, depozitolar ve diğer olaylar için webhook bildirimleri gönderir. Webhook'lar sahteciliği önlemek için HMAC-SHA256 ile imzalanır.
 
-### How HMAC Webhooks Work
+### HMAC Webhook'ları Nasıl Çalışır
 
 ```
-1. MERX computes: HMAC-SHA256(webhook_body, your_webhook_secret)
-2. MERX includes the signature in the X-Merx-Signature header
-3. Your server recomputes the HMAC with the same secret
-4. If signatures match: genuine webhook. If not: forged, discard.
+1. MERX hesaplar: HMAC-SHA256(webhook_body, your_webhook_secret)
+2. MERX imzayı X-Merx-Signature başlığına ekler
+3. Sunucunuz HMAC'ı aynı secret ile yeniden hesaplar
+4. İmzalar eşleşirse: orijinal webhook. Yoksa: sahte, atla.
 ```
 
-### Verification in Code
+### Kod'da Doğrulama
 
 ```typescript
 import crypto from 'crypto';
@@ -281,18 +281,18 @@ function verifyWebhook(body: string, signature: string, secret: string): boolean
 }
 ```
 
-Note the use of `timingSafeEqual` to prevent timing attacks. A naive string comparison (`===`) would leak information about the correct signature through response time variations.
+Zamanlama saldırılarını önlemek için `timingSafeEqual` kullanımına dikkat edin. Saf bir dize karşılaştırması (`===`) yanıt süresi varyasyonları aracılığıyla doğru imza hakkında bilgi sızıtacaktır.
 
 ---
 
-## Principle 8: Secrets Management
+## İlke 8: Gizli Bilgiler Yönetimi
 
-No secret is ever hardcoded in source code. All sensitive values are managed through environment variables and Docker secrets.
+Hiçbir secret hiçbir zaman kaynak kodunda sabit kodlanmaz. Tüm hassas değerler ortam değişkenleri ve Docker secret'ları aracılığıyla yönetilir.
 
-### Environment Variables
+### Ortam Değişkenleri
 
 ```
-# .env (never committed to git)
+# .env (hiçbir zaman git'e işlenmez)
 DATABASE_URL=postgresql://...
 REDIS_URL=redis://...
 API_JWT_SECRET=...
@@ -300,9 +300,9 @@ WEBHOOK_SIGNING_SECRET=...
 TRON_API_KEY=...
 ```
 
-### Docker Secrets (for High-Sensitivity Values)
+### Docker Secret'ları (Yüksek Hassasiyetli Değerler İçin)
 
-The treasury private key is too sensitive for environment variables (which can be logged or leaked through process inspection). It is stored as a Docker secret:
+Hazine özel anahtarı ortam değişkenleri için çok hassastır (günlük alınabilir veya işlem incelemesi aracılığıyla sızabilir). Docker secret olarak saklanır:
 
 ```yaml
 # docker-compose.yml
@@ -316,11 +316,11 @@ secrets:
     file: /run/secrets/treasury_key
 ```
 
-Docker secrets are mounted as files inside the container, readable only by the service process. They do not appear in environment variable listings, container inspect output, or logs.
+Docker secret'ları kapsayıcı içinde dosya olarak monte edilir, yalnızca hizmet süreci tarafından okunabilir. Ortam değişkeni listelerinde, kapsayıcı inceleme çıktısında veya günlüklerde görünmez.
 
-### Git Protection
+### Git Koruması
 
-The `.gitignore` file excludes all sensitive files:
+`.gitignore` dosyası tüm hassas dosyaları hariç tutar:
 
 ```
 .env
@@ -329,25 +329,25 @@ The `.gitignore` file excludes all sensitive files:
 secrets/
 ```
 
-This is set up before the first commit, not after.
+Bu ilk commit'ten önce kurulur, değil sonra.
 
 ---
 
-## Monitoring and Incident Response
+## İzleme ve Olaylara Yanıt
 
-### Automated Alerts
+### Otomatik Uyarılar
 
-The following conditions trigger immediate alerts:
+Aşağıdaki koşullar anında uyarı tetikler:
 
-- Ledger imbalance detected (debit-credit mismatch).
-- Treasury balance drops below threshold.
-- Failed authentication attempts exceed threshold (10/minute per IP).
-- Provider API returns unexpected errors.
-- Order execution failure rate exceeds 5%.
+- Defter dengesizliği algılandı (borç-alacak uyuşmazlığı).
+- Hazine bakiyesi eşik altına düşer.
+- Başarısız kimlik doğrulama denemeleri eşik aşarsa (10/dakika IP başına).
+- Sağlayıcı API beklenmeyen hatalar döndürür.
+- Sipariş yürütme başarısızlık oranı %5'i aşarsa.
 
-### Audit Logging
+### Denetim Günlüğü
 
-Every security-relevant operation is logged with structured data:
+Her güvenlikle ilgili işlem yapılandırılmış veriler ile günlüğe kaydedilir:
 
 ```json
 {
@@ -360,27 +360,28 @@ Every security-relevant operation is logged with structured data:
 }
 ```
 
-Logs are retained for forensic analysis and compliance. They are append-only and stored separately from application data.
+Günlükler adli analiz ve uyum için saklanır. Bunlar yalnızca ekleme ve uygulama verilerinden ayrı olarak saklanır.
 
 ---
 
-## Sonuc
+## Sonuç
 
-Security at MERX is not a single feature but a set of interlocking principles: no key custody, double-entry accounting, atomic balance operations, strict input validation, service isolation, rate limiting, signed webhooks, and proper secrets management. Each principle addresses a specific threat vector, and together they create a defense-in-depth architecture where compromising any single component does not compromise the system.
+MERX'teki güvenlik, tek bir özellik değildir, ancak birbirine bağlı ilkeler kümesidir: anahtar saklama değil, çift giriş muhasebesi, atomik bakiye işlemleri, katı girdi doğrulaması, hizmet izolasyonu, hız sınırlandırması, imzalı webhook'lar ve uygun secret yönetimi. Her ilke belirli bir tehdit vektörünü ele alır ve birlikte, herhangi bir bileşenin güvenliğini ihlal etmenin sistemi tehlikeye atmadığı derinlemesine savunma mimarisi yaratırlar.
 
-No system is invulnerable. But by designing security into the architecture from the start - rather than patching it on later - MERX minimizes the attack surface and maximizes the cost an attacker must pay to cause harm.
+Hiçbir sistem, tam korunaklı değildir. Fakat güvenliği mimari içine entegre ederek tasarlararak - daha sonra düzeltmek yerine - MERX saldırı yüzeyini en aza indirir ve saldırganın zarar vermesi için ödeyeceği maliyeti arttırır.
 
-Acik kaynak bilesenleri inceleyin: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js), [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python), [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).
+Açık kaynak bileşenleri inceleyin: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js), [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python), [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).
 
-MERX'i kullanmaya baslayin: [https://merx.exchange](https://merx.exchange).
+MERX'i [https://merx.exchange](https://merx.exchange)'de kullanmaya başlayın.
 
 ---
 
-*Bu makale, MERX teknik serisinin bir parcasidir. MERX, guvenligi sonradan eklenen bir sey degil, temel bir gereksinim olarak insaa edilen ilk blokzincir kaynak borsasidir.*
+*Bu makale MERX teknik serisinin bir parçasıdır. MERX, güvenliği temel bir gereksinim olarak tasarlanan ilk blokzincir kaynakları değişimidir, yan düşünce değil.*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır kurulum, salt-okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -392,6 +393,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI aracınızdan şunu sorun: "TRON enerjisinin en ucuz fiyatı şu anda nedir?" ve bağlantılı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,223 +1,223 @@
-# Почему bandwidth в TRON бесплатна (пока не закончится)
+# Почему пропускная способность TRON бесплатна (пока что)
 
-Every TRON account gets 600 free bandwidth points per day. For casual users sending an occasional TRX transfer, this is enough. The transaction feels free, and TRON's marketing proudly claims zero-fee transfers. But for any application processing more than a couple of transactions daily, that free bandwidth runs out fast - and what happens next can be surprisingly expensive if you are not prepared.
+Каждый аккаунт TRON получает 600 бесплатных пунктов пропускной способности в день. Для обычных пользователей, отправляющих время от времени транзакции TRX, этого достаточно. Транзакция кажется бесплатной, и маркетинг TRON с гордостью заявляет о нулевых комиссиях. Но для любого приложения, обрабатывающего более нескольких транзакций в день, бесплатная пропускная способность заканчивается быстро — и то, что происходит дальше, может быть удивительно дорогим, если вы не готовы.
 
-This article explains how TRON bandwidth actually works, when the free allocation fails you, what it costs when it does, and how to manage bandwidth at scale.
-
----
-
-## What Bandwidth Actually Is
-
-Bandwidth is the resource consumed by the raw byte size of every transaction on TRON. Not just smart contract calls - every single transaction, including simple TRX transfers, account updates, and votes. If it touches the blockchain, it uses bandwidth.
-
-The amount of bandwidth consumed equals the transaction's serialized byte size. A typical TRX transfer is 250-300 bytes. A USDT transfer (smart contract call) is 340-400 bytes.
-
-Think of bandwidth as a data quota. The TRON network limits how much data you can write to the blockchain per day. The free allocation gives every account a small daily quota. Exceed it, and you pay.
+Эта статья объясняет, как на самом деле работает пропускная способность TRON, когда бесплатное выделение заканчивается, какие затраты возникают, и как управлять пропускной способностью в масштабе.
 
 ---
 
-## The Free 600 Bandwidth Points
+## Что такое пропускная способность на самом деле
 
-Every activated TRON account receives 600 bandwidth points per day. These regenerate continuously over a 24-hour window, similar to energy regeneration.
+Пропускная способность — это ресурс, потребляемый размером в байтах каждой транзакции на TRON. Не только вызовы смарт-контрактов — каждая отдельная транзакция, включая простые переводы TRX, обновления аккаунта и голоса. Если это касается блокчейна, это потребляет пропускную способность.
 
-### What 600 Bandwidth Gets You
+Количество потребляемой пропускной способности равно размеру сериализованной транзакции в байтах. Типичный перевод TRX занимает 250-300 байт. Перевод USDT (вызов смарт-контракта) занимает 340-400 байт.
 
-| Transaction Type | Bytes per TX | Transfers per Day |
-|-----------------|-------------|-------------------|
-| TRX transfer | ~270 | 2 |
-| USDT transfer | ~350 | 1 |
-| TRC-10 token transfer | ~280 | 2 |
-| Account permission update | ~300 | 2 |
-
-That is it. Two simple transfers, or one USDT transfer, per day. For a personal wallet that sends the occasional payment, this is adequate. For anything else, it is not even close.
-
-### Regeneration
-
-Bandwidth regenerates continuously over 24 hours. If you use 300 bandwidth at noon, you will have those 300 points back by noon the next day. But regeneration is linear - after 12 hours, you will have regenerated 150 of those 300 points.
-
-```
-Regeneration rate = 600 / 86400 = 0.00694 bandwidth points per second
-```
-
-Or roughly 25 points per hour. If you exhaust your bandwidth in the morning, you will not have meaningful capacity again until the next day.
+Думайте о пропускной способности как о квоте данных. Сеть TRON ограничивает, сколько данных вы можете писать в блокчейн в день. Бесплатное выделение дает каждому аккаунту небольшую дневную квоту. Если вы её превысите, вы платите.
 
 ---
 
-## When Free Bandwidth Runs Out
+## Бесплатные 600 пунктов пропускной способности
 
-When your bandwidth reaches zero and you send a transaction, the TRON network does not reject it. Instead, it burns TRX from your account to cover the bandwidth cost. This is the "invisible fee" that surprises developers who assumed TRON transactions are free.
+Каждый активированный аккаунт TRON получает 600 пунктов пропускной способности в день. Они восстанавливаются непрерывно в течение 24-часового окна, аналогично восстановлению energy.
 
-### The Burn Mechanism
+### Что вам дает 600 пунктов пропускной способности
 
-The bandwidth burn price is a network parameter set by super representative voting. As of early 2026, the effective bandwidth burn rate is approximately:
+| Тип транзакции | Байт на транзакцию | Переводов в день |
+|-----------------|-------------------|------------------|
+| Перевод TRX | ~270 | 2 |
+| Перевод USDT | ~350 | 1 |
+| Перевод TRC-10 токена | ~280 | 2 |
+| Обновление разрешений аккаунта | ~300 | 2 |
+
+Вот и всё. Два простых перевода или один перевод USDT в день. Для личного кошелька, отправляющего время от времени платежи, этого достаточно. Для всего остального это совсем недостаточно.
+
+### Восстановление
+
+Пропускная способность восстанавливается непрерывно в течение 24 часов. Если вы использовали 300 пунктов в полдень, эти 300 пунктов у вас будут снова в полдень следующего дня. Но восстановление линейно — через 12 часов вы восстановите 150 из этих 300 пунктов.
 
 ```
-1,000 SUN per bandwidth point (byte)
+Скорость восстановления = 600 / 86400 = 0.00694 пунктов пропускной способности в секунду
 ```
 
-This means:
-
-| Transaction Type | Bytes | Burn Cost (SUN) | Burn Cost (TRX) |
-|-----------------|-------|----------------|----------------|
-| TRX transfer | 270 | 270,000 | 0.27 |
-| USDT transfer | 350 | 350,000 | 0.35 |
-
-At $0.25/TRX, a single TRX transfer costs about $0.07 in bandwidth burns, and a USDT transfer costs about $0.09. These numbers look small in isolation. They become significant at volume.
+Или примерно 25 пунктов в час. Если вы исчерпали пропускную способность с утра, значимая ёмкость вам будет доступна только на следующий день.
 
 ---
 
-## The Volume Problem
+## Когда бесплатная пропускная способность заканчивается
 
-Let us calculate bandwidth costs for a payment processor handling different transaction volumes. We will assume all transactions are USDT transfers (350 bytes each) and that only the free 600 bandwidth offsets the first transfer's cost.
+Когда ваша пропускная способность достигает нуля и вы отправляете транзакцию, сеть TRON её не отклоняет. Вместо этого она сжигает TRX с вашего аккаунта, чтобы покрыть стоимость пропускной способности. Это «невидимая комиссия», которая удивляет разработчиков, предполагавших, что транзакции TRON бесплатны.
 
-### Daily Bandwidth Consumption
+### Механизм сжигания
+
+Цена сжигания пропускной способности — это параметр сети, устанавливаемый голосованием супер-представителей. По состоянию на начало 2026 года эффективная ставка сжигания пропускной способности составляет примерно:
 
 ```
-10 transfers/day:    10 x 350 = 3,500 bytes
-  Free bandwidth:    600 bytes
-  Burned:            2,900 bytes
-  Burn cost:         2,900,000 SUN = 2.9 TRX = $0.73/day
-
-100 transfers/day:   100 x 350 = 35,000 bytes
-  Free bandwidth:    600 bytes
-  Burned:            34,400 bytes
-  Burn cost:         34,400,000 SUN = 34.4 TRX = $8.60/day
-
-1,000 transfers/day: 1,000 x 350 = 350,000 bytes
-  Free bandwidth:    600 bytes
-  Burned:            349,400 bytes
-  Burn cost:         349,400,000 SUN = 349.4 TRX = $87.35/day
+1 000 SUN за пункт пропускной способности (байт)
 ```
 
-### Monthly Bandwidth Costs
+Это означает:
 
-| Daily Transfers | Monthly Bandwidth Cost (TRX) | Monthly Bandwidth Cost (USD) |
-|----------------|-----------------------------|-----------------------------|
+| Тип транзакции | Байт | Стоимость сжигания (SUN) | Стоимость сжигания (TRX) |
+|-----------------|------|------------------------|-------------------------|
+| Перевод TRX | 270 | 270 000 | 0.27 |
+| Перевод USDT | 350 | 350 000 | 0.35 |
+
+При цене $0.25/TRX один перевод TRX обходится примерно в $0.07 при сжигании пропускной способности, а перевод USDT обходится примерно в $0.09. Эти числа выглядят мало в изоляции. Они становятся значительными при больших объёмах.
+
+---
+
+## Проблема объёма
+
+Давайте рассчитаем затраты на пропускную способность для платежного процессора, обрабатывающего различные объёмы транзакций. Мы предположим, что все транзакции — это переводы USDT (350 байт каждый) и что только первые 600 бесплатных пунктов пропускной способности покрывают стоимость первой транзакции.
+
+### Суточное потребление пропускной способности
+
+```
+10 транзакций/день:    10 x 350 = 3 500 байт
+  Бесплатная пропускная способность: 600 байт
+  Сжигается:            2 900 байт
+  Стоимость сжигания:   2 900 000 SUN = 2.9 TRX = $0.73/день
+
+100 транзакций/день:   100 x 350 = 35 000 байт
+  Бесплатная пропускная способность: 600 байт
+  Сжигается:            34 400 байт
+  Стоимость сжигания:   34 400 000 SUN = 34.4 TRX = $8.60/день
+
+1 000 транзакций/день: 1 000 x 350 = 350 000 байт
+  Бесплатная пропускная способность: 600 байт
+  Сжигается:            349 400 байт
+  Стоимость сжигания:   349 400 000 SUN = 349.4 TRX = $87.35/день
+```
+
+### Месячные затраты на пропускную способность
+
+| Дневные транзакции | Месячные затраты на пропускную способность (TRX) | Месячные затраты на пропускную способность (USD) |
+|--------------------|---------------------------------------------------|---------------------------------------------------|
 | 10 | 87 | $21.75 |
 | 50 | 514 | $128.50 |
-| 100 | 1,032 | $258.00 |
-| 500 | 5,222 | $1,305.50 |
-| 1,000 | 10,482 | $2,620.50 |
+| 100 | 1 032 | $258.00 |
+| 500 | 5 222 | $1 305.50 |
+| 1 000 | 10 482 | $2 620.50 |
 
-At 1,000 transfers per day, bandwidth alone costs over $2,600 per month. This is often overlooked because energy costs are larger (roughly $42,000/month at the same volume for USDT transfers), but $2,600 is not negligible. It is the cost of a junior developer or a production server.
-
----
-
-## Bandwidth vs Energy: A Cost Comparison
-
-For a USDT transfer, how do bandwidth and energy costs compare?
-
-```
-Energy cost (burning):     27.30 TRX per transfer
-Bandwidth cost (burning):   0.35 TRX per transfer
-```
-
-Energy is 78x more expensive than bandwidth. This is why most optimization discussion focuses on energy. But bandwidth costs are:
-
-- **Unavoidable**: every transaction uses bandwidth, even TRX-only transfers
-- **Not covered by energy rental**: renting energy does not include bandwidth
-- **Cumulative**: they add up across all transactions, not just smart contract calls
+При 1 000 транзакций в день только пропускная способность обходится в более чем $2 600 в месяц. Это часто упускается, потому что затраты на energy больше (примерно $42 000/месяц при том же объёме для переводов USDT), но $2 600 это не пустяк. Это стоимость младшего разработчика или production сервера.
 
 ---
 
-## How to Get More Bandwidth
+## Пропускная способность vs Energy: сравнение затрат
 
-### Option 1: Stake TRX for Bandwidth
-
-Just as you can stake TRX for energy, you can stake TRX for bandwidth. The mechanism is identical - you call `freezeBalanceV2` with `resource: "BANDWIDTH"`.
-
-The staking ratio for bandwidth is different from energy. As of early 2026, approximately:
+Для перевода USDT, как сравниваются затраты на пропускную способность и energy?
 
 ```
-1,000 TRX staked = ~5,000 bandwidth/day
+Затраты на energy (сжигание):     27.30 TRX за транзакцию
+Затраты на пропускную способность (сжигание): 0.35 TRX за транзакцию
 ```
 
-For 100 USDT transfers per day (35,000 bytes needed):
+Energy дороже пропускной способности в 78 раз. Вот почему большинство обсуждений оптимизации сосредоточены на energy. Но затраты на пропускную способность:
+
+- **Неизбежны**: каждая транзакция потребляет пропускную способность, даже переводы только TRX
+- **Не покрыты арендой energy**: аренда energy не включает пропускную способность
+- **Кумулятивны**: они складываются во всех транзакциях, а не только в вызовах смарт-контрактов
+
+---
+
+## Как получить больше пропускной способности
+
+### Вариант 1: заморозить TRX для пропускной способности
+
+Как вы можете заморозить TRX для energy, вы можете заморозить TRX для пропускной способности. Механизм идентичен — вы вызываете `freezeBalanceV2` с `resource: "BANDWIDTH"`.
+
+Соотношение замораживания для пропускной способности отличается от energy. По состоянию на начало 2026 года примерно:
 
 ```
-Required bandwidth: 35,000 bytes/day
-Free bandwidth:     600 bytes/day
-Need from staking:  34,400 bytes/day
-TRX to stake:       34,400 / 5 = ~6,880 TRX
-Capital at $0.25:   $1,720
+1 000 TRX заморозить = ~5 000 пропускной способности/день
 ```
 
-This is dramatically cheaper than staking for energy (which would require $900,000 for the same volume). Bandwidth staking is accessible even for small operations.
+Для 100 переводов USDT в день (необходимо 35 000 байт):
 
-### Option 2: Let It Burn
+```
+Требуемая пропускная способность: 35 000 байт/день
+Бесплатная пропускная способность: 600 байт/день
+Необходимо заморозить:            34 400 байт/день
+TRX для замораживания:             34 400 / 5 = ~6 880 TRX
+Капитал при $0.25:                 $1 720
+```
 
-For many operations, simply burning TRX for bandwidth is the pragmatic choice. The cost is low enough that managing bandwidth staking may not be worth the operational overhead.
+Это драматически дешевле, чем замораживание для energy (которое потребовало бы $900 000 для того же объёма). Замораживание пропускной способности доступно даже для небольших операций.
 
-At 100 transfers/day, the bandwidth burn cost is $258/month. If staking $1,720 worth of TRX saves you $258/month, the payback period is about 6-7 months (accounting for opportunity cost). Reasonable, but not urgent.
+### Вариант 2: дать ей сжечься
 
-### Option 3: Rent Bandwidth
+Для многих операций просто сжечь TRX для пропускной способности — это практичный выбор. Стоимость достаточно низкая, что управление замораживанием пропускной способности может быть не стоить операционных издержек.
 
-Some energy providers also offer bandwidth delegation. This is less common than energy rental because bandwidth costs are lower and demand is smaller. MERX supports bandwidth delegation for users who need it:
+При 100 транзакций/день стоимость сжигания пропускной способности составляет $258/месяц. Если замораживание $1 720 стоимости TRX сэкономит вам $258/месяц, период окупаемости составляет около 6-7 месяцев (с учетом альтернативной стоимости). Разумно, но не срочно.
+
+### Вариант 3: арендовать пропускную способность
+
+Некоторые поставщики energy также предлагают делегирование пропускной способности. Это менее распространено, чем аренда energy, потому что затраты на пропускную способность ниже, и спрос меньше. MERX поддерживает делегирование пропускной способности для пользователей, которые это нужно:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 
-// Check current bandwidth status
+// Проверить текущий статус пропускной способности
 const resources = await client.checkAddressResources({
   address: 'your-tron-address'
 });
 
-console.log(`Bandwidth: ${resources.bandwidth.remaining}/${resources.bandwidth.limit}`);
+console.log(`Пропускная способность: ${resources.bandwidth.remaining}/${resources.bandwidth.limit}`);
 ```
 
 ---
 
-## When Bandwidth Becomes Critical
+## Когда пропускная способность становится критичной
 
-### Scenario 1: High-Frequency Trading Bots
+### Сценарий 1: торговые боты с высокой частотой
 
-A trading bot executing 500+ transactions per day will burn through free bandwidth instantly. If the bot does not hold sufficient TRX for burns, transactions will fail entirely. This is a hard failure - the bot stops working.
-
-```
-500 trades/day x 300 bytes = 150,000 bytes/day
-Free: 600 bytes
-Burn cost: 149,400,000 SUN = 149.4 TRX/day
-Monthly: ~$1,119
-```
-
-For a trading bot, $1,119/month in bandwidth costs is a cost of doing business. But if the bot's TRX balance runs dry, it halts. Monitoring TRX balance for bandwidth burns is as important as monitoring trading capital.
-
-### Scenario 2: DApp With Many Users
-
-A DApp where each user has their own address faces a different challenge. Each address gets its own 600 free bandwidth. If users make only 1-2 transactions per day, bandwidth may not be an issue. But if the DApp sponsors transactions (paying on behalf of users), all bandwidth consumption comes from a single address.
+Торговый бот, выполняющий 500+ транзакций в день, мгновенно исчерпает бесплатную пропускную способность. Если бот не держит достаточно TRX для сжигания, транзакции полностью откажут. Это жёсткий отказ — бот перестаёт работать.
 
 ```
-DApp address sponsors 10,000 user transactions/day
-10,000 x 350 bytes = 3,500,000 bytes
-Free: 600 bytes
-Burn cost: 3,499,400,000 SUN = 3,499.4 TRX/day = ~$875/day
-Monthly: ~$26,250
+500 сделок/день x 300 байт = 150 000 байт/день
+Бесплатно: 600 байт
+Стоимость сжигания: 149 400 000 SUN = 149.4 TRX/день
+Месячно: ~$1 119
 ```
 
-At this scale, bandwidth staking becomes essential. The required stake of approximately 700,000 TRX ($175,000) would eliminate the $26,250 monthly burn entirely.
+Для торгового бота $1 119/месяц затрат на пропускную способность — это стоимость ведения дел. Но если баланс TRX бота исчерпается, он остановится. Мониторинг баланса TRX для сжигания пропускной способности так же важен, как мониторинг торгового капитала.
 
-### Scenario 3: Multi-Signature Wallets
+### Сценарий 2: DApp с большим количеством пользователей
 
-Multi-sig transactions are larger than standard transactions because they contain multiple signatures. A 3-of-5 multi-sig transaction can be 600-800 bytes. This means a single multi-sig transaction can consume the entire daily free bandwidth allocation.
+DApp, где у каждого пользователя есть свой адрес, сталкивается с другой проблемой. Каждый адрес получает свои 600 бесплатных пунктов пропускной способности. Если пользователи делают только 1-2 транзакции в день, пропускная способность может быть не проблемой. Но если DApp спонсирует транзакции (платит от имени пользователей), все потребление пропускной способности исходит с одного адреса.
 
 ```
-Multi-sig transfer: ~700 bytes
-Free bandwidth: 600 bytes
-First transfer already exceeds free allocation by 100 bytes
-Second transfer: 700 bytes fully burned
+Адрес DApp спонсирует 10 000 пользовательских транзакций/день
+10 000 x 350 байт = 3 500 000 байт
+Бесплатно: 600 байт
+Стоимость сжигания: 3 499 400 000 SUN = 3 499.4 TRX/день = ~$875/день
+Месячно: ~$26 250
 ```
 
-Organizations using multi-sig wallets should plan for bandwidth costs from day one.
+В этом масштабе замораживание TRX для пропускной способности становится необходимостью. Требуемое замораживание примерно 700 000 TRX ($175 000) полностью устранило бы ежемесячное сжигание $26 250.
+
+### Сценарий 3: кошельки с множественной подписью
+
+Транзакции с множественной подписью больше, чем стандартные транзакции, потому что они содержат несколько подписей. Транзакция 3-из-5 с множественной подписью может быть 600-800 байт. Это означает, что одна такая транзакция может исчерпать всё дневное выделение бесплатной пропускной способности.
+
+```
+Перевод с множественной подписью: ~700 байт
+Бесплатная пропускная способность: 600 байт
+Первый перевод уже превышает свободное выделение на 100 байт
+Второй перевод: 700 байт полностью сжигается
+```
+
+Организации, использующие кошельки с множественной подписью, должны планировать затраты на пропускную способность с самого начала.
 
 ---
 
-## Bandwidth Monitoring Best Practices
+## Лучшие практики мониторинга пропускной способности
 
-### Track Remaining Bandwidth
+### Отслеживайте оставшуюся пропускную способность
 
-Before submitting transactions, check your available bandwidth:
+Перед отправкой транзакций проверьте доступную пропускную способность:
 
 ```typescript
 const resources = await client.checkAddressResources({
@@ -225,78 +225,79 @@ const resources = await client.checkAddressResources({
 });
 
 const available = resources.bandwidth.remaining;
-const needed = 350; // estimated for USDT transfer
+const needed = 350; // примерное значение для перевода USDT
 
 if (available < needed) {
-  console.log(`Bandwidth depleted. Will burn ${needed * 0.001} TRX`);
-  // Ensure sufficient TRX balance for burn
+  console.log(`Пропускная способность исчерпана. Будет сожжено ${needed * 0.001} TRX`);
+  // Убедитесь, что достаточный баланс TRX для сжигания
 }
 ```
 
-### Monitor TRX Balance for Burns
+### Мониторьте баланс TRX для сжигания
 
-If you rely on bandwidth burning, ensure your address always has enough TRX to cover burns. Set alerts when the balance drops below a threshold:
+Если вы полагаетесь на сжигание пропускной способности, убедитесь, что ваш адрес всегда имеет достаточно TRX для покрытия сжигания. Установите предупреждения, когда баланс упадёт ниже порога:
 
 ```
-Alert threshold = max_daily_transactions x bytes_per_tx x 0.001 TRX/byte x 3 days
+Порог предупреждения = макс_суточные_транзакции x байты_на_транзакцию x 0.001 TRX/байт x 3 дня
 ```
 
-This gives you a 3-day buffer to replenish before the address runs out of TRX and transactions start failing.
+Это даёт вам 3-дневный буфер для пополнения перед тем, как адрес закончится TRX и транзакции начнут откликаться отказом.
 
-### Separate Energy and Bandwidth Concerns
+### Разделите Energy и проблемы пропускной способности
 
-When budgeting for TRON operations, track energy and bandwidth costs separately. They have different characteristics:
+Когда вы планируете бюджет для операций TRON, отслеживайте затраты на energy и пропускную способность отдельно. Они имеют разные характеристики:
 
-- Energy is expensive and can be rented efficiently.
-- Bandwidth is cheap and often best handled by burning or modest staking.
-- Optimizing one does not optimize the other.
+- Energy дорогой и может быть эффективно арендован.
+- Пропускная способность дешевая и часто лучше всего обрабатывается сжиганием или скромным замораживанием.
+- Оптимизация одного не оптимизирует другое.
 
 ---
 
-## Bandwidth in the MERX Context
+## Пропускная способность в контексте MERX
 
-MERX provides complete resource visibility through its API. When you check prices or create orders, the platform accounts for both energy and bandwidth requirements:
+MERX обеспечивает полную видимость ресурсов через свой API. Когда вы проверяете цены или создаёте заказы, платформа учитывает требования как к energy, так и к пропускной способности:
 
 ```typescript
-// Estimate total cost including bandwidth
+// Оцените общую стоимость, включая пропускную способность
 const estimate = await client.estimateTransactionCost({
   type: 'trc20_transfer',
   from: 'sender-address',
   to: 'recipient-address'
 });
 
-console.log(`Energy cost: ${estimate.energyCost} TRX`);
-console.log(`Bandwidth cost: ${estimate.bandwidthCost} TRX`);
-console.log(`Total cost: ${estimate.totalCost} TRX`);
+console.log(`Стоимость energy: ${estimate.energyCost} TRX`);
+console.log(`Стоимость пропускной способности: ${estimate.bandwidthCost} TRX`);
+console.log(`Общая стоимость: ${estimate.totalCost} TRX`);
 ```
 
-API documentation and full SDK reference: [https://merx.exchange/docs](https://merx.exchange/docs)
+Документация API и полная ссылка на SDK: [https://merx.exchange/docs](https://merx.exchange/docs)
 
 ---
 
 ## Заключение
 
-TRON bandwidth is genuinely free - for the first 600 bytes per day. After that, it costs real TRX. The amounts are modest compared to energy costs, but they are not zero, and at scale they represent a meaningful line item.
+Пропускная способность TRON действительно бесплатна — для первых 600 байт в день. После этого она стоит настоящий TRX. Суммы скромны по сравнению с затратами на energy, но они не равны нулю, и в масштабе они представляют значительную статью расходов.
 
-The key takeaways:
+Ключевые выводы:
 
-1. **600 free bandwidth covers 1-2 transactions per day.** Plan accordingly.
-2. **After free bandwidth, TRX is burned at roughly 1,000 SUN per byte.** A USDT transfer burns about 0.35 TRX.
-3. **At 100+ transactions per day, consider staking TRX for bandwidth.** The capital requirement is modest (thousands, not millions).
-4. **Always monitor TRX balance when relying on burns.** A zero balance means failed transactions.
-5. **Bandwidth and energy are separate resources.** Renting energy does not cover bandwidth.
+1. **600 бесплатных байтов покрывают 1-2 транзакции в день.** Планируйте соответственно.
+2. **После бесплатной пропускной способности TRX сжигается примерно 1 000 SUN за байт.** Перевод USDT сжигает около 0.35 TRX.
+3. **При 100+ транзакциях в день рассмотрите замораживание TRX для пропускной способности.** Требование капитала скромно (тысячи, а не миллионы).
+4. **Всегда мониторьте баланс TRX при полагании на сжигание.** Нулевой баланс означает невыполненные транзакции.
+5. **Пропускная способность и energy — это отдельные ресурсы.** Аренда energy не покрывает пропускную способность.
 
-For developers building high-volume TRON applications, bandwidth management is a minor but essential detail. Get it right once, and it never becomes a problem. Ignore it, and it will surprise you at the worst possible time.
+Для разработчиков, создающих высоконагруженные приложения TRON, управление пропускной способностью — это небольшая, но существенная деталь. Сделайте это правильно один раз, и это никогда не станет проблемой. Игнорируйте это, и оно удивит вас в самый худший момент.
 
-Start monitoring your TRON resource usage at [https://merx.exchange](https://merx.exchange).
+Начните мониторить использование ресурсов TRON на [https://merx.exchange](https://merx.exchange).
 
 ---
 
-*This article is part of the MERX knowledge series on TRON infrastructure. MERX is the first blockchain resource exchange, aggregating energy and bandwidth providers into a single API.*
+*Эта статья входит в серию знаний MERX об инфраструктуре TRON. MERX — это первая блокчейн-биржа ресурсов, объединяющая поставщиков energy и пропускной способности в единый API.*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с помощью AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — без установки, без необходимости в API-ключе для инструментов только для чтения:
 
 ```json
 {
@@ -308,6 +309,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите у своего AI-агента: «Какой самый дешевый TRON energy прямо сейчас?» и получите живые цены от всех подключенных поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

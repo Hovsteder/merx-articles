@@ -1,18 +1,18 @@
-# Панель управления MERX: торговля energy без написания кода
+# MERX Dashboard: Trading Energy Without Writing Code
 
-Not every energy buyer is a developer. Not every developer wants to write code for a one-off purchase. And not every organization has the engineering bandwidth to integrate an API before they can start saving on TRON transaction costs.
+Не каждый покупатель energy — это разработчик. Не каждый разработчик хочет писать код для разовой покупки. И не у каждой организации есть инженерные ресурсы для интеграции API до того, как они смогут начать экономить на затратах на транзакции TRON.
 
-The MERX dashboard at [merx.exchange](https://merx.exchange) provides a complete web interface for buying energy, comparing provider prices, managing your balance, tracking orders, and generating API keys -- all without writing a single line of code. This article walks through every feature of the dashboard and shows how to use it effectively.
+MERX dashboard на [merx.exchange](https://merx.exchange) предоставляет полный веб-интерфейс для покупки energy, сравнения цен провайдеров, управления балансом, отслеживания заказов и генерации API-ключей — всё без написания ни единой строки кода. В этой статье рассмотрены все функции dashboard и показано, как их эффективно использовать.
 
 ## Начало работы
 
-Navigate to [merx.exchange](https://merx.exchange) and create an account. The registration requires an email address and password. No KYC. No identity verification. No waiting period. Your account is active immediately.
+Перейдите на [merx.exchange](https://merx.exchange) и создайте учётную запись. При регистрации требуется адрес электронной почты и пароль. Без KYC. Без проверки личности. Без периода ожидания. Ваш аккаунт активен сразу же.
 
-Once logged in, you land on the main dashboard view. The interface follows a dark theme with high-contrast typography -- no visual noise, no unnecessary decoration, just the information you need to make purchase decisions.
+После входа вы попадаете на главный вид dashboard. Интерфейс использует тёмную тему с контрастной типографией — никакого визуального шума, никаких ненужных украшений, только информация, необходимая для принятия решений о покупке.
 
-## The Price Panel
+## Панель цен
 
-The first thing you see on the dashboard is the live price panel. This displays current energy prices from all seven integrated providers, updated every 30 seconds.
+Первое, что вы видите на dashboard — это панель живых цен. Она отображает текущие цены на energy от всех семи интегрированных провайдеров, обновляется каждые 30 секунд.
 
 ```
 Provider      1h Price    1d Price    Available
@@ -26,11 +26,11 @@ TronSave      35 SUN      28 SUN      Yes
 SoHu          34 SUN      27 SUN      Yes
 ```
 
-The panel highlights the cheapest provider for each duration tier. Prices are displayed in SUN per energy unit -- the standard denomination that allows direct comparison across providers regardless of how they internally quote their rates.
+Панель выделяет самого дешёвого провайдера для каждого уровня длительности. Цены отображаются в SUN за единицу energy — стандартное обозначение, которое позволяет прямое сравнение провайдеров независимо от того, как они внутри себя квотируют ставки.
 
-### What the Prices Mean
+### Что означают цены
 
-Each price represents the cost per unit of energy for the specified rental duration. To calculate the total cost for your purchase:
+Каждая цена представляет стоимость единицы energy для указанной длительности аренды. Чтобы рассчитать общую стоимость вашей покупки:
 
 ```
 Total cost = energy_amount * price_per_unit
@@ -39,36 +39,36 @@ Example:
   65,000 energy * 28 SUN/unit = 1,820,000 SUN = 1.82 TRX
 ```
 
-The dashboard performs this calculation automatically when you enter an order. You see the total cost in both SUN and TRX before confirming.
+Dashboard автоматически выполняет этот расчёт при введении заказа. Вы видите общую стоимость в SUN и TRX перед подтверждением.
 
-### Price History
+### История цен
 
-Below the live prices, a historical chart shows how prices have moved over the past 24 hours, 7 days, or 30 days. This helps you identify patterns -- prices tend to be lower during off-peak hours (00:00-08:00 UTC) and higher during peak transaction periods.
+Под живыми ценами исторический график показывает движение цен за последние 24 часа, 7 дней или 30 дней. Это помогает вам определить закономерности — цены, как правило, ниже в часы минимальной активности (00:00–08:00 UTC) и выше в периоды пиковых транзакций.
 
-The chart is not just informational. If you are placing a large order and timing flexibility exists, waiting a few hours for a price dip can save a meaningful percentage.
+График не просто информативен. Если вы размещаете большой заказ и у вас есть гибкость по времени, ожидание в течение нескольких часов падения цены может сэкономить значительный процент.
 
-## Creating an Order
+## Создание заказа
 
-The order creation form is the core function of the dashboard. Here is the process:
+Форма создания заказа — это основная функция dashboard. Вот процесс:
 
-### Step 1: Enter Order Parameters
+### Шаг 1: Введите параметры заказа
 
-Fill in three fields:
+Заполните три поля:
 
-- **Energy amount**: The number of energy units you need. If you are unsure, the dashboard provides quick-select buttons for common amounts:
-  - 32,000 (minimal USDT transfer)
-  - 65,000 (standard USDT transfer)
-  - 200,000 (DEX swap)
-  - 500,000 (complex contract interaction)
-  - Custom amount
+- **Количество energy**: Количество единиц energy, которое вам нужно. Если вы не уверены, dashboard предоставляет кнопки быстрого выбора для распространённых количеств:
+  - 32,000 (минимальный перевод USDT)
+  - 65,000 (стандартный перевод USDT)
+  - 200,000 (обмен на DEX)
+  - 500,000 (сложное взаимодействие с контрактом)
+  - Пользовательское количество
 
-- **Target address**: The TRON address that will receive the energy delegation. This is the address that will execute the transaction needing energy. The dashboard validates the address format before proceeding.
+- **Целевой адрес**: TRON-адрес, который получит делегирование energy. Это адрес, который выполнит транзакцию, требующую energy. Dashboard проверяет формат адреса перед продолжением.
 
-- **Duration**: How long you need the energy. Options typically include 1 hour, 1 day, 3 days, 7 days, 14 days, and 30 days.
+- **Длительность**: Как долго вам нужна energy. Варианты обычно включают 1 час, 1 день, 3 дня, 7 дней, 14 дней и 30 дней.
 
-### Step 2: Review the Quote
+### Шаг 2: Просмотрите предложение
 
-After entering your parameters, the dashboard displays a detailed quote:
+После введения параметров dashboard отображает подробное предложение:
 
 ```
 Order Summary
@@ -83,31 +83,31 @@ Account balance:  50.00 TRX
 Balance after:    48.18 TRX
 ```
 
-The quote shows exactly which provider will fulfill the order, the per-unit price, the total cost, and the impact on your account balance. There are no hidden fees or markups.
+Предложение показывает, какой именно провайдер выполнит заказ, цену за единицу, общую стоимость и влияние на баланс вашего аккаунта. Нет скрытых комиссий или наценок.
 
-### Step 3: Confirm and Execute
+### Шаг 3: Подтвердите и выполните
 
-Click the confirm button. The order is submitted to the MERX backend, which routes it to the selected provider for execution. The delegation typically completes within seconds.
+Нажмите кнопку подтверждения. Заказ отправляется на backend MERX, который маршрутизирует его выбранному провайдеру для выполнения. Делегирование обычно завершается в течение нескольких секунд.
 
-Once the order is filled, the dashboard updates to show the order status, the on-chain delegation transaction hash, and the time remaining on the rental.
+После заполнения заказа dashboard обновляется, показывая статус заказа, хеш транзакции делегирования on-chain и оставшееся время аренды.
 
-## Managing Your Balance
+## Управление балансом
 
-### Depositing Funds
+### Пополнение средств
 
-Before you can buy energy, you need a TRX balance on MERX. The deposit process:
+Прежде чем вы сможете купить energy, вам нужен баланс TRX на MERX. Процесс пополнения:
 
-1. Navigate to the Balance section
-2. Click "Deposit"
-3. The dashboard displays your unique deposit address
-4. Send TRX to that address from any TRON wallet
-5. The deposit is credited automatically after on-chain confirmation
+1. Перейдите в раздел Balance
+2. Нажмите "Deposit"
+3. Dashboard отображает ваш уникальный адрес для пополнения
+4. Отправьте TRX на этот адрес из любого TRON-кошелька
+5. Депозит кредитуется автоматически после подтверждения on-chain
 
-The deposit monitor service watches for incoming transactions continuously. Credits typically appear within 1-2 minutes of the transaction being confirmed on-chain.
+Сервис мониторинга депозитов постоянно отслеживает входящие транзакции. Кредиты обычно появляются в течение 1–2 минут после подтверждения транзакции on-chain.
 
-### Viewing Balance History
+### Просмотр истории баланса
 
-The balance section shows a complete history of all balance changes:
+Раздел баланса показывает полную историю всех изменений баланса:
 
 ```
 Date/Time            Type          Amount       Balance
@@ -119,48 +119,48 @@ Date/Time            Type          Amount       Balance
 2026-03-29 09:15     Order #1249   -5.40 TRX    140.83 TRX
 ```
 
-Every entry corresponds to a double-entry ledger record in the MERX accounting system. The sum of all entries always reconciles to your current balance -- this is verifiable and auditable.
+Каждая запись соответствует двойной записи в системе учёта MERX. Сумма всех записей всегда согласуется с вашим текущим балансом — это поддаётся проверке и аудиту.
 
-### Withdrawals
+### Выводы
 
-If you need to withdraw TRX from your MERX account:
+Если вам нужно вывести TRX со своего аккаунта MERX:
 
-1. Navigate to the Balance section
-2. Click "Withdraw"
-3. Enter the destination TRON address
-4. Enter the amount to withdraw
-5. Confirm the withdrawal
+1. Перейдите в раздел Balance
+2. Нажмите "Withdraw"
+3. Введите адрес назначения TRON
+4. Введите сумму для вывода
+5. Подтвердите вывод
 
-Withdrawals are processed by the treasury-signer service and broadcast to the TRON network. Processing time depends on network conditions but typically completes within a few minutes.
+Выводы обрабатываются сервисом treasury-signer и транслируются в сеть TRON. Время обработки зависит от условий сети, но обычно завершается в течение нескольких минут.
 
-## Order History
+## История заказов
 
-The Order History view provides a searchable, filterable list of all your past orders. Each entry shows:
+Представление Order History предоставляет доступный для поиска и фильтрации список всех ваших прошлых заказов. Каждая запись показывает:
 
-- **Order ID**: Unique identifier for reference
-- **Date/Time**: When the order was placed
-- **Energy Amount**: How many energy units were purchased
-- **Duration**: Rental period
-- **Provider**: Which provider fulfilled the order
-- **Price**: Per-unit price in SUN
-- **Total Cost**: Total amount charged in TRX
-- **Status**: Pending, Active, Completed, or Failed
-- **Target Address**: Where the energy was delegated
+- **Order ID**: Уникальный идентификатор для справки
+- **Date/Time**: Когда был размещен заказ
+- **Energy Amount**: Сколько единиц energy было куплено
+- **Duration**: Период аренды
+- **Provider**: Какой провайдер выполнил заказ
+- **Price**: Цена за единицу в SUN
+- **Total Cost**: Общая сумма, взимаемая в TRX
+- **Status**: Pending, Active, Completed или Failed
+- **Target Address**: Куда была делегирована energy
 
-### Filtering and Search
+### Фильтрация и поиск
 
-You can filter orders by:
+Вы можете фильтровать заказы по:
 
-- Date range
-- Status (active, completed, all)
-- Provider
-- Target address
+- Диапазону дат
+- Статусу (active, completed, all)
+- Провайдеру
+- Целевому адресу
 
-This is particularly useful for organizations that purchase energy for multiple addresses and need to track costs per wallet or per application.
+Это особенно полезно для организаций, которые покупают energy для нескольких адресов и должны отслеживать затраты по кошельку или по приложению.
 
-### Order Details
+### Детали заказа
 
-Clicking on any order opens a detail view with full information:
+При нажатии на любой заказ открывается представление с полной информацией:
 
 ```
 Order #1247
@@ -178,34 +178,34 @@ Delegation Start: 2026-03-28 14:35:30 UTC
 Delegation End:   2026-03-28 15:35:30 UTC
 ```
 
-The transaction hash is a link to the on-chain delegation record, verifiable through any TRON block explorer.
+Хеш транзакции — это ссылка на запись делегирования on-chain, которую можно проверить с помощью любого обозревателя блоков TRON.
 
-## Generating API Keys
+## Генерация API-ключей
 
-When you are ready to integrate MERX into your application programmatically, the dashboard lets you generate API keys without needing to contact support.
+Когда вы готовы программно интегрировать MERX в свое приложение, dashboard позволяет вам генерировать API-ключи без необходимости обращаться в поддержку.
 
-1. Navigate to the Settings or API section
-2. Click "Generate API Key"
-3. Provide a label for the key (e.g., "Production server", "Staging environment")
-4. The key is displayed once -- copy it immediately
-5. The key is stored hashed on the server; it cannot be retrieved again
+1. Перейдите в раздел Settings или API
+2. Нажмите "Generate API Key"
+3. Укажите метку для ключа (например, "Production server", "Staging environment")
+4. Ключ отображается один раз — скопируйте его немедленно
+5. Ключ хранится в хеше на сервере; его невозможно получить снова
 
-You can manage multiple API keys, each with its own label. If a key is compromised, revoke it from the dashboard and generate a new one. Revoking a key is immediate -- all requests using the revoked key will fail with an authentication error.
+Вы можете управлять несколькими API-ключами, каждый со своей меткой. Если ключ скомпрометирован, отозвите его из dashboard и сгенерируйте новый. Отзыв ключа происходит немедленно — все запросы, использующие отозванный ключ, будут завершены с ошибкой аутентификации.
 
-### API Key Security
+### Безопасность API-ключей
 
-API keys authenticate your requests to the MERX REST API, WebSocket feeds, and SDKs. Treat them like passwords:
+API-ключи аутентифицируют ваши запросы к REST API, WebSocket-потокам и SDK MERX. Относитесь к ним как к паролям:
 
-- Never commit API keys to version control
-- Store them in environment variables or secret managers
-- Use separate keys for development, staging, and production
-- Rotate keys periodically
+- Никогда не фиксируйте API-ключи в контроле версий
+- Храните их в переменных окружения или менеджерах секретов
+- Используйте отдельные ключи для разработки, staging и production
+- Периодически ротируйте ключи
 
-The dashboard shows the last-used timestamp for each key, making it easy to identify and revoke unused keys.
+Dashboard показывает последнюю метку времени использования для каждого ключа, облегчая идентификацию и отзыв неиспользуемых ключей.
 
-## Monitoring Active Delegations
+## Мониторинг активных делегирований
 
-The dashboard includes a real-time view of your active energy delegations:
+Dashboard включает представление в реальном времени ваших активных делегирований energy:
 
 ```
 Active Delegations
@@ -216,47 +216,47 @@ TAddr2...         200,000    2026-03-31 09:00  20h 30m
 TAddr3...         500,000    2026-04-02 12:00  3d 2h 30m
 ```
 
-For each active delegation, you can:
+Для каждого активного делегирования вы можете:
 
-- See the exact expiration time
-- View the remaining time
-- See how much energy is available
-- Extend the delegation by placing a new order for the same address
+- Увидеть точное время истечения
+- Просмотреть оставшееся время
+- Увидеть, сколько energy доступно
+- Расширить делегирование, разместив новый заказ для того же адреса
 
-The system does not currently support canceling an active delegation early (energy delegation on TRON is an on-chain operation that runs until its specified duration expires), but you can always extend an existing delegation by purchasing additional energy for the same target address.
+Система в настоящее время не поддерживает досрочное отмену активного делегирования (делегирование energy в TRON — это операция on-chain, которая работает до определённой продолжительности), но вы всегда можете расширить существующее делегирование, купив дополнительную energy для того же целевого адреса.
 
-## Energy Estimation Tool
+## Инструмент оценки energy
 
-The dashboard includes a built-in energy estimation tool. If you are not sure how much energy your transaction will need, you can simulate it directly from the dashboard:
+Dashboard включает встроенный инструмент оценки energy. Если вы не уверены, сколько energy потребуется вашей транзакции, вы можете смоделировать её прямо из dashboard:
 
-1. Enter the contract address (e.g., the USDT contract)
-2. Select the function (e.g., transfer)
-3. Enter the parameters (recipient address, amount)
-4. Click "Estimate"
+1. Введите адрес контракта (например, контракт USDT)
+2. Выберите функцию (например, transfer)
+3. Введите параметры (адрес получателя, сумму)
+4. Нажмите "Estimate"
 
-The tool calls `triggerConstantContract` under the hood and returns the exact energy required for your specific transaction against the current contract state. This eliminates guesswork and prevents over-purchasing or under-purchasing energy.
+Инструмент вызывает `triggerConstantContract` под капотом и возвращает точную energy, необходимую для вашей конкретной транзакции с учётом текущего состояния контракта. Это устраняет угадывание и предотвращает избыточную или недостаточную покупку energy.
 
-## Who the Dashboard Is For
+## Для кого предназначен dashboard
 
-### Business Operators
+### Операторы бизнеса
 
-If you run a business that sends USDT payments -- payroll, vendor payments, remittances -- you do not need a developer to integrate an API. Open the dashboard, deposit TRX, and start buying energy before each batch of transfers. The cost savings are immediate and significant.
+Если вы управляете бизнесом, который отправляет платежи USDT — зарплата, оплата поставщикам, переводы денежных средств — вам не нужен разработчик для интеграции API. Откройте dashboard, пополните баланс TRX и начните покупать energy перед каждой партией переводов. Экономия затрат немедленна и значительна.
 
-### Developers Evaluating MERX
+### Разработчики, оценивающие MERX
 
-Before committing to an API integration, use the dashboard to test the service. Place a few orders, observe the pricing, verify that delegations arrive on-chain as expected. Once you are satisfied, generate an API key and move to programmatic access.
+Прежде чем приступить к интеграции API, используйте dashboard для тестирования сервиса. Разместите несколько заказов, наблюдайте за ценообразованием, проверьте, что делегирования прибывают on-chain как ожидается. После того как вы будете удовлетворены, сгенерируйте API-ключ и перейдите к программному доступу.
 
-### Finance Teams
+### Финансовые команды
 
-The order history and balance views provide the reporting that finance teams need: what was spent, when, on what, from which provider. Export this data for reconciliation with your internal accounting systems.
+Представления истории заказов и балансов предоставляют отчётность, которая необходима финансовым командам: что было потрачено, когда, на что, у какого провайдера. Экспортируйте эти данные для сверки с вашими внутренними системами учёта.
 
-### Occasional Users
+### Случайные пользователи
 
-If you make TRON transactions occasionally -- a few per week or per month -- the dashboard is likely all you need. No integration, no code, no maintenance. Just log in, buy energy, and save 90% on transaction fees.
+Если вы делаете TRON-транзакции случайно — несколько в неделю или в месяц — dashboard, вероятно, всё, что вам нужно. Никакой интеграции, никакого кода, никакого обслуживания. Просто войдите, купите energy и экономьте 90% на комиссиях за транзакции.
 
-## From Dashboard to API
+## От dashboard к API
 
-The dashboard and the API share the same backend. Every action you perform in the dashboard -- checking prices, placing orders, viewing history -- maps directly to an API endpoint. When you are ready to automate:
+Dashboard и API совместно используют один backend. Каждое действие, которое вы выполняете в dashboard — проверка цен, размещение заказов, просмотр истории — соответствует прямому API-endpoint. Когда вы готовы к автоматизации:
 
 ```
 Dashboard action          API equivalent
@@ -268,14 +268,15 @@ View balance              GET /api/v1/balance
 Estimate energy           POST /api/v1/estimate
 ```
 
-The transition from dashboard user to API user is seamless. Your account, balance, and order history carry over. The only addition is the API key you generate from the dashboard itself.
+Переход от пользователя dashboard к пользователю API является безупречным. Ваш аккаунт, баланс и история заказов переносятся. Единственное дополнение — это API-ключ, который вы генерируете из самого dashboard.
 
-Full documentation: [https://merx.exchange/docs](https://merx.exchange/docs)
-Platform: [https://merx.exchange](https://merx.exchange)
+Полная документация: [https://merx.exchange/docs](https://merx.exchange/docs)
+Платформа: [https://merx.exchange](https://merx.exchange)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте сейчас с AI
+
+Добавьте MERX в Claude Desktop или любого MCP-совместимого клиента — никакой установки, не требуется API-ключ для инструментов только для чтения:
 
 ```json
 {
@@ -287,6 +288,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите вашего AI-агента: "What is the cheapest TRON energy right now?" и получите живые цены от всех подключённых провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,28 +1,28 @@
-# Двойная запись для блокчейна: архитектура бухгалтерского учета MERX
+# Двойная запись в блокчейне: архитектура учёта MERX
 
-Double-entry bookkeeping was invented in 13th-century Italy. It has survived every financial innovation since -- paper currency, stock exchanges, central banking, electronic funds transfer, and now blockchain. There is a reason it has endured: it works. Every transaction produces a balanced pair of entries, and any imbalance signals an error immediately.
+Двойная бухгалтерия была изобретена в Италии в XIII веке. Она пережила каждое финансовое нововведение с тех пор — бумажные деньги, фондовые биржи, центральное банковское дело, электронные переводы и теперь блокчейн. Причина её долголетия понятна: она работает. Каждая операция создаёт сбалансированную пару записей, и любой дисбаланс немедленно сигнализирует об ошибке.
 
-When we built the accounting system for MERX -- a platform that handles TRX deposits, energy purchases, provider settlements, and withdrawals -- we chose double-entry ledger design without debate. The alternative, single-entry tracking with running balance updates, is how most crypto platforms handle accounting. It is also how most crypto platforms end up with unexplainable balance discrepancies.
+Когда мы разрабатывали систему учёта для MERX — платформы, которая обрабатывает депозиты TRX, покупки energy, расчеты с поставщиками и вывод средств — мы выбрали архитектуру двойной записи без дебатов. Альтернатива, однозначная запись с обновлением текущего баланса, — это то, как большинство крипто-платформ ведут учёт. Это также то, как большинство крипто-платформ в итоге сталкиваются с необъяснимыми расхождениями в балансах.
 
-This article explains the ledger architecture behind MERX: why double-entry matters for blockchain platforms, how the ledger table is designed, why records are immutable, how debit and credit accounts interact, and how we reconcile balances using SELECT FOR UPDATE.
+Эта статья объясняет архитектуру главной книги MERX: почему двойная запись важна для блокчейн-платформ, как спроектирована таблица главной книги, почему записи неизменяемы, как взаимодействуют дебетовые и кредитовые счета и как мы проводим сверку балансов с использованием SELECT FOR UPDATE.
 
-## Why Double-Entry for Crypto
+## Почему двойная запись для крипто
 
-A single-entry system works like a bank statement: one column, one running total. When a user deposits 100 TRX, you add 100 to their balance. When they spend 5 TRX, you subtract 5. Simple.
+Система однозначной записи работает как выписка в банке: один столбец, один итоговый результат. Когда пользователь вносит 100 TRX, вы добавляете 100 к его балансу. Когда он тратит 5 TRX, вы вычитаете 5. Просто.
 
-The problems with single-entry appear under stress:
+Проблемы системы однозначной записи появляются под нагрузкой:
 
-**Concurrent modifications.** Two orders execute simultaneously. Both read the user's balance as 100 TRX. Both deduct 5 TRX. Both write 95 TRX. The user has been charged once instead of twice. Or worse: one write overwrites the other, and the platform loses track of a transaction entirely.
+**Одновременные изменения.** Два заказа выполняются одновременно. Оба читают баланс пользователя как 100 TRX. Оба вычитают 5 TRX. Оба записывают 95 TRX. Пользователю было взимается один раз вместо двух. Или ещё хуже: одна запись перезаписывает другую, и платформа полностью теряет отслеживание транзакции.
 
-**Missing audit trail.** A user's balance is 47.3 TRX. How did it get there? With single-entry, you have to reconstruct the balance from individual transaction records -- which may or may not be complete, and which have no built-in integrity check.
+**Отсутствие аудит-следа.** Баланс пользователя составляет 47,3 TRX. Как он туда попал? С однозначной записью вам нужно восстановить баланс из отдельных записей о транзакциях — которые могут быть неполными, и у которых нет встроенной проверки целостности.
 
-**Reconciliation failure.** The sum of all user balances should equal the platform's TRX holdings. With single-entry, verifying this requires aggregating every user's balance and comparing it to the treasury. If the numbers do not match, there is no systematic way to find the discrepancy.
+**Неудача при сверке.** Сумма всех балансов пользователей должна равняться холдингам TRX платформы. С однозначной записью проверка этого требует агрегирования баланса каждого пользователя и сравнения его с казной. Если числа не совпадают, нет систематического способа найти расхождение.
 
-Double-entry solves all of these problems structurally. Every balance mutation creates two entries that must sum to zero. The integrity check is built into every operation.
+Двойная запись решает все эти проблемы структурно. Каждое изменение баланса создаёт две записи, которые должны суммироваться в ноль. Проверка целостности встроена в каждую операцию.
 
-## The Ledger Table
+## Таблица главной книги
 
-The MERX ledger is a single PostgreSQL table:
+Главная книга MERX — это одна таблица PostgreSQL:
 
 ```sql
 CREATE TABLE ledger (
@@ -43,37 +43,37 @@ CREATE INDEX idx_ledger_reference ON ledger(reference_id);
 CREATE INDEX idx_ledger_created ON ledger(created_at);
 ```
 
-### Column Design
+### Проектирование столбцов
 
-**amount_sun**: All amounts stored in SUN (1 TRX = 1,000,000 SUN). Using the smallest unit eliminates floating-point arithmetic entirely. There are no decimal amounts, no rounding errors, no precision loss. Every calculation is integer arithmetic.
+**amount_sun**: Все суммы хранятся в SUN (1 TRX = 1 000 000 SUN). Использование наименьшей единицы полностью исключает арифметику с плавающей точкой. Нет десятичных сумм, нет ошибок округления, нет потери точности. Каждый расчёт — это целочисленная арифметика.
 
-**direction**: Either DEBIT or CREDIT. The meaning depends on the account type:
+**direction**: Either DEBIT или CREDIT. Смысл зависит от типа счета:
 
-- For user accounts: CREDIT increases the balance, DEBIT decreases it
-- For settlement accounts: DEBIT increases the balance, CREDIT decreases it
-- For revenue accounts: CREDIT increases the balance
+- Для счетов пользователей: CREDIT увеличивает баланс, DEBIT уменьшает его
+- Для счетов расчетов: DEBIT увеличивает баланс, CREDIT уменьшает его
+- Для счетов доходов: CREDIT увеличивает баланс
 
-**entry_type**: Categorizes the ledger entry. Examples:
+**entry_type**: Категоризирует запись в главной книге. Примеры:
 
 ```
-DEPOSIT              User deposits TRX to their MERX account
-WITHDRAWAL           User withdraws TRX from their MERX account
-ORDER_PAYMENT        User pays for an energy order
-ORDER_REFUND         Order fails, payment returned to user
-PROVIDER_SETTLEMENT  Payment to energy provider for fulfilled order
-X402_PAYMENT         On-chain payment received via x402 protocol
+DEPOSIT              Пользователь вносит TRX на свой счёт MERX
+WITHDRAWAL           Пользователь выводит TRX со своего счёта MERX
+ORDER_PAYMENT        Пользователь платит за заказ energy
+ORDER_REFUND         Заказ не выполнен, платёж возвращен пользователю
+PROVIDER_SETTLEMENT  Платёж поставщику energy за выполненный заказ
+X402_PAYMENT         Платёж в цепи получен через протокол x402
 ```
 
-**reference_id** and **reference_type**: Link the ledger entry to the business object that caused it (an order, a deposit, a withdrawal). This creates a bidirectional audit trail: from the ledger entry you can find the order, and from the order you can find its ledger entries.
+**reference_id** и **reference_type**: Связывают запись в главной книге с бизнес-объектом, который её вызвал (заказ, депозит, вывод). Это создаёт двусторонний аудит-след: из записи в главной книге вы можете найти заказ, и из заказа вы можете найти его записи в главной книге.
 
-**idempotency_key**: Prevents duplicate entries. If the same operation is processed twice (due to a retry, a network timeout, a duplicate webhook), the unique constraint on idempotency_key ensures only one entry is created.
+**idempotency_key**: Предотвращает дублирующиеся записи. Если одна и та же операция обрабатывается дважды (из-за повтора, тайм-аута сети, дублирующегося вебхука), ограничение уникальности на idempotency_key гарантирует, что будет создана только одна запись.
 
-## The Immutability Rule
+## Правило неизменяемости
 
-Ledger records are never updated. They are never deleted. This is enforced at the database level:
+Записи в главной книге никогда не обновляются. Они никогда не удаляются. Это обеспечивается на уровне базы данных:
 
 ```sql
--- Prevent any updates to ledger records
+-- Предотвратить обновление записей главной книги
 CREATE OR REPLACE FUNCTION prevent_ledger_update()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -86,7 +86,7 @@ CREATE TRIGGER no_ledger_update
   FOR EACH ROW
   EXECUTE FUNCTION prevent_ledger_update();
 
--- Prevent any deletes from ledger
+-- Предотвратить удаление из главной книги
 CREATE OR REPLACE FUNCTION prevent_ledger_delete()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -100,29 +100,29 @@ CREATE TRIGGER no_ledger_delete
   EXECUTE FUNCTION prevent_ledger_delete();
 ```
 
-These triggers make the immutability rule unbreakable at the database level. Not even an administrator running direct SQL can modify or remove a ledger entry without first disabling the trigger -- an operation that would be visible in database audit logs.
+Эти триггеры делают правило неизменяемости неразрывным на уровне базы данных. Даже администратор, запускающий прямой SQL, не может изменить или удалить запись в главной книге, не отключив предварительно триггер — операцию, которая будет видна в журналах аудита базы данных.
 
-### Why Immutability Matters
+### Почему неизменяемость важна
 
-**Audit integrity.** If ledger records can be modified, an attacker (or a bug) can alter the financial history of the platform. Immutable records mean the history is permanent and tamper-evident.
+**Целостность аудита.** Если записи в главной книге можно изменять, злоумышленник (или ошибка) может изменить финансовую историю платформы. Неизменяемые записи означают, что история постоянна и защищена от подделок.
 
-**Regulatory compliance.** Financial record-keeping regulations universally require that transaction records be preserved. Deleting or altering them is a compliance violation.
+**Соответствие нормативным требованиям.** Правила ведения финансовой отчётности универсально требуют сохранения записей о транзакциях. Их удаление или изменение является нарушением соответствия.
 
-**Debugging.** When something goes wrong -- and in a system processing real money, things will go wrong -- immutable records provide a complete, unaltered timeline of events. You can replay history exactly as it happened.
+**Отладка.** Когда что-то пойдёт не так — а в системе, обрабатывающей реальные деньги, что-то обязательно пойдёт не так — неизменяемые записи предоставляют полную, неизменённую временную шкалу событий. Вы можете воспроизвести историю ровно так, как она произошла.
 
-### Corrections and Reversals
+### Исправления и возвраты
 
-If a ledger entry needs to be "corrected" (for example, a refund), you do not update the original entry. You create a new entry with the opposite direction:
+Если запись в главной книге должна быть «исправлена» (например, возврат денег), вы не обновляете исходную запись. Вы создаёте новую запись с противоположным направлением:
 
 ```sql
--- Original order payment
+-- Исходный платёж по заказу
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($user_id, 'ORDER_PAYMENT', 1820000, 'DEBIT', $order_id);
 
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($provider_settlement, 'ORDER_PAYMENT', 1820000, 'CREDIT', $order_id);
 
--- Order failed, issue refund (new entries, originals remain)
+-- Заказ не выполнен, издан возврат (новые записи, исходные остаются)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($user_id, 'ORDER_REFUND', 1820000, 'CREDIT', $order_id);
 
@@ -130,15 +130,15 @@ INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($provider_settlement, 'ORDER_REFUND', 1820000, 'DEBIT', $order_id);
 ```
 
-After the refund, the original payment entries still exist. The user's calculated balance reflects both the payment and the refund: net zero. The audit trail shows exactly what happened and when.
+После возврата исходные записи платежа всё ещё существуют. Рассчитанный баланс пользователя отражает как платёж, так и возврат: ноль нетто. Аудит-след показывает ровно то, что произошло и когда.
 
-## Debit and Credit Accounts
+## Дебетовые и кредитовые счета
 
-MERX uses several account types, each with its own role in the double-entry system:
+MERX использует несколько типов счетов, каждый с собственной ролью в системе двойной записи:
 
-### User Accounts
+### Счета пользователей
 
-Every MERX user has an account. Their balance is calculated from ledger entries:
+Каждый пользователь MERX имеет счет. Их баланс рассчитывается из записей в главной книге:
 
 ```sql
 SELECT
@@ -149,37 +149,37 @@ FROM ledger
 WHERE account_id = $user_id;
 ```
 
-Credits increase the balance (deposits, refunds). Debits decrease it (order payments, withdrawals).
+Кредиты увеличивают баланс (депозиты, возвраты). Дебеты уменьшают его (платежи по заказам, выводы).
 
-### Provider Settlement Account
+### Счет расчетов с поставщиком
 
-When a user buys energy, the payment needs to reach the provider. The provider settlement account tracks what MERX owes to each provider:
-
-```
-User pays for order:
-  User account:               DEBIT  1,820,000 SUN
-  Provider settlement (Feee): CREDIT 1,820,000 SUN
-
-MERX settles with provider:
-  Provider settlement (Feee): DEBIT  1,820,000 SUN
-  Treasury:                   CREDIT 1,820,000 SUN
-```
-
-At any point, the provider settlement account balance shows the total amount MERX owes to that provider and has not yet settled.
-
-### Treasury Account
-
-The treasury account represents MERX's on-chain TRX holdings. Deposits credit the treasury (TRX received). Withdrawals and provider settlements debit the treasury (TRX sent out).
-
-### The Fundamental Equation
-
-At all times:
+Когда пользователь покупает energy, платёж должен достичь поставщика. Счет расчетов с поставщиком отслеживает, сколько MERX должна каждому поставщику:
 
 ```
-Sum of all CREDITS = Sum of all DEBITS
+Пользователь платит за заказ:
+  Счет пользователя:                DEBIT  1 820 000 SUN
+  Счет расчётов поставщика (Feee): CREDIT 1 820 000 SUN
+
+MERX рассчитывается с поставщиком:
+  Счет расчётов поставщика (Feee): DEBIT  1 820 000 SUN
+  Казна:                            CREDIT 1 820 000 SUN
 ```
 
-If this equation fails, the system has a bug. MERX runs a reconciliation check periodically:
+В любой момент баланс счета расчетов с поставщиком показывает общую сумму, которую MERX должна этому поставщику и ещё не рассчиталась.
+
+### Казна
+
+Счет казны представляет холдинги TRX MERX в цепи. Депозиты кредитуют казну (TRX получены). Выводы и расчеты с поставщиками дебетуют казну (TRX отправлены).
+
+### Фундаментальное уравнение
+
+Всегда:
+
+```
+Сумма всех КРЕДИТОВ = Сумма всех ДЕБЕТОВ
+```
+
+Если это уравнение не выполняется, в системе есть ошибка. MERX периодически запускает проверку сверки:
 
 ```sql
 SELECT
@@ -187,151 +187,151 @@ SELECT
   SUM(CASE WHEN direction = 'DEBIT' THEN amount_sun ELSE 0 END) AS total_debits
 FROM ledger;
 
--- total_credits MUST equal total_debits
--- If not, alert immediately
+-- total_credits ДОЛЖНА равняться total_debits
+-- Если нет, немедленно alert
 ```
 
-## The Complete Transaction Flow
+## Полный поток транзакций
 
-Here is how a typical energy purchase flows through the ledger:
+Вот как типичная покупка energy проходит через главную книгу:
 
-### 1. User Deposits TRX
+### 1. Пользователь вносит TRX
 
-The deposit monitor detects an incoming TRX transfer to the MERX deposit address:
+Монитор депозитов обнаруживает входящий трансфер TRX на адрес депозита MERX:
 
 ```sql
 BEGIN;
 
--- Credit the user's account (their balance increases)
+-- Кредитовать счет пользователя (баланс увеличивается)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id, reference_type, idempotency_key)
 VALUES ($user_id, 'DEPOSIT', 100000000, 'CREDIT', $deposit_id, 'DEPOSIT', $tx_hash);
 
--- Debit the treasury (TRX received, treasury acknowledges the liability)
+-- Дебетовать казну (TRX получена, казна признаёт ответственность)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id, reference_type, idempotency_key)
 VALUES ($treasury_id, 'DEPOSIT', 100000000, 'DEBIT', $deposit_id, 'DEPOSIT', $tx_hash || '_treasury');
 
 COMMIT;
 ```
 
-### 2. User Buys Energy
+### 2. Пользователь покупает energy
 
-The user places an order for 65,000 energy at 28 SUN/unit:
+Пользователь размещает заказ на 65 000 energy по 28 SUN за единицу:
 
 ```sql
 BEGIN;
 
--- Check balance with row lock
+-- Проверить баланс с блокировкой строки
 SELECT balance_sun FROM account_balances
 WHERE account_id = $user_id
 FOR UPDATE;
 
--- Verify sufficient balance
--- 65,000 * 28 = 1,820,000 SUN = 1.82 TRX
+-- Проверить достаточность баланса
+-- 65 000 * 28 = 1 820 000 SUN = 1.82 TRX
 
--- Debit user account (balance decreases)
+-- Дебетовать счет пользователя (баланс уменьшается)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id, reference_type, idempotency_key)
 VALUES ($user_id, 'ORDER_PAYMENT', 1820000, 'DEBIT', $order_id, 'ORDER', $idempotency_key);
 
--- Credit provider settlement (MERX now owes the provider)
+-- Кредитовать счет расчетов (MERX теперь должна поставщику)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id, reference_type, idempotency_key)
 VALUES ($provider_settlement_id, 'ORDER_PAYMENT', 1820000, 'CREDIT', $order_id, 'ORDER', $idempotency_key || '_settlement');
 
 COMMIT;
 ```
 
-### 3. Order Fails (Refund)
+### 3. Заказ не выполнен (возврат)
 
-If the provider fails to delegate the energy, the order is refunded:
+Если поставщик не может делегировать energy, заказ возвращается:
 
 ```sql
 BEGIN;
 
--- Credit user account (balance restored)
+-- Кредитовать счет пользователя (баланс восстановлен)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id, reference_type)
 VALUES ($user_id, 'ORDER_REFUND', 1820000, 'CREDIT', $order_id, 'ORDER');
 
--- Debit provider settlement (MERX no longer owes the provider)
+-- Дебетовать счет расчетов (MERX больше не должна поставщику)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id, reference_type)
 VALUES ($provider_settlement_id, 'ORDER_REFUND', 1820000, 'DEBIT', $order_id, 'ORDER');
 
 COMMIT;
 ```
 
-The original payment entries remain. The refund entries are new records. The user's net balance change for this order is zero: 1,820,000 SUN debited, then 1,820,000 SUN credited.
+Исходные записи платежа остаются. Записи возврата — новые записи. Чистое изменение баланса пользователя для этого заказа равно нулю: 1 820 000 SUN дебетировано, затем 1 820 000 SUN кредитировано.
 
-## Balance Reconciliation with SELECT FOR UPDATE
+## Сверка баланса с SELECT FOR UPDATE
 
-The most dangerous moment in any financial system is the balance check before a deduction. Without proper locking, concurrent requests can both pass the balance check and both deduct, resulting in a negative balance.
+Самый опасный момент в любой финансовой системе — это проверка баланса перед вычитанием. Без надлежащей блокировки одновременные запросы могут обойти проверку баланса и оба вычесть, в результате чего баланс станет отрицательным.
 
-### The Race Condition
+### Состояние гонки
 
 ```
-Thread A: SELECT balance WHERE user_id = 1  -> 10 TRX
-Thread B: SELECT balance WHERE user_id = 1  -> 10 TRX
-Thread A: Deduct 8 TRX, new balance = 2 TRX
-Thread B: Deduct 8 TRX, new balance = 2 TRX
-Result: User had 10 TRX, spent 16 TRX, balance shows 2 TRX
+Поток A: SELECT balance WHERE user_id = 1  -> 10 TRX
+Поток B: SELECT balance WHERE user_id = 1  -> 10 TRX
+Поток A: Вычесть 8 TRX, новый баланс = 2 TRX
+Поток B: Вычесть 8 TRX, новый баланс = 2 TRX
+Результат: Пользователь имел 10 TRX, потратил 16 TRX, баланс показывает 2 TRX
 ```
 
-The platform just lost 6 TRX.
+Платформа только что потеряла 6 TRX.
 
-### The Fix: SELECT FOR UPDATE
+### Исправление: SELECT FOR UPDATE
 
 ```sql
 BEGIN;
 
--- Lock the row. Any other transaction trying to read this row
--- with FOR UPDATE will block until this transaction completes.
+-- Заблокировать строку. Любая другая транзакция, пытающаяся прочитать эту строку
+-- с FOR UPDATE, будет заблокирована до завершения этой транзакции.
 SELECT balance_sun FROM account_balances
 WHERE account_id = $user_id
 FOR UPDATE;
 
--- Now we have an exclusive lock. Check balance safely.
--- If insufficient, ROLLBACK.
--- If sufficient, proceed with ledger entries.
+-- Теперь у нас есть монопольная блокировка. Проверить баланс безопасно.
+-- Если недостаточно, ROLLBACK.
+-- Если достаточно, продолжить с записями в главной книге.
 
 INSERT INTO ledger ...;
 
 COMMIT;
--- Lock released. Next waiting transaction can proceed.
+-- Блокировка освобождена. Следующая ожидающая транзакция может продолжить.
 ```
 
-With `FOR UPDATE`, the scenario becomes:
+С `FOR UPDATE` сценарий становится:
 
 ```
-Thread A: SELECT ... FOR UPDATE  -> 10 TRX (row locked)
-Thread B: SELECT ... FOR UPDATE  -> BLOCKED (waiting for A's lock)
-Thread A: Deduct 8 TRX, COMMIT  -> balance = 2 TRX (lock released)
-Thread B: SELECT ... FOR UPDATE  -> 2 TRX (lock acquired)
-Thread B: Deduct 8 TRX?         -> INSUFFICIENT BALANCE, ROLLBACK
+Поток A: SELECT ... FOR UPDATE  -> 10 TRX (строка заблокирована)
+Поток B: SELECT ... FOR UPDATE  -> ЗАБЛОКИРОВАН (ожидание блокировки A)
+Поток A: Вычесть 8 TRX, COMMIT  -> баланс = 2 TRX (блокировка освобождена)
+Поток B: SELECT ... FOR UPDATE  -> 2 TRX (блокировка получена)
+Поток B: Вычесть 8 TRX?         -> НЕДОСТАТОЧНЫЙ БАЛАНС, ROLLBACK
 ```
 
-No overspend. No lost funds. The serialization guarantee of `SELECT FOR UPDATE` ensures that balance checks and deductions are atomic.
+Никакого перерасхода. Никаких потерянных средств. Гарантия сериализации `SELECT FOR UPDATE` гарантирует, что проверки баланса и вычитания являются атомарными.
 
-### Performance Implications
+### Влияние на производительность
 
-`SELECT FOR UPDATE` serializes transactions per account. Two users can transact simultaneously without blocking each other (they lock different rows). But two concurrent orders for the same user must wait in line.
+`SELECT FOR UPDATE` сериализирует транзакции для каждого счета. Два пользователя могут выполнять транзакции одновременно без блокировки друг друга (они блокируют разные строки). Но два одновременных заказа одного пользователя должны ждать в очереди.
 
-In practice, this is not a bottleneck. Individual users rarely submit truly concurrent requests. When they do (e.g., a misconfigured bot), serialization is the correct behavior -- you want those requests processed sequentially, not in parallel.
+На практике это не узкое место. Отдельные пользователи редко подают действительно одновременные запросы. Когда они это делают (например, неправильно настроенный бот), сериализация является правильным поведением — вам нужна обработка этих запросов последовательно, а не параллельно.
 
-## Periodic Reconciliation
+## Периодическая сверка
 
-Beyond per-transaction integrity, MERX runs a periodic reconciliation that verifies the entire ledger:
+Помимо целостности каждой транзакции, MERX запускает периодическую сверку, которая проверяет всю главную книгу:
 
 ```sql
--- 1. Verify global balance equation
+-- 1. Проверить глобальное уравнение баланса
 SELECT
   SUM(CASE WHEN direction = 'CREDIT' THEN amount_sun ELSE 0 END) AS credits,
   SUM(CASE WHEN direction = 'DEBIT' THEN amount_sun ELSE 0 END) AS debits
 FROM ledger;
--- credits MUST equal debits
+-- credits ДОЛЖНЫ равняться debits
 
--- 2. Verify per-account balances against on-chain state
--- Sum of all user balances should equal treasury holdings
--- minus pending provider settlements
+-- 2. Проверить балансы на счете против состояния в цепи
+-- Сумма всех балансов пользователей должна равняться холдингам казны
+-- минус ожидающие расчеты с поставщиками
 
--- 3. Check for orphaned references
--- Every reference_id should point to a valid order, deposit, or withdrawal
+-- 3. Проверить на потерянные ссылки
+-- Каждый reference_id должен указывать на действительный заказ, депозит или вывод
 SELECT l.reference_id, l.reference_type
 FROM ledger l
 LEFT JOIN orders o ON l.reference_id = o.id AND l.reference_type = 'ORDER'
@@ -339,26 +339,27 @@ LEFT JOIN deposits d ON l.reference_id = d.id AND l.reference_type = 'DEPOSIT'
 WHERE o.id IS NULL AND d.id IS NULL AND l.reference_type IS NOT NULL;
 ```
 
-If any check fails, the system alerts immediately. The response is investigation and correction (via new ledger entries), never modification of existing records.
+Если какая-либо проверка не пройдена, система немедленно оповещает. Ответ — это расследование и исправление (через новые записи в главной книге), никогда не изменение существующих записей.
 
-## Итоги
+## Резюме
 
-The MERX double-entry ledger provides:
+Главная книга двойной записи MERX обеспечивает:
 
-1. **Integrity**: Every transaction is a balanced pair. Imbalances are detected immediately.
-2. **Immutability**: Records cannot be modified or deleted. History is permanent.
-3. **Concurrency safety**: SELECT FOR UPDATE prevents race conditions on balance checks.
-4. **Auditability**: Complete financial history with bidirectional references.
-5. **Reconciliation**: Periodic checks verify the entire system state.
+1. **Целостность**: Каждая транзакция — это сбалансированная пара. Дисбалансы обнаруживаются немедленно.
+2. **Неизменяемость**: Записи не могут быть изменены или удалены. История постоянна.
+3. **Безопасность при параллелизме**: SELECT FOR UPDATE предотвращает состояния гонки при проверке баланса.
+4. **Проверяемость**: Полная финансовая история с двусторонними ссылками.
+5. **Сверка**: Периодические проверки верифицируют состояние всей системы.
 
-This is not novel. It is a 700-year-old accounting technique applied to a blockchain platform. The novelty is that most crypto platforms skip it -- and pay the price in lost funds, unexplainable discrepancies, and auditor nightmares.
+Это не ново. Это 700-летняя техника учета, применяемая к блокчейн-платформе. Новизна в том, что большинство крипто-платформ её пропускают — и платят цену потерянными средствами, необъяснимыми расхождениями и кошмарами аудиторов.
 
-Platform: [https://merx.exchange](https://merx.exchange)
-Documentation: [https://merx.exchange/docs](https://merx.exchange/docs)
+Платформа: [https://merx.exchange](https://merx.exchange)
+Документация: [https://merx.exchange/docs](https://merx.exchange/docs)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — нулевая установка, без API ключа для инструментов, доступных только для чтения:
 
 ```json
 {
@@ -370,6 +371,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите вашего AI-помощника: "What is the cheapest TRON energy right now?" и получите живые цены от всех подключенных поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

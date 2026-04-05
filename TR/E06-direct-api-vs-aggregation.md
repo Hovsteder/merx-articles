@@ -1,24 +1,24 @@
-# Dogrudan Saglayici API ve MERX Agregasyonu: Entegrasyon Maliyeti
+# Doğrudan Sağlayıcı API'si vs MERX Agregasyonu: Entegrasyon Maliyeti
 
-Every developer building on TRON eventually faces the energy cost problem. Transactions consume energy, and buying energy from providers is cheaper than burning TRX. The question is not whether to use energy providers -- it is how to integrate them.
+TRON üzerinde geliştirme yapan her geliştirici eninde sonunda enerji maliyeti sorunuyla karşılaşır. İşlemler enerji tüketir ve sağlayıcılardan enerji satın almak TRX yakmaktan daha ucuzdur. Soru enerji sağlayıcılarını kullanıp kullanmamak değil -- onları nasıl entegre edeceğinizdir.
 
-You have two paths: integrate with each provider's API directly, or use an aggregation layer like MERX. This article compares the real-world integration cost of both approaches, measured in developer hours, maintenance burden, and long-term complexity.
+İki yolunuz vardır: her sağlayıcının API'sini doğrudan entegre etmek veya MERX gibi bir agregasyon katmanı kullanmak. Bu makale her iki yaklaşımın gerçek dünyada entegrasyon maliyetini karşılaştırır; bunu geliştirici saatleri, bakım yükü ve uzun vadeli karmaşıklık cinsinden ölçer.
 
-## The Direct Integration Path
+## Doğrudan Entegrasyon Yolu
 
-Let us say you want best-price energy for your TRON application. You decide to integrate with multiple providers directly to compare prices and route to the cheapest option.
+Diyelim ki TRON uygulamanız için en iyi fiyatlı enerji istiyorsunuz. Fiyatları karşılaştırmak ve en ucuz seçeneğe yönlendirmek için birden fazla sağlayıcı ile doğrudan entegre olmaya karar veriyorsunuz.
 
-Here is what you are signing up for.
+İşte buna katlanacaklarınız.
 
-### Provider API Landscape
+### Sağlayıcı API Ortamı
 
-The TRON energy market has seven significant providers. Each has its own API -- and "its own" means genuinely different in every dimension that matters to a developer.
+TRON enerji pazarında yedi önemli sağlayıcı vardır. Her birinin kendi API'si var -- ve "kendi" demek geliştirici açısından önemli olan her boyutta gerçekten farklı demektir.
 
-**Authentication varies.** Some providers use API keys in headers. Others use signed requests. At least one uses session-based authentication. You need to implement and maintain three or four different auth flows.
+**Kimlik doğrulaması değişir.** Bazı sağlayıcılar başlıklarda API anahtarları kullanır. Diğerleri imzalı istekler kullanır. En az biri oturum tabanlı kimlik doğrulama kullanır. Üç veya dört farklı kimlik doğrulama akışını uygulamanız ve sürdürmeniz gerekir.
 
-**Request formats differ.** One provider expects energy amounts in SUN. Another expects them in TRX. A third uses its own unit system. Duration formats are inconsistent -- some accept seconds, others accept preset tier identifiers like "1h" or "tier_3".
+**İstek formatları farklıdır.** Bir sağlayıcı enerji miktarlarını SUN cinsinden bekler. Bir diğeri TRX cinsinden bekler. Üçüncüsü kendi birim sistemini kullanır. Süre formatları tutarsızdır -- bazıları saniye, diğerleri "1h" veya "tier_3" gibi önceden ayarlanmış tier tanımlayıcılarını kabul eder.
 
-**Response formats are incompatible.** Provider A returns:
+**Yanıt formatları uyumsuzdur.** Sağlayıcı A şunu döndürür:
 ```json
 {
   "price": 28,
@@ -27,7 +27,7 @@ The TRON energy market has seven significant providers. Each has its own API -- 
 }
 ```
 
-Provider B returns:
+Sağlayıcı B şunu döndürür:
 ```json
 {
   "data": {
@@ -39,7 +39,7 @@ Provider B returns:
 }
 ```
 
-Provider C returns:
+Sağlayıcı C şunu döndürür:
 ```json
 {
   "result": {
@@ -51,46 +51,46 @@ Provider C returns:
 }
 ```
 
-To compare prices, you need to normalize all of these into a common format. That means writing a translation layer for each provider.
+Fiyatları karşılaştırmak için hepsini ortak bir formata normalleştirmeniz gerekir. Bu, her sağlayıcı için bir çeviri katmanı yazmanız anlamına gelir.
 
-**Error handling is inconsistent.** One provider returns HTTP 400 with a JSON error object. Another returns HTTP 200 with an error field in the response body. A third returns plain text error messages. You need provider-specific error parsing for each integration.
+**Hata yönetimi tutarsızdır.** Bir sağlayıcı HTTP 400'ü JSON hata nesnesiyle döndürür. Bir diğeri HTTP 200'ü yanıt gövdesinde hata alanıyla döndürür. Üçüncüsü düz metin hata mesajları döndürür. Her entegrasyon için sağlayıcıya özgü hata ayrıştırması yapmanız gerekir.
 
-### Development Time Estimate
+### Geliştirme Süresi Tahmini
 
-Based on real-world integration efforts, here is a realistic breakdown for integrating seven providers directly:
+Gerçek dünyada entegrasyon çabalarına dayalı olarak, yedi sağlayıcıyı doğrudan entegre etmek için gerçekçi bir dağılım:
 
-| Task | Hours per Provider | Total (7 providers) |
+| Görev | Sağlayıcı Başına Saatler | Toplam (7 sağlayıcı) |
 |---|---|---|
-| Read and understand API docs | 2-4 | 14-28 |
-| Implement authentication | 2-4 | 14-28 |
-| Implement price fetching | 3-6 | 21-42 |
-| Implement order placement | 4-8 | 28-56 |
-| Implement order status tracking | 2-4 | 14-28 |
-| Normalize response formats | 2-3 | 14-21 |
-| Error handling per provider | 2-4 | 14-28 |
-| Testing per provider | 4-8 | 28-56 |
-| **Total** | **21-41** | **147-287** |
+| API dokümentasyonunu okuma ve anlama | 2-4 | 14-28 |
+| Kimlik doğrulama uygulaması | 2-4 | 14-28 |
+| Fiyat alma uygulaması | 3-6 | 21-42 |
+| Sipariş verme uygulaması | 4-8 | 28-56 |
+| Sipariş durumu izleme uygulaması | 2-4 | 14-28 |
+| Yanıt formatlarını normalleştirme | 2-3 | 14-21 |
+| Sağlayıcı başına hata yönetimi | 2-4 | 14-28 |
+| Sağlayıcı başına test | 4-8 | 28-56 |
+| **Toplam** | **21-41** | **147-287** |
 
-At a conservative $100/hour for developer time, direct integration costs **$14,700 - $28,700** in initial development.
+Saatte muhafazakar bir şekilde $100 developer zamanında, doğrudan entegrasyon **$14.700 - $28.700**'e mal olur başlangıç geliştirmede.
 
-And this is just the beginning.
+Ve bu sadece başlangıç.
 
-### Ongoing Maintenance
+### Devam Eden Bakım
 
-Providers change their APIs. They add rate limits, modify response formats, deprecate endpoints, or change authentication methods. Each change requires you to update your integration.
+Sağlayıcılar API'larını değiştirirler. Oran limitlerini ekler, yanıt formatlarını değiştirir, uç noktaları kullanımdan kaldırır veya kimlik doğrulama yöntemlerini değiştirirler. Her değişiklik entegrasyonunuzu güncellemenizi gerektirir.
 
-Typical maintenance burden:
+Tipik bakım yükü:
 
-- **API changes**: 2-4 hours per incident, roughly 1-2 incidents per provider per year. That is 14-56 hours annually across seven providers.
-- **New provider support**: When a new provider enters the market with better prices, adding it takes another 21-41 hours.
-- **Monitoring and alerting**: You need to detect when a provider's API is down or returning errors. Building this monitoring adds 20-40 hours of development.
-- **Documentation**: Keeping internal docs updated as provider APIs change takes 1-2 hours per change.
+- **API değişiklikleri**: Olay başına 2-4 saat, kabaca sağlayıcı başına yıllık 1-2 olay. Bu yedi sağlayıcı genelinde yıllık 14-56 saat.
+- **Yeni sağlayıcı desteği**: Pazara daha iyi fiyatlarla giren yeni bir sağlayıcı eklemek başka 21-41 saat sürer.
+- **İzleme ve uyarı**: Sağlayıcının API'sinin çalışmadığını veya hata döndürdüğünü tespit etmeniz gerekir. Bu izlemeyi inşa etmek 20-40 saatlik geliştirme ekler.
+- **Dokümantasyon**: Sağlayıcı API'leri değiştikçe iç dokümanları güncell tutmak değişiklik başına 1-2 saat alır.
 
-**Estimated annual maintenance cost: $5,000 - $15,000.**
+**Tahmini yıllık bakım maliyeti: $5.000 - $15.000.**
 
-### The Code You End Up Writing
+### Yazdığınız Kod
 
-To illustrate the complexity, here is a simplified version of what a multi-provider integration looks like:
+Karmaşıklığı göstermek için, multi-sağlayıcı entegrasyonun basitleştirilmiş bir versiyonu:
 
 ```typescript
 // provider-a.ts
@@ -112,8 +112,8 @@ class ProviderA {
 // provider-b.ts
 class ProviderB {
   async getPrice(amount: number, duration: string): Promise<NormalizedPrice> {
-    const token = await this.authenticate(); // Different auth flow
-    const durationCode = this.mapDuration(duration); // Different format
+    const token = await this.authenticate(); // Farklı kimlik doğrulama akışı
+    const durationCode = this.mapDuration(duration); // Farklı format
     const response = await fetch('https://provider-b.io/v2/quote', {
       headers: { 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({
@@ -130,7 +130,7 @@ class ProviderB {
   }
 }
 
-// ... repeat for 5 more providers, each with unique quirks
+// ... 5 sağlayıcı daha için tekrarlayın, her biri benzersiz özelliklerle
 
 // aggregator.ts
 class InternalAggregator {
@@ -163,24 +163,24 @@ class InternalAggregator {
 }
 ```
 
-This is a simplified version. A production implementation needs retry logic, circuit breakers, rate limiting, health monitoring, logging, and error reporting for each provider. The codebase grows to thousands of lines of provider-specific integration code.
+Bu basitleştirilmiş bir versiyondur. Üretim uygulaması her sağlayıcı için yeniden deneme mantığı, devre kesiciler, oran sınırlaması, sağlık izleme, günlüğe kaydetme ve hata raporlaması gerektirir. Kod tabanı binlerce satır sağlayıcıya özgü entegrasyon koduna büyür.
 
-## The MERX Integration Path
+## MERX Entegrasyon Yolu
 
-Now compare this with the MERX approach. The entire integration:
+Şimdi bunu MERX yaklaşımıyla karşılaştırın. Tüm entegrasyon:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// Get best price across all providers
+// Tüm sağlayıcılar arasında en iyi fiyatı al
 const prices = await merx.getPrices({
   energy_amount: 65000,
   duration: '1h'
 });
 
-// Place order at best price
+// En iyi fiyattan sipariş ver
 const order = await merx.createOrder({
   energy_amount: 65000,
   duration: '1h',
@@ -188,42 +188,42 @@ const order = await merx.createOrder({
 });
 ```
 
-That is the complete integration. One SDK, one authentication method, one request format, one response format.
+Bu tüm entegrasyon. Bir SDK, bir kimlik doğrulama yöntemi, bir istek formatı, bir yanıt formatı.
 
-### Development Time with MERX
+### MERX ile Geliştirme Süresi
 
-| Task | Hours |
+| Görev | Saatler |
 |---|---|
-| Read MERX documentation | 1-2 |
-| Install SDK and configure auth | 0.5 |
-| Implement price fetching | 0.5-1 |
-| Implement order placement | 0.5-1 |
-| Implement order tracking | 0.5-1 |
-| Error handling | 1-2 |
-| Testing | 2-4 |
-| **Total** | **6-11.5** |
+| MERX dokümentasyonunu okuma | 1-2 |
+| SDK yükleme ve kimlik doğrulama yapılandırması | 0.5 |
+| Fiyat alma uygulaması | 0.5-1 |
+| Sipariş verme uygulaması | 0.5-1 |
+| Sipariş izleme uygulaması | 0.5-1 |
+| Hata yönetimi | 1-2 |
+| Test | 2-4 |
+| **Toplam** | **6-11.5** |
 
-At $100/hour: **$600 - $1,150.**
+Saatte $100: **$600 - $1.150.**
 
-Compare that with $14,700 - $28,700 for direct integration. The MERX path is 13-25 times cheaper in initial development cost.
+Doğrudan entegrasyon için $14.700 - $28.700 ile karşılaştırın. MERX yolu başlangıç geliştirme maliyetinde 13-25 kat daha ucuzdur.
 
-### Maintenance with MERX
+### MERX ile Bakım
 
-MERX handles provider API changes internally. When Provider B changes their authentication flow, MERX updates their integration. Your code does not change.
+MERX sağlayıcı API değişikliklerini dahili olarak yönetir. Sağlayıcı B'nin kimlik doğrulama akışını değiştirdiğinde, MERX entegrasyonlarını günceller. Kodunuz değişmez.
 
-When a new provider enters the market, MERX adds support. Your code does not change.
+Pazara yeni bir sağlayıcı girdiğinde, MERX destek ekler. Kodunuz değişmez.
 
-When a provider goes down, MERX routes to alternatives. Your code does not change.
+Bir sağlayıcı çöktüğünde, MERX alternatiflere yönlendirir. Kodunuz değişmez.
 
-**Estimated annual maintenance cost with MERX: near zero** for the integration layer itself. Normal application maintenance still applies, but the provider-specific complexity is eliminated.
+**MERX ile tahmini yıllık bakım maliyeti: neredeyse sıfır** entegrasyon katmanı için. Normal uygulama bakımı hala uygulanır, ancak sağlayıcıya özgü karmaşıklık ortadan kaldırılır.
 
-## Language-Agnostic Access
+## Dilden Bağımsız Erişim
 
-Direct provider integration multiplies complexity for each programming language your team uses. If your backend is in Go but your tooling is in Python, you need provider integrations in both languages.
+Doğrudan sağlayıcı entegrasyonu ekibinizin kullandığı her programlama dili için karmaşıklığı katlar. Backend'iniz Go'da ama aletleriniz Python'daysa, her iki dilde sağlayıcı entegrasyonlarına ihtiyacınız vardır.
 
-MERX provides multiple access methods:
+MERX birden fazla erişim yöntemi sağlar:
 
-### REST API (Any Language)
+### REST API (Her Dil)
 
 ```bash
 curl https://merx.exchange/api/v1/prices \
@@ -232,7 +232,7 @@ curl https://merx.exchange/api/v1/prices \
   -d '{"energy_amount": 65000, "duration": "1h"}'
 ```
 
-Any language with HTTP support can use the REST API directly.
+HTTP desteği olan herhangi bir dil REST API'sini doğrudan kullanabilir.
 
 ### JavaScript SDK
 
@@ -250,93 +250,93 @@ merx = MerxClient(api_key="your-key")
 prices = merx.get_prices(energy_amount=65000, duration="1h")
 ```
 
-### WebSocket (Real-Time)
+### WebSocket (Gerçek Zamanlı)
 
 ```typescript
 const ws = merx.connectWebSocket();
 ws.on('price_update', (data) => {
-  // Real-time price updates across all providers
+  // Tüm sağlayıcılar arasında gerçek zamanlı fiyat güncellemeleri
 });
 ```
 
-### Webhooks (Async)
+### Webhook'lar (Asenkron)
 
-Configure webhooks to receive notifications when orders fill, prices change, or other events occur. No polling required.
+Siparişler doldurulduğunda, fiyatlar değiştiğinde veya başka olaylar meydana geldiğinde bildirim almak için webhook'ları yapılandırın. Yoklama gerekmez.
 
-### MCP Server (AI Agents)
+### MCP Sunucusu (AI Ajanlar)
 
-The MERX MCP server at [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) allows AI agents to interact with the energy market directly. This integration point has no equivalent in the direct-provider approach.
+MERX MCP sunucusu [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)'de AI ajanlarının enerji pazarı ile doğrudan etkileşim kurmasını sağlar. Bu entegrasyon noktası doğrudan sağlayıcı yaklaşımında eşdeğer değildir.
 
-## The Hidden Cost: Opportunity
+## Gizli Maliyet: Fırsat
 
-Beyond direct development costs, there is an opportunity cost to building provider integrations. Every hour spent writing and maintaining provider-specific code is an hour not spent on your core product.
+Doğrudan geliştirme maliyetinin ötesinde, sağlayıcı entegrasyonları inşa etmenin bir fırsat maliyeti vardır. Sağlayıcıya özgü kodu yazmak ve sürdürmek için harcanan her saat, temel ürününüz üzerinde çalışmak için harcanan bir saattir.
 
-If you are building a payment processor, your differentiation is in the payment experience, not in energy provider integrations. If you are building a DEX, your value is in the trading experience, not in energy procurement.
+Ödeme işlemcisi inşa ediyorsanız, ayırıcınız enerji sağlayıcı entegrasyonlarında değil, ödeme deneyimindedir. DEX inşa ediyorsanız, değeriniz enerji satın alma maliyetinde değil, ticaret deneyimindedir.
 
-Energy procurement is infrastructure. Like database hosting or CDN services, it is something you should buy, not build -- unless your core business is energy procurement.
+Enerji satın alma altyapıdır. Veritabanı barındırma veya CDN hizmetleri gibi, bu satın alacağınız bir şeydir, inşa etmeyeceğiniz -- enerji satın alma altyapısı sizin temel işletmeniz olmadığı sürece.
 
-## Hata Yonetimi Comparison
+## Hata Yönetimi Karşılaştırması
 
-Direct integration requires handling errors from seven different providers, each with their own error taxonomy:
+Doğrudan entegrasyon, her birinin kendi hata taksonomi'sine sahip yedi farklı sağlayıcıdan hata yönetimini gerektirir:
 
 ```typescript
-// Direct integration error handling nightmare
+// Doğrudan entegrasyon hata yönetimi kabusu
 try {
   const price = await providerA.getPrice(amount, duration);
 } catch (e) {
   if (e.response?.status === 429) {
-    // Rate limited by Provider A
+    // Sağlayıcı A tarafından oran sınırlı
   } else if (e.response?.data?.error === 'INSUFFICIENT_SUPPLY') {
-    // Provider A specific error
+    // Sağlayıcı A'ya özgü hata
   } else if (e.code === 'ECONNREFUSED') {
-    // Provider A is down
+    // Sağlayıcı A çalışmıyor
   }
-  // Fall through to Provider B with different error patterns
+  // Farklı hata desenleriyle Sağlayıcı B'ye düşün
 }
 ```
 
-MERX provides standardized error responses:
+MERX standardlaştırılmış hata yanıtları sağlar:
 
 ```typescript
 try {
   const order = await merx.createOrder({ /* ... */ });
 } catch (e) {
-  // Standard format regardless of underlying provider
-  console.error(e.code);    // e.g., 'INSUFFICIENT_SUPPLY'
-  console.error(e.message); // Human-readable description
-  console.error(e.details); // Additional context
+  // Temel sağlayıcı ne olursa olsun standart format
+  console.error(e.code);    // örn. 'INSUFFICIENT_SUPPLY'
+  console.error(e.message); // İnsan tarafından okunabilir açıklama
+  console.error(e.details); // Ek bağlam
 }
 ```
 
-One error format. One set of error codes. One error handling strategy.
+Bir hata formatı. Bir hata kodu seti. Bir hata yönetimi stratejisi.
 
-## Side-by-Side Cost Summary
+## Yan Yana Maliyet Özeti
 
-| Cost Category | Direct (7 providers) | MERX |
+| Maliyet Kategorisi | Doğrudan (7 sağlayıcı) | MERX |
 |---|---|---|
-| Initial development | $14,700 - $28,700 | $600 - $1,150 |
-| Annual maintenance | $5,000 - $15,000 | ~$0 |
-| New provider integration | $2,100 - $4,100 each | $0 (automatic) |
-| Monitoring infrastructure | $2,000 - $4,000 | $0 (built in) |
-| Total Year 1 | $21,700 - $47,700 | $600 - $1,150 |
-| Total Year 2 | $26,700 - $62,700 | $600 - $1,150 |
-| Total Year 3 | $31,700 - $77,700 | $600 - $1,150 |
+| Başlangıç geliştirme | $14.700 - $28.700 | $600 - $1.150 |
+| Yıllık bakım | $5.000 - $15.000 | ~$0 |
+| Yeni sağlayıcı entegrasyonu | $2.100 - $4.100 her biri | $0 (otomatik) |
+| İzleme altyapısı | $2.000 - $4.000 | $0 (dahili) |
+| Toplam 1. Yıl | $21.700 - $47.700 | $600 - $1.150 |
+| Toplam 2. Yıl | $26.700 - $62.700 | $600 - $1.150 |
+| Toplam 3. Yıl | $31.700 - $77.700 | $600 - $1.150 |
 
-The cumulative cost difference over three years is stark. Direct integration costs 20-70 times more than the MERX approach.
+Üç yıl içinde kümülatif maliyet farkı çarpıcıdır. Doğrudan entegrasyon MERX yaklaşımından 20-70 kat daha maliyetlidir.
 
-## Sonuc
+## Sonuç
 
-Integrating with TRON energy providers directly is a solvable engineering problem. Any competent development team can do it. The question is whether it is worth the cost.
+TRON enerji sağlayıcılarıyla doğrudan entegre olmak çözülebilir bir mühendislik problemidir. Yetkin herhangi bir geliştirme ekibi bunu yapabilir. Soru maliyetinin değip değmediğidir.
 
-For most teams, the answer is no. The time and money spent on direct integration could be invested in core product development. MERX abstracts the provider complexity behind a single, well-documented API with typed SDKs, real-time capabilities, and automatic failover.
+Çoğu ekip için cevap hayırdır. Doğrudan entegrasyon harcanan zaman ve para, temel ürün geliştirmesine yatırılabilir. MERX sağlayıcı karmaşıklığını yazılı SDK'lar, gerçek zamanlı yetenekler ve otomatik yük devretme ile tek, iyi belgelenmiş bir API'nin ardında soyutlar.
 
-The integration takes hours instead of weeks, the maintenance burden drops to near zero, and you get access to every provider in the market through a single API key.
+Entegrasyon saatler yerine haftalar alır, bakım yükü neredeyse sıfıra düşer ve pazardaki her sağlayıcıya tek bir API anahtarı aracılığıyla erişim elde edersiniz.
 
-Start with the documentation at [https://merx.exchange/docs](https://merx.exchange/docs) or explore the platform at [https://merx.exchange](https://merx.exchange).
+[https://merx.exchange/docs](https://merx.exchange/docs) adresindeki dokümantasyonla başlayın veya [https://merx.exchange](https://merx.exchange) adresindeki platformu keşfedin.
 
-## Try It Now with AI
+## Şimdi AI ile Deneyin
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+Claude Desktop'a veya MCP uyumlu herhangi bir istemciye MERX ekleyin -- sıfır kurulum, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -348,6 +348,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza şunu sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve bağlanan tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP dokümantasyonu: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

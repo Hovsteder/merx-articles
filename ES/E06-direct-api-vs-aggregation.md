@@ -1,24 +1,24 @@
-# API directa del proveedor vs agregacion de MERX: costo de integracion
+# API de Proveedor Directo vs Agregación MERX: Costo de Integración
 
-Every developer building on TRON eventually faces the costo de energia problem. Transactions consume energy, and buying energy from providers is cheaper than burning TRX. The question is not whether to use proveedor de energias -- it is how to integrate them.
+Cada desarrollador que construye en TRON eventualmente enfrenta el problema del costo de energía. Las transacciones consumen energía, y comprar energía a proveedores es más barato que quemar TRX. La pregunta no es si usar proveedores de energía -- es cómo integrarlos.
 
-You have two paths: integrate with each provider's API directly, or use an aggregation layer like MERX. This article compares the real-world integration cost of both approaches, measured in developer hours, maintenance burden, and long-term complexity.
+Tienes dos caminos: integrar directamente con la API de cada proveedor, o usar una capa de agregación como MERX. Este artículo compara el costo real de integración de ambos enfoques, medido en horas de desarrollador, carga de mantenimiento y complejidad a largo plazo.
 
-## The Direct Integration Path
+## El Camino de Integración Directa
 
-Let us say you want best-price energy for your TRON application. You decide to integrate with multiple providers directly to compare prices and route to the cheapest option.
+Digamos que quieres el mejor precio de energía para tu aplicación TRON. Decides integrar directamente con múltiples proveedores para comparar precios y enrutar hacia la opción más barata.
 
-Aqui esta what you are signing up for.
+Esto es lo que estás aceptando.
 
-### Provider API Landscape
+### Panorama de API de Proveedores
 
-The TRON mercado de energia has seven significant providers. Each has its own API -- and "its own" means genuinely different in every dimension that matters to a developer.
+El mercado de energía TRON tiene siete proveedores significativos. Cada uno tiene su propia API -- y "su propia" significa genuinamente diferente en todas las dimensiones que importan a un desarrollador.
 
-**Authentication varies.** Some providers use clave de APIs in headers. Others use signed requests. At least one uses session-based authentication. You need to implement and maintain three or four different auth flows.
+**La autenticación varía.** Algunos proveedores usan claves API en encabezados. Otros usan solicitudes firmadas. Al menos uno usa autenticación basada en sesiones. Necesitas implementar y mantener tres o cuatro flujos de autenticación diferentes.
 
-**Request formats differ.** One provider expects cantidad de energias in SUN. Another expects them in TRX. A third uses its own unit system. Duration formats are inconsistent -- some accept seconds, others accept preset tier identifiers like "1h" or "tier_3".
+**Los formatos de solicitud difieren.** Un proveedor espera cantidades de energía en SUN. Otro las espera en TRX. Un tercero usa su propio sistema de unidades. Los formatos de duración son inconsistentes -- algunos aceptan segundos, otros aceptan identificadores de nivel preestablecidos como "1h" o "tier_3".
 
-**Response formats are incompatible.** Provider A returns:
+**Los formatos de respuesta son incompatibles.** El Proveedor A devuelve:
 ```json
 {
   "price": 28,
@@ -27,7 +27,7 @@ The TRON mercado de energia has seven significant providers. Each has its own AP
 }
 ```
 
-Provider B returns:
+El Proveedor B devuelve:
 ```json
 {
   "data": {
@@ -39,7 +39,7 @@ Provider B returns:
 }
 ```
 
-Provider C returns:
+El Proveedor C devuelve:
 ```json
 {
   "result": {
@@ -51,46 +51,46 @@ Provider C returns:
 }
 ```
 
-To compare prices, you need to normalize all of these into a common format. That means writing a translation layer for each provider.
+Para comparar precios, necesitas normalizar todos estos en un formato común. Eso significa escribir una capa de traducción para cada proveedor.
 
-**Error handling is inconsistent.** One provider returns HTTP 400 with a JSON error object. Another returns HTTP 200 with an error field in the response body. A third returns plain text error messages. You need provider-specific error parsing for each integration.
+**El manejo de errores es inconsistente.** Un proveedor devuelve HTTP 400 con un objeto de error JSON. Otro devuelve HTTP 200 con un campo de error en el cuerpo de la respuesta. Un tercero devuelve mensajes de error en texto plano. Necesitas análisis de errores específico de proveedor para cada integración.
 
-### Development Time Estimate
+### Estimación de Tiempo de Desarrollo
 
-Based on real-world integration efforts, here is a realistic breakdown for integrating seven providers directly:
+Basado en esfuerzos de integración del mundo real, aquí hay un desglose realista para integrar siete proveedores directamente:
 
-| Task | Hours per Provider | Total (7 providers) |
+| Tarea | Horas por Proveedor | Total (7 proveedores) |
 |---|---|---|
-| Read and understand API docs | 2-4 | 14-28 |
-| Implement authentication | 2-4 | 14-28 |
-| Implement price fetching | 3-6 | 21-42 |
-| Implement order placement | 4-8 | 28-56 |
-| Implement estado de la orden tracking | 2-4 | 14-28 |
-| Normalize response formats | 2-3 | 14-21 |
-| Error handling per provider | 2-4 | 14-28 |
-| Testing per provider | 4-8 | 28-56 |
+| Leer y entender documentación de API | 2-4 | 14-28 |
+| Implementar autenticación | 2-4 | 14-28 |
+| Implementar obtención de precios | 3-6 | 21-42 |
+| Implementar colocación de órdenes | 4-8 | 28-56 |
+| Implementar seguimiento de estado de órdenes | 2-4 | 14-28 |
+| Normalizar formatos de respuesta | 2-3 | 14-21 |
+| Manejo de errores por proveedor | 2-4 | 14-28 |
+| Pruebas por proveedor | 4-8 | 28-56 |
 | **Total** | **21-41** | **147-287** |
 
-At a conservative $100/hour for developer time, direct integration costs **$14,700 - $28,700** in initial development.
+A un conservador de $100/hora para tiempo de desarrollador, la integración directa cuesta **$14,700 - $28,700** en desarrollo inicial.
 
-And this is just the beginning.
+Y esto es solo el comienzo.
 
-### Ongoing Maintenance
+### Mantenimiento Continuo
 
-Providers change their APIs. They add limite de velocidads, modify response formats, deprecate endpoints, or change authentication methods. Each change requires you to update your integration.
+Los proveedores cambian sus APIs. Agregan límites de velocidad, modifican formatos de respuesta, deprecian endpoints, o cambian métodos de autenticación. Cada cambio requiere que actualices tu integración.
 
-Typical maintenance burden:
+Carga típica de mantenimiento:
 
-- **API changes**: 2-4 hours per incident, roughly 1-2 incidents per provider per year. That is 14-56 hours annually across seven providers.
-- **New provider support**: When a new provider enters the market with better prices, adding it takes another 21-41 hours.
-- **Monitoring and alerting**: You need to detect when a provider's API is down or returning errors. Building this monitoring adds 20-40 hours of development.
-- **Documentation**: Keeping internal docs updated as provider APIs change takes 1-2 hours per change.
+- **Cambios de API**: 2-4 horas por incidente, aproximadamente 1-2 incidentes por proveedor por año. Eso es 14-56 horas anuales en siete proveedores.
+- **Soporte de nuevo proveedor**: Cuando un nuevo proveedor entra al mercado con mejores precios, agregarlo toma otras 21-41 horas.
+- **Monitoreo y alertas**: Necesitas detectar cuando la API de un proveedor está caída o devolviendo errores. Construir este monitoreo suma 20-40 horas de desarrollo.
+- **Documentación**: Mantener documentos internos actualizados cuando cambian las APIs de proveedores toma 1-2 horas por cambio.
 
-**Estimated annual maintenance cost: $5,000 - $15,000.**
+**Costo de mantenimiento anual estimado: $5,000 - $15,000.**
 
-### The Code You End Up Writing
+### El Código que Terminas Escribiendo
 
-To illustrate the complexity, here is a simplified version of what a multi-provider integration looks like:
+Para ilustrar la complejidad, aquí hay una versión simplificada de lo que se ve una integración multi-proveedor:
 
 ```typescript
 // provider-a.ts
@@ -163,24 +163,24 @@ class InternalAggregator {
 }
 ```
 
-This is a simplified version. A production implementation needs retry logic, circuit breakers, limite de velocidading, health monitoring, logging, and error reporting for each provider. The codebase grows to thousands of lines of provider-specific integration code.
+Esta es una versión simplificada. Una implementación de producción necesita lógica de reintentos, interruptores de circuito, limitación de velocidad, monitoreo de salud, registro y reportes de errores para cada proveedor. La base de código crece a miles de líneas de código de integración específico de proveedor.
 
-## The MERX Integration Path
+## El Camino de Integración MERX
 
-Now compare this with the MERX approach. The entire integration:
+Ahora compara esto con el enfoque MERX. La integración completa:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// Get best price across all providers
+// Obtén el mejor precio en todos los proveedores
 const prices = await merx.getPrices({
   energy_amount: 65000,
   duration: '1h'
 });
 
-// Place order at best price
+// Coloca orden al mejor precio
 const order = await merx.createOrder({
   energy_amount: 65000,
   duration: '1h',
@@ -188,42 +188,42 @@ const order = await merx.createOrder({
 });
 ```
 
-That is the complete integration. One SDK, one authentication method, one request format, one response format.
+Esa es la integración completa. Un SDK, un método de autenticación, un formato de solicitud, un formato de respuesta.
 
-### Development Time with MERX
+### Tiempo de Desarrollo con MERX
 
-| Task | Hours |
+| Tarea | Horas |
 |---|---|
-| Read MERX documentation | 1-2 |
-| Install SDK and configure auth | 0.5 |
-| Implement price fetching | 0.5-1 |
-| Implement order placement | 0.5-1 |
-| Implement order tracking | 0.5-1 |
-| Error handling | 1-2 |
-| Testing | 2-4 |
+| Leer documentación de MERX | 1-2 |
+| Instalar SDK y configurar autenticación | 0.5 |
+| Implementar obtención de precios | 0.5-1 |
+| Implementar colocación de órdenes | 0.5-1 |
+| Implementar seguimiento de órdenes | 0.5-1 |
+| Manejo de errores | 1-2 |
+| Pruebas | 2-4 |
 | **Total** | **6-11.5** |
 
-At $100/hour: **$600 - $1,150.**
+A $100/hora: **$600 - $1,150.**
 
-Compare that with $14,700 - $28,700 for direct integration. The MERX path is 13-25 times cheaper in initial development cost.
+Compara esto con $14,700 - $28,700 para integración directa. El camino MERX es 13-25 veces más barato en costo de desarrollo inicial.
 
-### Maintenance with MERX
+### Mantenimiento con MERX
 
-MERX handles provider API changes internally. When Provider B changes their authentication flow, MERX updates their integration. Your code does not change.
+MERX maneja cambios de API de proveedor internamente. Cuando el Proveedor B cambia su flujo de autenticación, MERX actualiza su integración. Tu código no cambia.
 
-When a new provider enters the market, MERX adds support. Your code does not change.
+Cuando un nuevo proveedor entra al mercado, MERX agrega soporte. Tu código no cambia.
 
-When a provider goes down, MERX routes to alternatives. Your code does not change.
+Cuando un proveedor se cae, MERX enruta a alternativas. Tu código no cambia.
 
-**Estimated annual maintenance cost with MERX: near zero** for the integration layer itself. Normal application maintenance still applies, but the provider-specific complexity is eliminated.
+**Costo de mantenimiento anual estimado con MERX: casi cero** para la capa de integración en sí. El mantenimiento de aplicación normal aún se aplica, pero la complejidad específica de proveedor se elimina.
 
-## Language-Agnostic Access
+## Acceso Agnóstico de Lenguaje
 
-Direct provider integration multiplies complexity for each programming language your team uses. If your backend is in Go but your tooling is in Python, you need provider integrations in both languages.
+La integración directa de proveedor multiplica la complejidad para cada lenguaje de programación que usa tu equipo. Si tu backend está en Go pero tu herramienta está en Python, necesitas integraciones de proveedor en ambos lenguajes.
 
-MERX provides multiple access methods:
+MERX proporciona múltiples métodos de acceso:
 
-### REST API (Any Language)
+### REST API (Cualquier Lenguaje)
 
 ```bash
 curl https://merx.exchange/api/v1/prices \
@@ -232,7 +232,7 @@ curl https://merx.exchange/api/v1/prices \
   -d '{"energy_amount": 65000, "duration": "1h"}'
 ```
 
-Any language with HTTP support can use the REST API directly.
+Cualquier lenguaje con soporte HTTP puede usar la REST API directamente.
 
 ### JavaScript SDK
 
@@ -250,93 +250,94 @@ merx = MerxClient(api_key="your-key")
 prices = merx.get_prices(energy_amount=65000, duration="1h")
 ```
 
-### WebSocket (Real-Time)
+### WebSocket (Tiempo Real)
 
 ```typescript
 const ws = merx.connectWebSocket();
 ws.on('price_update', (data) => {
-  // Real-time price updates across all providers
+  // Actualizaciones de precio en tiempo real en todos los proveedores
 });
 ```
 
-### Webhooks (Async)
+### Webhooks (Asincrónico)
 
-Configure webhooks to receive notifications when orders fill, prices change, or other events occur. No polling required.
+Configura webhooks para recibir notificaciones cuando se cierren órdenes, cambien precios u otros eventos ocurran. No se requiere polling.
 
-### MCP Server (AI Agents)
+### Servidor MCP (Agentes de IA)
 
-The MERX MCP server at [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) allows AI agents to interact with the mercado de energia directly. This integration point has no equivalent in the direct-provider approach.
+El servidor MCP de MERX en [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) permite que agentes de IA interactúen directamente con el mercado de energía. Este punto de integración no tiene equivalente en el enfoque de proveedor directo.
 
-## The Hidden Cost: Opportunity
+## El Costo Oculto: Oportunidad
 
-Beyond direct development costs, there is an costo de oportunidad to building provider integrations. Every hour spent writing and maintaining provider-specific code is an hour not spent on your core product.
+Más allá de los costos de desarrollo directo, hay un costo de oportunidad para construir integraciones de proveedor. Cada hora gastada escribiendo y manteniendo código específico de proveedor es una hora no gastada en tu producto central.
 
-If you are building a procesador de pagos, your differentiation is in the payment experience, not in proveedor de energia integrations. If you are building a DEX, your value is in the trading experience, not in adquisicion de energia.
+Si estás construyendo un procesador de pagos, tu diferenciación está en la experiencia de pago, no en integraciones de proveedor de energía. Si estás construyendo un DEX, tu valor está en la experiencia de trading, no en la adquisición de energía.
 
-Energy procurement is infrastructure. Like database hosting or CDN services, it is something you should buy, not build -- unless your core business is adquisicion de energia.
+La adquisición de energía es infraestructura. Como alojamiento de base de datos o servicios CDN, es algo que deberías comprar, no construir -- a menos que tu negocio principal sea la adquisición de energía.
 
-## Error Handling Comparison
+## Comparación de Manejo de Errores
 
-Direct integration requires handling errors from seven different providers, each with their own error taxonomy:
+La integración directa requiere manejar errores de siete proveedores diferentes, cada uno con su propia taxonomía de errores:
 
 ```typescript
-// Direct integration error handling nightmare
+// Pesadilla de manejo de errores de integración directa
 try {
   const price = await providerA.getPrice(amount, duration);
 } catch (e) {
   if (e.response?.status === 429) {
-    // Rate limited by Provider A
+    // Limitado por velocidad por el Proveedor A
   } else if (e.response?.data?.error === 'INSUFFICIENT_SUPPLY') {
-    // Provider A specific error
+    // Error específico del Proveedor A
   } else if (e.code === 'ECONNREFUSED') {
-    // Provider A is down
+    // El Proveedor A está caído
   }
-  // Fall through to Provider B with different error patterns
+  // Cae al Proveedor B con diferentes patrones de error
 }
 ```
 
-MERX provides standardized respuesta de errors:
+MERX proporciona respuestas de error estandarizadas:
 
 ```typescript
 try {
   const order = await merx.createOrder({ /* ... */ });
 } catch (e) {
-  // Standard format regardless of underlying provider
-  console.error(e.code);    // e.g., 'INSUFFICIENT_SUPPLY'
-  console.error(e.message); // Human-readable description
-  console.error(e.details); // Additional context
+  // Formato estándar independientemente del proveedor subyacente
+  console.error(e.code);    // p.ej., 'INSUFFICIENT_SUPPLY'
+  console.error(e.message); // Descripción legible para humanos
+  console.error(e.details); // Contexto adicional
 }
 ```
 
-One formato de error. One set of codigo de errors. One manejo de errores strategy.
+Un formato de error. Un conjunto de códigos de error. Una estrategia de manejo de errores.
 
-## Side-by-Side Cost Resumen
+## Resumen de Costos Lado a Lado
 
-| Cost Category | Direct (7 providers) | MERX |
+| Categoría de Costo | Directo (7 proveedores) | MERX |
 |---|---|---|
-| Initial development | $14,700 - $28,700 | $600 - $1,150 |
-| Annual maintenance | $5,000 - $15,000 | ~$0 |
-| New provider integration | $2,100 - $4,100 each | $0 (automatic) |
-| Monitoring infrastructure | $2,000 - $4,000 | $0 (built in) |
-| Total Year 1 | $21,700 - $47,700 | $600 - $1,150 |
-| Total Year 2 | $26,700 - $62,700 | $600 - $1,150 |
-| Total Year 3 | $31,700 - $77,700 | $600 - $1,150 |
+| Desarrollo inicial | $14,700 - $28,700 | $600 - $1,150 |
+| Mantenimiento anual | $5,000 - $15,000 | ~$0 |
+| Integración de nuevo proveedor | $2,100 - $4,100 cada uno | $0 (automático) |
+| Infraestructura de monitoreo | $2,000 - $4,000 | $0 (incorporado) |
+| Total Año 1 | $21,700 - $47,700 | $600 - $1,150 |
+| Total Año 2 | $26,700 - $62,700 | $600 - $1,150 |
+| Total Año 3 | $31,700 - $77,700 | $600 - $1,150 |
 
-The cumulative cost difference over three years is stark. Direct integration costs 20-70 times more than the MERX approach.
+La diferencia de costo acumulativo en tres años es dramática. La integración directa cuesta 20-70 veces más que el enfoque MERX.
 
-## Conclusion
+## Conclusión
 
-Integrating with TRON proveedor de energias directly is a solvable engineering problem. Any competent development team can do it. The question is whether it is worth the cost.
+Integrar directamente con proveedores de energía TRON es un problema de ingeniería solucionable. Cualquier equipo de desarrollo competente puede hacerlo. La pregunta es si vale la pena el costo.
 
-For most teams, the answer is no. The time and money spent on direct integration could be invested in core product development. MERX abstracts the provider complexity behind a single, well-documented API with typed SDKs, tiempo real capabilities, and respaldo automatico.
+Para la mayoría de los equipos, la respuesta es no. El tiempo y dinero gastado en integración directa podrían invertirse en desarrollo de producto central. MERX abstrae la complejidad del proveedor detrás de una única API bien documentada con SDKs tipificados, capacidades en tiempo real y conmutación por error automática.
 
-The integration takes hours instead of weeks, the maintenance burden drops to near zero, and you get access to every provider in the market through a una sola clave de API.
+La integración toma horas en lugar de semanas, la carga de mantenimiento cae a casi cero, y obtienes acceso a cada proveedor en el mercado a través de una única clave API.
 
-Start with the documentation at [https://merx.exchange/docs](https://merx.exchange/docs) or explore the platform at [https://merx.exchange](https://merx.exchange).
+Comienza con la documentación en [https://merx.exchange/docs](https://merx.exchange/docs) o explora la plataforma en [https://merx.exchange](https://merx.exchange).
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Agrega MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -348,6 +349,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía TRON más barata ahora mismo?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,102 +1,102 @@
-# MERX ve PowerSun Karsilastirmasi: Agregator ve Tek Saglayici
+# MERX vs PowerSun: Toplayıcı vs Tek Sağlayıcı
 
-PowerSun has been a reliable name in the TRON energy rental space. It offers a straightforward model: fixed prices across ten duration tiers, predictable availability, and a simple API. MERX takes a different approach, operating as an aggregator that includes PowerSun among its seven connected providers. This article examines both platforms, compares their models, and clarifies when each makes sense.
+PowerSun, TRON enerji kiralama alanında güvenilir bir isim olmuştur. Basit bir model sunmaktadır: on süre katmanında sabit fiyatlar, öngörülebilir kullanılabilirlik ve basit bir API. MERX farklı bir yaklaşım benimser ve yedi bağlı sağlayıcı arasında PowerSun'ı da içeren bir toplayıcı olarak çalışır. Bu makale her iki platformu incelemekte, modellerini karşılaştırmakta ve her birinin ne zaman mantıklı olduğunu açıklamaktadır.
 
-## How PowerSun Works
+## PowerSun Nasıl Çalışır
 
-PowerSun is a fixed-price energy provider. Unlike P2P marketplaces where prices fluctuate based on seller listings, PowerSun sets its own rates. You pick a duration, specify the amount of energy you need, and pay the listed price. The model is simple and predictable.
+PowerSun sabit fiyatlı bir enerji sağlayıcısıdır. Fiyatların satıcı listelenmelerine göre dalgalandığı P2P pazarlarının aksine, PowerSun kendi oranlarını belirler. Bir süre seçersiniz, ihtiyaç duyduğunuz enerji miktarını belirtirsiniz ve listelenen fiyatı ödersiniz. Model basit ve öngörülebilirdir.
 
-### Duration Tiers
+### Süre Katmanları
 
-PowerSun offers ten duration options:
+PowerSun on süre seçeneği sunmaktadır:
 
-| Duration | Typical Use Case |
+| Süre | Tipik Kullanım Durumu |
 |---|---|
-| 5 minutes | Single transaction |
-| 10 minutes | Quick batch |
-| 30 minutes | Short session |
-| 1 hour | Standard operations |
-| 3 hours | Extended session |
-| 6 hours | Half-day operations |
-| 12 hours | Extended processing |
-| 1 day | Daily operations |
-| 3 days | Multi-day campaigns |
-| 14 days | Long-term needs |
+| 5 dakika | Tek işlem |
+| 10 dakika | Hızlı toplu işlem |
+| 30 dakika | Kısa oturum |
+| 1 saat | Standart işlemler |
+| 3 saat | Uzun oturum |
+| 6 saat | Yarım günlük işlemler |
+| 12 saat | Uzun işleme |
+| 1 gün | Günlük işlemler |
+| 3 gün | Çok günlük kampanyalar |
+| 14 gün | Uzun vadeli ihtiyaçlar |
 
-Each tier has a fixed price per unit of energy. Longer durations cost more per unit because the provider locks resources for a longer period. The pricing is transparent -- you know exactly what you will pay before placing an order.
+Her katmanın enerji birimi başına sabit bir fiyatı vardır. Daha uzun süreler, sağlayıcı kaynakları daha uzun süre kilitlediği için birim başına daha fazla maliyetlidir. Fiyatlandırma şeffaftır -- sipariş vermeden önce tam olarak ne kadar ödeyeceğinizi bilirsiniz.
 
-### PowerSun Strengths
+### PowerSun Güçlü Yönleri
 
-**Predictability.** Fixed pricing eliminates the guesswork. You can budget exactly, forecast costs for next month, and build those numbers into your product pricing.
+**Öngörülebilirlik.** Sabit fiyatlandırma tahmin belirsizliğini ortadan kaldırır. Tam olarak bütçe ayırabilir, gelecek ay için maliyetleri tahmin edebilir ve bu numaraları ürün fiyatlandırmanıza dahil edebilirsiniz.
 
-**Reliability.** PowerSun maintains its own infrastructure and energy supply. When the platform quotes availability, it generally delivers.
+**Güvenilirlik.** PowerSun kendi altyapısını ve enerji arzını yönetir. Platform kullanılabilirlik teklifi verdiğinde, genellikle bunu gerçekleştirir.
 
-**Simple integration.** The API is straightforward. Authenticate, check prices, place an order. No marketplace dynamics to navigate.
+**Basit entegrasyon.** API basittir. Kimlik doğrulaması yapın, fiyatları kontrol edin, sipariş verin. Gezinmesi gereken pazar dinamiği yoktur.
 
-**Multiple durations.** Ten tiers cover most use cases, from single transactions (5 minutes) to multi-week operations (14 days).
+**Çoklu süreler.** On katman, tek işlemlerden (5 dakika) çok haftalık işlemlere (14 gün) kadar çoğu kullanım durumunu kapsar.
 
-### PowerSun Limitations
+### PowerSun Sınırlamaları
 
-**Single source pricing.** You get PowerSun's price. It might be competitive, or it might not -- you have no visibility into what other providers charge without checking them separately.
+**Tek kaynak fiyatlandırması.** PowerSun'ın fiyatını alırsınız. Rekabetçi olabilir veya olmayabilir -- diğer sağlayıcıların ne talep ettiğini ayrıca kontrol etmeden görünürlüğe sahip değilsiniz.
 
-**No aggregation.** If PowerSun's price for your specific amount and duration is not the best on the market, you still pay it unless you manually check alternatives.
+**Toplayıcı yok.** PowerSun'ın belirli miktarınız ve süreniz için fiyatı pazardaki en iyi değilse, alternatiferi manuel olarak kontrol etmediğiniz sürece yine de bunu ödersiniz.
 
-**Fixed model inflexibility.** Fixed prices do not adjust to market conditions in real time. When the market softens and competitors drop prices, PowerSun's rates may lag behind.
+**Sabit model esnekliği yok.** Sabit fiyatlar gerçek zamanlı pazar koşullarına göre ayarlanmaz. Pazar yumuşak hale geldiğinde ve rakipler fiyatları düşürdüğünde, PowerSun'ın oranları geride kalabilir.
 
-## How MERX Approaches the Problem
+## MERX Soruna Nasıl Yaklaşır
 
-MERX is not a direct competitor to PowerSun in the traditional sense. MERX is an aggregator that includes PowerSun as one of its seven provider connections. When you place an order through MERX, the system queries PowerSun alongside TronSave, Feee, Catfee, Netts, iTRX, and Sohu, then routes your order to whichever provider offers the best price.
+MERX, geleneksel anlamda PowerSun'ın doğrudan rakibi değildir. MERX, yedi sağlayıcı bağlantısından birini PowerSun olarak içeren bir toplayıcıdır. MERX aracılığıyla sipariş verdiğinizde, sistem PowerSun'ı TronSave, Feee, Catfee, Netts, iTRX ve Sohu ile birlikte sorgular, ardından siparişinizi en iyi fiyat sunan sağlayıcıya yönlendirir.
 
-This means you always have access to PowerSun's rates -- but only when they are the best available option.
+Bu, PowerSun'ın oranlarına her zaman erişebileceğiniz anlamına gelir -- ancak yalnızca mevcut en iyi seçenek olduğunda.
 
-### How Aggregation Works in Practice
+### Uygulamada Toplayıcı Nasıl Çalışır
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// MERX queries all providers including PowerSun
+// MERX PowerSun dahil tüm sağlayıcıları sorgular
 const prices = await merx.getPrices({
   energy_amount: 100000,
   duration: '1h'
 });
 
-// See what each provider offers
+// Her sağlayıcının ne sunduğunu görün
 for (const offer of prices.providers) {
   console.log(`${offer.provider}: ${offer.price_sun} SUN`);
 }
 
-// The best price might be PowerSun, or it might be another provider
-console.log(`Best: ${prices.best.price_sun} SUN via ${prices.best.provider}`);
+// En iyi fiyat PowerSun olabilir veya başka bir sağlayıcı olabilir
+console.log(`En iyi: ${prices.best.price_sun} SUN, ${prices.best.provider} tarafından`);
 ```
 
-When PowerSun has the lowest rate for your specific request, MERX routes the order to PowerSun. When another provider undercuts PowerSun, MERX routes there instead. You always get the market-best price without managing multiple integrations.
+PowerSun'ın belirli talebiniz için en düşük oranı olduğunda, MERX siparişi PowerSun'a yönlendirir. Başka bir sağlayıcı PowerSun'ı geçip daha düşük fiyat sunduğunda, MERX ora yönlendirir. Birden çok entegrasyon yönetmeden her zaman pazar en iyi fiyatını alırsınız.
 
-## Feature Comparison
+## Özellik Karşılaştırması
 
-| Feature | PowerSun | MERX |
+| Özellik | PowerSun | MERX |
 |---|---|---|
-| Type | Fixed-price provider | Aggregator (7 providers) |
-| Pricing model | Fixed per duration tier | Best across all providers |
-| Includes PowerSun | -- | Yes |
-| Duration options | 10 tiers | Flexible (minutes to days) |
-| Price competitiveness | May or may not be best | Always market-best |
-| Exact energy simulation | No | Yes |
-| Standing orders | No | Yes |
-| Auto-energy | No | Yes |
-| WebSocket updates | No | Yes |
-| MCP for AI agents | No | Yes |
-| SDK | Basic | JS + Python |
-| Failover | No | Automatic |
+| Tür | Sabit fiyatlı sağlayıcı | Toplayıcı (7 sağlayıcı) |
+| Fiyatlandırma modeli | Süre başına sabit | Tüm sağlayıcılar arasında en iyi |
+| PowerSun'ı içerir | -- | Evet |
+| Süre seçenekleri | 10 katman | Esnek (dakika - günler) |
+| Fiyat rekabetçiliği | En iyi olabilir veya olmayabilir | Her zaman pazar en iyisi |
+| Tam enerji simülasyonu | Hayır | Evet |
+| Kalıcı siparişler | Hayır | Evet |
+| Otomatik enerji | Hayır | Evet |
+| WebSocket güncellemeleri | Hayır | Evet |
+| AI ajanları için MCP | Hayır | Evet |
+| SDK | Temel | JS + Python |
+| Yedek devre | Hayır | Otomatik |
 
-## Price Analysis
+## Fiyat Analizi
 
-Let us walk through a realistic comparison. You need 100,000 energy units for one hour.
+Gerçekçi bir karşılaştırmayı adım adım inceleyelim. 100.000 enerji birimine bir saat süreyle ihtiyacınız var.
 
-PowerSun quotes a fixed rate -- say, 32 SUN per unit. Your cost is fixed and known.
+PowerSun sabit bir oran sunmaktadır -- diyelim ki, birim başına 32 SUN. Maliyetiniz sabit ve bilinmektedir.
 
-Through MERX, the system queries all seven providers:
+MERX aracılığıyla, sistem tüm yedi sağlayıcıyı sorgular:
 
 - Sohu: 34 SUN
 - TronSave: 31 SUN
@@ -106,22 +106,22 @@ Through MERX, the system queries all seven providers:
 - Netts: 33 SUN
 - iTRX: 30 SUN
 
-MERX routes to Feee at 28 SUN. You save 4 SUN per unit -- a 12.5% reduction. On 100,000 energy units, that difference adds up.
+MERX, 28 SUN'da Feee'ye yönlendirir. Birim başına 4 SUN tasarruf edersiniz -- %12,5 indirim. 100.000 enerji biriminde, bu fark toplanır.
 
-Now consider the reverse scenario. PowerSun runs a promotional rate at 24 SUN while other providers sit at 28-35 SUN. MERX queries all providers, sees PowerSun's rate is the best, and routes the order to PowerSun. You get the promotional rate automatically without needing to know about it.
+Şimdi ters senaryoyu düşünün. PowerSun, diğer sağlayıcılar 28-35 SUN'da otururken promosyon oranında 24 SUN sunmaktadır. MERX tüm sağlayıcıları sorgular, PowerSun'ın oranının en iyi olduğunu görür ve siparişi PowerSun'a yönlendirir. Bunu bilmek zorunda kalmadan promosyon oranını otomatik olarak alırsınız.
 
-The point is not that PowerSun is always more expensive. The point is that an aggregator ensures you never overpay regardless of which provider happens to be cheapest at any given moment.
+Mesele PowerSun'ın her zaman daha pahalı olması değildir. Mesele, bir toplayıcının, hangi sağlayıcının herhangi bir zamanda en ucuz olduğundan bağımsız olarak, asla fazla ödeme yapmamanızı sağlamasıdır.
 
-## The Fixed Price Trade-off
+## Sabit Fiyat Değiş Tokuşu
 
-PowerSun's fixed pricing is both its strength and its limitation. Fixed prices enable budgeting and forecasting. You know your cost today, tomorrow, and next week (assuming rates stay stable).
+PowerSun'ın sabit fiyatlandırması hem güçlü yönü hem de sınırlamasıdır. Sabit fiyatlar bütçeleme ve tahmini sağlar. Maliyetinizi bugün, yarın ve gelecek hafta bileceğinizi bilirsiniz (oranların stabil kalıyor olması şartıyla).
 
-But the TRON energy market is not static. Prices shift based on network utilization, staking dynamics, and competitive pressure among providers. A fixed price that was competitive yesterday might be above market today.
+Ancak TRON enerji piyasası statik değildir. Fiyatlar ağ kullanım oranı, bahis dinamikleri ve sağlayıcılar arasında rekabete dayalı olarak değişir. Dün rekabetçi olan sabit bir fiyat bugün pazarın üstünde olabilir.
 
-MERX provides real-time price data through its API:
+MERX, API aracılığıyla gerçek zamanlı fiyat verisi sağlar:
 
 ```typescript
-// Track price movements across all providers
+// Tüm sağlayıcılar arasında fiyat hareketlerini izleyin
 const ws = merx.connectWebSocket();
 
 ws.on('price_update', (data) => {
@@ -129,14 +129,14 @@ ws.on('price_update', (data) => {
 });
 ```
 
-This real-time visibility lets you understand market dynamics. Even if you choose to use PowerSun directly for its predictability, knowing the broader market context helps you evaluate whether you are getting competitive rates.
+Bu gerçek zamanlı görünürlük, pazar dinamiklerini anlamanızı sağlar. PowerSun'ı doğrudan öngörülebilirliği için kullanmayı seçseniz bile, daha geniş pazar bağlamını bilmek, rekabetçi oranlar alıp almadığınızı değerlendirmenize yardımcı olur.
 
-## Standing Orders and Automation
+## Kalıcı Siparişler ve Otomasyon
 
-One capability MERX offers that has no equivalent in PowerSun is standing orders. These are conditional orders that execute automatically when market conditions meet your criteria.
+MERX'in sunduğu ve PowerSun'da eşdeğeri olmayan bir yetenek kalıcı siparişlerdir. Bunlar pazar koşulları kriterlerinizi karşıladığında otomatik olarak yürütülen koşullu siparişlerdir.
 
 ```typescript
-// Buy energy when any provider drops below 25 SUN
+// Herhangi bir sağlayıcı 25 SUN'ın altına düştüğünde enerji satın alın
 const standing = await merx.createStandingOrder({
   energy_amount: 100000,
   max_price_sun: 25,
@@ -146,46 +146,46 @@ const standing = await merx.createStandingOrder({
 });
 ```
 
-This feature is particularly relevant for cost-conscious operators. Rather than accepting the current rate -- whether from PowerSun or any other provider -- you define the price you are willing to pay and let the system execute when the market reaches that level.
+Bu özellik, maliyet bilinci olan operatörler için özellikle alakalıdır. Mevcut oranı kabul etmek yerine -- PowerSun'dan olsun ya da başka bir sağlayıcıdan -- ödemeye istekli olduğunuz fiyatı tanımlar ve piyasa o seviyeye ulaştığında sistem yürütülmesini sağlarsınız.
 
-For operations that are not time-critical (batch processing, scheduled distributions, periodic maintenance), standing orders can significantly reduce average energy costs by capturing price dips automatically.
+Zaman krizi olmayan işlemler için (toplu işleme, zamanlanmış dağıtımlar, periyodik bakım), kalıcı siparişler fiyat düşüşlerini otomatik olarak yakalayarak ortalama enerji maliyetlerini önemli ölçüde düşürebilir.
 
-## Reliability and Failover
+## Güvenilirlik ve Yedek Devre
 
-PowerSun is generally reliable, but no single provider guarantees 100% uptime. API maintenance, supply constraints, and infrastructure issues affect every provider periodically.
+PowerSun genellikle güvenilirdir, ancak hiçbir tek sağlayıcı %100 çalışma süresi garantisi vermez. API bakımı, arz kısıtlamaları ve altyapı sorunları her sağlayıcıyı periyodik olarak etkiler.
 
-When you depend solely on PowerSun and it experiences an outage, your operations stop. You need to detect the failure, switch to an alternative provider, handle the different API format, and manage the transition -- all while your transactions wait.
+Yalnızca PowerSun'a bağımlı olduğunuzda ve kesintiye uğradığında, işlemleriniz durmaktadır. Hatasız algılaması, alternatif bir sağlayıcıya geçiş, farklı API biçimini yönetme ve geçişi idare etme gerekmektedir -- ve hepsi işlemleriniz beklerken gerçekleşir.
 
-MERX handles this automatically. If PowerSun is unavailable, orders route to the next cheapest provider. If that provider is also down, the system continues down the list. Your application code never changes:
+MERX bunu otomatik olarak yönetir. PowerSun kullanılamadığında, siparişler bir sonraki en ucuz sağlayıcıya yönlendirilir. Bu sağlayıcı da kapalıysa, sistem listeyi devam ettirir. Uygulama kodunuz asla değişmez:
 
 ```typescript
-// This code works regardless of which provider is available
+// Bu kod, hangi sağlayıcı kullanılabilir olduğundan bağımsız olarak çalışır
 const order = await merx.createOrder({
   energy_amount: 65000,
   duration: '1h',
   target_address: 'TRecipientAddress...'
 });
-// order.provider tells you who filled it
+// order.provider size onu kimin doldurduğunu söyler
 ```
 
-The failover is transparent. Your logs show which provider filled each order, but your application logic does not need to handle provider-specific error cases.
+Yedek devre şeffaftır. Günlükleri hangi sağlayıcının her siparişi doldurduğunu gösterir, ancak uygulama mantığınız sağlayıcıya özgü hata durumlarını yönetmek zorunda değildir.
 
-## Developer Experience
+## Geliştirici Deneyimi
 
-PowerSun offers a basic API that handles energy purchases. It works, and for simple use cases, simplicity is an advantage.
+PowerSun enerji satın almalarını yönetir temel bir API sunar. Çalışır ve basit kullanım durumları için, basitlik bir avantajdır.
 
-MERX provides a more comprehensive developer toolkit:
+MERX daha kapsamlı bir geliştirici araç seti sağlar:
 
-- **Typed SDKs** for JavaScript and Python with full IDE support
-- **WebSocket connections** for real-time price and order updates
-- **Webhooks** for asynchronous notifications
-- **MCP server** at [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) for AI agent integration
-- **Exact energy simulation** using triggerConstantContract for precise estimates
+- **Yazılı SDK'lar** tam IDE desteği ile JavaScript ve Python için
+- **WebSocket bağlantıları** gerçek zamanlı fiyat ve sipariş güncellemeleri için
+- **Web kancaları** asenkron bildirimler için
+- **MCP sunucusu** [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) adresinde AI ajan entegrasyonu için
+- **Tam enerji simülasyonu** kesin tahminler için triggerConstantContract kullanarak
 
-The exact simulation capability deserves special mention. Rather than guessing or using hardcoded energy estimates, MERX can simulate your specific transaction against the TRON network and tell you exactly how much energy it will consume. This eliminates the common problem of over-purchasing or under-purchasing energy.
+Tam simülasyon yeteneği özel bahis almayı hak etmektedir. Tahminde bulunmak veya sabit kodlanmış enerji tahminleri kullanmak yerine, MERX belirli işleminizi TRON ağına karşı simüle edebilir ve tam olarak ne kadar enerji tüketeceklerini söyleyebilir. Bu, enerji aşırı satın alma veya yetersiz satın alma ortak sorununu ortadan kaldırır.
 
 ```typescript
-// Know exactly how much energy your transaction needs
+// İşleminizin tam olarak ne kadar enerji gerektirdiğini öğrenin
 const estimate = await merx.estimateEnergy({
   contract_address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', // USDT
   function_selector: 'transfer(address,uint256)',
@@ -193,42 +193,43 @@ const estimate = await merx.estimateEnergy({
   owner_address: senderAddress
 });
 
-console.log(`Exact energy needed: ${estimate.energy_required}`);
+console.log(`Tam gereken enerji: ${estimate.energy_required}`);
 ```
 
-## When PowerSun Alone Makes Sense
+## Yalnızca PowerSun'ın Anlamlı Olması Durumları
 
-**Budget predictability is paramount.** If your organization requires exact cost forecasting and the convenience of fixed rates outweighs potential savings from market-rate purchasing, PowerSun's model delivers that predictability.
+**Bütçe öngörülebilirliği en önemlidir.** Kuruluşunuz tam maliyet tahmini gerektiriyorsa ve sabit oranların rahatlığı pazar oranı satın almadan kaynaklanabilecek tasarruflardan daha ağır basıyorsa, PowerSun'ın modeli o öngörülebilirliği sunar.
 
-**Existing deep integration.** If your systems are deeply integrated with PowerSun's API and everything works reliably, the marginal savings from aggregation may not justify the integration effort -- though MERX's SDK makes switching straightforward.
+**Mevcut derin entegrasyon.** Sistemleriniz PowerSun'ın API'sine derin şekilde entegre ise ve her şey güvenilir şekilde çalışıyorsa, toplayıcıdan kaynaklanan marjinal tasarruflar entegrasyon çabasını haklı çıkarmayabilir -- ancak MERX'in SDK'sı geçişi basit hale getirir.
 
-**Simple use case.** If you make occasional energy purchases manually and do not need automation, standing orders, or real-time price tracking, PowerSun's direct interface might be sufficient.
+**Basit kullanım durumu.** Ara sıra enerji satın almalarını manuel olarak yapıyorsanız ve otomasyon, kalıcı siparişler veya gerçek zamanlı fiyat izlemesine ihtiyacınız yoksa, PowerSun'ın doğrudan arayüzü yeterli olabilir.
 
-## When MERX Makes More Sense
+## MERX'in Daha Mantıklı Olması Durumları
 
-**Cost optimization.** If you want the lowest available rate every time, aggregation provides a structural advantage over any single provider.
+**Maliyet optimizasyonu.** Her seferinde mevcut en düşük oranı istiyorsanız, toplayıcılık herhangi bir tek sağlayıcıya göre yapısal bir avantaj sağlar.
 
-**Automated systems.** If your application sends transactions programmatically, MERX's SDK, webhooks, and WebSocket support are built for that workflow.
+**Otomatikleştirilmiş sistemler.** Uygulamanız programlı olarak işlem gönderiyorsa, MERX'in SDK'sı, web kancaları ve WebSocket desteği bu iş akışı için yerleşiktir.
 
-**Scale.** As transaction volume grows, the per-unit savings from aggregation compound. A few SUN per unit across millions of energy units represents meaningful cost reduction.
+**Ölçek.** İşlem hacmi arttıkça, toplayıcıdan kaynaklanan birim başına tasarruflar bileşik hale gelir. Milyonlarca enerji biriminde birim başına birkaç SUN, anlamlı bir maliyet düşüşünü temsil eder.
 
-**Reliability.** If your operations cannot tolerate provider downtime, multi-provider failover is essential.
+**Güvenilirlik.** İşlemleriniz sağlayıcı kapalı kalma süresini tolere edemiyorsa, çok sağlayıcı yedek devre gereklidir.
 
-**Advanced features.** Standing orders, exact simulation, auto-energy, and AI agent integration are capabilities that extend beyond basic energy purchasing.
+**Gelişmiş özellikler.** Kalıcı siparişler, tam simülasyon, otomatik enerji ve AI ajan entegrasyonu, temel enerji satın almayı aşan yeteneklerdir.
 
-## Sonuc
+## Sonuç
 
-PowerSun is a solid, reliable energy provider with a clear pricing model. It does one thing well: sell energy at fixed rates across multiple duration tiers.
+PowerSun, net bir fiyatlandırma modeline sahip katı ve güvenilir bir enerji sağlayıcısıdır. Bir şeyi iyi yapar: birden çok süre katmanında sabit oranlarda enerji satmak.
 
-MERX operates at a different level. By aggregating PowerSun alongside six other providers, it ensures you get PowerSun's rates when they are the best -- and better rates when another provider undercuts them. The aggregation model adds failover, real-time price comparison, standing orders, and developer tools that a single provider cannot offer.
+MERX, farklı bir seviyede çalışır. PowerSun'ı altı diğer sağlayıcı yanında toplayarak, PowerSun'ın oranlarını en iyi olduğunda aldığınızı -- ve başka bir sağlayıcı bunları geçtiğinde daha iyi oranları aldığınızı sağlar. Toplayıcı model yedek devreyi, gerçek zamanlı fiyat karşılaştırmasını, kalıcı siparişleri ve tek bir sağlayıcının sunabileceklerinin ötesinde geliştirici araçlarını ekler.
 
-For most developers and businesses operating on TRON, the aggregator model provides better pricing, higher reliability, and more powerful tooling. PowerSun's supply remains available through MERX, so choosing the aggregator does not mean losing access to PowerSun -- it means gaining access to everything else alongside it.
+TRON'da çalışan çoğu geliştirici ve işletme için toplayıcı model daha iyi fiyatlandırma, daha yüksek güvenilirlik ve daha güçlü araçlar sağlar. PowerSun'ın arzı MERX aracılığıyla kullanılabilir kalır, bu nedenle toplayıcıyı seçmek PowerSun'a erişimi kaybetmek anlamına gelmez -- bu, bunun yanında her şeye erişim kazanmak anlamına gelir.
 
-Start exploring at [https://merx.exchange](https://merx.exchange) or review the API documentation at [https://merx.exchange/docs](https://merx.exchange/docs).
+[https://merx.exchange](https://merx.exchange) adresinde keşfetmeye başlayın veya API belgelerini [https://merx.exchange/docs](https://merx.exchange/docs) adresinde gözden geçirin.
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır kurulum, salt okunur araçlar için API anahtarı gerekli değildir:
 
 ```json
 {
@@ -240,6 +241,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

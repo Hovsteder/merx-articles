@@ -1,38 +1,38 @@
-# Высокочастотные операции TRON: руководство по стратегии energy
+# Высокочастотные операции на TRON: Руководство по стратегии управления энергией
 
-When your TRON application sends more than 100 transactions per day, energy management shifts from a cost optimization to a core operational concern. At this volume, ad hoc energy purchasing -- buying energy per transaction as needed -- introduces latency, increases per-unit costs, and creates failure points that can halt your pipeline.
+Когда ваше приложение на TRON отправляет более 100 транзакций в день, управление энергией перестает быть оптимизацией затрат и становится главной операционной задачей. При таком объеме ad hoc закупки энергии -- покупка энергии по мере необходимости для каждой транзакции -- вводит задержки, повышает цену за единицу и создает точки отказа, которые могут остановить ваш процесс.
 
-This guide covers energy strategies specifically designed for high-frequency TRON operations: duration optimization, standing orders for price triggers, budget planning, and architectural patterns that keep costs low while maintaining throughput.
+Это руководство охватывает стратегии управления энергией, специально разработанные для высокочастотных операций на TRON: оптимизация длительности, постоянные ордера для срабатывания по цене, планирование бюджета и архитектурные паттерны, которые поддерживают низкие затраты при сохранении пропускной способности.
 
-## The High-Frequency Problem
+## Проблема высокочастотных операций
 
-At 100+ transactions per day, several issues compound:
+При 100+ транзакциях в день несколько проблем накапливаются:
 
-**Latency accumulates.** If each energy purchase takes 3-5 seconds, and you buy per transaction, you add 5-8 minutes of total delay per day at 100 TX. At 1,000 TX/day, that is nearly an hour of waiting for energy.
+**Задержки накапливаются.** Если каждая закупка энергии занимает 3-5 секунд, а вы покупаете энергию для каждой транзакции, вы добавляете 5-8 минут общей задержки в день при 100 TX. При 1 000 TX/день это почти час ожидания энергии.
 
-**API rate limits matter.** Making individual price queries and order placements for each transaction can hit provider rate limits. MERX handles this more gracefully than direct provider APIs, but unnecessary API calls are still waste.
+**Лимиты API имеют значение.** Выполнение отдельных запросов цены и размещение ордеров для каждой транзакции могут достичь лимитов провайдера. MERX справляется с этим более элегантно, чем прямые API провайдеров, но ненужные вызовы API все еще являются потерей.
 
-**Price volatility exposure increases.** Each individual purchase is a separate price event. If prices spike briefly, more of your transactions get caught at the higher rate.
+**Растет подверженность волатильности цены.** Каждая отдельная покупка -- это отдельный ценовой момент. Если цены кратко скачут вверх, больше ваших транзакций попадает по более высокому курсу.
 
-**Per-transaction overhead.** The fixed cost of an API call, order processing, and delegation mechanics means buying 65,000 energy 100 times costs more than buying 6,500,000 energy once -- even at the same per-unit rate.
+**Накладные расходы за транзакцию.** Фиксированная стоимость вызова API, обработки ордера и механики делегирования означает, что покупка 65 000 энергии 100 раз стоит дороже, чем покупка 6 500 000 энергии один раз -- даже при одинаковой цене за единицу.
 
-## Duration Optimization
+## Оптимизация длительности
 
-The most impactful strategy for high-frequency operations is choosing the right energy duration. MERX supports durations from 5 minutes to 14 days, and the choice dramatically affects both cost and operational patterns.
+Наиболее эффективная стратегия для высокочастотных операций -- выбрать правильную длительность энергии. MERX поддерживает длительности от 5 минут до 14 дней, и этот выбор кардинально влияет как на стоимость, так и на операционные паттерны.
 
-### Short Durations (5m - 30m)
+### Короткие длительности (5м - 30м)
 
-**Best for:** Burst operations, single transactions, testing
+**Лучше всего для:** Импульсивные операции, отдельные транзакции, тестирование
 
-Short durations cost the least per unit of energy because the provider locks resources for a minimal period. However, for high-frequency operations, the overhead of repeatedly purchasing short-duration energy negates the per-unit savings.
+Короткие длительности стоят дешевле всего за единицу энергии, потому что провайдер блокирует ресурсы на минимальный период. Однако для высокочастотных операций накладные расходы на повторное изнесение короткой энергии аннулируют экономию за единицу.
 
-If you need 65,000 energy per transaction and send 100 transactions over 8 hours, buying 5-minute energy 100 times means 100 API calls, 100 order processing cycles, and 100 delegation operations. The overhead costs more than the per-unit savings.
+Если вам нужна 65 000 энергии за транзакцию и вы отправляете 100 транзакций за 8 часов, покупка 5-минутной энергии 100 раз означает 100 вызовов API, 100 циклов обработки ордеров и 100 операций делегирования. Накладные расходы стоят больше, чем экономия за единицу.
 
-### Medium Durations (1h - 6h)
+### Средние длительности (1ч - 6ч)
 
-**Best for:** Steady operational windows, shift-based processing
+**Лучше всего для:** Стабильные операционные окна, обработка на смену
 
-Medium durations provide the best balance for most high-frequency use cases. Buy enough energy for your expected transaction volume over the next 1-6 hours in a single purchase.
+Средние длительности обеспечивают лучший баланс для большинства высокочастотных случаев использования. Купите достаточно энергии для ожидаемого объема транзакций на следующие 1-6 часов в одной покупке.
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -58,13 +58,13 @@ console.log(
 );
 ```
 
-One purchase, one API call, one delegation -- covering 200 transactions.
+Одна покупка, один вызов API, одна делегирование -- охватывает 200 транзакций.
 
-### Long Durations (1d - 14d)
+### Длительные длительности (1д - 14д)
 
-**Best for:** Continuous operations, predictable daily volume
+**Лучше всего для:** Непрерывные операции, предсказуемый ежедневный объем
 
-For systems that run continuously (payment processors, automated trading bots, distribution services), daily or multi-day energy purchases simplify operations further.
+Для систем, которые работают непрерывно (процессоры платежей, автоматизированные торговые боты, сервисы распределения), ежедневные или многодневные закупки энергии упрощают операции еще больше.
 
 ```typescript
 // Daily energy purchase for a payment processor
@@ -80,23 +80,23 @@ const order = await merx.createOrder({
 });
 ```
 
-The trade-off is that longer durations cost more per unit. A provider locking 32.5 million energy for 24 hours charges a premium over locking it for 1 hour. However, the reduced operational overhead and guaranteed availability for the full period often justify the premium.
+Компромисс заключается в том, что более длительные длительности стоят дороже за единицу. Провайдер, блокирующий 32,5 миллиона энергии на 24 часа, берет премию по сравнению с блокировкой на 1 час. Однако сниженные операционные накладные расходы и гарантированная доступность в течение всего периода часто оправдывают премию.
 
-### Duration Cost Analysis
+### Анализ стоимости длительности
 
-| Duration | Relative Cost/Unit | API Calls (100 TX) | Complexity |
+| Длительность | Относительная стоимость/единица | Вызовы API (100 TX) | Сложность |
 |---|---|---|---|
-| 5 min | 1.0x (baseline) | 100 | High |
-| 1 hour | 1.1-1.3x | 5-8 | Low |
-| 6 hours | 1.3-1.5x | 1-2 | Minimal |
-| 1 day | 1.5-2.0x | 1 | Minimal |
-| 14 days | 2.0-3.0x | 1 per 2 weeks | Minimal |
+| 5 мин | 1.0x (базовая) | 100 | Высокая |
+| 1 час | 1.1-1.3x | 5-8 | Низкая |
+| 6 часов | 1.3-1.5x | 1-2 | Минимальная |
+| 1 день | 1.5-2.0x | 1 | Минимальная |
+| 14 дней | 2.0-3.0x | 1 на 2 недели | Минимальная |
 
-For 100+ TX/day, the 1-hour or 6-hour duration tiers typically provide the best cost-to-complexity ratio.
+Для 100+ TX/день уровни длительности в 1 час или 6 часов обычно обеспечивают лучшее соотношение стоимости и сложности.
 
-## Standing Orders for Price Optimization
+## Постоянные ордера для оптимизации цены
 
-High-frequency operators have a unique advantage: flexibility in timing. If your system processes transactions in batches rather than real-time, you can use standing orders to buy energy only when prices drop below your target.
+Высокочастотные операторы имеют уникальное преимущество: гибкость во времени. Если ваша система обрабатывает транзакции пакетами, а не в реальном времени, вы можете использовать постоянные ордера для покупки энергии только когда цены упадут ниже вашей целевой цены.
 
 ```typescript
 // Standing order: buy 10M energy when price drops below 24 SUN
@@ -109,22 +109,22 @@ const standing = await merx.createStandingOrder({
 });
 ```
 
-### How Standing Orders Work at Scale
+### Как работают постоянные ордера в большом масштабе
 
-MERX monitors prices across all seven providers continuously. When any provider's rate for your specified amount and duration drops to or below your `max_price_sun`, the order executes automatically.
+MERX постоянно контролирует цены у всех семи провайдеров. Когда курс любого провайдера для вашего указанного количества и длительности упадет до или ниже вашего `max_price_sun`, ордер выполняется автоматически.
 
-For high-frequency operators, this creates a pattern:
+Для высокочастотных операторов это создает паттерн:
 
-1. Set a standing order at your target price
-2. When price dips, energy is automatically purchased
-3. Use the purchased energy for operations over the duration window
-4. The standing order resets and waits for the next price dip
+1. Установите постоянный ордер по вашей целевой цене
+2. Когда цена падает, энергия автоматически закупается
+3. Используйте закупленную энергию для операций в течение окна длительности
+4. Постоянный ордер сбрасывается и ожидает следующего падения цены
 
-This approach captures intraday price fluctuations that manual purchasing cannot. Energy prices on TRON follow daily patterns -- typically lower during off-peak hours in major time zones. Standing orders exploit these patterns automatically.
+Этот подход захватывает внутридневные колебания цены, которые ручная покупка не может захватить. Цены энергии на TRON следуют дневным паттернам -- обычно ниже в непиковые часы в основных часовых поясах. Постоянные ордера эксплуатируют эти паттерны автоматически.
 
-### Price Target Strategy
+### Стратегия целевой цены
 
-Setting the right `max_price_sun` requires balancing cost savings against fill probability:
+Установление правильного `max_price_sun` требует баланса между экономией затрат и вероятностью заполнения:
 
 ```typescript
 // Analyze recent price history to set targets
@@ -142,17 +142,17 @@ console.log(`10th percentile: ${analysis.p10_sun} SUN`);
 // Lower target = cheaper but less frequent fills
 ```
 
-**Aggressive (10th percentile):** Lowest cost, but fills infrequently. Works when you have flexible timing and existing energy reserves.
+**Агрессивная (10-й перцентиль):** Самая низкая стоимость, но заполняется редко. Работает, когда у вас гибкое время и существующие резервы энергии.
 
-**Moderate (25th percentile):** Good balance. Fills often enough to maintain operations while capturing below-average prices.
+**Умеренная (25-й перцентиль):** Хороший баланс. Заполняется достаточно часто для поддержания операций, захватывая цены ниже среднего.
 
-**Conservative (median):** Fills quickly but offers only modest savings over market rate.
+**Консервативная (медиана):** Заполняется быстро, но предлагает только скромную экономию по сравнению с рыночной ставкой.
 
-## Budget Planning
+## Планирование бюджета
 
-For organizations, energy spend needs to be predictable and budgetable. Here is a framework for planning high-frequency energy costs.
+Для организаций расходы на энергию должны быть предсказуемыми и включаемыми в бюджет. Вот фреймворк для планирования затрат на энергию в высокочастотных операциях.
 
-### Monthly Budget Calculation
+### Расчет ежемесячного бюджета
 
 ```typescript
 interface EnergyBudget {
@@ -208,9 +208,9 @@ const budget = calculateMonthlyBudget({
 // Savings: $21,078 (87.4%)
 ```
 
-### Budget Monitoring
+### Мониторинг бюджета
 
-Track actual spend against budget in real time:
+Отслеживайте фактические расходы в сравнении с бюджетом в реальном времени:
 
 ```typescript
 class BudgetMonitor {
@@ -249,11 +249,11 @@ class BudgetMonitor {
 }
 ```
 
-## Architectural Patterns for High Frequency
+## Архитектурные паттерны для высокочастотных операций
 
-### Pattern 1: Energy Pool
+### Паттерн 1: Пул энергии
 
-Maintain a pre-purchased energy reserve and replenish it before it depletes:
+Поддерживайте заранее закупленный резерв энергии и пополняйте его до того, как он истощится:
 
 ```typescript
 class EnergyPool {
@@ -304,9 +304,9 @@ const pool = new EnergyPool({
 setInterval(() => pool.checkAndReplenish(), 60000);
 ```
 
-### Pattern 2: Auto-Energy with MERX
+### Паттерн 2: Автоматическая энергия с MERX
 
-For the simplest high-frequency setup, use MERX auto-energy:
+Для простейшей высокочастотной настройки используйте автоматическую энергию MERX:
 
 ```typescript
 // Configure once
@@ -325,11 +325,11 @@ for (const tx of pendingTransactions) {
 }
 ```
 
-Auto-energy shifts energy management from your application code to the MERX platform. Your application sends transactions without any energy awareness.
+Автоматическая энергия переносит управление энергией из кода вашего приложения на платформу MERX. Ваше приложение отправляет транзакции без какого-либо осознания энергии.
 
-### Pattern 3: Scheduled Batch Purchasing
+### Паттерн 3: Планомерная пакетная закупка
 
-For operations with predictable daily schedules:
+Для операций с предсказуемыми дневными расписаниями:
 
 ```typescript
 // Purchase energy at the start of each operating window
@@ -353,17 +353,17 @@ async function dailyEnergySetup(): Promise<void> {
 // Run via cron at 07:55 daily
 ```
 
-## Monitoring and Optimization
+## Мониторинг и оптимизация
 
-### Key Metrics to Track
+### Ключевые метрики для отслеживания
 
-For high-frequency operations, monitor these metrics:
+Для высокочастотных операций отслеживайте эти метрики:
 
-1. **Average price paid per unit** -- Is it trending up or down?
-2. **Fill rate** -- What percentage of orders fill successfully?
-3. **Energy utilization** -- What percentage of purchased energy is actually used?
-4. **Burn events** -- How often do transactions burn TRX (indicating energy gaps)?
-5. **Provider distribution** -- Which providers fill your orders most often?
+1. **Средняя цена, уплаченная за единицу** -- она растет или падает?
+2. **Уровень заполнения** -- какой процент ордеров заполняется успешно?
+3. **Использование энергии** -- какой процент закупленной энергии фактически используется?
+4. **События сжигания** -- как часто транзакции сжигают TRX (указывая на пробелы энергии)?
+5. **Распределение провайдера** -- какие провайдеры заполняют ваши ордера чаще всего?
 
 ```typescript
 interface OperationalMetrics {
@@ -403,31 +403,32 @@ function analyzeMetrics(
 }
 ```
 
-### Optimizing Utilization
+### Оптимизация использования
 
-Low utilization (buying more energy than you use) wastes money. High-frequency operators should aim for 85-95% utilization:
+Низкое использование (покупка большего количества энергии, чем вы используете) тратит деньги впустую. Высокочастотные операторы должны стремиться к 85-95% использованию:
 
-- **Below 80%:** You are over-purchasing. Reduce the energy amount or shorten the duration.
-- **85-95%:** Optimal range. Small buffer for variability.
-- **Above 98%:** You are cutting it too close. Some transactions may burn TRX due to insufficient energy. Increase the buffer slightly.
+- **Ниже 80%:** Вы перекупаетесь. Уменьшите количество энергии или сократите длительность.
+- **85-95%:** Оптимальный диапазон. Небольшой буфер для изменчивости.
+- **Выше 98%:** Вы режете слишком близко. Некоторые транзакции могут сжечь TRX из-за недостаточной энергии. Увеличьте буфер немного.
 
 ## Заключение
 
-High-frequency TRON operations require a fundamentally different approach to energy management than occasional transactions. The key principles:
+Высокочастотные операции на TRON требуют принципиально другого подхода к управлению энергией, чем случайные транзакции. Ключевые принципы:
 
-1. **Buy in bulk, not per transaction.** Reduce API overhead and capture better rates.
-2. **Match duration to your operating window.** Do not pay for 24 hours of energy if you process transactions over 4 hours.
-3. **Use standing orders for price optimization.** Let the system capture price dips automatically.
-4. **Monitor utilization.** Buy enough to avoid TRX burns but not so much that energy goes unused.
-5. **Budget proactively.** Use historical data and price analysis to forecast costs.
+1. **Покупайте оптом, а не за транзакцию.** Уменьшите накладные расходы API и захватите лучшие курсы.
+2. **Согласуйте длительность с вашим операционным окном.** Не платите за 24 часа энергии, если вы обрабатываете транзакции за 4 часа.
+3. **Используйте постоянные ордера для оптимизации цены.** Позвольте системе автоматически захватывать падения цены.
+4. **Мониторьте использование.** Купите достаточно, чтобы избежать сжигания TRX, но не столько, чтобы энергия не использовалась.
+5. **Планируйте бюджет заранее.** Используйте исторические данные и анализ цены для прогнозирования затрат.
 
-For systems processing 100+ transactions daily, the difference between ad hoc energy purchasing and an optimized strategy can exceed $10,000 per month. The engineering investment to implement these patterns is measured in days; the return is measured in months of savings.
+Для систем, обрабатывающих 100+ транзакций в день, разница между ad hoc закупкой энергии и оптимизированной стратегией может превысить 10 000 долларов в месяц. Инженерные инвестиции для внедрения этих паттернов измеряются днями; отдача измеряется месяцами сбережений.
 
-Explore MERX's high-frequency capabilities at [https://merx.exchange/docs](https://merx.exchange/docs) or start at [https://merx.exchange](https://merx.exchange).
+Изучите возможности высокочастотных операций MERX на [https://merx.exchange/docs](https://merx.exchange/docs) или начните с [https://merx.exchange](https://merx.exchange).
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой совместимый с MCP клиент -- без установки, без API ключа для инструментов только для чтения:
 
 ```json
 {
@@ -439,6 +440,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Попросите вашего AI агента: "What is the cheapest TRON energy right now?" и получите живые цены от всех подключенных провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

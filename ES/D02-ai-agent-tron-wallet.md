@@ -1,36 +1,36 @@
-# Dele a su agente de IA una billetera TRON
+# Dale a Tu Agente de IA una Billetera TRON
 
-## Why AI Agents Need On-Chain Access
+## Por Qué los Agentes de IA Necesitan Acceso On-Chain
 
-The conversation about AI agents has moved beyond chatbots and code assistants. The next frontier is agents that can act autonomously on blockchain networks - checking balances, sending transactions, buying resources, and managing portfolios without human intervention at every step.
+La conversación sobre agentes de IA ha evolucionado más allá de chatbots y asistentes de código. La siguiente frontera son agentes que puedan actuar de forma autónoma en redes blockchain - verificando saldos, enviando transacciones, comprando recursos y gestionando carteras sin intervención humana en cada paso.
 
-TRON is the backbone of stablecoin transfers. Over 50 billion USDT moves on TRON daily, and the network's modelo de recursos - energy and bandwidth instead of gas fees - makes it uniquely suited for high-frequency, low-cost operations. But connecting an AI agent to TRON has historically required building custom integrations, managing RPC endpoints, handling resource estimation, and dealing with the complexities of TronWeb.
+TRON es la columna vertebral de las transferencias de stablecoins. Más de 50 mil millones de USDT se mueven en TRON diariamente, y el modelo de recursos de la red - energy y bandwidth en lugar de gas fees - la hace singularmente adecuada para operaciones de alta frecuencia y bajo costo. Pero conectar un agente de IA a TRON históricamente ha requerido construir integraciones personalizadas, gestionar endpoints RPC, manejar estimaciones de recursos y lidiar con las complejidades de TronWeb.
 
-MERX solves this with a single MCP server that gives any compatible AI agent - Claude, Cursor, or any Model Context Protocol client - a full-featured TRON wallet and resource exchange in one integration.
+MERX resuelve esto con un único servidor MCP que le da a cualquier agente de IA compatible - Claude, Cursor, o cualquier cliente Model Context Protocol - una billetera TRON completa y un intercambio de recursos en una sola integración.
 
-This article walks through the setup, from zero to an autonomous agent that holds keys, checks balances, and buys energy on TRON mainnet.
+Este artículo te guía a través de la configuración, desde cero hasta un agente autónomo que posee claves, verifica saldos y compra energy en la mainnet de TRON.
 
-## What Is MCP and Why It Matters
+## Qué Es MCP y Por Qué Importa
 
-The Model Context Protocol (MCP) is an open standard created by Anthropic that lets AI models interact with external tools, data sources, and services through a unified interface. Think of it as a USB port for AI - any MCP-compatible client can connect to any MCP server without custom integration code.
+El Model Context Protocol (MCP) es un estándar abierto creado por Anthropic que permite a los modelos de IA interactuar con herramientas externas, fuentes de datos y servicios a través de una interfaz unificada. Piénsalo como un puerto USB para IA - cualquier cliente compatible con MCP puede conectarse a cualquier servidor MCP sin código de integración personalizada.
 
-An MCP server exposes three primitives:
+Un servidor MCP expone tres primitivos:
 
-- **Tools** - actions the agent can take (send TRX, buy energy, execute a swap)
-- **Prompts** - pre-built templates that guide the agent through complex workflows
-- **Resources** - structured data the agent can read (flujo de precioss, network parameters, account state)
+- **Tools** - acciones que el agente puede realizar (enviar TRX, comprar energy, ejecutar un swap)
+- **Prompts** - plantillas preconstruidas que guían al agente a través de flujos complejos
+- **Resources** - datos estructurados que el agente puede leer (feeds de precios, parámetros de la red, estado de la cuenta)
 
-MERX implements all three primitives with 21 tools, 30 prompts, and 21 resources. No other blockchain MCP server offers this level of coverage.
+MERX implementa los tres primitivos con 21 tools, 30 prompts y 21 resources. Ningún otro servidor blockchain MCP ofrece este nivel de cobertura.
 
-## Installation
+## Instalación
 
-The MERX MCP server is published as a standard npm package. Install it globally or use npx to run it directly:
+El servidor MERX MCP se publica como un paquete npm estándar. Instálalo globalmente o usa npx para ejecutarlo directamente:
 
 ```bash
 npm install -g merx-mcp
 ```
 
-Or add it to your MCP client configuration. For Claude Desktop, edit `claude_desktop_config.json`:
+O agrégalo a la configuración de tu cliente MCP. Para Claude Desktop, edita `claude_desktop_config.json`:
 
 ```json
 {
@@ -46,7 +46,7 @@ Or add it to your MCP client configuration. For Claude Desktop, edit `claude_des
 }
 ```
 
-For Cursor, the configuration goes into your project's `.cursor/mcp.json`:
+Para Cursor, la configuración va en el `.cursor/mcp.json` de tu proyecto:
 
 ```json
 {
@@ -59,11 +59,11 @@ For Cursor, the configuration goes into your project's `.cursor/mcp.json`:
 }
 ```
 
-That is the entire setup. No clave de APIs. No registration. No OAuth flows.
+Esa es toda la configuración. Sin API keys. Sin registro. Sin flujos OAuth.
 
-## Setting Up the Wallet
+## Configurando la Billetera
 
-The first thing your agent needs is a TRON address. MERX provides the `set_private_key` tool, which accepts a hex-encoded clave privada and automatically derives the corresponding TRON address.
+Lo primero que tu agente necesita es una dirección TRON. MERX proporciona la herramienta `set_private_key`, que acepta una clave privada codificada en hexadecimal y deriva automáticamente la dirección TRON correspondiente.
 
 ```
 Tool: set_private_key
@@ -77,11 +77,11 @@ Response:
 }
 ```
 
-The clave privada never leaves the local machine. It is stored in the MCP server's runtime memory for the duration of the session and is used exclusively to sign transactions locally before broadcasting. MERX servers never see your clave privada - all signing happens client-side.
+La clave privada nunca sale de la máquina local. Se almacena en la memoria de tiempo de ejecución del servidor MCP durante la duración de la sesión y se usa exclusivamente para firmar transacciones localmente antes de transmitirlas. Los servidores MERX nunca ven tu clave privada - toda la firma ocurre del lado del cliente.
 
-### Generating a Fresh Wallet
+### Generando una Billetera Nueva
 
-If you need a new wallet for your agent, you can generate one using any TRON-compatible tool. The agent itself can create one using standard cryptographic libraries:
+Si necesitas una billetera nueva para tu agente, puedes generar una usando cualquier herramienta compatible con TRON. El agente mismo puede crear una usando librerías criptográficas estándar:
 
 ```javascript
 const TronWeb = require('tronweb');
@@ -90,13 +90,13 @@ console.log('Address:', account.address.base58);
 console.log('Private Key:', account.privateKey);
 ```
 
-Fund the address with a small amount of TRX for activation and basic operations, then pass the clave privada to `set_private_key`.
+Financia la dirección con una pequeña cantidad de TRX para activación y operaciones básicas, luego pasa la clave privada a `set_private_key`.
 
-## Core Wallet Operations
+## Operaciones Básicas de Billetera
 
-Once the wallet is configured, the agent has access to a complete suite of en cadena operations.
+Una vez que la billetera está configurada, el agente tiene acceso a un conjunto completo de operaciones on-chain.
 
-### Checking Balances
+### Verificando Saldos
 
 ```
 Tool: get_trx_balance
@@ -109,7 +109,7 @@ Response:
 }
 ```
 
-For TRC20 tokens:
+Para tokens TRC20:
 
 ```
 Tool: get_trc20_balance
@@ -126,7 +126,7 @@ Response:
 }
 ```
 
-### Sending TRX
+### Enviando TRX
 
 ```
 Tool: transfer_trx
@@ -136,9 +136,9 @@ Input: {
 }
 ```
 
-The agent signs the transaction locally and broadcasts it to the TRON network. The tool returns the hash de transaccion for en cadena verification.
+El agente firma la transacción localmente y la transmite a la red TRON. La herramienta devuelve el hash de la transacción para verificación on-chain.
 
-### Sending TRC20 Tokens
+### Enviando Tokens TRC20
 
 ```
 Tool: transfer_trc20
@@ -149,13 +149,13 @@ Input: {
 }
 ```
 
-TRC20 transfers consume energy. This is where MERX shines - the agent can automatically estimate, purchase, and delegate energy before executing the transfer, reducing the cost from approximately 27 TRX (burned) to under 4 TRX (delegated energy).
+Las transferencias TRC20 consumen energy. Aquí es donde MERX brilla - el agente puede estimar, comprar y delegar energy automáticamente antes de ejecutar la transferencia, reduciendo el costo de aproximadamente 27 TRX (quemados) a menos de 4 TRX (energy delegada).
 
-## Buying Energy - The Core Value Proposition
+## Comprando Energy - La Propuesta de Valor Principal
 
-TRON's modelo de recursos means every contrato inteligente interaction costs energy. A simple USDT transfer requires approximately 65,000 energy. A SunSwap trade can consume over 200,000 energy. Without delegated energy, these costs are paid by burning TRX at current network rates.
+El modelo de recursos de TRON significa que cada interacción con contrato inteligente cuesta energy. Una transferencia simple de USDT requiere aproximadamente 65,000 energy. Un trade en SunSwap puede consumir más de 200,000 energy. Sin energy delegada, estos costos se pagan quemando TRX a las tasas actuales de la red.
 
-MERX aggregates energy from multiple providers and gives the agent a single tool to purchase it:
+MERX agrega energy de múltiples proveedores y le da al agente una única herramienta para comprarla:
 
 ```
 Tool: create_order
@@ -166,7 +166,7 @@ Input: {
 }
 ```
 
-The agent can also check current market prices before purchasing:
+El agente también puede verificar los precios actuales del mercado antes de comprar:
 
 ```
 Tool: get_best_price
@@ -183,9 +183,9 @@ Response:
 }
 ```
 
-### The ensure_resources Tool
+### La Herramienta ensure_resources
 
-For agents that want to focus on intent rather than mechanics, `ensure_resources` is the high-level tool that handles everything:
+Para agentes que quieren enfocarse en la intención en lugar de los detalles, `ensure_resources` es la herramienta de alto nivel que maneja todo:
 
 ```
 Tool: ensure_resources
@@ -196,19 +196,19 @@ Input: {
 }
 ```
 
-This tool checks what the address already has, calculates the deficit, purchases only what is needed, and waits for delegation to arrive before returning. The agent does not need to understand mercado de energias, provider APIs, or delegation mechanics.
+Esta herramienta verifica lo que la dirección ya tiene, calcula el déficit, compra solo lo necesario y espera a que la delegación llegue antes de devolver. El agente no necesita entender mercados de energy, APIs de proveedores o mecánicas de delegación.
 
-## The Zero-Registration Path with x402
+## El Camino Sin Registro con x402
 
-MERX offers a path that requires no account creation at all. The x402 protocol enables pay-per-use energy purchases where payment is verified en cadena.
+MERX ofrece un camino que no requiere creación de cuenta en absoluto. El protocolo x402 habilita compras de energy de pago por uso donde el pago se verifica on-chain.
 
-The flow works like this:
+El flujo funciona así:
 
-1. The agent calls `create_paid_order` to get an invoice
-2. The invoice specifies an exact TRX amount and a memo string
-3. The agent signs and broadcasts the payment transaction using its local wallet
-4. MERX verifies the payment en cadena using the memo as a correlation key
-5. Energy is delegated to the target address
+1. El agente llama `create_paid_order` para obtener una factura
+2. La factura especifica una cantidad exacta de TRX y una cadena de memo
+3. El agente firma y transmite la transacción de pago usando su billetera local
+4. MERX verifica el pago on-chain usando el memo como clave de correlación
+5. Energy se delega a la dirección objetivo
 
 ```
 Tool: create_paid_order
@@ -229,62 +229,62 @@ Response:
 }
 ```
 
-The agent then sends TRX with the specified memo, and the order is fulfilled. No clave de API. No email. No signup form. Pure en cadena commerce between an autonomous agent and a service.
+El agente luego envía TRX con el memo especificado, y la orden se completa. Sin API key. Sin email. Sin formulario de registro. Comercio puro on-chain entre un agente autónomo y un servicio.
 
-## A Real Autonomous Agent Flow
+## Un Flujo Real de Agente Autónomo
 
-Aqui esta a complete example of what an autonomous agent session looks like when connected to MERX:
+Aquí hay un ejemplo completo de cómo se ve una sesión de agente autónomo cuando está conectada a MERX:
 
-**Step 1: Agent configures its wallet**
+**Paso 1: El agente configura su billetera**
 
-The agent loads its clave privada from a secure environment variable and calls `set_private_key`. MERX derives the TRON address and confirms the wallet is ready.
+El agente carga su clave privada desde una variable de entorno segura y llama `set_private_key`. MERX deriva la dirección TRON y confirma que la billetera está lista.
 
-**Step 2: Agent checks its financial position**
+**Paso 2: El agente verifica su posición financiera**
 
-The agent calls `get_trx_balance` and `get_trc20_balance` for USDT. It now knows it has 500 TRX and 2,000 USDT.
+El agente llama `get_trx_balance` y `get_trc20_balance` para USDT. Ahora sabe que tiene 500 TRX y 2,000 USDT.
 
-**Step 3: Agent receives a task - "Send 100 USDT to this address"**
+**Paso 3: El agente recibe una tarea - "Envía 100 USDT a esta dirección"**
 
-The agent calls `check_address_resources` to see what energy and bandwidth are available. It finds 0 energy delegated.
+El agente llama `check_address_resources` para ver qué energy y bandwidth están disponibles. Encuentra 0 energy delegada.
 
-**Step 4: Agent estimates the cost**
+**Paso 4: El agente estima el costo**
 
-The agent calls `estimate_transaction_cost` for a USDT transfer. The response shows 65,000 energy needed. Without energy, this would burn approximately 27 TRX. With energy purchase, the cost is approximately 3.5 TRX.
+El agente llama `estimate_transaction_cost` para una transferencia de USDT. La respuesta muestra 65,000 energy necesarios. Sin energy, esto quemaría aproximadamente 27 TRX. Con compra de energy, el costo es aproximadamente 3.5 TRX.
 
-**Step 5: Agent buys energy**
+**Paso 5: El agente compra energy**
 
-The agent calls `ensure_resources` with the requisito de energia. MERX finds el proveedor mas barato, places the order, and waits for delegation to arrive.
+El agente llama `ensure_resources` con el requisito de energy. MERX encuentra el proveedor más barato, coloca la orden y espera a que llegue la delegación.
 
-**Step 6: Agent executes the transfer**
+**Paso 6: El agente ejecuta la transferencia**
 
-With energy now delegated, the agent calls `transfer_trc20` to send 100 USDT. The transaction consumes the delegated energy instead of burning TRX.
+Con energy ahora delegada, el agente llama `transfer_trc20` para enviar 100 USDT. La transacción consume la energy delegada en lugar de quemar TRX.
 
-**Step 7: Agent verifies the result**
+**Paso 7: El agente verifica el resultado**
 
-The agent calls `get_transaction` with the hash de transaccion to confirm success.
+El agente llama `get_transaction` con el hash de la transacción para confirmar el éxito.
 
-Total cost: approximately 3.5 TRX instead of 27 TRX. The agent saved 87% on fees without any human intervention.
+Costo total: aproximadamente 3.5 TRX en lugar de 27 TRX. El agente ahorró 87% en comisiones sin intervención humana.
 
-## Security Considerations
+## Consideraciones de Seguridad
 
-### Private Key Management
+### Gestión de Clave Privada
 
-The clave privada exists only in the MCP server's runtime memory. It is never transmitted to MERX servers, never written to disk by the MCP server, and never included in API calls. All transaction signing happens locally.
+La clave privada existe solo en la memoria de tiempo de ejecución del servidor MCP. Nunca se transmite a servidores MERX, nunca se escribe en disco por el servidor MCP, y nunca se incluye en llamadas API. Toda la firma de transacciones ocurre localmente.
 
-For production deployments, store the clave privada in your infrastructure's secret management system (AWS Secrets Manager, HashiCorp Vault, or environment variables in a secure runtime) and pass it to the MCP server at startup.
+Para despliegues en producción, almacena la clave privada en el sistema de gestión de secretos de tu infraestructura (AWS Secrets Manager, HashiCorp Vault, o variables de entorno en un runtime seguro) y pásala al servidor MCP al iniciar.
 
-### Transaction Limits
+### Límites de Transacción
 
-For autonomous agents, consider implementing guardrails:
+Para agentes autónomos, considera implementar restricciones:
 
-- Set a maximum transaction amount in your agent's logic
-- Use orden permanentes with budget limits for recurring purchases
-- Monitor the agent's wallet balance and alert if it drops below a threshold
-- Use a dedicated wallet with limited funds rather than your main treasury
+- Establece un monto de transacción máximo en la lógica de tu agente
+- Usa órdenes permanentes con límites de presupuesto para compras recurrentes
+- Monitorea el saldo de la billetera del agente y alerta si cae por debajo de un umbral
+- Usa una billetera dedicada con fondos limitados en lugar de tu tesorería principal
 
-### Network Selection
+### Selección de Red
 
-MERX supports both mainnet and Shasta testnet. Always test new agent workflows on Shasta first:
+MERX soporta tanto mainnet como testnet Shasta. Siempre prueba nuevos flujos de agentes en Shasta primero:
 
 ```json
 {
@@ -294,46 +294,47 @@ MERX supports both mainnet and Shasta testnet. Always test new agent workflows o
 }
 ```
 
-Switch to mainnet only after validating the complete flow.
+Cambia a mainnet solo después de validar el flujo completo.
 
-## Beyond Basic Wallet Operations
+## Más Allá de Operaciones Básicas de Billetera
 
-Once your agent has a wallet, the MERX MCP server unlocks capabilities far beyond simple transfers:
+Una vez que tu agente tiene una billetera, el servidor MERX MCP desbloquea capacidades mucho más allá de simples transferencias:
 
-- **DEX trading** via SunSwap with exact energy simulation
-- **Standing orders** that buy energy automatically when prices drop below a threshold
-- **Delegation monitors** that auto-renew energy before it expires
-- **Multi-step intents** that batch multiple operations with optimized resource purchasing
-- **Price analysis** across all proveedor de energias to find the best deals
+- **Trading en DEX** vía SunSwap con simulación exacta de energy
+- **Órdenes permanentes** que compran energy automáticamente cuando los precios caen por debajo de un umbral
+- **Monitores de delegación** que renuevan energy automáticamente antes de que expire
+- **Intents multi-paso** que agrupan múltiples operaciones con compra de recursos optimizada
+- **Análisis de precios** en todos los proveedores de energy para encontrar los mejores tratos
 
-Each of these capabilities is exposed as a tool the agent can call, with prompts that guide the agent through complex workflows and resources that provide tiempo real market data.
+Cada una de estas capacidades se expone como una herramienta que el agente puede llamar, con prompts que guían al agente a través de flujos complejos y resources que proporcionan datos de mercado en tiempo real.
 
-## Como comenzar Today
+## Comenzando Hoy
 
-The fastest path from zero to a working agent wallet:
+El camino más rápido de cero a una billetera de agente que funciona:
 
-1. Install the Servidor MCP: `npm install -g merx-mcp`
-2. Configure your MCP client (Claude Desktop, Cursor, or any MCP-compatible tool)
-3. Generate or import a TRON clave privada
-4. Call `set_private_key` to activate the wallet
-5. Call `get_trx_balance` to verify connectivity
+1. Instala el servidor MCP: `npm install -g merx-mcp`
+2. Configura tu cliente MCP (Claude Desktop, Cursor, o cualquier herramienta compatible con MCP)
+3. Genera o importa una clave privada TRON
+4. Llama `set_private_key` para activar la billetera
+5. Llama `get_trx_balance` para verificar conectividad
 
-The entire setup takes under five minutes. No registration, no clave de APIs, no approval process.
+Toda la configuración toma menos de cinco minutos. Sin registro, sin API keys, sin proceso de aprobación.
 
-MERX is the bridge between AI agents and the TRON blockchain. The MCP server is codigo abierto, the protocol is standardized, and the mercado de energia is live.
+MERX es el puente entre agentes de IA y la blockchain de TRON. El servidor MCP es código abierto, el protocolo es estándar, y el mercado de energy está en vivo.
 
-Your agent is ready for a wallet. Give it one.
+Tu agente está listo para una billetera. Dale una.
 
 ---
 
 **Enlaces:**
-- MERX Plataforma: [https://merx.exchange](https://merx.exchange)
+- Plataforma MERX: [https://merx.exchange](https://merx.exchange)
 - Servidor MCP (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - Servidor MCP (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin API key necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -345,6 +346,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es el energy de TRON más barato ahora?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,323 +1,323 @@
-# 30 промптов и 21 ресурс: почему MERX - единственный полнопротокольный MCP-сервер
+# 30 подсказок и 21 ресурс: почему MERX — единственный полнофункциональный MCP сервер
 
-## MCP Has Three Primitives, Not One
+## MCP имеет три примитива, а не один
 
-The Model Context Protocol defines three types of capabilities that a server can expose to an AI client:
+Model Context Protocol определяет три типа возможностей, которые сервер может предоставить AI клиенту:
 
-1. **Tools** - executable actions (send a transaction, buy energy, execute a swap)
-2. **Prompts** - pre-built templates that guide the model through complex workflows
-3. **Resources** - structured data the model can read (price feeds, network parameters, documentation)
+1. **Tools** — исполняемые действия (отправить транзакцию, купить энергию, выполнить свап)
+2. **Prompts** — предварительно подготовленные шаблоны, которые направляют модель через сложные рабочие процессы
+3. **Resources** — структурированные данные, которые модель может читать (ценовые фиды, параметры сети, документация)
 
-Most MCP servers implement only tools. They expose a handful of callable functions, call it a day, and market themselves as "MCP-compatible." This is technically correct in the same way that a car with an engine but no steering wheel is technically a vehicle.
+Большинство MCP серверов реализуют только tools. Они предоставляют несколько вызываемых функций, и на этом успокаиваются, позиционируя себя как «MCP-совместимые». Это технически верно в том же смысле, как автомобиль с двигателем, но без руля, технически является транспортным средством.
 
-Tools alone give the model actions but no guidance on when or how to use them. Without prompts, the model must figure out complex multi-step workflows from scratch every time. Without resources, the model has no structured data to reference - it must make tool calls just to read information that should be passively available.
+Tools одни дают модели действия, но не дают руководства о том, когда или как их использовать. Без prompts модель должна разбираться со сложными многошаговыми рабочими процессами с нуля каждый раз. Без resources модель не имеет структурированных данных для справки — она должна делать вызовы инструментов, просто чтобы прочитать информацию, которая должна быть пассивно доступна.
 
-MERX implements all three primitives: 55 tools, 30 prompts, and 21 resources. This article explains what each primitive does, why all three matter, and how MERX uses them to create an MCP server that is qualitatively different from tools-only implementations.
+MERX реализует все три примитива: 55 tools, 30 prompts и 21 ресурс. Эта статья объясняет, что делает каждый примитив, почему все три важны и как MERX использует их для создания MCP сервера, качественно отличающегося от реализаций, основанных только на tools.
 
-## Primitive 1: Tools (Actions)
+## Примитив 1: Tools (Действия)
 
-Tools are the most intuitive primitive. A tool is a function the model can call to perform an action. It has a name, a description, typed parameters, and returns a structured response.
+Tools — наиболее интуитивный примитив. Tool это функция, которую модель может вызвать для выполнения действия. У неё есть имя, описание, типизированные параметры и структурированный ответ.
 
-MERX exposes 55 tools covering the full scope of TRON blockchain operations:
+MERX предоставляет 55 tools, охватывающих полный спектр операций блокчейна TRON:
 
-### Wallet Operations
-- `set_private_key` - Configure the wallet with a private key (derives address automatically)
-- `get_trx_balance` - Check TRX balance of any address
-- `get_trc20_balance` - Check TRC20 token balance
-- `transfer_trx` - Send TRX to an address
-- `transfer_trc20` - Send TRC20 tokens to an address
-- `check_address_resources` - View energy and bandwidth allocation
+### Операции с кошельком
+- `set_private_key` — настроить кошелек с приватным ключом (адрес выводится автоматически)
+- `get_trx_balance` — проверить баланс TRX любого адреса
+- `get_trc20_balance` — проверить баланс TRC20 токена
+- `transfer_trx` — отправить TRX на адрес
+- `transfer_trc20` — отправить TRC20 токены на адрес
+- `check_address_resources` — просмотреть распределение energy и bandwidth
 
-### Energy Market
-- `get_prices` - Current prices from all providers
-- `get_best_price` - Find the cheapest energy offer
-- `create_order` - Purchase energy from the market
-- `create_paid_order` - Purchase energy via x402 (no account needed)
-- `ensure_resources` - Automatically purchase needed resources
-- `list_orders` - View order history
-- `get_order` - Get details of a specific order
+### Энергетический рынок
+- `get_prices` — текущие цены от всех провайдеров
+- `get_best_price` — найти самое дешёвое предложение по энергии
+- `create_order` — купить энергию на рынке
+- `create_paid_order` — купить энергию через x402 (регистрация не требуется)
+- `ensure_resources` — автоматически купить необходимые ресурсы
+- `list_orders` — просмотреть историю заказов
+- `get_order` — получить информацию о конкретном заказе
 
-### DEX Trading
-- `get_swap_quote` - Get a SunSwap V2 quote with exact simulation
-- `execute_swap` - Execute a swap with automatic resource management
-- `approve_trc20` - Set token spending approval
+### DEX торговля
+- `get_swap_quote` — получить котировку SunSwap V2 с точной симуляцией
+- `execute_swap` — выполнить свап с автоматическим управлением ресурсами
+- `approve_trc20` — установить одобрение на трату токена
 
-### Automation
-- `create_standing_order` - Set up automatic energy purchases
-- `list_standing_orders` - View active standing orders
-- `create_monitor` - Set up delegation or balance monitors
-- `list_monitors` - View active monitors
+### Автоматизация
+- `create_standing_order` — установить автоматические покупки энергии
+- `list_standing_orders` — просмотреть активные постоянные заказы
+- `create_monitor` — установить мониторы делегирования или баланса
+- `list_monitors` — просмотреть активные мониторы
 
-### Advanced
-- `execute_intent` - Execute multi-step transaction plans
-- `estimate_contract_call` - Simulate any contract call for energy estimation
+### Продвинутые функции
+- `execute_intent` — выполнить многошаговые планы транзакций
+- `estimate_contract_call` — смоделировать любой вызов контракта для оценки энергии
 
-Each tool has a JSON Schema definition for its parameters, a natural language description, and structured return types. The model knows exactly what each tool does, what parameters it needs, and what it will return.
+У каждого tool есть определение JSON Schema для его параметров, описание на естественном языке и структурированные типы возвращаемых значений. Модель точно знает, что делает каждый tool, какие параметры ему нужны и что он вернёт.
 
-But tools alone are not enough.
+Но tools одних недостаточно.
 
-## Primitive 2: Prompts (Templates)
+## Примитив 2: Prompts (Шаблоны)
 
-A prompt is a pre-built template that the model can use to handle a specific type of request. Think of it as a recipe: "When the user asks for X, here is the step-by-step approach, including which tools to call, in what order, and how to interpret the results."
+Prompt это предварительно подготовленный шаблон, который модель может использовать для обработки конкретного типа запроса. Думайте о нём как о рецепте: «Когда пользователь просит X, вот пошаговый подход, включая какие tools вызывать, в каком порядке и как интерпретировать результаты».
 
-MERX provides 30 prompts organized across 10 categories.
+MERX предоставляет 30 prompts, организованных в 10 категорий.
 
-### Getting Started (3 prompts)
+### Начало работы (3 prompts)
 
 **setup_wallet**
 ```
-Template: Walk the user through wallet configuration
-Steps:
-  1. Explain private key security
-  2. Call set_private_key
-  3. Call get_trx_balance to verify
-  4. Call check_address_resources for baseline
-  5. Recommend next steps based on balance
+Шаблон: пройти пользователя через конфигурацию кошелька
+Шаги:
+  1. Объяснить безопасность приватного ключа
+  2. Вызвать set_private_key
+  3. Вызвать get_trx_balance для проверки
+  4. Вызвать check_address_resources для базовой информации
+  5. Рекомендовать следующие шаги на основе баланса
 ```
 
 **first_energy_purchase**
 ```
-Template: Guide first-time energy buyers
-Steps:
-  1. Explain what energy is and why it matters
-  2. Call get_prices to show market overview
-  3. Help choose amount and duration
-  4. Call create_order or create_paid_order
-  5. Verify delegation with check_address_resources
+Шаблон: направлять первых покупателей энергии
+Шаги:
+  1. Объяснить, что такое energy и почему это важно
+  2. Вызвать get_prices для показа обзора рынка
+  3. Помочь выбрать сумму и длительность
+  4. Вызвать create_order или create_paid_order
+  5. Проверить делегирование через check_address_resources
 ```
 
 **platform_overview**
 ```
-Template: Explain MERX capabilities
-Content: Structured overview of all tools, prompts, and resources
-  with examples of when to use each
+Шаблон: объяснить возможности MERX
+Содержание: структурированный обзор всех tools, prompts и resources
+  с примерами когда использовать каждый
 ```
 
-### Energy Management (4 prompts)
+### Управление энергией (4 prompts)
 
 **buy_cheapest_energy**
 ```
-Template: Find and buy energy at the best price
-Steps:
-  1. Call get_best_price with user's parameters
-  2. Show price comparison across providers
-  3. Confirm purchase with user
-  4. Call create_order
-  5. Poll for delegation confirmation
+Шаблон: найти и купить энергию по лучшей цене
+Шаги:
+  1. Вызвать get_best_price с параметрами пользователя
+  2. Показать сравнение цен между провайдерами
+  3. Подтвердить покупку у пользователя
+  4. Вызвать create_order
+  5. Опрашивать подтверждение делегирования
 ```
 
 **compare_providers**
 ```
-Template: Detailed provider comparison
-Steps:
-  1. Call get_prices for all providers
-  2. Calculate cost for user's specific needs
-  3. Present comparison table
-  4. Include reliability and speed metrics
-  5. Recommend best option with reasoning
+Шаблон: детальное сравнение провайдеров
+Шаги:
+  1. Вызвать get_prices для всех провайдеров
+  2. Рассчитать стоимость для конкретных потребностей пользователя
+  3. Представить таблицу сравнения
+  4. Включить метрики надёжности и скорости
+  5. Рекомендовать лучший вариант с обоснованием
 ```
 
 **optimize_costs**
 ```
-Template: Analyze spending and suggest optimizations
-Steps:
-  1. Review order history
-  2. Analyze price patterns
-  3. Identify opportunities for standing orders
-  4. Calculate potential savings
-  5. Present optimization plan
+Шаблон: анализ расходов и предложение оптимизаций
+Шаги:
+  1. Просмотреть историю заказов
+  2. Анализировать паттерны цен
+  3. Идентифицировать возможности для постоянных заказов
+  4. Рассчитать потенциальную экономию
+  5. Представить план оптимизации
 ```
 
 **ensure_resources_for_tx**
 ```
-Template: Prepare resources for a specific transaction
-Steps:
-  1. Estimate energy for the planned transaction
-  2. Check current resources
-  3. Calculate deficit
-  4. Purchase if needed
-  5. Confirm readiness
+Шаблон: подготовить ресурсы для конкретной транзакции
+Шаги:
+  1. Оценить energy для планируемой транзакции
+  2. Проверить текущие ресурсы
+  3. Рассчитать дефицит
+  4. Купить если требуется
+  5. Подтвердить готовность
 ```
 
-### Transaction Execution (4 prompts)
+### Выполнение транзакций (4 prompts)
 
 **send_usdt**
 ```
-Template: Complete USDT transfer with resource optimization
-Steps:
-  1. Validate recipient address
-  2. Estimate energy
-  3. Ensure resources
-  4. Execute transfer
-  5. Verify on-chain
+Шаблон: завершить переводу USDT с оптимизацией ресурсов
+Шаги:
+  1. Проверить адрес получателя
+  2. Оценить energy
+  3. Обеспечить ресурсы
+  4. Выполнить передачу
+  5. Проверить на цепи
 ```
 
 **send_trx**
 ```
-Template: TRX transfer (simpler - no energy needed)
-Steps:
-  1. Validate recipient address
-  2. Check bandwidth
-  3. Execute transfer
-  4. Verify on-chain
+Шаблон: передача TRX (проще — energy не требуется)
+Шаги:
+  1. Проверить адрес получателя
+  2. Проверить bandwidth
+  3. Выполнить передачу
+  4. Проверить на цепи
 ```
 
 **swap_tokens**
 ```
-Template: DEX swap with full pipeline
-Steps:
-  1. Get quote
-  2. Review price impact and slippage
-  3. Check if approval needed
-  4. Ensure resources for approval + swap
-  5. Execute swap
-  6. Verify result
+Шаблон: DEX свап с полным конвейером
+Шаги:
+  1. Получить котировку
+  2. Просмотреть влияние цены и slippage
+  3. Проверить нужно ли одобрение
+  4. Обеспечить ресурсы для одобрения + свопа
+  5. Выполнить свап
+  6. Проверить результат
 ```
 
 **execute_complex_intent**
 ```
-Template: Multi-step transaction plan
-Steps:
-  1. Help user define steps
-  2. Simulate all steps
-  3. Review total costs
-  4. Choose resource strategy
-  5. Execute intent
-  6. Report results
+Шаблон: многошаговый план транзакций
+Шаги:
+  1. Помочь пользователю определить шаги
+  2. Смоделировать все шаги
+  3. Просмотреть общие расходы
+  4. Выбрать стратегию ресурсов
+  5. Выполнить intent
+  6. Отчёт о результатах
 ```
 
-### Automation (4 prompts)
+### Автоматизация (4 prompts)
 
 **setup_standing_order**
 ```
-Template: Configure automatic energy purchases
-Steps:
-  1. Understand user's needs (volume, timing, budget)
-  2. Recommend trigger type
-  3. Set appropriate constraints
-  4. Create standing order
-  5. Explain monitoring and management
+Шаблон: конфигурировать автоматические покупки энергии
+Шаги:
+  1. Понять потребности пользователя (объём, время, бюджет)
+  2. Рекомендовать тип триггера
+  3. Установить соответствующие ограничения
+  4. Создать постоянный заказ
+  5. Объяснить мониторинг и управление
 ```
 
 **setup_delegation_monitor**
 ```
-Template: Configure auto-renewal for energy delegations
-Steps:
-  1. Review current delegations
-  2. Set renewal window
-  3. Configure price protection
-  4. Set notification channels
-  5. Create monitor
+Шаблон: конфигурировать автоматическое обновление делегирований энергии
+Шаги:
+  1. Просмотреть текущие делегирования
+  2. Установить окно обновления
+  3. Конфигурировать защиту цены
+  4. Установить каналы уведомлений
+  5. Создать монитор
 ```
 
 **setup_balance_monitor**
 ```
-Template: Configure balance-based alerts and actions
-Steps:
-  1. Analyze current resource usage patterns
-  2. Recommend threshold levels
-  3. Configure action (buy, ensure, or notify)
-  4. Set budget constraints
-  5. Create monitor
+Шаблон: конфигурировать оповещения и действия на основе баланса
+Шаги:
+  1. Анализировать текущие паттерны использования ресурсов
+  2. Рекомендовать уровни порогов
+  3. Конфигурировать действие (купить, обеспечить или уведомить)
+  4. Установить ограничения по бюджету
+  5. Создать монитор
 ```
 
 **review_automation**
 ```
-Template: Audit and optimize existing automation
-Steps:
-  1. List all standing orders and monitors
-  2. Review execution history
-  3. Identify underperforming rules
-  4. Suggest improvements
-  5. Apply changes if approved
+Шаблон: аудит и оптимизация существующей автоматизации
+Шаги:
+  1. Вывести все постоянные заказы и мониторы
+  2. Просмотреть историю выполнения
+  3. Идентифицировать недостаточно эффективные правила
+  4. Предложить улучшения
+  5. Применить изменения если одобрено
 ```
 
-### Analysis (4 prompts)
+### Анализ (4 prompts)
 
 **analyze_prices**
 ```
-Template: Market price analysis
-Steps:
-  1. Pull current prices from all providers
-  2. Pull price history
-  3. Identify trends and patterns
-  4. Calculate optimal buy times
-  5. Present analysis with charts
+Шаблон: анализ цен на рынке
+Шаги:
+  1. Получить текущие цены от всех провайдеров
+  2. Получить историю цен
+  3. Идентифицировать тренды и паттерны
+  4. Рассчитать оптимальное время покупки
+  5. Представить анализ с графиками
 ```
 
 **calculate_savings**
 ```
-Template: Calculate savings from using delegated energy
-Steps:
-  1. Estimate energy for user's transaction types
-  2. Calculate cost with TRX burn
-  3. Calculate cost with energy purchase
-  4. Show savings percentage
-  5. Project annual savings at given volume
+Шаблон: рассчитать экономию от использования делегированной энергии
+Шаги:
+  1. Оценить energy для типов транзакций пользователя
+  2. Рассчитать стоимость с TRX сжиганием
+  3. Рассчитать стоимость с покупкой энергии
+  4. Показать процент экономии
+  5. Спроецировать годовую экономию при заданном объёме
 ```
 
 **estimate_transaction_cost**
 ```
-Template: Cost estimation for any transaction type
-Steps:
-  1. Identify transaction type
-  2. Simulate with exact parameters
-  3. Show energy and bandwidth requirements
-  4. Show cost with and without delegation
-  5. Recommend optimal approach
+Шаблон: оценка стоимости для любого типа транзакции
+Шаги:
+  1. Идентифицировать тип транзакции
+  2. Смоделировать с точными параметрами
+  3. Показать требования по energy и bandwidth
+  4. Показать стоимость с и без делегирования
+  5. Рекомендовать оптимальный подход
 ```
 
 **portfolio_overview**
 ```
-Template: Complete account overview
-Steps:
-  1. Check all balances (TRX, USDT, other tokens)
-  2. Check resource allocation
-  3. Review active delegations
-  4. Summarize active automation rules
-  5. Present financial overview
+Шаблон: полный обзор аккаунта
+Шаги:
+  1. Проверить все балансы (TRX, USDT, другие токены)
+  2. Проверить распределение ресурсов
+  3. Просмотреть активные делегирования
+  4. Подвести итоги активных правил автоматизации
+  5. Представить финансовый обзор
 ```
 
-### Account Management (3 prompts)
+### Управление аккаунтом (3 prompts)
 
-**account_setup**, **deposit_guide**, **withdrawal_guide** - Step-by-step templates for account lifecycle operations.
+**account_setup**, **deposit_guide**, **withdrawal_guide** — пошаговые шаблоны для операций жизненного цикла аккаунта.
 
 ### x402 (2 prompts)
 
-**x402_purchase** - Guide through the zero-registration purchase flow.
-**x402_explain** - Explain how x402 works and when to use it.
+**x402_purchase** — направлять через поток покупки без регистрации.
+**x402_explain** — объяснить как работает x402 и когда его использовать.
 
-### Network Information (2 prompts)
+### Информация о сети (2 prompts)
 
-**explain_energy**, **explain_bandwidth** - Educational templates that explain TRON's resource model using data from resources.
+**explain_energy**, **explain_bandwidth** — образовательные шаблоны, объясняющие ресурсную модель TRON используя данные из resources.
 
-### Troubleshooting (2 prompts)
+### Устранение неполадок (2 prompts)
 
-**transaction_failed**, **delegation_not_arrived** - Diagnostic templates that help identify and resolve common issues.
+**transaction_failed**, **delegation_not_arrived** — диагностические шаблоны, которые помогают идентифицировать и решать частые проблемы.
 
-### Integration (2 prompts)
+### Интеграция (2 prompts)
 
-**sdk_quickstart**, **api_integration** - Templates for developers integrating MERX into their applications.
+**sdk_quickstart**, **api_integration** — шаблоны для разработчиков, интегрирующих MERX в свои приложения.
 
-### Why Prompts Matter
+### Почему Prompts важны
 
-Without prompts, a model receiving the request "help me buy energy" would need to:
-1. Figure out which tools are relevant
-2. Determine the correct order of operations
-3. Decide what information to gather first
-4. Handle edge cases it may not know about
+Без prompts, модель получившая запрос «помоги мне купить энергию» должна была бы:
+1. Разобраться какие tools релевантны
+2. Определить правильный порядок операций
+3. Решить какую информацию собрать первой
+4. Обработать граничные случаи, о которых она может не знать
 
-With the `buy_cheapest_energy` prompt, the model has a tested, optimized workflow that handles edge cases, presents information in the right format, and follows the correct sequence of operations. The difference is the same as handing someone a set of tools versus handing them tools plus a manual.
+С prompt `buy_cheapest_energy`, модель имеет проверенный, оптимизированный рабочий процесс, который обрабатывает граничные случаи, представляет информацию в правильном формате и следует правильной последовательности операций. Разница как между выдачей человеку набора инструментов и выдачей инструментов плюс руководство.
 
-## Primitive 3: Resources (Data)
+## Примитив 3: Resources (Данные)
 
-Resources are structured data that the model can read without making an action call. Unlike tools, which do something, resources provide something - they make information passively available.
+Resources это структурированные данные, которые модель может читать без совершения вызова действия. В отличие от tools, которые что-то делают, resources что-то предоставляют — они делают информацию пассивно доступной.
 
-MERX provides 21 resources: 14 static and 7 dynamic templates.
+MERX предоставляет 21 ресурс: 14 статических и 7 динамических шаблонов.
 
-### Static Resources (14)
+### Статические ресурсы (14)
 
-Static resources provide fixed reference data that does not change between sessions:
+Статические ресурсы предоставляют фиксированные справочные данные, которые не изменяются между сеансами:
 
 ```
 merx://docs/getting-started
@@ -336,11 +336,11 @@ merx://docs/faq
 merx://docs/troubleshooting
 ```
 
-When the model reads `merx://docs/energy-explained`, it receives a structured document explaining TRON's energy model - what energy is, how it is consumed, how delegation works, and how it relates to TRX costs. This information is available immediately, without making any API calls or tool invocations.
+Когда модель читает `merx://docs/energy-explained`, она получает структурированный документ, объясняющий ресурсную модель energy TRON — что такое energy, как она потребляется, как работает делегирование и как это соотносится с затратами TRX. Эта информация доступна немедленно, без каких-либо вызовов API или вызовов инструментов.
 
-### Dynamic Template Resources (7)
+### Динамические шаблонные ресурсы (7)
 
-Template resources accept parameters and return data specific to the request:
+Шаблонные ресурсы принимают параметры и возвращают данные, специфичные для запроса:
 
 ```
 merx://prices/current
@@ -352,7 +352,7 @@ merx://network/parameters
 merx://network/chain-info
 ```
 
-For example, `merx://prices/current` returns the current energy prices from all providers in a structured format:
+Например, `merx://prices/current` возвращает текущие цены на энергию от всех провайдеров в структурированном формате:
 
 ```json
 {
@@ -376,7 +376,7 @@ For example, `merx://prices/current` returns the current energy prices from all 
 }
 ```
 
-And `merx://account/{address}/resources` returns the current resource allocation for any address:
+И `merx://account/{address}/resources` возвращает текущее распределение ресурсов для любого адреса:
 
 ```json
 {
@@ -401,89 +401,90 @@ And `merx://account/{address}/resources` returns the current resource allocation
 }
 ```
 
-### Why Resources Matter
+### Почему Resources важны
 
-Resources give the model context without the overhead of tool calls. When a user asks "what is my energy balance?", the model can check the resource `merx://account/{address}/resources` directly. When the model needs to reference documentation about standing orders before creating one, it reads `merx://docs/standing-orders-guide`.
+Resources дают модели контекст без затрат на вызовы инструментов. Когда пользователь спрашивает «какой у меня баланс энергии?», модель может проверить ресурс `merx://account/{address}/resources` напрямую. Когда модели нужно обратиться к документации о постоянных заказах перед созданием одного, она читает `merx://docs/standing-orders-guide`.
 
-Without resources, every piece of information requires a tool call. The model would need to call `get_prices` to see current prices, even though that information could be passively available. The distinction is between a model that must actively request every piece of data (tools-only) and a model that has a rich information environment available for reference (tools + resources).
+Без resources каждая информация требует вызова инструмента. Модель должна была бы вызвать `get_prices` чтобы увидеть текущие цены, даже хотя эта информация могла быть пассивно доступна. Различие между моделью, которая должна активно запрашивать каждый кусок данных (только tools) и моделью, которая имеет богатую информационную среду для справки (tools + resources).
 
 ## Преимущество полного протокола
 
-When all three primitives work together, the model operates at a fundamentally different level:
+Когда все три примитива работают вместе, модель работает на принципиально другом уровне:
 
-### Scenario: User asks "Help me set up energy automation"
+### Сценарий: пользователь спрашивает «помоги мне установить автоматизацию энергии»
 
-**Tools-only MCP server:**
-1. Model guesses which tools exist for automation
-2. Calls tools in a trial-and-error sequence
-3. May miss important configuration options
-4. No guidance on best practices
-5. No background reference material
+**MCP сервер только с tools:**
+1. Модель угадывает какие tools существуют для автоматизации
+2. Вызывает tools в последовательности методом проб и ошибок
+3. Может пропустить важные опции конфигурации
+4. Нет руководства по лучшим практикам
+5. Нет справочного материала
 
-**Full-protocol MERX MCP server:**
-1. Model reads `merx://docs/standing-orders-guide` for reference material
-2. Model activates `setup_standing_order` prompt for step-by-step workflow
-3. Model reads `merx://prices/history/7d` to recommend price thresholds
-4. Model calls `create_standing_order` tool with optimized parameters
-5. Model reads `merx://docs/monitors-guide` and suggests complementary monitors
-6. Model calls `create_monitor` tool for delegation expiry protection
-7. Result: Complete, well-configured automation with documentation-backed decisions
+**Полнофункциональный MCP сервер MERX:**
+1. Модель читает `merx://docs/standing-orders-guide` для справочного материала
+2. Модель активирует prompt `setup_standing_order` для пошагового рабочего процесса
+3. Модель читает `merx://prices/history/7d` чтобы рекомендовать пороги цен
+4. Модель вызывает tool `create_standing_order` с оптимизированными параметрами
+5. Модель читает `merx://docs/monitors-guide` и предлагает дополнительные мониторы
+6. Модель вызывает tool `create_monitor` для защиты истечения делегирования
+7. Результат: полностью, хорошо сконфигурированная автоматизация с решениями, подтверждёнными документацией
 
-The full-protocol approach is not just marginally better - it produces qualitatively different outcomes because the model has access to guidance (prompts), knowledge (resources), and capability (tools) simultaneously.
+Подход полного протокола не просто немного лучше — он производит качественно отличающиеся результаты, потому что модель имеет доступ к руководству (prompts), знаниям (resources) и способности (tools) одновременно.
 
-## Чего не хватает другим MCP-серверам
+## Что упускают другие MCP серверы
 
-A survey of blockchain-related MCP servers as of early 2026 shows a consistent pattern:
+Обзор связанных с блокчейном MCP серверов по состоянию на начало 2026 показывает последовательную закономерность:
 
-| Server | Tools | Prompts | Resources | Full Protocol |
+| Сервер | Tools | Prompts | Resources | Полный протокол |
 |---|---|---|---|---|
-| Generic ETH MCP | 5-8 | 0 | 0 | No |
-| Solana MCP | 10-12 | 0 | 0 | No |
-| Bitcoin MCP | 3-4 | 0 | 0 | No |
-| Multi-chain MCP | 15-20 | 0 | 0 | No |
-| MERX | 52 | 30 | 21 | Yes |
+| Generic ETH MCP | 5-8 | 0 | 0 | Нет |
+| Solana MCP | 10-12 | 0 | 0 | Нет |
+| Bitcoin MCP | 3-4 | 0 | 0 | Нет |
+| Multi-chain MCP | 15-20 | 0 | 0 | Нет |
+| MERX | 52 | 30 | 21 | Да |
 
-No other blockchain MCP server implements prompts or resources. They are all tools-only, which means:
+Ни один другой MCP сервер блокчейна не реализует prompts или resources. Все они только с tools, что означает:
 
-- No workflow guidance for multi-step operations
-- No documentation available at model inference time
-- No passive data access for context and reference
-- Every interaction starts from scratch with no structural knowledge
+- Нет руководства рабочего процесса для многошаговых операций
+- Нет документации доступной во время вывода модели
+- Нет пассивного доступа к данным для контекста и справки
+- Каждое взаимодействие начинается с нуля без структурного знания
 
-MERX is the only MCP server where the model has a complete operational environment - the ability to act (tools), the knowledge of how to act (prompts), and the data to inform decisions (resources).
+MERX — единственный MCP сервер, где модель имеет полную операционную среду — способность действовать (tools), знание как действовать (prompts) и данные для информирования решений (resources).
 
-## Цифры
+## Числа
 
-MERX by the numbers:
+MERX по числам:
 
-- **55 tools** across 5 categories (wallet, energy market, DEX, automation, advanced)
-- **30 prompts** across 10 categories (getting started, energy, transactions, automation, analysis, accounts, x402, network, troubleshooting, integration)
-- **21 resources** (14 static documentation, 7 dynamic data templates)
-- **72 total capabilities** exposed through a single MCP server
+- **55 tools** в 5 категориях (кошелёк, энергетический рынок, DEX, автоматизация, продвинутые)
+- **30 prompts** в 10 категориях (начало, энергия, транзакции, автоматизация, анализ, аккаунты, x402, сеть, устранение неполадок, интеграция)
+- **21 ресурс** (14 статических документов, 7 динамических шаблонов данных)
+- **72 общих возможности** предоставляемые через единственный MCP сервер
 
-For an AI agent connected to MERX, this means:
-- It can perform any TRON operation (tools)
-- It knows the best approach for any scenario (prompts)
-- It has real-time data and documentation always available (resources)
+Для AI агента подключённого к MERX, это означает:
+- Он может выполнить любую операцию TRON (tools)
+- Он знает лучший подход для любого сценария (prompts)
+- Он имеет данные в реальном времени и документацию всегда доступную (resources)
 
 ## Заключение
 
-MCP is a protocol with three primitives, not one. Implementing only tools is like building an API with endpoints but no documentation and no data feeds. It works, technically, but it forces the consumer to figure out everything on their own.
+MCP это протокол с тремя примитивами, а не один. Реализация только tools это как создание API с эндпоинтами, но без документации и без потоков данных. Это работает, технически, но это заставляет потребителя разбираться во всём самому.
 
-MERX implements the full protocol because the full protocol is how MCP was designed to be used. Tools for action. Prompts for guidance. Resources for knowledge. All three working together to create an environment where an AI agent can operate on the TRON blockchain with the same depth of capability as a human developer with years of experience.
+MERX реализует полный протокол, потому что полный протокол это как MCP был спроектирован для использования. Tools для действия. Prompts для руководства. Resources для знания. Все три работают вместе, чтобы создать среду, где AI агент может работать на блокчейне TRON с той же глубиной возможности как человеческий разработчик с многолетним опытом.
 
-Thirty prompts. Twenty-one resources. Twenty-one tools. No other blockchain MCP server comes close.
+Тридцать prompts. Двадцать один ресурс. Пятьдесят два инструмента. Ни один другой MCP сервер блокчейна даже близко не подходит.
 
 ---
 
 **Ссылки:**
-- Платформа MERX: [https://merx.exchange](https://merx.exchange)
+- MERX Platform: [https://merx.exchange](https://merx.exchange)
 - MCP Server (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - MCP Server (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любого MCP-совместимого клиента — без установки, без API ключа для read-only инструментов:
 
 ```json
 {
@@ -495,6 +496,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите у вашего AI агента: «Какая самая дешёвая TRON энергия прямо сейчас?» и получите текущие цены от всех подключённых провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

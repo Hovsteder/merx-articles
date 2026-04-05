@@ -1,22 +1,22 @@
-# x402 pago por uso: compre energia en TRON sin una cuenta
+# x402 Pago por Uso: Compra Energía TRON sin Cuenta
 
-## The Registration Problem
+## El Problema del Registro
 
-Every blockchain service follows the same pattern: create an account, verify your email, generate an clave de API, fund an internal balance, then start using the service. For a human user, this is a minor inconvenience. For an autonomous AI agent, it is a hard stop.
+Todo servicio blockchain sigue el mismo patrón: crear una cuenta, verificar tu correo electrónico, generar una clave API, financiar un saldo interno, luego comenzar a usar el servicio. Para un usuario humano, esto es un inconveniente menor. Para un agente de IA autónomo, es un punto de ruptura insalvable.
 
-Agents do not have email addresses. They do not want internal balances managed by third parties. They do not want to trust a platform with custody of their funds. What agents want is simple: pay for a service, receive the service, move on. No relationship. No state. No trust.
+Los agentes no tienen direcciones de correo electrónico. No quieren que terceros gestionen saldos internos. No quieren confiarle a una plataforma la custodia de sus fondos. Lo que los agentes quieren es simple: pagar por un servicio, recibir el servicio, continuar. Sin relación. Sin estado. Sin confianza.
 
-The x402 protocol makes this possible. Inspired by the HTTP 402 "Payment Required" status code (defined in 1997 but never widely implemented), x402 enables pay-per-use commerce where payment is verified en cadena rather than through accounts and clave de APIs.
+El protocolo x402 hace esto posible. Inspirado en el código de estado HTTP 402 "Payment Required" (definido en 1997 pero nunca ampliamente implementado), x402 permite el comercio de pago por uso donde el pago se verifica en cadena en lugar de a través de cuentas y claves API.
 
-MERX implements x402 for energy purchases. Any entity with a TRON wallet - human, agent, or contrato inteligente - can buy energy in a single transaction without creating an account, without depositing funds, and without any prior relationship with the MERX platform.
+MERX implementa x402 para compras de energía. Cualquier entidad con una cartera TRON - humana, agente o contrato inteligente - puede comprar energía en una sola transacción sin crear una cuenta, sin depositar fondos, y sin relación previa alguna con la plataforma MERX.
 
-## How It Works
+## Cómo Funciona
 
-The x402 flow has five steps. Each step is verifiable en cadena, and at no point does the buyer need to trust MERX with custody of their funds.
+El flujo x402 tiene cinco pasos. Cada paso es verificable en cadena, y en ningún momento el comprador necesita confiarle a MERX la custodia de sus fondos.
 
-### Step 1: Request an Invoice
+### Paso 1: Solicitar una Factura
 
-The buyer calls `create_paid_order` with the desired energy parameters:
+El comprador llama a `create_paid_order` con los parámetros de energía deseados:
 
 ```
 Tool: create_paid_order
@@ -42,221 +42,221 @@ Response:
 }
 ```
 
-The invoice is a quote, not a commitment. No funds have moved. The buyer can inspect the price, compare it to alternatives, and decide whether to proceed. The invoice expires after 5 minutes - if not paid within that window, the quoted price is no longer guaranteed.
+La factura es una cotización, no un compromiso. No se han movido fondos. El comprador puede inspeccionar el precio, compararlo con alternativas, y decidir si proceder. La factura expira después de 5 minutos - si no se paga dentro de ese período, el precio cotizado ya no está garantizado.
 
-### Step 2: Sign the Payment Locally
+### Paso 2: Firmar el Pago Localmente
 
-The buyer constructs a TRX transfer transaction from their wallet to the MERX treasury address. The critical detail is the memo field, which must contain the exact string from the invoice.
+El comprador construye una transacción de transferencia de TRX desde su cartera a la dirección del tesorero de MERX. El detalle crítico es el campo memo, que debe contener la cadena exacta de la factura.
 
 ```javascript
 const tx = await tronWeb.transactionBuilder.sendTrx(
   invoice.pay_to,        // TMerxTreasuryAddress
-  invoice.amount_sun,    // 1430000 (1.43 TRX in SUN)
+  invoice.amount_sun,    // 1430000 (1.43 TRX en SUN)
   buyerAddress
 );
 
-// Add memo to transaction data
+// Agregar memo a los datos de la transacción
 const txWithMemo = await tronWeb.transactionBuilder.addUpdateData(
   tx,
   invoice.memo,          // "merx_xpay_abc123"
   'utf8'
 );
 
-// Sign locally - private key never leaves the buyer's machine
+// Firmar localmente - la clave privada nunca sale de la máquina del comprador
 const signedTx = await tronWeb.trx.sign(txWithMemo);
 ```
 
-The payment is signed with the buyer's clave privada on the buyer's machine. The clave privada is never shared with MERX, never transmitted over the network, and never stored anywhere outside the buyer's control.
+El pago se firma con la clave privada del comprador en la máquina del comprador. La clave privada nunca se comparte con MERX, nunca se transmite por la red, y nunca se almacena en ningún lugar fuera del control del comprador.
 
-### Step 3: Broadcast the Payment
+### Paso 3: Transmitir el Pago
 
-The signed transaction is broadcast to the TRON network:
+La transacción firmada se transmite a la red TRON:
 
 ```javascript
 const result = await tronWeb.trx.sendRawTransaction(signedTx);
 const txHash = result.txid;
 ```
 
-At this point, the payment is en cadena. It is visible to anyone who queries the TRON blockchain. The TRX has moved from the buyer's address to the MERX treasury address, and the memo field contains the invoice identifier.
+En este punto, el pago está en cadena. Es visible para cualquiera que consulte la blockchain de TRON. El TRX se ha movido de la dirección del comprador a la dirección del tesorero de MERX, y el campo memo contiene el identificador de la factura.
 
-### Step 4: MERX Verifies On-Chain
+### Paso 4: MERX Verifica En Cadena
 
-MERX monitors its treasury address for incoming transactions. When a transaction arrives, MERX:
+MERX monitorea su dirección de tesorero buscando transacciones entrantes. Cuando llega una transacción, MERX:
 
-1. Reads the memo field
-2. Matches it against outstanding invoices
-3. Verifies the amount matches the invoice (exact amount required)
-4. Verifies the invoice has not expired
-5. Verifies the invoice has not already been paid (prevents double-claiming)
-
-```
-Verification:
-  TX hash: 7f3a2b...
-  From: TBuyerAddress...
-  To: TMerxTreasuryAddress...
-  Amount: 1,430,000 SUN (1.43 TRX) - MATCHES
-  Memo: "merx_xpay_abc123" - MATCHES invoice
-  Invoice status: UNPAID - OK
-  Invoice expiry: 2026-03-30T12:05:00Z - NOT EXPIRED
-
-  Result: VERIFIED
-```
-
-### Step 5: Energy Delegation
-
-With payment verified, MERX places the energy order through its provider network:
+1. Lee el campo memo
+2. Lo compara con facturas pendientes
+3. Verifica que el monto coincida con la factura (cantidad exacta requerida)
+4. Verifica que la factura no haya expirado
+5. Verifica que la factura no haya sido pagada ya (previene doble reclamación)
 
 ```
-Order placed:
-  Energy: 65,000
-  Duration: 1 hour
-  Target: TBuyerAddress...
-  Provider: sohu (best price at time of order)
+Verificación:
+  Hash TX: 7f3a2b...
+  De: TBuyerAddress...
+  Para: TMerxTreasuryAddress...
+  Monto: 1,430,000 SUN (1.43 TRX) - COINCIDE
+  Memo: "merx_xpay_abc123" - COINCIDE con factura
+  Estado de factura: NO PAGADA - OK
+  Vencimiento de factura: 2026-03-30T12:05:00Z - NO EXPIRADA
 
-Delegation confirmed after 4.1 seconds
-Energy available at TBuyerAddress: 65,000
+  Resultado: VERIFICADA
 ```
 
-The buyer now has 65,000 energy delegated to their address for 1 hour. They can use it for USDT transfers, DEX swaps, or any other contrato inteligente interaction.
+### Paso 5: Delegación de Energía
 
-## The Complete Agent Flow
-
-Aqui esta how an AI agent executes the entire x402 flow through the MERX Servidor MCP:
+Con el pago verificado, MERX realiza la orden de energía a través de su red de proveedores:
 
 ```
-Agent: "I need to send 100 USDT to TRecipient. I don't have a MERX account."
+Orden realizada:
+  Energía: 65,000
+  Duración: 1 hora
+  Destino: TBuyerAddress...
+  Proveedor: sohu (mejor precio en el momento de la orden)
 
-Step 1: Agent calls create_paid_order
-  -> Receives invoice: 1.43 TRX, memo "merx_xpay_abc123"
-
-Step 2: Agent calls transfer_trx
-  -> Sends 1.43 TRX to TMerxTreasury with memo "merx_xpay_abc123"
-  -> TX hash: 7f3a2b...
-
-Step 3: Agent waits for verification (automatic)
-  -> MERX detects payment, verifies on-chain
-  -> Energy delegated to agent's address
-
-Step 4: Agent calls transfer_trc20
-  -> Sends 100 USDT to TRecipient
-  -> Uses delegated energy instead of burning TRX
-  -> Cost: 1.43 TRX instead of ~27 TRX
-
-Total interaction with MERX: 2 tool calls
-Account created: No
-API key used: No
-Funds deposited: No
-Trust required: Minimal (payment verified on-chain)
+Delegación confirmada después de 4.1 segundos
+Energía disponible en TBuyerAddress: 65,000
 ```
 
-## Security: Why the Memo Matters
+El comprador ahora tiene 65,000 de energía delegados a su dirección durante 1 hora. Pueden usarla para transferencias de USDT, swaps de DEX, o cualquier otra interacción de contrato inteligente.
 
-The memo field is the linchpin of x402 security. Without it, any TRX transfer to the MERX treasury could be claimed as payment for any invoice. This creates two attack vectors:
+## El Flujo Completo del Agente
 
-### Cross-Payment Attack
-
-Without memo verification, an attacker could:
-1. Request an invoice for 65,000 energy (1.43 TRX)
-2. Wait for someone else to send 1.43 TRX to the MERX treasury for an unrelated reason
-3. Claim that unrelated payment as their invoice payment
-4. Receive free energy
-
-The memo prevents this. Every invoice has a unique memo string. A payment is only matched to an invoice if the memo field contains the exact string. Random TRX transfers to the treasury address - which happen on any active address - are ignored because they lack a valid memo.
-
-### Replay Attack
-
-Without expiration and single-use enforcement, an attacker could:
-1. Pay an invoice legitimately
-2. Reference the same payment hash de transaccion for a second invoice
-3. Receive energy twice for one payment
-
-MERX prevents this with two mechanisms:
-- Each invoice is marked as PAID after the first successful verification. A second payment claiming the same memo is rejected.
-- Each payment transaction can only be matched to one invoice. The hash de transaccion is recorded and cannot be reused.
-
-### Amount Verification
-
-The payment amount must exactly match the invoice amount. Sending 1.42 TRX instead of 1.43 TRX results in a failed verification. This prevents attacks where an attacker sends a minimal amount (e.g., 0.000001 TRX) with a valid memo to claim an invoice at a fraction of the price.
-
-## Real Mainnet Transaction
-
-Aqui esta a verified x402 transaction from TRON mainnet:
+Aquí es cómo un agente de IA ejecuta todo el flujo x402 a través del servidor MCP de MERX:
 
 ```
-Invoice:
-  Order ID: xpay_m7k2p9
-  Energy: 65,000
-  Duration: 1 hour
-  Price: 1.43 TRX
+Agente: "Necesito enviar 100 USDT a TRecipient. No tengo una cuenta de MERX."
+
+Paso 1: Agente llama a create_paid_order
+  -> Recibe factura: 1.43 TRX, memo "merx_xpay_abc123"
+
+Paso 2: Agente llama a transfer_trx
+  -> Envía 1.43 TRX a TMerxTreasury con memo "merx_xpay_abc123"
+  -> Hash TX: 7f3a2b...
+
+Paso 3: Agente espera verificación (automática)
+  -> MERX detecta pago, verifica en cadena
+  -> Energía delegada a dirección del agente
+
+Paso 4: Agente llama a transfer_trc20
+  -> Envía 100 USDT a TRecipient
+  -> Usa energía delegada en lugar de quemar TRX
+  -> Costo: 1.43 TRX en lugar de ~27 TRX
+
+Total de interacciones con MERX: 2 llamadas a herramientas
+Cuenta creada: No
+Clave API utilizada: No
+Fondos depositados: No
+Confianza requerida: Mínima (pago verificado en cadena)
+```
+
+## Seguridad: Por Qué el Memo es Importante
+
+El campo memo es el eje de la seguridad x402. Sin él, cualquier transferencia de TRX al tesorero de MERX podría reclamarse como pago para cualquier factura. Esto crea dos vectores de ataque:
+
+### Ataque de Pago Cruzado
+
+Sin verificación de memo, un atacante podría:
+1. Solicitar una factura por 65,000 de energía (1.43 TRX)
+2. Esperar a que alguien más envíe 1.43 TRX al tesorero de MERX por una razón no relacionada
+3. Reclamar ese pago no relacionado como pago de su factura
+4. Recibir energía gratuita
+
+El memo previene esto. Cada factura tiene una cadena de memo única. Un pago solo se compara con una factura si el campo memo contiene la cadena exacta. Las transferencias aleatorias de TRX al tesorero - que ocurren en cualquier dirección activa - se ignoran porque carecen de un memo válido.
+
+### Ataque de Reproducción
+
+Sin expiración y cumplimiento de un solo uso, un atacante podría:
+1. Pagar una factura legítimamente
+2. Hacer referencia a la misma transacción de pago para una segunda factura
+3. Recibir energía dos veces por un pago
+
+MERX previene esto con dos mecanismos:
+- Cada factura se marca como PAGADA después de la primera verificación exitosa. Un segundo pago que reclama el mismo memo se rechaza.
+- Cada transacción de pago solo se puede comparar con una factura. El hash de la transacción se registra y no se puede reutilizar.
+
+### Verificación de Monto
+
+El monto del pago debe coincidir exactamente con el monto de la factura. Enviar 1.42 TRX en lugar de 1.43 TRX resulta en una verificación fallida. Esto previene ataques donde un atacante envía un monto mínimo (por ejemplo, 0.000001 TRX) con un memo válido para reclamar una factura a una fracción del precio.
+
+## Transacción Real de Mainnet
+
+Aquí hay una transacción x402 verificada de la red principal de TRON:
+
+```
+Factura:
+  ID de Orden: xpay_m7k2p9
+  Energía: 65,000
+  Duración: 1 hora
+  Precio: 1.43 TRX
   Memo: merx_xpay_m7k2p9
 
-Payment Transaction:
+Transacción de Pago:
   Hash: 8d4f1a7b3c2e...
-  Block: 58,234,891
-  From: TWallet...
-  To: TMerxTreasury...
-  Amount: 1,430,000 SUN
+  Bloque: 58,234,891
+  De: TWallet...
+  Para: TMerxTreasury...
+  Monto: 1,430,000 SUN
   Memo: merx_xpay_m7k2p9
-  Status: CONFIRMED
+  Estado: CONFIRMADA
 
-Verification:
-  Timestamp: 2026-03-28T14:22:17Z
-  Match: Amount OK, Memo OK, Not expired, Not previously paid
-  Result: VERIFIED
+Verificación:
+  Marca de tiempo: 2026-03-28T14:22:17Z
+  Coincidencia: Monto OK, Memo OK, No expirada, No pagada previamente
+  Resultado: VERIFICADA
 
-Energy Delegation:
-  Delegated: 65,000 energy
-  Provider: catfee
-  Delegation TX: 3a8b2c...
-  Confirmed at: 2026-03-28T14:22:23Z
-  Expires at: 2026-03-28T15:22:23Z
+Delegación de Energía:
+  Delegada: 65,000 de energía
+  Proveedor: catfee
+  TX de delegación: 3a8b2c...
+  Confirmada en: 2026-03-28T14:22:23Z
+  Expira en: 2026-03-28T15:22:23Z
 ```
 
-From invoice request to delegacion de energia: 23 seconds. No account. No clave de API. No prior relationship.
+De solicitud de factura a delegación de energía: 23 segundos. Sin cuenta. Sin clave API. Sin relación previa.
 
-## When to Use x402 vs Account-Based Access
+## Cuándo Usar x402 vs Acceso Basado en Cuenta
 
-x402 is ideal for:
+x402 es ideal para:
 
-- **AI agents** that operate autonomously and should not depend on managed accounts
-- **One-time purchases** where the overhead of account creation exceeds the value of the transaction
-- **Privacy-conscious users** who do not want to create accounts or provide identifying information
-- **Testing and evaluation** where developers want to try the service before committing to an account
-- **Cross-platform agents** that interact with many services and should not maintain separate accounts for each
+- **Agentes de IA** que operan autónomamente y no deberían depender de cuentas gestionadas
+- **Compras únicas** donde el costo de creación de cuenta excede el valor de la transacción
+- **Usuarios conscientes de la privacidad** que no quieren crear cuentas o proporcionar información identificativa
+- **Pruebas y evaluación** donde los desarrolladores quieren probar el servicio antes de comprometerse con una cuenta
+- **Agentes multiplataforma** que interactúan con muchos servicios y no deberían mantener cuentas separadas para cada uno
 
-Account-based access is better for:
+El acceso basado en cuenta es mejor para:
 
-- **High-volume operations** where the per-transaction overhead of x402 (invoice creation + payment broadcast + verification) matters
-- **Standing orders and monitors** which require persistent server-side state linked to an account
-- **Balance-based billing** where prepaid credit is more efficient than per-transaction payments
-- **Team operations** where multiple users share an account with role-based access
+- **Operaciones de alto volumen** donde el costo por transacción de x402 (creación de factura + transmisión de pago + verificación) importa
+- **Órdenes permanentes y monitores** que requieren estado persistente del lado del servidor vinculado a una cuenta
+- **Facturación basada en saldo** donde el crédito prepagado es más eficiente que pagos por transacción
+- **Operaciones de equipo** donde múltiples usuarios comparten una cuenta con acceso basado en roles
 
-Many users start with x402 for evaluation and migrate to account-based access as their usage grows. The two models are complementary, not competing.
+Muchos usuarios comienzan con x402 para evaluación y migran al acceso basado en cuenta a medida que su uso crece. Los dos modelos son complementarios, no competitivos.
 
-## x402 and the Future of Agent Commerce
+## x402 y el Futuro del Comercio de Agentes
 
-The x402 protocol represents a broader shift in how services are consumed. Traditional SaaS billing - monthly subscriptions, tiered pricing, usage limits - assumes a human customer who creates an account, evaluates pricing tiers, and makes a purchasing decision. This model breaks down when the customer is an AI agent that needs to make purchasing decisions autonomously, in tiempo real, for specific tasks.
+El protocolo x402 representa un cambio más amplio en cómo se consumen los servicios. La facturación tradicional de SaaS - suscripciones mensuales, precios escalonados, límites de uso - asume un cliente humano que crea una cuenta, evalúa niveles de precios, y toma una decisión de compra. Este modelo se desmorona cuando el cliente es un agente de IA que necesita tomar decisiones de compra autónomamente, en tiempo real, para tareas específicas.
 
-x402 aligns with the agent economy:
+x402 se alinea con la economía de agentes:
 
-- **No registration** - Agents do not have identities in the traditional sense. x402 requires only a wallet address.
-- **Per-use pricing** - Agents should pay for what they use, when they use it, in amounts proportional to the task at hand.
-- **On-chain verification** - Trust is established through cryptographic proof, not through account credentials or business relationships.
-- **Composability** - An agent can use x402 to pay for energy from MERX, then use that energy to interact with any TRON contrato inteligente. The payment and the service are decoupled.
+- **Sin registro** - Los agentes no tienen identidades en el sentido tradicional. x402 requiere solo una dirección de cartera.
+- **Precios por uso** - Los agentes deberían pagar por lo que usan, cuándo lo usan, en montos proporcionales a la tarea en cuestión.
+- **Verificación en cadena** - La confianza se establece a través de prueba criptográfica, no a través de credenciales de cuenta o relaciones comerciales.
+- **Componibilidad** - Un agente puede usar x402 para pagar energía de MERX, luego usar esa energía para interactuar con cualquier contrato inteligente TRON. El pago y el servicio están desacoplados.
 
-MERX is the first energy exchange to implement x402. As the protocol matures, we expect other blockchain services to adopt similar pay-per-use models optimized for agent consumption.
+MERX es el primer intercambio de energía que implementa x402. A medida que el protocolo madura, esperamos que otros servicios blockchain adopten modelos de pago por uso similares optimizados para consumo de agentes.
 
-## Implementation Details for Developers
+## Detalles de Implementación para Desarrolladores
 
-### Building an x402 Client
+### Construir un Cliente x402
 
-If you are building an application that uses MERX x402 without the MCP server, here is the minimal implementation:
+Si está construyendo una aplicación que usa MERX x402 sin el servidor MCP, aquí está la implementación mínima:
 
 ```javascript
 const TronWeb = require('tronweb');
 
 async function buyEnergyX402(tronWeb, energyAmount, durationHours, targetAddress) {
-  // Step 1: Get invoice
+  // Paso 1: Obtener factura
   const invoiceRes = await fetch('https://merx.exchange/api/v1/x402/invoice', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -268,7 +268,7 @@ async function buyEnergyX402(tronWeb, energyAmount, durationHours, targetAddress
   });
   const invoice = await invoiceRes.json();
 
-  // Step 2: Build payment transaction
+  // Paso 2: Construir transacción de pago
   const tx = await tronWeb.transactionBuilder.sendTrx(
     invoice.pay_to,
     invoice.amount_sun,
@@ -279,11 +279,11 @@ async function buyEnergyX402(tronWeb, energyAmount, durationHours, targetAddress
     tx, invoice.memo, 'utf8'
   );
 
-  // Step 3: Sign and broadcast
+  // Paso 3: Firmar y transmitir
   const signedTx = await tronWeb.trx.sign(txWithMemo);
   const result = await tronWeb.trx.sendRawTransaction(signedTx);
 
-  // Step 4: Poll for order completion
+  // Paso 4: Sondear finalización de orden
   let order;
   for (let i = 0; i < 20; i++) {
     await new Promise(r => setTimeout(r, 3000));
@@ -298,40 +298,41 @@ async function buyEnergyX402(tronWeb, energyAmount, durationHours, targetAddress
 }
 ```
 
-### Error Handling
+### Manejo de Errores
 
-Common failure modes and their resolutions:
+Modos de fallo comunes y sus resoluciones:
 
-| Error | Cause | Resolution |
+| Error | Causa | Resolución |
 |---|---|---|
-| `INVOICE_EXPIRED` | Payment not sent within 5 minutes | Request a new invoice |
-| `AMOUNT_MISMATCH` | Payment amount differs from invoice | Send exact amount; request new invoice if price changed |
-| `MEMO_NOT_FOUND` | Payment missing memo field | Resend with correct memo; funds from failed attempt are not auto-refunded |
-| `ALREADY_PAID` | Invoice was already fulfilled | Check estado de la orden; this is not an error if you are polling |
-| `PROVIDER_UNAVAILABLE` | No provider can fill the order | Retry after a few minutes; the invoice payment will be credited to a MERX balance for manual withdrawal |
+| `INVOICE_EXPIRED` | Pago no enviado dentro de 5 minutos | Solicitar nueva factura |
+| `AMOUNT_MISMATCH` | El monto de pago difiere de la factura | Enviar monto exacto; solicitar nueva factura si el precio cambió |
+| `MEMO_NOT_FOUND` | Pago sin campo memo | Reenviar con memo correcto; los fondos del intento fallido no se reembolsan automáticamente |
+| `ALREADY_PAID` | La factura ya fue cumplida | Verificar estado de orden; esto no es un error si está sondeando |
+| `PROVIDER_UNAVAILABLE` | Ningún proveedor puede llenar la orden | Reintentar después de unos minutos; el monto de pago será acreditado a un saldo de MERX para retiro manual |
 
-### Refund Policy
+### Política de Reembolso
 
-If MERX cannot fulfill the order after payment is verified (e.g., all providers are temporarily unavailable), the payment amount is credited to a claimable balance associated with the payer's TRON address. The payer can claim this balance through a separate endpoint without creating an account - the claim is verified by signing a message with the same clave privada that sent the original payment.
+Si MERX no puede cumplir la orden después de que el pago se verifica (por ejemplo, todos los proveedores no están disponibles temporalmente), el monto de pago se acredita a un saldo reclamable asociado con la dirección TRON del pagador. El pagador puede reclamar este saldo a través de un punto final separado sin crear una cuenta - la reclamación se verifica firmando un mensaje con la misma clave privada que envió el pago original.
 
-## Conclusion
+## Conclusión
 
-The HTTP 402 status code was defined nearly 30 years ago with the vision of native internet payments. That vision was ahead of its time. Blockchains finally provide the infrastructure to make it real.
+El código de estado HTTP 402 fue definido hace casi 30 años con la visión de pagos nativos en internet. Esa visión fue adelantada a su tiempo. Las blockchains finalmente proporcionan la infraestructura para hacerla real.
 
-MERX x402 turns compra de energia into a single atomic flow: request, pay, receive. No accounts. No clave de APIs. No trust assumptions beyond what the blockchain provides.
+MERX x402 convierte la compra de energía en un flujo atómico único: solicitar, pagar, recibir. Sin cuentas. Sin claves API. Sin suposiciones de confianza más allá de lo que la blockchain proporciona.
 
-For AI agents, this is the natural purchasing model. For developers, it is the simplest integration path. For the ecosystem, it is a proof of concept for how blockchain services will be consumed in the agent economy.
+Para agentes de IA, este es el modelo de compra natural. Para desarrolladores, es el camino de integración más simple. Para el ecosistema, es una prueba de concepto de cómo se consumirán los servicios blockchain en la economía de agentes.
 
 ---
 
 **Enlaces:**
-- MERX Plataforma: [https://merx.exchange](https://merx.exchange)
+- Plataforma MERX: [https://merx.exchange](https://merx.exchange)
 - Servidor MCP (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - Servidor MCP (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Agrega MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -343,6 +344,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación MCP completa: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

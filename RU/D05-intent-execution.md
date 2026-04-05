@@ -1,39 +1,39 @@
-# Исполнение намерений: многошаговые планы для AI-агентов в TRON
+# Выполнение намерений: многошаговые планы для AI-агентов в TRON
 
-## Проблема with One-at-a-Time
+## Проблема с поочередным выполнением
 
-AI agents interacting with TRON face a structural problem when tasks involve multiple on-chain operations. Consider a simple scenario: an agent needs to send 100 USDT to Alice and then swap 50 TRX for USDT. Each operation requires its own energy purchase, its own delegation wait, and its own broadcast cycle.
+AI-агенты, взаимодействующие с TRON, сталкиваются со структурной проблемой, когда задачи включают несколько операций в цепи. Рассмотрим простой сценарий: агент должен отправить 100 USDT Алисе и затем обменять 50 TRX на USDT. Каждая операция требует собственной покупки energy, собственного периода ожидания делегирования и собственного цикла трансляции.
 
-With the one-at-a-time approach, the agent makes at least 8 tool calls:
+При поочередном подходе агент совершает как минимум 8 вызовов инструментов:
 
-1. Estimate energy for USDT transfer
-2. Buy energy for USDT transfer
-3. Wait for delegation
-4. Execute USDT transfer
-5. Estimate energy for swap
-6. Buy energy for swap
-7. Wait for delegation
-8. Execute swap
+1. Оценить energy для передачи USDT
+2. Купить energy для передачи USDT
+3. Дождаться делегирования
+4. Выполнить передачу USDT
+5. Оценить energy для обмена
+6. Купить energy для обмена
+7. Дождаться делегирования
+8. Выполнить обмен
 
-Each energy purchase is a separate market interaction with its own transaction overhead. Each delegation wait adds 3-6 seconds of latency. The total wall-clock time can exceed 30 seconds for what should be a simple two-step task.
+Каждая покупка energy — это отдельное взаимодействие на рынке с собственными накладными расходами на транзакцию. Каждое ожидание делегирования добавляет 3-6 секунд задержки. Общее время выполнения может превышать 30 секунд для того, что должно быть простой двухшаговой задачей.
 
-MERX solves this with intent execution - a system that takes a multi-step plan from an AI agent, simulates every step, optimizes resource purchases across all steps, and executes the entire plan in sequence.
+MERX решает эту проблему с помощью выполнения намерений — системы, которая берет многошаговый план от AI-агента, моделирует каждый шаг, оптимизирует закупки ресурсов для всех шагов и выполняет весь план последовательно.
 
-## What Is an Intent
+## Что такое намерение
 
-In the MERX system, an intent is a declarative description of what the agent wants to accomplish, expressed as an ordered list of actions. The agent specifies the desired outcome, and MERX handles the execution mechanics.
+В системе MERX намерение — это декларативное описание того, чего хочет достичь агент, выраженное в виде упорядоченного списка действий. Агент указывает желаемый результат, а MERX обрабатывает механику выполнения.
 
-An intent differs from a sequence of tool calls in three important ways:
+Намерение отличается от последовательности вызовов инструментов тремя важными способами:
 
-1. **Resource optimization** - MERX can batch energy purchases across all steps, buying the total energy needed in a single order rather than step by step.
+1. **Оптимизация ресурсов** — MERX может пакетировать покупки energy для всех шагов, покупая всю необходимую energy за один заказ вместо пошагового приобретения.
 
-2. **Pre-validation** - Every step is simulated before any step executes. If step 3 of a 5-step plan would fail, the agent knows before step 1 is broadcast.
+2. **Предварительная валидация** — каждый шаг моделируется перед выполнением любого шага. Если шаг 3 из 5-шагового плана потерпит неудачу, агент узнает об этом до трансляции шага 1.
 
-3. **Atomic planning** - The agent submits the entire plan at once, giving MERX visibility into the full scope of work. This enables optimizations that are impossible when steps are submitted individually.
+3. **Атомарное планирование** — агент отправляет весь план сразу, давая MERX полную видимость объема работы. Это позволяет проводить оптимизации, невозможные при отдельной отправке шагов.
 
-## The execute_intent Tool
+## Инструмент execute_intent
 
-The MCP server exposes intent execution through the `execute_intent` tool:
+MCP-сервер предоставляет выполнение намерений через инструмент `execute_intent`:
 
 ```
 Tool: execute_intent
@@ -61,15 +61,15 @@ Input: {
 }
 ```
 
-The response includes the simulation results for each step, the total resource cost, and the execution status of each step after completion.
+Ответ включает результаты моделирования для каждого шага, общую стоимость ресурсов и статус выполнения каждого шага после завершения.
 
 ## Поддерживаемые действия
 
-The intent system supports the following action types:
+Система намерений поддерживает следующие типы действий:
 
 ### transfer_trx
 
-Send TRX to an address. This is a native transfer that consumes bandwidth but no energy.
+Отправить TRX на адрес. Это нативный трансфер, который потребляет bandwidth, но не energy.
 
 ```json
 {
@@ -83,7 +83,7 @@ Send TRX to an address. This is a native transfer that consumes bandwidth but no
 
 ### transfer_trc20
 
-Send a TRC20 token (USDT, USDC, etc.) to an address. Consumes energy for the smart contract call.
+Отправить токен TRC-20 (USDT, USDC и т.д.) на адрес. Потребляет energy для вызова смарт-контракта.
 
 ```json
 {
@@ -98,7 +98,7 @@ Send a TRC20 token (USDT, USDC, etc.) to an address. Consumes energy for the sma
 
 ### swap
 
-Execute a token swap on SunSwap V2. Includes exact energy simulation for the specific swap parameters.
+Выполнить обмен токенов на SunSwap V2. Включает точное моделирование energy для конкретных параметров обмена.
 
 ```json
 {
@@ -114,7 +114,7 @@ Execute a token swap on SunSwap V2. Includes exact energy simulation for the spe
 
 ### approve
 
-Set a spending approval for a TRC20 token. Required before swapping tokens (not needed for swapping TRX).
+Установить разрешение на трату токена TRC-20. Требуется перед обменом токенов (не требуется для обмена TRX).
 
 ```json
 {
@@ -129,7 +129,7 @@ Set a spending approval for a TRC20 token. Required before swapping tokens (not 
 
 ### call_contract
 
-Execute an arbitrary smart contract call. This is the escape hatch for operations not covered by the specific action types.
+Выполнить произвольный вызов смарт-контракта. Это переход для операций, не охватываемых конкретными типами действий.
 
 ```json
 {
@@ -145,7 +145,7 @@ Execute an arbitrary smart contract call. This is the escape hatch for operation
 
 ### buy_resource
 
-Purchase energy or bandwidth as a step in the plan. Useful when the agent wants explicit control over resource timing.
+Купить energy или bandwidth как шаг в плане. Полезно, когда агент хочет явный контроль над временем закупки ресурсов.
 
 ```json
 {
@@ -160,11 +160,11 @@ Purchase energy or bandwidth as a step in the plan. Useful when the agent wants 
 
 ## Стратегии ресурсов
 
-The `resource_strategy` parameter controls how MERX handles energy purchases across the intent's steps.
+Параметр `resource_strategy` управляет тем, как MERX обрабатывает покупки energy в шагах намерения.
 
 ### batch_cheapest
 
-This is the default and recommended strategy. MERX simulates all steps, sums the total energy required, subtracts available resources, and makes a single energy purchase for the entire intent.
+Это стратегия по умолчанию и рекомендуемая. MERX моделирует все шаги, суммирует требуемую energy, вычитает доступные ресурсы и совершает одну покупку energy для всего намерения.
 
 ```
 Step 1 (transfer_trc20): 64,895 energy
@@ -174,39 +174,39 @@ Currently available:     0 energy
 Purchase:                290,000 energy (rounded to order unit)
 ```
 
-One purchase. One delegation wait. Then all steps execute sequentially using the pooled energy.
+Одна покупка. Одно ожидание делегирования. Затем все шаги выполняются последовательно, используя объединенную energy.
 
-Benefits:
-- Single market interaction (lower overhead)
-- Single delegation wait (lower latency)
-- Potential volume discount on larger orders
-- Simpler failure handling
+Преимущества:
+- Одно взаимодействие на рынке (меньше накладных расходов)
+- Одно ожидание делегирования (меньше задержки)
+- Потенциальная скидка за объем при больших заказах
+- Более простая обработка ошибок
 
 ### per_step
 
-Each step purchases its own energy independently. Use this when steps are conditional or when you need to minimize risk (if step 1 fails, you haven't purchased energy for step 2).
+Каждый шаг покупает свою energy независимо. Используйте это, когда шаги условные или когда вам нужно минимизировать риск (если шаг 1 не удается, вы не купили energy для шага 2).
 
 ```
 Step 1: buy 65,000 energy -> wait -> execute transfer
 Step 2: buy 225,000 energy -> wait -> execute swap
 ```
 
-This strategy is slower (two delegation waits) but wastes less energy if execution is halted mid-plan.
+Эта стратегия медленнее (два ожидания делегирования), но расходует меньше energy, если выполнение остановлено посередине плана.
 
-## Симуляция с сохранением состояния
+## Моделирование с состоянием
 
-The intent system's simulation engine maintains state across steps. This is critical for plans where later steps depend on the results of earlier steps.
+Двигатель моделирования системы намерений сохраняет состояние между шагами. Это критически важно для планов, где более поздние шаги зависят от результатов предыдущих шагов.
 
-Consider this intent: "Swap 50 TRX for USDT, then send the received USDT to Alice."
+Рассмотрим это намерение: "Обменять 50 TRX на USDT, затем отправить полученный USDT Алисе."
 
-The simulation engine:
+Двигатель моделирования:
 
-1. Simulates step 1 (swap). Result: agent receives 16.42 USDT.
-2. Updates the simulated state to reflect the new USDT balance.
-3. Simulates step 2 (transfer 16.42 USDT to Alice) against the updated state.
-4. Confirms step 2 would succeed with the balance from step 1.
+1. Моделирует шаг 1 (обмен). Результат: агент получает 16.42 USDT.
+2. Обновляет смоделированное состояние, чтобы отразить новый баланс USDT.
+3. Моделирует шаг 2 (передача 16.42 USDT Алисе) для обновленного состояния.
+4. Подтверждает, что шаг 2 успешен с балансом из шага 1.
 
-Without stateful simulation, step 2 would be simulated against the agent's current balance (which might not include the USDT from the swap). The simulation would incorrectly report that step 2 would fail due to insufficient balance.
+Без моделирования с состоянием шаг 2 был бы смоделирован для текущего баланса агента (который может не включать USDT из обмена). Моделирование неправильно сообщило бы, что шаг 2 потерпит неудачу из-за недостаточного баланса.
 
 ```
 Tool: execute_intent
@@ -234,11 +234,11 @@ Input: {
 }
 ```
 
-The `use_previous_output` parameter tells the intent system to use the output amount from the preceding step as the input amount for this step.
+Параметр `use_previous_output` сообщает системе намерений использовать выходную сумму из предыдущего шага как входную сумму для этого шага.
 
-## Ответ симуляции
+## Ответ моделирования
 
-Before execution begins, the intent system returns a simulation summary:
+Перед началом выполнения система намерений возвращает сводку моделирования:
 
 ```json
 {
@@ -273,11 +273,11 @@ Before execution begins, the intent system returns a simulation summary:
 }
 ```
 
-The agent sees the full plan with costs before any on-chain action is taken. If the costs are unacceptable or a step would fail, the agent can modify the plan without spending anything.
+Агент видит полный план с затратами перед любым действием в цепи. Если затраты неприемлемы или какой-то шаг потерпит неудачу, агент может изменить план, не потратив ничего.
 
-## Исполнение и обработка ошибок
+## Выполнение и обработка ошибок
 
-Once the agent confirms the plan (or if auto-execution is enabled), the intent executes step by step:
+После подтверждения плана агентом (или если включено автоматическое выполнение), намерение выполняется шаг за шагом:
 
 ```json
 {
@@ -307,9 +307,9 @@ Once the agent confirms the plan (or if auto-execution is enabled), the intent e
 }
 ```
 
-### Failure Mid-Execution
+### Ошибка во время выполнения
 
-If a step fails during execution (not during simulation), the intent system stops and reports the failure:
+Если шаг не удается во время выполнения (не во время моделирования), система намерений останавливается и сообщает об ошибке:
 
 ```json
 {
@@ -335,13 +335,13 @@ If a step fails during execution (not during simulation), the intent system stop
 }
 ```
 
-Step 1 has already been committed on-chain and cannot be reversed. The agent receives the remaining energy balance and can decide how to proceed - retry the failed step with adjusted parameters, execute a different action, or let the energy expire.
+Шаг 1 уже зафиксирован в цепи и не может быть отменен. Агент получает оставшийся баланс energy и может решить, как действовать дальше — повторить неудачный шаг с отрегулированными параметрами, выполнить другое действие или дать energy истечь.
 
-## Real-World Example: Treasury Rebalancing
+## Реальный пример: переbalансировка казны
 
-Here is a realistic multi-step intent that an agent might execute for treasury management:
+Вот реалистичное многошаговое намерение, которое агент может выполнить для управления казной:
 
-"Swap 1,000 TRX for USDT, send 300 USDT to the operations wallet, send 200 USDT to the marketing wallet, keep the rest."
+"Обменять 1000 TRX на USDT, отправить 300 USDT на кошелек операций, отправить 200 USDT на кошелек маркетинга, оставить остаток."
 
 ```
 Tool: execute_intent
@@ -377,7 +377,7 @@ Input: {
 }
 ```
 
-Simulation:
+Моделирование:
 
 ```
 Step 1 (swap):     223,354 energy
@@ -392,48 +392,49 @@ With intent batching: 1 purchase = 16.83 TRX
 Savings from batching: 1.37 TRX + reduced latency (1 wait vs 3)
 ```
 
-## Когда использовать Intents vs Individual Tools
+## Когда использовать намерения против отдельных инструментов
 
-Use `execute_intent` when:
+Используйте `execute_intent`, когда:
 
-- The task involves two or more on-chain operations
-- Steps have dependencies (step 2 uses the output of step 1)
-- You want to minimize total resource costs through batching
-- You need pre-validation of the entire plan before committing
+- Задача включает две или более операции в цепи
+- Шаги имеют зависимости (шаг 2 использует выход шага 1)
+- Вы хотите минимизировать общие затраты на ресурсы через пакетирование
+- Вам нужна предварительная валидация всего плана перед фиксацией
 
-Use individual tools when:
+Используйте отдельные инструменты, когда:
 
-- The task is a single operation
-- The agent needs to make decisions between steps based on external input
-- Steps are separated by significant time gaps
-- The agent wants maximum control over each stage of execution
+- Задача — это одна операция
+- Агенту нужно принять решения между шагами на основе внешних данных
+- Шаги разделены значительными временными промежутками
+- Агент хочет максимальный контроль на каждом этапе выполнения
 
-## Намерения и автономность агента
+## Намерения и автономия агента
 
-The intent system is designed for agent autonomy. An agent that receives a high-level instruction like "rebalance the treasury" can decompose it into concrete steps, construct an intent, simulate it, review the costs, and execute - all without human intervention at any stage.
+Система намерений разработана для автономии агента. Агент, получивший высокоуровневую инструкцию типа "переbalансировать казну", может разложить ее на конкретные шаги, построить намерение, смоделировать его, пересмотреть затраты и выполнить — все без вмешательства человека на каком-либо этапе.
 
-The simulation step serves as the agent's safety check. Before committing any funds, the agent can verify that every step will succeed, the total cost is within budget, and the expected outputs match the desired outcome. This is the equivalent of a human reviewing a transaction before clicking "confirm," but executed programmatically by the agent itself.
+Шаг моделирования служит проверкой безопасности агента. Перед фиксацией любых средств агент может убедиться, что каждый шаг успешен, общая стоимость в пределах бюджета и ожидаемые выходы соответствуют желаемому результату. Это эквивалент проверки транзакции человеком перед нажатием "подтвердить", но выполняется программно самим агентом.
 
-Combined with standing orders for recurring resource purchases and monitors for balance alerts, the intent system enables fully autonomous on-chain operations that run 24/7 without human oversight.
+В сочетании с постоянными заказами на повторяющиеся закупки ресурсов и мониторами для оповещений о балансе система намерений позволяет полностью автономные операции в цепи, которые работают 24/7 без человеческого надзора.
 
 ## Заключение
 
-Single-step execution is the training wheels of blockchain automation. Real agent workflows involve multiple operations, dependencies between steps, and resource optimization across the full plan.
+Выполнение с одним шагом — это вспомогательные колесики автоматизации блокчейна. Реальные рабочие процессы агента включают несколько операций, зависимости между шагами и оптимизацию ресурсов для полного плана.
 
-MERX intent execution gives AI agents the ability to think in plans rather than individual actions. Simulate everything. Optimize resources across the full scope. Execute with confidence that every step has been pre-validated.
+Выполнение намерений MERX дает AI-агентам возможность думать планами вместо отдельных действий. Смоделируйте всё. Оптимизируйте ресурсы для полного объема. Выполняйте с уверенностью, что каждый шаг был предварительно валидирован.
 
-The blockchain is not a single-operation environment. Your agent should not be either.
+Блокчейн — это не среда для одной операции. Ваш агент не должен быть ей тоже.
 
 ---
 
 **Ссылки:**
-- Платформа MERX: [https://merx.exchange](https://merx.exchange)
+- MERX Platform: [https://merx.exchange](https://merx.exchange)
 - MCP Server (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - MCP Server (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — без установки, без API-ключа для инструментов только для чтения:
 
 ```json
 {
@@ -445,6 +446,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Попросите вашего AI-агента: "What is the cheapest TRON energy right now?" и получите живые цены от всех подключенных поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

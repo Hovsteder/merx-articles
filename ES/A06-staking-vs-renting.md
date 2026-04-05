@@ -1,305 +1,306 @@
-# Staking vs alquiler de energia en TRON: analisis de punto de equilibrio
+# Staking vs Alquiler de Energía TRON: Análisis de Punto de Equilibrio
 
-Every business that sends USDT on TRON faces the same decision: should you stake your own TRX to generate energy, or rent energy from a provider? The answer depends on your volume, capital availability, risk tolerance, and time horizon. This article provides the math to make that decision with confidence.
+Cada negocio que envía USDT en TRON enfrenta la misma decisión: ¿debería hacer staking de tu propio TRX para generar energía, o alquilar energía a un proveedor? La respuesta depende de tu volumen, disponibilidad de capital, tolerancia al riesgo y horizonte temporal. Este artículo proporciona las matemáticas para tomar esa decisión con confianza.
 
-We will build a complete financial model comparing both approaches, find the exact break-even point, and identify the scenarios where each strategy wins.
-
----
-
-## How Staking Works
-
-Under TRON's Stake 2.0 system, you lock TRX in a staking contract to receive energy. The energy you receive is proportional to your share of the total network stake:
-
-```
-your_daily_energy = (your_staked_trx / total_network_staked_trx) * total_energy_limit
-```
-
-### Current Staking Parameters (Early 2026)
-
-- **Staking ratio**: approximately 36,000 TRX per 65,000 energy/day
-- **Lock period**: 14 days (you cannot unstake and access your TRX for 14 days after initiating unstake)
-- **Regeneration**: energy regenerates continuously over 24 hours
-- **Minimum stake**: no protocol minimum, but practical minimum is enough for at least one operation
-
-### What You Get
-
-Staking gives you a daily presupuesto de energia that regenerates automatically. If you stake 36,000 TRX, you get approximately 65,000 energy per day - enough for one standard USDT transfer.
-
-### What You Give Up
-
-- **Liquidity**: your TRX is locked. You cannot sell it, trade it, or use it for anything else during the lock period.
-- **Capital exposure**: if TRX price drops while staked, your capital loses value.
-- **Flexibility**: your presupuesto de energia is fixed. Busy days cannot borrow from quiet days.
+Construiremos un modelo financiero completo comparando ambos enfoques, encontraremos el punto de equilibrio exacto e identificaremos los escenarios donde cada estrategia es ganadora.
 
 ---
 
-## How Renting Works
+## Cómo Funciona el Staking
 
-Energy rental involves paying a provider (or aggregator) to delegate energy to your TRON address for a specified duration. The provider has already staked TRX and is selling the resulting energy at a markup.
+Bajo el sistema Stake 2.0 de TRON, bloqueas TRX en un contrato de staking para recibir energía. La energía que recibes es proporcional a tu participación en el staking total de la red:
 
-### Current Rental Parameters (Early 2026)
+```
+tu_energia_diaria = (tu_trx_en_staking / total_trx_en_staking_red) * limite_energia_total
+```
 
-- **Price range**: 80-130 SUN per unidad de energia (varies by provider, duration, and market)
-- **Durations**: 1 hour, 1 day, 3 days, 7 days, 14 days, 30 days
-- **Delivery**: typically within seconds of payment
-- **Minimum order**: usually 10,000-32,000 unidad de energias
+### Parámetros Actuales de Staking (Principios de 2026)
 
-### What You Get
+- **Ratio de staking**: aproximadamente 36,000 TRX por 65,000 energía/día
+- **Período de bloqueo**: 14 días (no puedes hacer unstake y acceder a tu TRX durante 14 días después de iniciar el unstake)
+- **Regeneración**: la energía se regenera continuamente durante 24 horas
+- **Staking mínimo**: sin mínimo de protocolo, pero el mínimo práctico es suficiente para al menos una operación
 
-Immediate energy availability with no capital lock-up. You pay only for what you use, when you use it.
+### Lo Que Obtienes
 
-### What You Give Up
+El staking te da un presupuesto de energía diaria que se regenera automáticamente. Si haces staking de 36,000 TRX, obtienes aproximadamente 65,000 energía por día, suficiente para una transferencia estándar de USDT.
 
-- **Per-unit cost**: renting is more expensive per unidad de energia than the effective cost of staking (providers need margin).
-- **Price uncertainty**: rental prices fluctuate with market demand.
-- **Dependency**: you rely on provider availability and uptime.
+### Lo Que Renuncias
+
+- **Liquidez**: tu TRX está bloqueado. No puedes venderlo, intercambiarlo o usarlo para nada más durante el período de bloqueo.
+- **Exposición de capital**: si el precio de TRX cae mientras está en staking, tu capital pierde valor.
+- **Flexibilidad**: tu presupuesto de energía es fijo. Los días ocupados no pueden tomar prestado de los días tranquilos.
 
 ---
 
-## The Break-Even Model
+## Cómo Funciona el Alquiler
 
-To compare staking and renting fairly, we need to account for all costs - not just the obvious ones.
+El alquiler de energía implica pagar a un proveedor (o agregador) para delegar energía a tu dirección de TRON durante una duración especificada. El proveedor ya ha hecho staking de TRX y está vendiendo la energía resultante con un margen.
 
-### Staking Costs
+### Parámetros Actuales de Alquiler (Principios de 2026)
 
-The primary cost of staking is costo de oportunidad. If your TRX were not staked, you could earn yield elsewhere (lending, liquidity provision, or simply not holding a volatile asset).
+- **Rango de precio**: 80-130 SUN por unidad de energía (varía según el proveedor, duración y mercado)
+- **Duraciones**: 1 hora, 1 día, 3 días, 7 días, 14 días, 30 días
+- **Entrega**: típicamente dentro de segundos después del pago
+- **Orden mínima**: usualmente 10,000-32,000 unidades de energía
 
-```
-Annual opportunity cost = Staked TRX value x Expected annual return
-```
+### Lo Que Obtienes
 
-For this analysis, we will use three costo de oportunidad scenarios:
+Disponibilidad inmediata de energía sin bloqueo de capital. Pagas solo lo que usas, cuando lo usas.
 
-- **Conservative (3%)**: low-risk DeFi yields or stablecoin lending
-- **Moderate (5%)**: typical crypto yield strategies
-- **Aggressive (8%)**: active trading or higher-risk DeFi
+### Lo Que Renuncias
 
-### Staking Cost Per Transfer
+- **Costo por unidad**: alquilar es más caro por unidad de energía que el costo efectivo del staking (los proveedores necesitan margen).
+- **Incertidumbre de precio**: los precios de alquiler fluctúan con la demanda del mercado.
+- **Dependencia**: dependes de la disponibilidad y tiempo de actividad del proveedor.
 
-For 1 USDT transfer per day (65,000 energy):
+---
 
-```
-TRX required:    36,000 TRX
-Capital at $0.25: $9,000
+## El Modelo de Punto de Equilibrio
 
-At 3% opportunity cost: $9,000 x 0.03 / 365 = $0.74/transfer
-At 5% opportunity cost: $9,000 x 0.05 / 365 = $1.23/transfer
-At 8% opportunity cost: $9,000 x 0.08 / 365 = $1.97/transfer
-```
+Para comparar el staking y el alquiler de manera justa, necesitamos contabilizar todos los costos, no solo los obvios.
 
-### Rental Cost Per Transfer
+### Costos del Staking
 
-Using MERX best-price aggregation at approximately 85 SUN per unidad de energia:
+El costo principal del staking es el costo de oportunidad. Si tu TRX no estuviera en staking, podrías obtener rendimiento en otra parte (préstamos, provisión de liquidez, o simplemente no mantener un activo volátil).
 
 ```
-65,000 energy x 85 SUN = 5,525,000 SUN = 5.525 TRX
-At $0.25/TRX = $1.38/transfer
+Costo de oportunidad anual = Valor de TRX en staking x Retorno anual esperado
 ```
 
-### Break-Even Comparison
+Para este análisis, usaremos tres escenarios de costo de oportunidad:
 
-| Opportunity Cost Rate | Staking Cost/Transfer | Rental Cost/Transfer | Winner |
-|-----------------------|----------------------|---------------------|--------|
+- **Conservador (3%)**: rendimientos DeFi de bajo riesgo o préstamos en stablecoins
+- **Moderado (5%)**: estrategias de rendimiento cripto típicas
+- **Agresivo (8%)**: trading activo o DeFi de mayor riesgo
+
+### Costo de Staking Por Transferencia
+
+Para 1 transferencia de USDT por día (65,000 energía):
+
+```
+TRX requerido:     36,000 TRX
+Capital a $0.25:   $9,000
+
+A 3% costo de oportunidad:   $9,000 x 0.03 / 365 = $0.74/transferencia
+A 5% costo de oportunidad:   $9,000 x 0.05 / 365 = $1.23/transferencia
+A 8% costo de oportunidad:   $9,000 x 0.08 / 365 = $1.97/transferencia
+```
+
+### Costo de Alquiler Por Transferencia
+
+Usando agregación de mejor precio de MERX a aproximadamente 85 SUN por unidad de energía:
+
+```
+65,000 energía x 85 SUN = 5,525,000 SUN = 5.525 TRX
+A $0.25/TRX = $1.38/transferencia
+```
+
+### Comparación de Punto de Equilibrio
+
+| Tasa de Costo de Oportunidad | Costo Staking/Transferencia | Costo Alquiler/Transferencia | Ganador |
+|------------------------------|----------------------------|------------------------------|---------|
 | 3% | $0.74 | $1.38 | Staking |
-| 5% | $1.23 | $1.38 | Staking (barely) |
-| 6.3% | $1.38 | $1.38 | Break-even |
-| 8% | $1.97 | $1.38 | Renting |
+| 5% | $1.23 | $1.38 | Staking (apenas) |
+| 6.3% | $1.38 | $1.38 | Punto de equilibrio |
+| 8% | $1.97 | $1.38 | Alquiler |
 
-**The break-even costo de oportunidad rate is approximately 6.3%.** If you can earn more than 6.3% on your TRX elsewhere, renting is cheaper. If not, staking wins on pure cost.
+**La tasa de costo de oportunidad de punto de equilibrio es aproximadamente 6.3%.** Si puedes ganar más de 6.3% en tu TRX en otro lugar, alquilar es más barato. Si no, el staking gana en costo puro.
 
 ---
 
-## But Cost Is Not Everything
+## Pero el Costo No Es Todo
 
-The break-even analysis above only considers direct financial cost. Several other factors should influence the decision.
+El análisis de punto de equilibrio anterior solo considera el costo financiero directo. Varios otros factores deberían influir en la decisión.
 
-### Factor 1: Capital Requirements
+### Factor 1: Requisitos de Capital
 
-This is often the deciding factor. Aqui esta the TRX required at various volumes:
+Este suele ser el factor decisivo. Aquí está el TRX requerido a varios volúmenes:
 
-| Daily Transfers | Energy Needed | TRX to Stake | Capital Required |
-|----------------|--------------|-------------|-----------------|
+| Transferencias Diarias | Energía Necesaria | TRX a Hacer Staking | Capital Requerido |
+|----------------------|------------------|-------------------|-----------------|
 | 1 | 65,000 | 36,000 | $9,000 |
 | 10 | 650,000 | 360,000 | $90,000 |
 | 50 | 3,250,000 | 1,800,000 | $450,000 |
 | 100 | 6,500,000 | 3,600,000 | $900,000 |
 | 500 | 32,500,000 | 18,000,000 | $4,500,000 |
 
-For a business doing 100 USDT transfers daily, staking requires $900,000 in locked TRX. Many businesses simply do not have this capital available, making renting the only viable option regardless of cost efficiency.
+Para un negocio que realiza 100 transferencias de USDT diarias, el staking requiere $900,000 en TRX bloqueado. Muchos negocios simplemente no tienen este capital disponible, haciendo que el alquiler sea la única opción viable independientemente de la eficiencia de costo.
 
-### Factor 2: Demand Variability
+### Factor 2: Variabilidad de Demanda
 
-Staking gives you a fixed daily presupuesto de energia. If your transfer volume varies significantly, you face two problems:
+El staking te da un presupuesto de energía diaria fijo. Si tu volumen de transferencias varía significativamente, enfrentas dos problemas:
 
-- **Low days**: your energy regenerates and is wasted. You paid for capacity you did not use.
-- **High days**: you exhaust your energy early and must either rent additional energy or burn TRX at a premium.
+- **Días bajos**: tu energía se regenera y se desperdicia. Pagaste por capacidad que no usaste.
+- **Días altos**: agotaste tu energía temprano y debes alquilar energía adicional o quemar TRX a un precio premium.
 
-Consider a procesador de pagos with the following weekly pattern:
-
-```
-Monday:    150 transfers
-Tuesday:   120 transfers
-Wednesday: 110 transfers
-Thursday:  130 transfers
-Friday:    200 transfers
-Saturday:   40 transfers
-Sunday:     30 transfers
-
-Average: 111/day
-Peak: 200/day
-```
-
-If you stake for peak capacity (200/day), you waste 45% of your energy on weekends. If you stake for average (111/day), you need to rent an additional 89 transfers worth of energy on Fridays.
-
-A hybrid approach often makes sense: stake for your baseline and rent for peaks. But this adds operational complexity.
-
-### Factor 3: TRX Price Risk
-
-When you stake 3,600,000 TRX worth $900,000, you are making a $900,000 bet on TRX's price stability. Consider:
+Considera un procesador de pagos con el siguiente patrón semanal:
 
 ```
-TRX drops 20%: you lose $180,000 in capital value
-That exceeds years of energy rental savings
+Lunes:      150 transferencias
+Martes:     120 transferencias
+Miércoles:  110 transferencias
+Jueves:     130 transferencias
+Viernes:    200 transferencias
+Sábado:      40 transferencias
+Domingo:     30 transferencias
+
+Promedio: 111/día
+Pico: 200/día
 ```
 
-Conversely, if TRX appreciates, your capital gains offset costo de energias. But this is speculation, not optimizacion de costos.
+Si haces staking para la capacidad de pico (200/día), desperdicias 45% de tu energía los fines de semana. Si haces staking para el promedio (111/día), necesitas alquilar energía adicional para 89 transferencias los viernes.
 
-Renting eliminates price risk entirely. You pay in small increments and never hold more TRX than needed for near-term operations.
+Un enfoque híbrido a menudo tiene sentido: haz staking para tu línea base y alquila para los picos. Pero esto agrega complejidad operacional.
 
-### Factor 4: Unstaking Delay
+### Factor 3: Riesgo de Precio de TRX
 
-The 14-day unstaking period is a hard constraint. If you need to access your TRX urgently - por ejemplo, to cover a margin call or capitalize on a trading opportunity - those funds are inaccessible for two weeks.
+Cuando haces staking de 3,600,000 TRX por valor de $900,000, estás haciendo una apuesta de $900,000 en la estabilidad del precio de TRX. Considera:
 
-This illiquidity premium is difficult to quantify but very real. For a business that may face cash flow crunches, the inability to access $900,000 for 14 days is a significant risk.
+```
+TRX cae 20%: pierdes $180,000 en valor de capital
+Eso excede años de ahorros en alquiler de energía
+```
 
-### Factor 5: Operational Simplicity
+A la inversa, si TRX se aprecia, tus ganancias de capital compensan los costos de energía. Pero esto es especulación, no optimización de costos.
 
-Staking requires:
-- Managing a TRON wallet with large TRX balances
-- Monitoring proporcion de stakings (they change as network stake changes)
-- Adjusting stake when ratios shift
-- Planning unstaking 14 days in advance when you need to reduce
+El alquiler elimina completamente el riesgo de precio. Pagas en pequeños incrementos y nunca mantienes más TRX que lo necesario para operaciones a corto plazo.
 
-Renting via MERX requires:
-- Maintaining a MERX deposit balance
-- Making API calls when you need energy
-- Nothing else
+### Factor 4: Retraso de Unstaking
 
-For engineering teams already managing complex systems, the operational overhead of staking is non-trivial.
+El período de unstaking de 14 días es una restricción dura. Si necesitas acceder a tu TRX urgentemente, por ejemplo, para cubrir una llamada de margen o capitalizar una oportunidad de trading, esos fondos son inaccesibles durante dos semanas.
+
+Esta prima de iliquidez es difícil de cuantificar pero muy real. Para un negocio que puede enfrentar constricciones de flujo de efectivo, la incapacidad de acceder a $900,000 durante 14 días es un riesgo significativo.
+
+### Factor 5: Simplicidad Operacional
+
+El staking requiere:
+- Administrar una billetera TRON con grandes saldos de TRX
+- Monitorear ratios de staking (cambian a medida que el staking de la red cambia)
+- Ajustar el staking cuando los ratios cambian
+- Planificar unstaking 14 días antes cuando necesites reducir
+
+Alquilar a través de MERX requiere:
+- Mantener un saldo de depósito en MERX
+- Hacer llamadas API cuando necesitas energía
+- Nada más
+
+Para equipos de ingeniería que ya administran sistemas complejos, la sobrecarga operacional del staking es no trivial.
 
 ---
 
-## Decision Framework
+## Marco de Decisión
 
-### Stake When
+### Haz Staking Cuando
 
-- You have abundant TRX capital with no better use
-- Your daily volume is consistent and predictable
-- You plan to hold TRX long-term regardless (alignment of interests)
-- Your costo de oportunidad of capital is below 6%
-- You have engineering capacity to manage staking operations
+- Tengas abundante capital en TRX sin mejor uso
+- Tu volumen diario sea consistente y predecible
+- Planees mantener TRX a largo plazo de todas formas (alineación de intereses)
+- Tu costo de oportunidad de capital esté por debajo de 6%
+- Tengas capacidad de ingeniería para administrar operaciones de staking
 
-### Rent When
+### Alquila Cuando
 
-- You lack the capital to stake for your volume needs
-- Your volume is variable or unpredictable
-- You want to minimize TRX price exposure
-- Your costo de oportunidad of capital exceeds 6%
-- You value operational simplicity
-- You are still scaling and do not know your steady-state volume
+- Te falte capital para hacer staking en tu volumen de necesidades
+- Tu volumen sea variable o impredecible
+- Quieras minimizar la exposición al precio de TRX
+- Tu costo de oportunidad de capital exceda 6%
+- Valores la simplicidad operacional
+- Aún estés escalando y no sepas tu volumen en estado estable
 
-### Use a Hybrid When
+### Usa un Enfoque Híbrido Cuando
 
-- You have some capital to stake for baseline coverage
-- Your volume has predictable peaks that exceed your staked capacity
-- You want optimizacion de costos with a safety net
-
----
-
-## Hybrid Strategy in Practice
-
-The most sophisticated operators use a hybrid approach. Aqui esta how to structure it:
-
-```
-Baseline: Stake for 60-70% of your average daily volume
-Peaks:    Rent the rest through MERX on demand
-```
-
-### Example: 100 Transfers/Day Average
-
-```
-Stake for 65 transfers:  2,340,000 TRX ($585,000)
-Opportunity cost at 5%:  $29,250/year = $80.14/day
-
-Rent remaining 35 transfers via MERX:
-  35 x 65,000 energy x 85 SUN = 194,250,000 SUN = 194.25 TRX
-  194.25 TRX x $0.25 = $48.56/day
-
-Total daily cost: $80.14 + $48.56 = $128.70/day
-Annual cost: $46,976
-
-vs. Pure staking (100/day):
-  Capital: $900,000, Opportunity cost: $45,000/year
-  But: no flexibility, full TRX exposure
-
-vs. Pure renting (100/day):
-  100 x 5.525 TRX x $0.25 = $138.13/day = $50,417/year
-  But: zero capital risk, full flexibility
-```
-
-The hybrid saves roughly $3,400/year versus pure renting while requiring only 65% of the capital of pure staking. Whether the reduced capital exposure and increased flexibility justify the modest extra cost is a business judgment.
+- Tengas algo de capital para hacer staking para cobertura de línea base
+- Tu volumen tenga picos predecibles que excedan tu capacidad en staking
+- Quieras optimización de costos con una red de seguridad
 
 ---
 
-## Automating the Hybrid with MERX
+## Estrategia Híbrida en la Práctica
 
-MERX supports automated gestion de recursos that enables the hybrid strategy without manual intervention:
+Los operadores más sofisticados usan un enfoque híbrido. Aquí te mostramos cómo estructurarlo:
+
+```
+Línea base: Haz staking para 60-70% de tu volumen diario promedio
+Picos:      Alquila el resto a través de MERX bajo demanda
+```
+
+### Ejemplo: 100 Transferencias/Día Promedio
+
+```
+Haz staking para 65 transferencias:  2,340,000 TRX ($585,000)
+Costo de oportunidad a 5%:           $29,250/año = $80.14/día
+
+Alquila las 35 transferencias restantes a través de MERX:
+  35 x 65,000 energía x 85 SUN = 194,250,000 SUN = 194.25 TRX
+  194.25 TRX x $0.25 = $48.56/día
+
+Costo diario total: $80.14 + $48.56 = $128.70/día
+Costo anual: $46,976
+
+vs. Staking puro (100/día):
+  Capital: $900,000, Costo de oportunidad: $45,000/año
+  Pero: sin flexibilidad, exposición completa a TRX
+
+vs. Alquiler puro (100/día):
+  100 x 5.525 TRX x $0.25 = $138.13/día = $50,417/año
+  Pero: riesgo de capital cero, flexibilidad completa
+```
+
+El híbrido ahorra aproximadamente $3,400/año versus alquiler puro mientras requiere solo 65% del capital del staking puro. Si la reducción de exposición de capital y el aumento de flexibilidad justifican el costo adicional modesto es un juicio comercial.
+
+---
+
+## Automatizar el Híbrido con MERX
+
+MERX es compatible con gestión de recursos automatizada que permite la estrategia híbrida sin intervención manual:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
-const client = new MerxClient({ apiKey: 'your-key' });
+const client = new MerxClient({ apiKey: 'tu-clave' });
 
-// Check if your staked energy is sufficient
+// Verifica si tu energía en staking es suficiente
 const resources = await client.checkAddressResources({
-  address: 'your-tron-address'
+  address: 'tu-dirección-tron'
 });
 
 const energyNeeded = 65000;
 const energyAvailable = resources.energy.remaining;
 
 if (energyAvailable < energyNeeded) {
-  // Rent the shortfall through MERX
+  // Alquila el faltante a través de MERX
   const shortfall = energyNeeded - energyAvailable;
   await client.createOrder({
     energy: shortfall,
-    targetAddress: 'your-tron-address',
+    targetAddress: 'tu-dirección-tron',
     duration: '1h'
   });
 }
 ```
 
-Standing orders can automate this further, ensuring your address always has sufficient energy before critical operations.
+Las órdenes permanentes pueden automatizar esto aún más, asegurando que tu dirección siempre tenga energía suficiente antes de operaciones críticas.
 
 SDK: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 
 ---
 
-## Conclusion
+## Conclusión
 
-The staking-vs-renting decision is not one-size-fits-all. The math favors staking when capital is cheap and abundant, and favors renting when capital is scarce or has better alternative uses. For most growing businesses, renting through an aggregator like MERX is the pragmatic choice: it requires minimal capital, eliminates TRX price risk, scales instantly, and lets you focus on your core product rather than TRON gestion de recursos.
+La decisión staking vs. alquiler no es de una talla única para todos. Las matemáticas favorecen el staking cuando el capital es barato y abundante, y favorecen el alquiler cuando el capital es escaso o tiene usos alternativos mejores. Para la mayoría de negocios en crecimiento, alquilar a través de un agregador como MERX es la opción pragmática: requiere capital mínimo, elimina riesgo de precio de TRX, escala instantáneamente, y te permite enfocarte en tu producto central en lugar de la gestión de recursos de TRON.
 
-If you do choose to stake, consider the hybrid approach: stake for your floor and rent for your ceiling. You capture most of the staking savings while retaining the flexibility that renting provides.
+Si decides hacer staking, considera el enfoque híbrido: haz staking para tu piso y alquila para tu techo. Capturas la mayoría de los ahorros de staking mientras retienes la flexibilidad que el alquiler proporciona.
 
-Calculate your optimal strategy with tiempo real pricing at [https://merx.exchange](https://merx.exchange).
+Calcula tu estrategia óptima con precios en tiempo real en [https://merx.exchange](https://merx.exchange).
 
 ---
 
-*Este articulo es parte de la serie de conocimiento de MERX sobre infraestructura TRON. MERX es el primer exchange de recursos blockchain. Documentacion en [https://merx.exchange/docs](https://merx.exchange/docs).*
+*Este artículo es parte de la serie de conocimiento de MERX sobre infraestructura de TRON. MERX es el primer intercambio de recursos blockchain. Documentación en [https://merx.exchange/docs](https://merx.exchange/docs).*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Agrega MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin necesidad de clave API para herramientas de solo lectura:
 
 ```json
 {
@@ -311,6 +312,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente IA: "¿Cuál es la energía TRON más barata ahora?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

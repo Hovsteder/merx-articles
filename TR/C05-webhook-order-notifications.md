@@ -1,21 +1,21 @@
-# Webhook Entegrasyonu: Energy Siparisleri Tamamlandiginda Bildirim Alin
+# Webhook Entegrasyonu: Enerji Siparişleri Doldurulduğunda Bildirim Alın
 
-MERX webhooks deliver real-time HTTP notifications when events occur on your account - orders filling, orders failing, deposits arriving, withdrawals completing. This article covers all four event types, the payload format, HMAC-SHA256 signature verification using the `X-Merx-Signature` header, the retry policy with exponential backoff, auto-deactivation after repeated failures, and complete server implementations in Express.js and Flask with signature verification.
+MERX webhook'ları, hesabınızda olaylar meydana geldiğinde—siparişler doldurulduğunda, siparişler başarısız olduğunda, mevduat geldiğinde, çekimler tamamlandığında—gerçek zamanlı HTTP bildirimleri iletir. Bu makale dört olay türünü, yük biçimini, `X-Merx-Signature` başlığı kullanılarak HMAC-SHA256 imza doğrulamasını, üstel geri tepme ile yeniden deneme ilkesini, tekrarlanan başarısızlıklar sonrasında otomatik deaktivasyonu ve imza doğrulama ile Express.js ve Flask'ta tam sunucu uygulamalarını kapsamaktadır.
 
-## Why Webhooks Instead of Polling
+## Yoklama Yerine Neden Webhook?
 
-The alternative to webhooks is polling the `/api/v1/orders/:id` endpoint in a loop, waiting for the status to change from `PENDING` to `FILLED`. This works for simple cases but has clear drawbacks:
+Webhook'lara alternatif, bir döngüde `/api/v1/orders/:id` endpoint'ini yoklamak, durumun `PENDING`'den `FILLED`'a değişmesini beklemektir. Bu basit durumlar için çalışsa da açık dezavantajları vardır:
 
-- Wasted requests. Most polls return the same unchanged status.
-- Latency. Your application only discovers a state change at the next poll interval.
-- Rate limits. With a 10-request-per-minute limit on the orders endpoint, aggressive polling quickly hits the ceiling.
-- Complexity. Polling logic needs retry handling, timeout management, and state tracking.
+- Boşa harcanmış istekler. Çoğu yoklama değişmemiş aynı durumu döndürür.
+- Gecikme. Uygulamanız bir durum değişikliğini yalnızca sonraki yoklama aralığında keşfeder.
+- Hız sınırları. Siparişler endpoint'inde 10-istek-per-dakika sınırı ile agresif yoklama hızlı bir şekilde sınıra ulaşır.
+- Karmaşıklık. Yoklama mantığı yeniden deneme işleme, zaman aşımı yönetimi ve durum takibi gerektirir.
 
-Webhooks invert the model. Instead of asking MERX "has anything changed?", MERX tells you the moment something happens. Your server receives an HTTP POST with the full event payload, processes it, and moves on. No polling loops, no wasted requests, no artificial delays.
+Webhook'lar modeli ters çevirir. MERX'ten "bir şey değişti mi?" diye sormak yerine, MERX size bir şey olur olmaz söyler. Sunucunuz tam olay yükü ile bir HTTP POST alır, bunu işler ve devam eder. Yoklama döngüleri yok, boşa harcanmış istekler yok, yapay gecikmeler yok.
 
-## Creating a Webhook
+## Webhook Oluşturma
 
-You can create webhooks via the REST API or the SDK.
+Webhook'ları REST API veya SDK aracılığıyla oluşturabilirsiniz.
 
 ### REST API
 
@@ -29,7 +29,7 @@ curl -X POST https://merx.exchange/api/v1/webhooks \
   }'
 ```
 
-Response:
+Yanıt:
 
 ```json
 {
@@ -44,7 +44,7 @@ Response:
 }
 ```
 
-The `secret` field is a 64-character hex string generated from 32 random bytes. It is returned only in the creation response. Store it securely - you will need it to verify incoming webhook signatures.
+`secret` alanı, 32 rastgele bayttan oluşturulan 64 karakterli hex dizesidir. Yalnızca oluşturma yanıtında döndürülür. Güvenli bir şekilde saklayın—gelen webhook imzalarını doğrulamak için ihtiyacınız olacak.
 
 ### JavaScript SDK
 
@@ -78,13 +78,13 @@ print(f"Webhook ID: {webhook.id}")
 print(f"Secret: {webhook.secret}")  # Store this securely
 ```
 
-## Event Types
+## Olay Türleri
 
-MERX supports four webhook event types. When creating a webhook, you choose which events to subscribe to. You can subscribe to all four or just the ones you need.
+MERX dört webhook olay türünü destekler. Bir webhook oluştururken hangi olaylara abone olmak istediğinizi seçersiniz. Dördüne de veya yalnızca ihtiyacınız olanlara abone olabilirsiniz.
 
 ### order.filled
 
-Sent when an order has been completely fulfilled. All provider delegations have been confirmed on-chain.
+Bir sipariş tamamen yerine getirildiğinde gönderilir. Tüm sağlayıcı delegasyonları zincir üzerinde doğrulanmıştır.
 
 ```json
 {
@@ -112,11 +112,11 @@ Sent when an order has been completely fulfilled. All provider delegations have 
 }
 ```
 
-This is the most important event for automated systems. When you receive it, the energy has been delegated and the target address can proceed with its TRON transactions.
+Bu, otomatikleştirilmiş sistemler için en önemli olaydır. Bunu aldığınızda, enerji delege edilmiş ve hedef adres TRON işlemleriyle ilerlemeye başlayabilir.
 
 ### order.failed
 
-Sent when an order could not be fulfilled. This can happen when all providers are unavailable, capacity is exhausted, or a provider-side error occurs.
+Bir sipariş yerine getirilemediğinde gönderilir. Bu, tüm sağlayıcılar kullanılamadığında, kapasite tükenmişse veya sağlayıcı tarafında bir hata oluştuğunda meydana gelebilir.
 
 ```json
 {
@@ -134,11 +134,11 @@ Sent when an order could not be fulfilled. This can happen when all providers ar
 }
 ```
 
-When an order fails, any reserved balance is refunded. The `refunded` field confirms this, and `refund_amount_sun` shows the amount returned if payment was already deducted.
+Bir sipariş başarısız olduğunda, ayrılan herhangi bir bakiye iade edilir. `refunded` alanı bunu doğrular ve `refund_amount_sun` ödeme zaten yapılmışsa geri döndürülen tutarı gösterir.
 
 ### deposit.received
 
-Sent when a deposit to your MERX account has been detected and credited.
+MERX hesabınıza yapılan bir mevduat tespit edilerek kredilendiğinde gönderilir.
 
 ```json
 {
@@ -157,7 +157,7 @@ Sent when a deposit to your MERX account has been detected and credited.
 
 ### withdrawal.completed
 
-Sent when a withdrawal request has been processed and the on-chain transaction is confirmed.
+Bir çekim isteği işlenip zincir üzerinde işlem doğrulandığında gönderilir.
 
 ```json
 {
@@ -174,27 +174,27 @@ Sent when a withdrawal request has been processed and the on-chain transaction i
 }
 ```
 
-## Signature Verification
+## İmza Doğrulaması
 
-Every webhook delivery includes an `X-Merx-Signature` header containing an HMAC-SHA256 signature of the request body, computed using your webhook secret as the key.
+Her webhook teslimati, webhook sırrınız kullanılarak hesaplanan istek gövdesinin HMAC-SHA256 imzasını içeren `X-Merx-Signature` başlığını içerir.
 
-The verification process:
+Doğrulama süreci:
 
-1. Read the raw request body (before JSON parsing).
-2. Compute HMAC-SHA256 of the raw body using your stored webhook secret.
-3. Compare the computed signature with the `X-Merx-Signature` header value.
-4. If they match, the request is authentic. If not, reject it.
+1. JSON ayrıştırmasından önce ham istek gövdesini okuyun.
+2. Depolanan webhook sırrınızı anahtar olarak kullanarak ham gövdenin HMAC-SHA256'sını hesaplayın.
+3. Hesaplanan imzayı `X-Merx-Signature` başlığı değeri ile karşılaştırın.
+4. Eşleşirse, istek orijinaldir. Değilse, reddedin.
 
-This protects against:
-- Forged requests from third parties who do not know your secret.
-- Tampered payloads where the body has been modified in transit.
-- Replay attacks (combined with timestamp validation).
+Bu korumalı:
+- Sırrınızı bilmeyen üçüncü taraflardan gelen sahte istekler.
+- İletim sırasında gövde değiştirilmiş, tahrif edilmiş yükler.
+- Zaman damgası doğrulaması ile birleştirilmiş yeniden oynatma saldırıları.
 
-Always use a constant-time comparison function when checking signatures. Standard string equality (`===` or `==`) is vulnerable to timing attacks.
+İmzaları kontrol ederken her zaman sabit-zaman karşılaştırma işlevi kullanın. Standart dize eşitliği (`===` veya `==`) zamanlama saldırılarına karşı savunmasızdır.
 
-## Express.js Webhook Handler
+## Express.js Webhook İşleyicisi
 
-Here is a complete Express.js server that receives and verifies MERX webhooks:
+MERX webhook'larını alan ve doğrulayan eksiksiz bir Express.js sunucusu:
 
 ```javascript
 import express from 'express'
@@ -293,15 +293,15 @@ app.listen(3000, () => {
 })
 ```
 
-Key implementation details:
+Anahtar uygulama detayları:
 
-- Use `express.raw({ type: 'application/json' })` instead of `express.json()` for the webhook route. You need the raw bytes for signature computation.
-- Use `crypto.timingSafeEqual()` for constant-time signature comparison.
-- Respond with HTTP 200 as quickly as possible. Do heavy processing asynchronously after acknowledging receipt.
+- Webhook rotası için `express.json()` yerine `express.raw({ type: 'application/json' })` kullanın. İmza hesaplaması için ham baytlara ihtiyacınız var.
+- Sabit-zaman imza karşılaştırması için `crypto.timingSafeEqual()` kullanın.
+- HTTP 200 ile mümkün olduğunca hızlı yanıt verin. Ağır işlemeyi alındısını onayladıktan sonra asenkron olarak yapın.
 
-## Flask Webhook Handler
+## Flask Webhook İşleyicisi
 
-Here is the equivalent implementation in Python using Flask:
+Python'da Flask kullanan eşdeğer uygulama:
 
 ```python
 import hashlib
@@ -397,46 +397,46 @@ if __name__ == "__main__":
     app.run(port=3000)
 ```
 
-Key Python-specific details:
+Python'a özgü anahtar detaylar:
 
-- Use `request.get_data()` to get the raw request body as bytes.
-- Use `hmac.compare_digest()` for constant-time string comparison. Python's `==` operator is not constant-time.
-- Use `hmac.new()` with `hashlib.sha256` to compute the HMAC.
+- Ham istek gövdesini bayt olarak almak için `request.get_data()` kullanın.
+- Sabit-zaman dize karşılaştırması için `hmac.compare_digest()` kullanın. Python'un `==` operatörü sabit-zaman değildir.
+- HMAC hesaplamak için `hashlib.sha256` ile `hmac.new()` kullanın.
 
-## Retry Policy
+## Yeniden Deneme İlkesi
 
-MERX retries failed webhook deliveries using an exponential backoff schedule:
+MERX başarısız webhook teslimatlarını üstel geri tepme programı kullanarak yeniden dener:
 
-| Attempt | Delay after failure |
-|---------|---------------------|
-| 1       | Immediate           |
-| 2       | 30 seconds          |
-| 3       | 5 minutes           |
+| Deneme | Başarısızlıktan Sonra Gecikme |
+|--------|------------------------------|
+| 1      | Hemen                        |
+| 2      | 30 saniye                    |
+| 3      | 5 dakika                     |
 
-A delivery is considered failed if:
-- Your server does not respond within 10 seconds.
-- Your server returns an HTTP status code outside the 2xx range.
-- The connection cannot be established (DNS failure, connection refused, TLS error).
+Bir teslim şu durumlarda başarısız sayılır:
+- Sunucunuz 10 saniye içinde yanıt vermez.
+- Sunucunuz 2xx aralığı dışında bir HTTP durum kodu döndürür.
+- Bağlantı kurulamaz (DNS hatası, bağlantı reddedildi, TLS hatası).
 
-After 3 failed attempts for a single event, the event is dropped. No further retries are made for that specific delivery.
+Bir olaya yönelik 3 başarısız denemeden sonra, olay bırakılır. O belirli teslim için başka yeniden deneme yapılmaz.
 
-Your webhook handler should:
-- Respond with HTTP 200 within a few seconds. Do heavy processing asynchronously.
-- Be idempotent. The same event may be delivered more than once in edge cases.
-- Log the event payload for debugging if processing fails.
+Webhook işleyiciniz:
+- HTTP 200 ile birkaç saniye içinde yanıt verin. Ağır işlemeyi asenkron olarak yapın.
+- İdempotent olun. Aynı olay kenar durumlarda birden fazla kez teslim edilebilir.
+- İşlem başarısız olursa hata ayıklama için olay yükünü günlüğe kaydedin.
 
-## Auto-Deactivation
+## Otomatik Deaktivizyon
 
-If a webhook endpoint consistently fails, MERX automatically deactivates it to prevent wasting resources on a dead endpoint.
+Bir webhook endpoint'i sürekli başarısız olursa, MERX ölü bir endpoint'e kaynak harcamamak için bunu otomatik olarak deaktive eder.
 
-The deactivation threshold is based on consecutive failures across multiple events. If your endpoint fails to accept deliveries repeatedly, the webhook's `is_active` flag is set to `false`.
+Deaktivizyon eşiği birden çok olay arasında ardışık başarısızlıklara dayanır. Endpoint'iniz teslimatları kabul etmeyi sürekli başarısız olursa, webhook'un `is_active` bayrağı `false` olarak ayarlanır.
 
-When a webhook is deactivated:
-- No further events are sent to that URL.
-- The webhook still appears in your list with `is_active: false`.
-- You can fix the endpoint issue and create a new webhook.
+Bir webhook deaktive edildiğinde:
+- O URL'ye başka olay gönderilmez.
+- Webhook listenizde `is_active: false` ile görünmeye devam eder.
+- Endpoint sorununu düzelterek yeni bir webhook oluşturabilirsiniz.
 
-Monitor your webhook status periodically:
+Webhook durumunu düzenli olarak izleyin:
 
 ```javascript
 const webhooks = await merx.webhooks.list()
@@ -454,27 +454,27 @@ for wh in webhooks:
         print(f"Webhook {wh.id} ({wh.url}) is deactivated")
 ```
 
-## Managing Webhooks
+## Webhook'ları Yönetme
 
-### Listing Webhooks
+### Webhook'ları Listeleme
 
 ```bash
 curl -H "X-API-Key: sk_live_your_key_here" \
   https://merx.exchange/api/v1/webhooks
 ```
 
-### Deleting a Webhook
+### Webhook Silme
 
 ```bash
 curl -X DELETE -H "X-API-Key: sk_live_your_key_here" \
   https://merx.exchange/api/v1/webhooks/wh_abc123
 ```
 
-Note that the webhook secret cannot be retrieved after creation. If you lose the secret, delete the webhook and create a new one.
+Webhook sırrının oluşturulduktan sonra alınamayacağını unutmayın. Sırrı kaybederseniz, webhook'u silin ve yeni bir tane oluşturun.
 
-## Testing Webhooks Locally
+## Webhook'ları Yerel Olarak Test Etme
 
-During development, your webhook URL needs to be publicly accessible. Tools like ngrok can expose a local server:
+Geliştirme sırasında webhook URL'niz genel olarak erişilebilir olması gerekir. ngrok gibi araçlar yerel bir sunucuyu açığa çıkarabilir:
 
 ```bash
 # Terminal 1: Start your webhook server
@@ -484,35 +484,36 @@ node webhook-server.js
 ngrok http 3000
 ```
 
-Use the ngrok URL (e.g., `https://abc123.ngrok.io/webhooks/merx`) when creating the webhook. Once you verify everything works, replace it with your production URL.
+Webhook oluştururken ngrok URL'sini kullanın (örn. `https://abc123.ngrok.io/webhooks/merx`). Her şeyin çalıştığını doğruladıktan sonra, onu üretim URL'niz ile değiştirin.
 
-## En Iyi Uygulamalar
+## En İyi Uygulamalar
 
-1. Always verify signatures. Never trust webhook payloads without checking the `X-Merx-Signature` header.
+1. Her zaman imzaları doğrulayın. `X-Merx-Signature` başlığını kontrol etmeden webhook yüklerine asla güvenmeyin.
 
-2. Respond quickly. Return HTTP 200 within 2-3 seconds. Queue heavy processing for background workers.
+2. Hızlı yanıt verin. HTTP 200 ile 2-3 saniye içinde döndürün. Ağır işlemeyi arka plan işçileri için kuyruğa alın.
 
-3. Be idempotent. Use the `order_id` or `deposit_id` as a deduplication key. If you receive the same event twice, the second processing should be a no-op.
+3. İdempotent olun. `order_id` veya `deposit_id` öğesini çoğaltma kaldırma anahtarı olarak kullanın. Aynı olayı iki kez alırsanız, ikinci işlem bir işlem olmamalıdır.
 
-4. Store the raw payload. Log the full JSON body before processing. If your handler has a bug, you can replay the events from logs.
+4. Ham yükü saklayın. İşlemeden önce tam JSON gövdesini günlüğe kaydedin. İşleyicinizin bir hatası varsa, olayları günlüklerden yeniden oynatabilirsiniz.
 
-5. Monitor webhook health. Check `is_active` status regularly. Set up alerts if webhooks are deactivated.
+5. Webhook sağlığını izleyin. `is_active` durumunu düzenli olarak kontrol edin. Webhook'lar deaktive edilirse uyarılar ayarlayın.
 
-6. Use HTTPS. MERX requires webhook URLs to use HTTPS. Self-signed certificates are not accepted.
+6. HTTPS kullanın. MERX webhook URL'lerinin HTTPS kullanmasını gerektirir. Kendi imzalı sertifikalar kabul edilmez.
 
-7. Subscribe selectively. Only subscribe to the events you actually handle. Unnecessary events waste bandwidth and processing time.
+7. Seçici olarak abone olun. Yalnızca gerçekten işlediğiniz olaylara abone olun. Gereksiz olaylar bant genişliğini ve işlem süresini boşa harcar.
 
 ## Kaynaklar
 
 - Platform: [merx.exchange](https://merx.exchange)
-- Dokumantasyon: [merx.exchange/docs](https://merx.exchange/docs)
+- Dokümantasyon: [merx.exchange/docs](https://merx.exchange/docs)
 - JavaScript SDK: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) | [npm](https://www.npmjs.com/package/merx-sdk)
 - Python SDK: [pypi.org/project/merx-sdk](https://pypi.org/project/merx-sdk/)
-- MCP Sunucusu: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+- MCP Server: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin—kurulum yok, salt okunur araçlar için API anahtarı gerekli değil:
 
 ```json
 {
@@ -524,6 +525,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP dokümantasyonu: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

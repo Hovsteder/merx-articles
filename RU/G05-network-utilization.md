@@ -1,56 +1,56 @@
-# Использование ресурсов сети TRON: что влияет на цены energy
+# Использование ресурсов сети TRON: что определяет цены на энергию
 
-To understand energy prices on TRON, you need to understand the network's resource system at a fundamental level. Energy prices are not set arbitrarily by providers -- they are downstream of network-level dynamics: total energy pools, staking ratios, transaction volumes, and governance parameters. This article examines these network-level factors and explains how they translate into the energy rental prices you pay.
+Чтобы понять цены на энергию в TRON, нужно разобраться с системой ресурсов сети на фундаментальном уровне. Цены на энергию устанавливаются не произвольно поставщиками — они являются следствием сетевой динамики: общие пулы энергии, соотношения стейкинга, объёмы транзакций и параметры управления. В этой статье мы рассмотрим эти факторы на уровне сети и объясним, как они влияют на цены за аренду энергии.
 
-## TRON's Resource Model
+## Модель ресурсов TRON
 
-TRON uses a dual-resource system: energy and bandwidth. Every transaction consumes bandwidth. Smart contract transactions also consume energy. This article focuses on energy because it is the more expensive and variable resource.
+TRON использует двухресурсную систему: энергия и bandwidth. Каждая транзакция потребляет bandwidth. Транзакции со смарт-контрактами также потребляют энергию. Эта статья сосредоточена на энергии, так как это более дорогой и волатильный ресурс.
 
-### How Energy Is Produced
+### Как производится энергия
 
-Energy on TRON is generated through staking (freezing) TRX. When a user stakes TRX for energy, they receive a proportional share of the network's total energy pool. The allocation formula is:
+Энергия в TRON генерируется путём стейкинга (блокировки) TRX. Когда пользователь стейкирует TRX для энергии, он получает пропорциональную часть общего пула энергии сети. Формула распределения:
 
 ```
 User's Energy = (User's Staked TRX / Total Network Staked TRX) * Total Energy Pool
 ```
 
-Key variables:
+Ключевые переменные:
 
-- **Total Energy Pool**: A network-level parameter set by TRON governance. This is the total amount of energy available across the entire network per day.
-- **Total Network Staked TRX**: The sum of all TRX staked for energy by all network participants.
-- **User's Staked TRX**: How much TRX a specific user (or provider) has staked.
+- **Total Energy Pool**: сетевой параметр, установленный управлением TRON. Это общее количество энергии, доступной во всей сети в день.
+- **Total Network Staked TRX**: сумма всех TRX, стейкированных для энергии всеми участниками сети.
+- **User's Staked TRX**: количество TRX, стейкированного конкретным пользователем (или поставщиком).
 
-### The Shared Pool Dynamic
+### Динамика общего пула
 
-This is a critical concept. The total energy pool is fixed at any given time. As more TRX is staked, each unit of staked TRX produces less energy because the pool is shared among more stakers. Conversely, if stakers withdraw, remaining stakers get a larger share.
+Это критическое понятие. Общий пул энергии фиксирован в любой момент времени. По мере стейкирования большего количества TRX каждая единица стейкированного TRX производит меньше энергии, потому что пул распределяется среди большего числа стейкеров. И наоборот, если стейкеры выводят средства, оставшиеся стейкеры получают большую долю.
 
-This dynamic directly affects provider economics and, consequently, rental prices.
+Эта динамика напрямую влияет на экономику поставщиков и, следовательно, на цены аренды.
 
-**Example:**
+**Пример:**
 
-If the total energy pool is 90 billion energy per day and 50 billion TRX is staked for energy:
+Если общий пул энергии составляет 90 миллиардов энергии в день и стейкировано 50 миллиардов TRX для энергии:
 
-- Each staked TRX produces: 90B / 50B = 1.8 energy per TRX per day
+- Каждый стейкированный TRX производит: 90B / 50B = 1.8 энергии на TRX в день
 
-If staking increases to 60 billion TRX:
+Если стейкинг увеличивается до 60 миллиардов TRX:
 
-- Each staked TRX produces: 90B / 60B = 1.5 energy per TRX per day
+- Каждый стейкированный TRX производит: 90B / 60B = 1.5 энергии на TRX в день
 
-A provider who staked 10 million TRX now produces 15 million energy/day instead of 18 million. Their production capacity dropped 16.7% without changing their own staking amount. To maintain revenue, they must either raise prices or stake more TRX.
+Поставщик, который стейкировал 10 миллионов TRX, теперь производит 15 миллионов энергии/день вместо 18 миллионов. Его производственная мощность упала на 16.7% без изменения собственного объёма стейкинга. Чтобы сохранить доход, он должен либо поднять цены, либо стейкировать больше TRX.
 
-## Network Parameters That Affect Prices
+## Сетевые параметры, влияющие на цены
 
-### Total Energy Pool
+### Общий пул энергии
 
-TRON's governance sets the total energy pool through network parameters. Historically, this pool has been adjusted as the network grows. An increase in the total pool means more energy is available, putting downward pressure on prices. A decrease (which is less common but possible) would constrain supply and push prices up.
+Управление TRON устанавливает общий пул энергии через сетевые параметры. Исторически этот пул корректировался по мере роста сети. Увеличение общего пула означает больше доступной энергии, что оказывает давление на снижение цен. Уменьшение (что менее вероятно, но возможно) сжимает предложение и поднимает цены вверх.
 
-### Energy Fee (SUN per Energy Unit)
+### Комиссия за энергию (SUN за единицу энергии)
 
-When a user does not have enough energy for a transaction, the network burns TRX to cover the deficit. The conversion rate -- how much TRX is burned per unit of energy -- sets the ceiling price for energy rental. No rational buyer would rent energy for more than the TRX burn cost.
+Когда у пользователя недостаточно энергии для транзакции, сеть сжигает TRX для покрытия дефицита. Коэффициент конвертации — сколько TRX сжигается за единицу энергии — устанавливает потолок цены на аренду энергии. Ни один рациональный покупатель не будет арендовать энергию дороже, чем стоимость сжигания TRX.
 
-This parameter is called the dynamic energy model, and it is adjusted by TRON governance. Changes to this parameter directly move the price ceiling for the entire rental market.
+Этот параметр называется динамической моделью энергии и корректируется управлением TRON. Изменения этого параметра напрямую смещают потолок цены на всём рынке аренды.
 
-You can check current network parameters through the TRON API:
+Вы можете проверить текущие сетевые параметры через API TRON:
 
 ```typescript
 import TronWeb from 'tronweb';
@@ -67,104 +67,104 @@ console.log(`Energy fee: ${energyFee.value} SUN`);
 // This is the TRX burn rate per energy unit
 ```
 
-### Dynamic Energy Model
+### Динамическая модель энергии
 
-TRON introduced a dynamic energy model that adjusts the energy fee based on network utilization. When network utilization exceeds a threshold, the energy fee increases, making TRX burn more expensive. This mechanism:
+TRON внедрила динамическую модель энергии, которая корректирует комиссию за энергию в зависимости от нагрузки на сеть. Когда нагрузка на сеть превышает пороговое значение, комиссия за энергию увеличивается, что делает сжигание TRX более дорогим. Этот механизм:
 
-- Discourages spam during high-utilization periods
-- Increases the price ceiling for energy rental during congestion
-- Creates additional incentive to use energy delegation during busy periods (because the alternative -- TRX burn -- gets more expensive)
+- Препятствует спаму в периоды высокой нагрузки
+- Увеличивает потолок цены на аренду энергии при перегруженности
+- Создаёт дополнительный стимул использовать делегирование энергии в напряжённые периоды (потому что альтернатива — сжигание TRX — становится дороже)
 
-## Staking Ratios and Their Impact
+## Соотношения стейкинга и их влияние
 
-### Current Staking Distribution
+### Текущее распределение стейкинга
 
-The TRX staked on the TRON network is distributed among:
+TRX, стейкированный в сети TRON, распределяется между:
 
-1. **Super Representatives (SRs) and voters**: Staked for governance participation and voting rewards
-2. **Energy providers**: Staked specifically to produce energy for rental
-3. **Individual users**: Staked for their own transaction energy
-4. **DeFi protocols**: Staked within various DeFi strategies
+1. **Super Representatives (SRs) и голосующими**: стейкировано для участия в управлении и вознаграждений за голоса
+2. **Поставщиками энергии**: стейкировано специально для производства энергии на аренду
+3. **Отдельными пользователями**: стейкировано для собственной энергии транзакций
+4. **Протоколами DeFi**: стейкировано в рамках различных DeFi-стратегий
 
-The proportion allocated to energy rental determines the total supply available in the energy market. As this proportion shifts, supply changes.
+Доля, выделенная на аренду энергии, определяет общее предложение на рынке энергии. По мере смещения этой доли изменяется предложение.
 
-### What Moves Staking
+### Что движет стейкингом
 
-Several factors influence how much TRX is allocated to energy staking:
+Несколько факторов влияют на то, сколько TRX выделяется на стейкинг энергии:
 
-**TRX price appreciation.** When TRX price rises significantly, the dollar-denominated value of staking rewards increases, attracting more staking. But TRX price also increases the opportunity cost of staking (the staked TRX could be sold), which can reduce staking. The net effect depends on market conditions and staker expectations.
+**Рост цены TRX.** Когда цена TRX значительно растёт, стоимость в долларах вознаграждений за стейкинг увеличивается, привлекая больше стейкинга. Но рост цены TRX также повышает альтернативную стоимость стейкинга (стейкированный TRX можно было бы продать), что может снизить стейкинг. Чистый эффект зависит от рыночных условий и ожиданий стейкеров.
 
-**DeFi yields.** When DeFi protocols on TRON offer attractive yields, TRX flows out of simple staking and into DeFi. This reduces the energy supply and pushes rental prices up.
+**Доходы DeFi.** Когда протоколы DeFi в TRON предлагают привлекательные доходы, TRX переходит из простого стейкинга в DeFi. Это снижает предложение энергии и поднимает цены аренды.
 
-**Staking rewards changes.** TRON periodically adjusts SR rewards and voting incentives. Changes that make staking more attractive increase the total staked TRX and expand the energy supply.
+**Изменения вознаграждений за стейкинг.** TRON периодически корректирует вознаграждения SR и стимулы голосования. Изменения, которые делают стейкинг более привлекательным, увеличивают общее стейкированное количество TRX и расширяют предложение энергии.
 
-**Market sentiment.** During bearish periods, some stakers sell their TRX, reducing the total stake and contracting energy supply. During bullish periods, new stakers enter, expanding supply.
+**Настроение рынка.** В медвежьих периодах некоторые стейкеры продают свой TRX, снижая общий стейк и сжимая предложение энергии. В бычьих периодах новые стейкеры входят на рынок, расширяя предложение.
 
-## Transaction Volume and Demand
+## Объём транзакций и спрос
 
-### USDT Dominance
+### Доминирование USDT
 
-USDT transfers on TRON account for the majority of energy demand. TRON processes more USDT volume than any other blockchain, and each transfer consumes approximately 65,000 energy. When USDT volume increases (market volatility, settlement periods, exchange flows), energy demand rises proportionally.
+Переводы USDT в TRON составляют большинство спроса на энергию. TRON обрабатывает больше объёма USDT, чем любой другой блокчейн, и каждый перевод потребляет примерно 65,000 энергии. Когда объём USDT увеличивается (волатильность рынка, периоды расчётов, потоки бирж), спрос на энергию растёт пропорционально.
 
-### Smart Contract Complexity
+### Сложность смарт-контрактов
 
-As TRON's DeFi and dApp ecosystem grows, the average energy consumption per transaction increases. Simple TRX transfers consume negligible energy, but:
+По мере развития экосистемы DeFi и dApps в TRON среднее потребление энергии на транзакцию растёт. Простые переводы TRX потребляют незначительную энергию, но:
 
-- USDT transfers: ~65,000 energy
-- DEX swaps: 120,000-223,000 energy
-- Complex DeFi interactions: 200,000-500,000+ energy
+- Переводы USDT: ~65,000 энергии
+- Свопы на DEX: 120,000-223,000 энергии
+- Сложные взаимодействия DeFi: 200,000-500,000+ энергии
 
-More complex smart contracts consuming more energy per call means the same number of transactions generates more energy demand.
+Более сложные смарт-контракты, потребляющие больше энергии за вызов, означают, что то же количество транзакций генерирует больше спроса на энергию.
 
-### Transaction Count Growth
+### Рост количества транзакций
 
-TRON's daily transaction count has grown consistently as adoption increases. Each new payment processor, DEX user, or dApp participant adds to the cumulative energy demand. This secular growth trend puts long-term upward pressure on energy demand (though supply growth from new stakers can offset this).
+Количество ежедневных транзакций в TRON постоянно растёт по мере роста принятия. Каждый новый платёжный процессор, пользователь DEX или участник dApp добавляет к совокупному спросу на энергию. Эта долгосрочная тенденция роста создаёт давление в сторону увеличения спроса на энергию (хотя рост предложения от новых стейкеров может это компенсировать).
 
-## How Network Dynamics Translate to Rental Prices
+## Как сетевая динамика переводится в цены аренды
 
-The rental price you pay for energy is the equilibrium point between:
+Цена аренды энергии, которую вы платите, — это точка равновесия между:
 
-**Supply**: Determined by how much TRX is staked for energy, which depends on TRX price, alternative yields, and staking incentives.
+**Предложением**: определяется тем, сколько TRX стейкировано для энергии, что зависит от цены TRX, альтернативных доходов и стимулов к стейкингу.
 
-**Demand**: Determined by transaction volume and complexity, which depends on USDT flows, DeFi activity, and adoption.
+**Спросом**: определяется объёмом и сложностью транзакций, что зависит от потоков USDT, активности DeFi и принятия.
 
-**Price ceiling**: The TRX burn rate, which is set by network governance parameters and the dynamic energy model.
+**Потолком цены**: коэффициент сжигания TRX, который устанавливается параметрами управления сетью и динамической моделью энергии.
 
-**Competition**: The number and behavior of energy providers, who set prices between their production cost (floor) and the TRX burn rate (ceiling).
+**Конкуренцией**: количеством и поведением поставщиков энергии, которые устанавливают цены между их себестоимостью (пол) и коэффициентом сжигания TRX (потолок).
 
-### The Price Band
+### Диапазон цен
 
-Energy rental prices occupy a band between the provider's production cost (floor) and the TRX burn cost (ceiling):
+Цены на аренду энергии находятся в диапазоне между себестоимостью производства поставщика (пол) и стоимостью сжигания TRX (потолок):
 
 ```
-TRX Burn Cost (ceiling)
+Стоимость сжигания TRX (потолок)
   |
-  |  <-- Rental prices fall in this band
+  |  <-- Цены аренды находятся в этом диапазоне
   |
-Provider Production Cost (floor)
+Себестоимость производства поставщика (пол)
 ```
 
-The width of this band determines how much room there is for competition and profit. When the ceiling rises (due to governance changes or the dynamic energy model), the band widens. When production costs rise (due to more stakers competing for the same energy pool), the floor rises.
+Ширина этого диапазона определяет, сколько места есть для конкуренции и прибыли. Когда потолок растёт (из-за изменений управления или динамической модели энергии), диапазон расширяется. Когда себестоимость растёт (из-за большего количества стейкеров, конкурирующих за один пул энергии), пол растёт.
 
-Currently, the band is approximately:
+В настоящий момент диапазон составляет примерно:
 
-- Floor: ~20-22 SUN (provider production cost + minimal margin)
-- Ceiling: ~210 SUN (TRX burn rate)
-- Typical market rate: 25-40 SUN (competitive equilibrium)
+- Пол: ~20-22 SUN (себестоимость поставщика + минимальная маржа)
+- Потолок: ~210 SUN (коэффициент сжигания TRX)
+- Типичная рыночная ставка: 25-40 SUN (конкурентное равновесие)
 
-The fact that market rates sit at 25-40 SUN -- far below the 210 SUN ceiling -- indicates a competitive market where multiple providers drive prices toward marginal cost.
+Тот факт, что рыночные ставки находятся на уровне 25-40 SUN — намного ниже потолка в 210 SUN — указывает на конкурентный рынок, где несколько поставщиков уводят цены к предельным издержкам.
 
-## Network Congestion Effects
+## Эффекты перегруженности сети
 
-During periods of high network utilization:
+В периоды высокой нагрузки на сеть:
 
-1. The dynamic energy model increases the TRX burn rate
-2. More users seek energy delegation to avoid the higher burn cost
-3. Demand for energy rental increases
-4. Providers can charge more while still offering savings over burn
-5. Rental prices rise
+1. Динамическая модель энергии увеличивает коэффициент сжигания TRX
+2. Больше пользователей ищут делегирование энергии, чтобы избежать более высоких затрат на сжигание
+3. Спрос на аренду энергии увеличивается
+4. Поставщики могут взимать более высокую плату, всё ещё предлагая сбережения по сравнению со сжиганием
+5. Цены аренды растут
 
-This creates a counter-intuitive dynamic: the best time to buy energy is not during congestion (when you need it most) but before congestion. This is why MERX standing orders are valuable -- they pre-purchase energy at target prices during calm periods, providing a buffer for congested periods when prices spike.
+Это создаёт противоинтуитивную динамику: лучшее время для покупки энергии — не во время перегруженности (когда она вам больше всего нужна), а до перегруженности. Вот почему постоянные заказы MERX ценны — они предварительно покупают энергию по целевым ценам в спокойные периоды, обеспечивая буфер на случай всплесков цен в перегруженные периоды.
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -181,9 +181,9 @@ const standing = await merx.createStandingOrder({
 });
 ```
 
-## Monitoring Network Conditions
+## Мониторинг сетевых условий
 
-For operators who want to correlate their energy costs with network conditions:
+Для операторов, которые хотят коррелировать свои затраты на энергию с сетевыми условиями:
 
 ```typescript
 // Check current network resource utilization
@@ -204,55 +204,56 @@ const utilization =
 console.log(`Network energy utilization: ${(utilization * 100).toFixed(1)}%`);
 ```
 
-High utilization (>70%) correlates with higher rental prices and activated dynamic energy penalties. Low utilization (<30%) correlates with lower rental prices and base-rate TRX burn costs.
+Высокая нагрузка (>70%) коррелирует с более высокими ценами аренды и активированными динамическими штрафами энергии. Низкая нагрузка (<30%) коррелирует с более низкими ценами аренды и базовыми затратами на сжигание TRX.
 
-## Long-Term Trends
+## Долгосрочные тенденции
 
-Several trends will shape the TRON energy market over the coming years:
+Несколько тенденций будут формировать рынок энергии TRON в ближайшие годы:
 
-### Growing USDT adoption
+### Растущее принятие USDT
 
-TRON's share of global USDT transfers continues to grow. Assuming this trend continues, energy demand will grow proportionally. Whether prices increase depends on whether supply (staking) grows at the same rate.
+Доля TRON в глобальных переводах USDT продолжает расти. Предполагая, что эта тенденция сохранится, спрос на энергию будет расти пропорционально. Растут ли цены, зависит от того, растёт ли предложение (стейкинг) с той же скоростью.
 
-### Protocol efficiency improvements
+### Улучшения эффективности протокола
 
-TRON protocol upgrades may improve EVM efficiency, reducing the energy consumed per smart contract operation. This would decrease demand per transaction but might be offset by increased transaction volume.
+Обновления протокола TRON могут улучшить эффективность EVM, снижая энергию, потребляемую на одну операцию смарт-контракта. Это снизит спрос на транзакцию, но может быть компенсировано увеличением объёма транзакций.
 
-### Governance parameter adjustments
+### Корректировки параметров управления
 
-TRON's governance will continue adjusting energy parameters based on network conditions. Increases to the total energy pool expand supply. Changes to the dynamic energy model affect the price ceiling.
+Управление TRON продолжит корректировать параметры энергии в зависимости от сетевых условий. Увеличения общего пула энергии расширяют предложение. Изменения динамической модели энергии влияют на потолок цены.
 
-### Provider market maturation
+### Зрелость рынка поставщиков
 
-As the energy market matures, providers will likely compete more on reliability and service quality in addition to price. Aggregators like MERX accelerate this competition by making provider comparison effortless.
+По мере созревания рынка энергии поставщики, вероятно, будут конкурировать больше на основе надёжности и качества обслуживания в дополнение к цене. Агрегаторы, такие как MERX, ускоряют эту конкуренцию, делая сравнение поставщиков простым.
 
-## Practical Implications
+## Практические последствия
 
-Understanding network dynamics helps you make better energy purchasing decisions:
+Понимание сетевой динамики помогает вам принимать лучшие решения при покупке энергии:
 
-1. **Monitor staking trends.** Large changes in total network staking signal future supply shifts. Increasing stakes mean more supply and potentially lower prices.
+1. **Следите за тенденциями стейкинга.** Крупные изменения в общем стейкинге сети сигнализируют о будущих сдвигах в предложении. Увеличение ставок означает больше предложения и потенциально более низкие цены.
 
-2. **Watch network utilization.** High utilization periods trigger the dynamic energy model, increasing both burn costs and rental prices. Buy before congestion, not during it.
+2. **Наблюдайте за нагрузкой на сеть.** Периоды высокой нагрузки активируют динамическую модель энергии, увеличивая как затраты на сжигание, так и цены аренды. Покупайте до перегруженности, а не во время неё.
 
-3. **Track USDT volume.** Since USDT transfers dominate energy demand, USDT flow data is a leading indicator of energy demand.
+3. **Отслеживайте объём USDT.** Поскольку переводы USDT доминируют в спросе на энергию, данные потоков USDT — опережающий индикатор спроса на энергию.
 
-4. **Follow governance proposals.** Changes to energy parameters (total pool, burn rates, dynamic model thresholds) directly affect the price band.
+4. **Следите за предложениями управления.** Изменения параметров энергии (общий пул, коэффициенты сжигания, пороги динамической модели) напрямую влияют на диапазон цен.
 
-5. **Use aggregation.** Network-level dynamics affect all providers, but they affect them differently. An aggregator ensures you always access the provider least affected by current conditions.
+5. **Используйте агрегацию.** Сетевая динамика влияет на всех поставщиков, но на них по-разному. Агрегатор гарантирует, что вы всегда получаете доступ к поставщику, наименее затронутому текущими условиями.
 
 ## Заключение
 
-TRON energy prices are not arbitrary numbers set by providers. They emerge from network-level dynamics: the total energy pool, the amount of TRX staked, transaction demand, and governance parameters. Providers operate within a band defined by their production cost and the TRX burn rate, competing for order flow within that band.
+Цены на энергию TRON — это не произвольные числа, установленные поставщиками. Они возникают из сетевой динамики: общего пула энергии, количества стейкированного TRX, спроса на транзакции и параметров управления. Поставщики работают в диапазоне, определяемом их себестоимостью и коэффициентом сжигания TRX, конкурируя за потоки заказов в этом диапазоне.
 
-Understanding these dynamics does not require you to become a network analyst. The practical takeaway is that prices move in response to measurable factors, and tools like standing orders let you position your purchases to take advantage of favorable conditions automatically.
+Понимание этой динамики не требует, чтобы вы стали сетевым аналитиком. Практическое значение заключается в том, что цены движутся в ответ на измеримые факторы, и инструменты, такие как постоянные заказы, позволяют вам позиционировать ваши покупки, чтобы автоматически воспользоваться благоприятными условиями.
 
-The network's resource system is well-designed: it provides a cost-effective path (energy delegation) that is dramatically cheaper than the default path (TRX burn), creating a market that benefits both stakers (earning yield) and transactors (paying less). MERX's role is to make this market as efficient as possible by connecting every buyer with the best available rate from every provider.
+Система ресурсов сети хорошо спроектирована: она обеспечивает экономически эффективный путь (делегирование энергии), который значительно дешевле стандартного пути (сжигание TRX), создавая рынок, который выгоден как стейкерам (зарабатывающим урожай), так и участникам транзакций (платящим меньше). Роль MERX заключается в том, чтобы сделать этот рынок максимально эффективным, подключая каждого покупателя с лучшей доступной ставкой от каждого поставщика.
 
-Explore current network conditions and energy prices at [https://merx.exchange](https://merx.exchange) or learn more at [https://merx.exchange/docs](https://merx.exchange/docs).
+Исследуйте текущие условия сети и цены на энергию на [https://merx.exchange](https://merx.exchange) или узнайте больше на [https://merx.exchange/docs](https://merx.exchange/docs).
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с помощью AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — без установки, без API-ключа для инструментов только для чтения:
 
 ```json
 {
@@ -264,6 +265,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите свого AI-агента: "What is the cheapest TRON energy right now?" и получите актуальные цены от всех подключённых поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

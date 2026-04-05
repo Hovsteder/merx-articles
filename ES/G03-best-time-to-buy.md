@@ -1,83 +1,83 @@
-# El mejor momento para comprar energia en TRON: analisis basado en datos
+# El Mejor Momento para Comprar Energía TRON: Análisis Basado en Datos
 
-Every energy buyer on TRON faces the same question: should I buy now, or will the price be better in an hour? The answer depends on data -- historical price patterns, current market conditions, and your specific tolerance for timing risk.
+Todo comprador de energía en TRON se enfrenta a la misma pregunta: ¿debería comprar ahora, o será mejor el precio en una hora? La respuesta depende de datos -- patrones históricos de precios, condiciones actuales del mercado, y tu tolerancia específica para el riesgo de timing.
 
-This article uses MERX's price analysis tools to examine when precios de energia tend to be lowest, how to use percentile-based purchasing strategies, and how orden permanentes can automate optimal timing.
+Este artículo utiliza las herramientas de análisis de precios de MERX para examinar cuándo tienden a ser más bajos los precios de energía, cómo usar estrategias de compra basadas en percentiles, y cómo las órdenes permanentes pueden automatizar el timing óptimo.
 
-## The Timing Question
+## La Cuestión del Timing
 
-TRON energy is not a commodity with a single market price. At any moment, seven providers offer different rates. Prices shift throughout the day based on demand, provider behavior, and network conditions. The "best time to buy" is the moment when the lowest available rate across all providers reaches its daily minimum.
+La energía de TRON no es un producto básico con un único precio de mercado. En cualquier momento, siete proveedores ofrecen diferentes tarifas. Los precios fluctúan a lo largo del día según la demanda, el comportamiento de los proveedores, y las condiciones de la red. El "mejor momento para comprar" es el momento en que la tarifa más baja disponible entre todos los proveedores alcanza su mínimo diario.
 
-The problem is that you cannot know in advance exactly when that minimum will occur. You can, sin embargo, analyze historical patterns to identify periods when low prices are more likely.
+El problema es que no puedes saber de antemano exactamente cuándo ocurrirá ese mínimo. Sin embargo, puedes analizar patrones históricos para identificar períodos en los que es más probable que haya precios bajos.
 
-## Analyzing Price History with MERX
+## Analizando el Historial de Precios con MERX
 
-MERX tracks price data across all providers over time. The `analyze_prices` tool provides statistical summaries that reveal pricing patterns:
+MERX rastrea datos de precios en todos los proveedores a lo largo del tiempo. La herramienta `analyze_prices` proporciona resúmenes estadísticos que revelan patrones de precios:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// 30-day price analysis for a standard order
+// Análisis de precios de 30 días para una orden estándar
 const analysis = await merx.analyzePrices({
   energy_amount: 65000,
   duration: '1h',
   period: '30d'
 });
 
-console.log('30-Day Price Statistics:');
-console.log(`  Mean:            ${analysis.mean_sun} SUN`);
-console.log(`  Median:          ${analysis.median_sun} SUN`);
-console.log(`  Min observed:    ${analysis.min_sun} SUN`);
-console.log(`  Max observed:    ${analysis.max_sun} SUN`);
-console.log(`  Std deviation:   ${analysis.stddev_sun} SUN`);
-console.log(`  5th percentile:  ${analysis.p5_sun} SUN`);
-console.log(`  25th percentile: ${analysis.p25_sun} SUN`);
-console.log(`  75th percentile: ${analysis.p75_sun} SUN`);
-console.log(`  95th percentile: ${analysis.p95_sun} SUN`);
+console.log('Estadísticas de Precios de 30 Días:');
+console.log(`  Media:           ${analysis.mean_sun} SUN`);
+console.log(`  Mediana:         ${analysis.median_sun} SUN`);
+console.log(`  Mínimo observado:    ${analysis.min_sun} SUN`);
+console.log(`  Máximo observado:    ${analysis.max_sun} SUN`);
+console.log(`  Desviación estándar: ${analysis.stddev_sun} SUN`);
+console.log(`  Percentil 5:     ${analysis.p5_sun} SUN`);
+console.log(`  Percentil 25:    ${analysis.p25_sun} SUN`);
+console.log(`  Percentil 75:    ${analysis.p75_sun} SUN`);
+console.log(`  Percentil 95:    ${analysis.p95_sun} SUN`);
 ```
 
-These statistics tell a story. The spread between the 5th and 95th percentile shows how much prices vary. The standard deviation quantifies volatility. The gap between mean and median indicates whether extreme prices skew the average.
+Estas estadísticas cuentan una historia. La diferencia entre el percentil 5 y 95 muestra cuánto varían los precios. La desviación estándar cuantifica la volatilidad. La brecha entre la media y la mediana indica si los precios extremos sesgan el promedio.
 
-## Percentile-Based Purchasing Strategy
+## Estrategia de Compra Basada en Percentiles
 
-The most effective approach to energy timing is not trying to hit the absolute minimum but targeting a percentile that balances ahorro de costos against fill reliability.
+El enfoque más efectivo para el timing de energía no es intentar alcanzar el mínimo absoluto sino apuntar a un percentil que equilibre el ahorro de costos contra la confiabilidad de ejecución.
 
-### How Percentiles Work
+### Cómo Funcionan los Percentiles
 
-If the 25th percentile price for your order profile is 24 SUN, that means 25% of observed prices over the analysis period were at or below 24 SUN. Setting a orden permanente at 24 SUN means:
+Si el precio del percentil 25 para tu perfil de orden es 24 SUN, eso significa que el 25% de los precios observados durante el período de análisis estaban en o por debajo de 24 SUN. Establecer una orden permanente a 24 SUN significa:
 
-- Your order fills 25% of the time (roughly 6 hours per day on average)
-- When it fills, you are paying less than 75% of observed market prices
-- You capture naturally occurring price dips without manual monitoring
+- Tu orden se ejecuta el 25% del tiempo (aproximadamente 6 horas por día en promedio)
+- Cuando se ejecuta, estás pagando menos que el 75% de los precios de mercado observados
+- Capturas caídas de precios que ocurren naturalmente sin monitoreo manual
 
-### Strategy Table
+### Tabla de Estrategia
 
-| Target Percentile | Fill Frequency | Savings vs Median | Risk Level |
+| Percentil Objetivo | Frecuencia de Ejecución | Ahorros vs Mediana | Nivel de Riesgo |
 |---|---|---|---|
-| 5th percentile | ~1-2 hours/day | Maximum | High (may not fill for hours) |
-| 10th percentile | ~2-3 hours/day | Very high | Moderate-high |
-| 25th percentile | ~6 hours/day | High | Moderate |
-| 50th percentile (median) | ~12 hours/day | Moderate | Low |
-| 75th percentile | ~18 hours/day | Low | Very low |
+| Percentil 5 | ~1-2 horas/día | Máximo | Alto (puede no ejecutarse durante horas) |
+| Percentil 10 | ~2-3 horas/día | Muy alto | Moderado-alto |
+| Percentil 25 | ~6 horas/día | Alto | Moderado |
+| Percentil 50 (mediana) | ~12 horas/día | Moderado | Bajo |
+| Percentil 75 | ~18 horas/día | Bajo | Muy bajo |
 
-### Choosing Your Percentile
+### Eligiendo tu Percentil
 
-**Time-flexible operations** (batch processing, non-urgent distributions): Target the 10th-25th percentile. You can wait hours for the price to hit your target.
+**Operaciones flexibles en tiempo** (procesamiento por lotes, distribuciones no urgentes): Apunta al percentil 10-25. Puedes esperar horas a que el precio alcance tu objetivo.
 
-**Semi-urgent operations** (standard business processing): Target the 25th-50th percentile. Orders fill within a few hours during normal market conditions.
+**Operaciones semi-urgentes** (procesamiento comercial estándar): Apunta al percentil 25-50. Las órdenes se ejecutan dentro de pocas horas en condiciones normales de mercado.
 
-**Time-critical operations** (tiempo real payments, user-facing transactions): Target the 50th-75th percentile or buy at market rate. Do not risk delays.
+**Operaciones críticas en tiempo** (pagos en tiempo real, transacciones de cara al usuario): Apunta al percentil 50-75 o compra al precio de mercado. No arriesgues retrasos.
 
-## Implementing the Strategy
+## Implementando la Estrategia
 
-### Standing Orders
+### Órdenes Permanentes
 
-Standing orders are the mechanism for implementing percentile-based purchasing:
+Las órdenes permanentes son el mecanismo para implementar compras basadas en percentiles:
 
 ```typescript
-// Based on analysis showing 25th percentile at 24 SUN
+// Basado en análisis que muestra percentil 25 a 24 SUN
 const standing = await merx.createStandingOrder({
   energy_amount: 65000,
   max_price_sun: 24,
@@ -86,86 +86,86 @@ const standing = await merx.createStandingOrder({
   target_address: 'TYourAddress...'
 });
 
-console.log(`Standing order created: ${standing.id}`);
-console.log(`Will fill when price drops to 24 SUN or below`);
+console.log(`Orden permanente creada: ${standing.id}`);
+console.log(`Se ejecutará cuando el precio baje a 24 SUN o menos`);
 ```
 
-The orden permanente monitors prices across all seven providers continuously. When any provider offers 24 SUN or below for your specified amount and duration, the order executes automatically.
+La orden permanente monitorea precios entre todos los siete proveedores continuamente. Cuando cualquier proveedor ofrece 24 SUN o menos para tu cantidad y duración especificadas, la orden se ejecuta automáticamente.
 
-### Tiered Standing Orders
+### Órdenes Permanentes Escalonadas
 
-For more sophisticated strategies, create multiple orden permanentes at different price levels:
+Para estrategias más sofisticadas, crea múltiples órdenes permanentes a diferentes niveles de precio:
 
 ```typescript
-// Tier 1: Aggressive - fill if price drops very low
+// Nivel 1: Agresivo - ejecutar si el precio baja mucho
 const tier1 = await merx.createStandingOrder({
   energy_amount: 200000,
-  max_price_sun: 22,       // Very aggressive
+  max_price_sun: 22,       // Muy agresivo
   duration: '1h',
   repeat: true,
   target_address: operationsWallet
 });
 
-// Tier 2: Moderate - fill at below-average prices
+// Nivel 2: Moderado - ejecutar a precios por debajo del promedio
 const tier2 = await merx.createStandingOrder({
   energy_amount: 100000,
-  max_price_sun: 25,       // Moderate
+  max_price_sun: 25,       // Moderado
   duration: '1h',
   repeat: true,
   target_address: operationsWallet
 });
 
-// Tier 3: Conservative - fill reliably
+// Nivel 3: Conservador - ejecutar de forma confiable
 const tier3 = await merx.createStandingOrder({
   energy_amount: 65000,
-  max_price_sun: 30,       // Conservative
+  max_price_sun: 30,       // Conservador
   duration: '1h',
   repeat: true,
   target_address: operationsWallet
 });
 ```
 
-This structure buys more energy when prices are very low, moderate amounts at average prices, and minimum requirements at higher prices. The result is a blended average cost that is consistently below market rate.
+Esta estructura compra más energía cuando los precios son muy bajos, cantidades moderadas a precios promedio, y requisitos mínimos a precios más altos. El resultado es un costo promedio combinado que es consistentemente inferior al precio de mercado.
 
-## Daily Timing Patterns
+## Patrones de Timing Diarios
 
-While specific price levels vary, daily patterns provide general guidance on when to buy:
+Si bien los niveles de precio específicos varían, los patrones diarios proporcionan orientación general sobre cuándo comprar:
 
-### Lower-Price Windows
+### Ventanas de Precios Más Bajos
 
-Based on typical TRON network activity patterns, prices tend to be softer during:
+Basado en patrones típicos de actividad de la red TRON, los precios tienden a ser más suaves durante:
 
-- **Late evening to early morning UTC+8** (approximately 22:00-06:00 UTC+8, or 14:00-22:00 UTC): Asian business hours end, reducing demand
-- **Weekends**: Lower overall transaction volume means less energy demand
-- **Holiday periods**: Both Western and Asian holiday periods see reduced activity
+- **Finales de la tarde hasta primeras horas de la mañana UTC+8** (aproximadamente 22:00-06:00 UTC+8, u 14:00-22:00 UTC): Fin del horario comercial asiático, reduciendo la demanda
+- **Fines de semana**: Menor volumen general de transacciones significa menos demanda de energía
+- **Períodos de vacaciones**: Tanto los períodos de vacaciones occidentales como asiáticos ven actividad reducida
 
-### Higher-Price Windows
+### Ventanas de Precios Más Altos
 
-Prices tend to be firmer during:
+Los precios tienden a ser más firmes durante:
 
-- **Asian business hours** (approximately 09:00-18:00 UTC+8): Peak TRON network activity
-- **Major market events**: Crypto market crashes or rallies drive transaction volume
-- **Token launch events**: Mass minting or distribution events create demand spikes
+- **Horario comercial asiático** (aproximadamente 09:00-18:00 UTC+8): Actividad máxima de la red TRON
+- **Eventos importantes del mercado**: Los colapsos o repuntes del mercado de criptomonedas impulsan el volumen de transacciones
+- **Eventos de lanzamiento de tokens**: Eventos de acuñación masiva o distribución crean picos de demanda
 
-### Important Caveat
+### Advertencia Importante
 
-These patterns are statistical tendencies, not guarantees. On any given day, the lowest price might occur during "peak hours" due to a provider running a promotion, or prices might be elevated during "off-peak" due to a large buyer clearing provider supply.
+Estos patrones son tendencias estadísticas, no garantías. En cualquier día dado, el precio más bajo podría ocurrir durante "horas pico" debido a que un proveedor ejecuta una promoción, o los precios podrían estar elevados durante "horas de baja actividad" debido a un comprador grande liquidando el suministro del proveedor.
 
-This is exactly why orden permanentes are more effective than manual timing: they monitor prices 24/7 and capture opportunities regardless of when they occur.
+Esto es exactamente por qué las órdenes permanentes son más efectivas que el timing manual: monitorizan precios 24/7 y capturan oportunidades sin importar cuándo ocurran.
 
-## Historical Data Patterns
+## Patrones de Datos Históricos
 
-Pull historical price data to build more detailed models:
+Extrae datos históricos de precios para construir modelos más detallados:
 
 ```typescript
-// Get granular price history
+// Obtener historial de precios granular
 const history = await merx.getPriceHistory({
   energy_amount: 65000,
   duration: '1h',
   period: '30d'
 });
 
-// Analyze by hour of day
+// Analizar por hora del día
 const hourlyPrices: Record<number, number[]> = {};
 
 for (const point of history.prices) {
@@ -174,22 +174,22 @@ for (const point of history.prices) {
   hourlyPrices[hour].push(point.best_price_sun);
 }
 
-// Find lowest-average hours
+// Encontrar las horas con promedio más bajo
 for (const [hour, prices] of Object.entries(hourlyPrices)) {
   const avg = prices.reduce((a, b) => a + b) / prices.length;
-  console.log(`UTC ${hour}:00 - Average: ${avg.toFixed(1)} SUN`);
+  console.log(`UTC ${hour}:00 - Promedio: ${avg.toFixed(1)} SUN`);
 }
 ```
 
-This analysis reveals which hours consistently offer better pricing for your specific order profile.
+Este análisis revela qué horas ofrecen consistentemente mejor precio para tu perfil de orden específico.
 
-## The Cost of Waiting
+## El Costo de Esperar
 
-An important consideration in timing strategy is the cost of waiting too long. If your orden permanente target is too aggressive (5th percentile or lower), you might wait days for a fill while your operations need energy now.
+Una consideración importante en la estrategia de timing es el costo de esperar demasiado. Si tu objetivo de orden permanente es demasiado agresivo (percentil 5 o inferior), podrías esperar días a una ejecución mientras tus operaciones necesitan energía ahora.
 
-### Buffer Strategy
+### Estrategia de Buffer
 
-Maintain an energy buffer so your orden permanentes have time to fill without disrupting operations:
+Mantén un buffer de energía para que tus órdenes permanentes tengan tiempo para ejecutarse sin interrumpir las operaciones:
 
 ```typescript
 class TimingStrategy {
@@ -205,19 +205,19 @@ class TimingStrategy {
     const available = resources.energy.available;
 
     if (available < this.emergencyThreshold) {
-      // Below emergency threshold: buy at market rate
+      // Por debajo del umbral de emergencia: compra al precio de mercado
       await this.buyAtMarket();
     } else if (available < this.bufferEnergy) {
-      // Below buffer: standing order at moderate price
+      // Por debajo del buffer: orden permanente a precio moderado
       await this.createModerateOrder();
     } else {
-      // Buffer is full: standing order at aggressive price
+      // Buffer lleno: orden permanente a precio agresivo
       await this.createAggressiveOrder();
     }
   }
 
   private async buyAtMarket(): Promise<void> {
-    // Get current best price and buy immediately
+    // Obtén el precio actual mejor y compra inmediatamente
     await this.merx.createOrder({
       energy_amount: this.bufferEnergy,
       duration: '1h',
@@ -228,7 +228,7 @@ class TimingStrategy {
   private async createModerateOrder(): Promise<void> {
     await this.merx.createStandingOrder({
       energy_amount: this.bufferEnergy,
-      max_price_sun: 28,  // 50th percentile
+      max_price_sun: 28,  // Percentil 50
       duration: '1h',
       target_address: this.wallet
     });
@@ -237,7 +237,7 @@ class TimingStrategy {
   private async createAggressiveOrder(): Promise<void> {
     await this.merx.createStandingOrder({
       energy_amount: this.bufferEnergy * 2,
-      max_price_sun: 23,  // 10th percentile
+      max_price_sun: 23,  // Percentil 10
       duration: '1h',
       target_address: this.wallet
     });
@@ -245,11 +245,11 @@ class TimingStrategy {
 }
 ```
 
-This adaptive strategy buys aggressively when the buffer is full (waiting for good prices costs nothing) and buys at market rate when the buffer is depleted (operations take priority over optimizacion de precios).
+Esta estrategia adaptativa compra de forma agresiva cuando el buffer está lleno (esperar a buenos precios no cuesta nada) y compra al precio de mercado cuando el buffer se agota (las operaciones tienen prioridad sobre la optimización de precios).
 
-## Measuring Your Results
+## Midiendo tus Resultados
 
-Track your average purchase price over time to verify your timing strategy works:
+Rastrea tu precio de compra promedio a lo largo del tiempo para verificar que tu estrategia de timing funciona:
 
 ```typescript
 interface PurchaseRecord {
@@ -282,37 +282,38 @@ function analyzeResults(
     (sum, p) => sum + p.priceSun, 0
   ) / marketOrders.length;
 
-  console.log(`Overall average: ${avgPrice.toFixed(1)} SUN`);
-  console.log(`Standing order avg: ${standingAvg.toFixed(1)} SUN`);
-  console.log(`Market order avg: ${marketAvg.toFixed(1)} SUN`);
+  console.log(`Promedio general: ${avgPrice.toFixed(1)} SUN`);
+  console.log(`Promedio de orden permanente: ${standingAvg.toFixed(1)} SUN`);
+  console.log(`Promedio de orden de mercado: ${marketAvg.toFixed(1)} SUN`);
   console.log(
-    `Standing order savings: ` +
+    `Ahorros de orden permanente: ` +
     `${((1 - standingAvg / marketAvg) * 100).toFixed(1)}%`
   );
 }
 ```
 
-A well-tuned timing strategy should show orden permanente average prices 10-20% below market order prices.
+Una estrategia de timing bien ajustada debería mostrar precios promedio de órdenes permanentes 10-20% por debajo de los precios de órdenes de mercado.
 
-## Conclusion
+## Conclusión
 
-The best time to buy TRON energy is not a specific hour or day -- it is the moment when prices reach your target level, captured automatically by a orden permanente.
+El mejor momento para comprar energía TRON no es una hora o día específico -- es el momento en que los precios alcanzan tu nivel objetivo, capturado automáticamente por una orden permanente.
 
-The data-driven approach is straightforward:
+El enfoque basado en datos es sencillo:
 
-1. Analyze historical prices to understand the distribution for your order profile
-2. Set a target at the 25th percentile (adjust based on your urgency)
-3. Create orden permanentes at your target price
-4. Maintain a buffer so operations continue while waiting for optimal prices
-5. Track results and adjust targets based on tasa de ejecucions and average costs
+1. Analiza precios históricos para entender la distribución para tu perfil de orden
+2. Establece un objetivo en el percentil 25 (ajusta según tu urgencia)
+3. Crea órdenes permanentes a tu precio objetivo
+4. Mantén un buffer para que las operaciones continúen mientras esperas precios óptimos
+5. Rastrea resultados y ajusta objetivos según las tasas de ejecución y costos promedio
 
-MERX provides the tools -- price analysis, orden permanentes, and multi-provider aggregation -- to implement this strategy without building custom infrastructure. The system monitors seven providers continuously, captures price dips automatically, and ensures you consistently buy below the market average.
+MERX proporciona las herramientas -- análisis de precios, órdenes permanentes, y agregación multi-proveedor -- para implementar esta estrategia sin construir infraestructura personalizada. El sistema monitorea siete proveedores continuamente, captura caídas de precios automáticamente, y asegura que consistentemente compres por debajo del promedio del mercado.
 
-Start analyzing prices at [https://merx.exchange](https://merx.exchange) or explore the analytics API at [https://merx.exchange/docs](https://merx.exchange/docs).
+Comienza a analizar precios en [https://merx.exchange](https://merx.exchange) o explora la API de análisis en [https://merx.exchange/docs](https://merx.exchange/docs).
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Añade MERX a Claude Desktop o a cualquier cliente compatible con MCP -- sin instalación, sin necesidad de clave API para herramientas de solo lectura:
 
 ```json
 {
@@ -324,6 +325,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

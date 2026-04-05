@@ -1,21 +1,21 @@
-# Integracion de webhooks: reciba notificaciones cuando las ordenes de energia se completen
+# Integración de Webhooks: Recibe Notificaciones Cuando tus Órdenes se Completen
 
-MERX webhooks deliver tiempo real HTTP notifications when events occur on your account - orders filling, orders failing, deposits arriving, withdrawals completing. This article covers all four event types, the payload format, HMAC-SHA256 signature verification using the `X-Merx-Signature` header, the retry policy with exponential backoff, auto-deactivation after repeated failures, and complete server implementations in Express.js and Flask with signature verification.
+Los webhooks de MERX entregan notificaciones HTTP en tiempo real cuando ocurren eventos en tu cuenta - órdenes completadas, órdenes fallidas, depósitos recibidos, retiros completados. Este artículo cubre los cuatro tipos de eventos, el formato de carga útil, verificación de firmas HMAC-SHA256 usando el encabezado `X-Merx-Signature`, la política de reintentos con retroceso exponencial, auto-desactivación después de fallos repetidos, e implementaciones completas de servidores en Express.js y Flask con verificación de firmas.
 
-## Why Webhooks Instead of Polling
+## Por Qué Webhooks en Lugar de Polling
 
-The alternative to webhooks is polling the `/api/v1/orders/:id` endpoint in a loop, waiting for the status to change from `PENDING` to `FILLED`. This works for simple cases but has clear drawbacks:
+La alternativa a los webhooks es hacer polling del endpoint `/api/v1/orders/:id` en un bucle, esperando a que el estado cambie de `PENDING` a `FILLED`. Esto funciona para casos simples pero tiene desventajas claras:
 
-- Wasted requests. Most polls return the same unchanged status.
-- Latency. Your application only discovers a state change at the next poll interval.
-- Rate limits. With a 10-request-per-minute limit on the orders endpoint, aggressive polling quickly hits the ceiling.
-- Complexity. Polling logic needs retry handling, timeout management, and state tracking.
+- Solicitudes desperdiciadas. La mayoría de los polls devuelven el mismo estado sin cambios.
+- Latencia. Tu aplicación solo descubre un cambio de estado en el siguiente intervalo de polling.
+- Límites de velocidad. Con un límite de 10 solicitudes por minuto en el endpoint de órdenes, el polling agresivo rápidamente alcanza el límite.
+- Complejidad. La lógica de polling necesita manejo de reintentos, gestión de tiempos de espera y seguimiento de estado.
 
-Webhooks invert the model. Instead of asking MERX "has anything changed?", MERX tells you the moment something happens. Your server receives an HTTP POST with the full event payload, processes it, and moves on. No polling loops, no wasted requests, no artificial delays.
+Los webhooks invierten el modelo. En lugar de preguntarle a MERX "¿ha cambiado algo?", MERX te lo comunica en el momento en que sucede algo. Tu servidor recibe un POST HTTP con la carga útil completa del evento, la procesa y continúa. Sin bucles de polling, sin solicitudes desperdiciadas, sin retrasos artificiales.
 
-## Creating a Webhook
+## Creando un Webhook
 
-You can create webhooks via the REST API or the SDK.
+Puedes crear webhooks a través de la REST API o el SDK.
 
 ### REST API
 
@@ -29,7 +29,7 @@ curl -X POST https://merx.exchange/api/v1/webhooks \
   }'
 ```
 
-Response:
+Respuesta:
 
 ```json
 {
@@ -44,7 +44,7 @@ Response:
 }
 ```
 
-The `secret` field is a 64-character hex string generated from 32 random bytes. It is returned only in the creation response. Store it securely - you will need it to verify incoming webhook signatures.
+El campo `secret` es una cadena hexadecimal de 64 caracteres generada a partir de 32 bytes aleatorios. Se devuelve solo en la respuesta de creación. Guárdalo de forma segura - lo necesitarás para verificar las firmas de los webhooks entrantes.
 
 ### JavaScript SDK
 
@@ -78,13 +78,13 @@ print(f"Webhook ID: {webhook.id}")
 print(f"Secret: {webhook.secret}")  # Store this securely
 ```
 
-## Event Types
+## Tipos de Eventos
 
-MERX supports four webhook event types. When creating a webhook, you choose which events to subscribe to. You can subscribe to all four or just the ones you need.
+MERX soporta cuatro tipos de eventos de webhooks. Cuando creas un webhook, eliges a cuáles eventos suscribirse. Puedes suscribirte a los cuatro o solo a los que necesites.
 
 ### order.filled
 
-Sent when an order has been completely fulfilled. All provider delegations have been confirmed en cadena.
+Se envía cuando una orden ha sido completamente cumplida. Todas las delegaciones de proveedores han sido confirmadas en la cadena.
 
 ```json
 {
@@ -112,11 +112,11 @@ Sent when an order has been completely fulfilled. All provider delegations have 
 }
 ```
 
-This is the most important event for automated systems. When you receive it, the energy has been delegated and the target address can proceed with its TRON transactions.
+Este es el evento más importante para sistemas automatizados. Cuando lo recibas, la energía ha sido delegada y la dirección de destino puede proceder con sus transacciones TRON.
 
 ### order.failed
 
-Sent when an order could not be fulfilled. This can happen when all providers are unavailable, capacity is exhausted, or a provider-side error occurs.
+Se envía cuando una orden no pudo ser cumplida. Esto puede ocurrir cuando todos los proveedores no están disponibles, la capacidad se ha agotado, o ocurre un error del lado del proveedor.
 
 ```json
 {
@@ -134,11 +134,11 @@ Sent when an order could not be fulfilled. This can happen when all providers ar
 }
 ```
 
-When an order fails, any reserved balance is refunded. The `refunded` field confirms this, and `refund_amount_sun` shows the amount returned if payment was already deducted.
+Cuando una orden falla, cualquier saldo reservado es reembolsado. El campo `refunded` confirma esto, y `refund_amount_sun` muestra la cantidad devuelta si el pago ya había sido deducido.
 
 ### deposit.received
 
-Sent when a deposit to your MERX account has been detected and credited.
+Se envía cuando se ha detectado un depósito en tu cuenta de MERX y ha sido acreditado.
 
 ```json
 {
@@ -157,7 +157,7 @@ Sent when a deposit to your MERX account has been detected and credited.
 
 ### withdrawal.completed
 
-Sent when a withdrawal request has been processed and the en cadena transaction is confirmed.
+Se envía cuando una solicitud de retiro ha sido procesada y la transacción en la cadena ha sido confirmada.
 
 ```json
 {
@@ -174,27 +174,27 @@ Sent when a withdrawal request has been processed and the en cadena transaction 
 }
 ```
 
-## Signature Verification
+## Verificación de Firmas
 
-Every webhook delivery includes an `X-Merx-Signature` header containing an HMAC-SHA256 signature of the request body, computed using your webhook secret as the key.
+Cada entrega de webhook incluye un encabezado `X-Merx-Signature` que contiene una firma HMAC-SHA256 del cuerpo de la solicitud, calculada usando tu secreto de webhook como clave.
 
-The verification process:
+El proceso de verificación:
 
-1. Read the raw request body (before JSON parsing).
-2. Compute HMAC-SHA256 of the raw body using your stored webhook secret.
-3. Compare the computed signature with the `X-Merx-Signature` header value.
-4. If they match, the request is authentic. If not, reject it.
+1. Lee el cuerpo de la solicitud sin procesar (antes del análisis JSON).
+2. Calcula HMAC-SHA256 del cuerpo sin procesar usando tu secreto de webhook almacenado.
+3. Compara la firma calculada con el valor del encabezado `X-Merx-Signature`.
+4. Si coinciden, la solicitud es auténtica. Si no, recházala.
 
-This protects against:
-- Forged requests from third parties who do not know your secret.
-- Tampered payloads where the body has been modified in transit.
-- Replay attacks (combined with timestamp validation).
+Esto te protege contra:
+- Solicitudes falsificadas de terceros que no conocen tu secreto.
+- Cargas útiles manipuladas donde el cuerpo ha sido modificado en tránsito.
+- Ataques de repetición (combinado con validación de marca de tiempo).
 
-Always use a constant-time comparison function when checking signatures. Standard string equality (`===` or `==`) is vulnerable to timing attacks.
+Siempre usa una función de comparación de tiempo constante al verificar firmas. La igualdad de cadenas estándar (`===` o `==`) es vulnerable a ataques de temporización.
 
-## Express.js Webhook Handler
+## Controlador de Webhooks en Express.js
 
-Aqui esta a complete Express.js server that receives and verifies MERX webhooks:
+Aquí hay un servidor Express.js completo que recibe y verifica webhooks de MERX:
 
 ```javascript
 import express from 'express'
@@ -293,15 +293,15 @@ app.listen(3000, () => {
 })
 ```
 
-Key implementation details:
+Detalles clave de la implementación:
 
-- Use `express.raw({ type: 'application/json' })` instead of `express.json()` for the webhook route. You need the raw bytes for signature computation.
-- Use `crypto.timingSafeEqual()` for constant-time signature comparison.
-- Respond with HTTP 200 as quickly as possible. Do heavy processing asynchronously after acknowledging receipt.
+- Usa `express.raw({ type: 'application/json' })` en lugar de `express.json()` para la ruta del webhook. Necesitas los bytes sin procesar para el cálculo de la firma.
+- Usa `crypto.timingSafeEqual()` para comparación de firmas de tiempo constante.
+- Responde con HTTP 200 lo antes posible. Realiza el procesamiento pesado de forma asincrónica después de confirmar la recepción.
 
-## Flask Webhook Handler
+## Controlador de Webhooks en Flask
 
-Aqui esta the equivalent implementation in Python using Flask:
+Aquí está la implementación equivalente en Python usando Flask:
 
 ```python
 import hashlib
@@ -397,46 +397,46 @@ if __name__ == "__main__":
     app.run(port=3000)
 ```
 
-Key Python-specific details:
+Detalles específicos de Python:
 
-- Use `request.get_data()` to get the raw request body as bytes.
-- Use `hmac.compare_digest()` for constant-time string comparison. Python's `==` operator is not constant-time.
-- Use `hmac.new()` with `hashlib.sha256` to compute the HMAC.
+- Usa `request.get_data()` para obtener el cuerpo de la solicitud sin procesar como bytes.
+- Usa `hmac.compare_digest()` para comparación de cadenas de tiempo constante. El operador `==` de Python no es de tiempo constante.
+- Usa `hmac.new()` con `hashlib.sha256` para calcular el HMAC.
 
-## Retry Policy
+## Política de Reintentos
 
-MERX retries failed webhook deliveries using an exponential backoff schedule:
+MERX reintenta entregas fallidas de webhooks usando un esquema de retroceso exponencial:
 
-| Attempt | Delay after failure |
-|---------|---------------------|
-| 1       | Immediate           |
-| 2       | 30 seconds          |
-| 3       | 5 minutes           |
+| Intento | Retraso después del fallo |
+|---------|--------------------------|
+| 1       | Inmediato                 |
+| 2       | 30 segundos               |
+| 3       | 5 minutos                 |
 
-A delivery is considered failed if:
-- Your server does not respond within 10 seconds.
-- Your server returns an HTTP status code outside the 2xx range.
-- The connection cannot be established (DNS failure, connection refused, TLS error).
+Una entrega se considera fallida si:
+- Tu servidor no responde dentro de 10 segundos.
+- Tu servidor devuelve un código de estado HTTP fuera del rango 2xx.
+- La conexión no se puede establecer (fallo de DNS, conexión rechazada, error de TLS).
 
-After 3 failed attempts for a single event, the event is dropped. No further retries are made for that specific delivery.
+Después de 3 intentos fallidos para un único evento, el evento se descarta. No se hacen más reintentos para esa entrega específica.
 
-Your webhook handler should:
-- Respond with HTTP 200 within a few seconds. Do heavy processing asynchronously.
-- Be idempotent. The same event may be delivered more than once in edge cases.
-- Log the event payload for debugging if processing fails.
+Tu controlador de webhooks debe:
+- Responder con HTTP 200 dentro de algunos segundos. Realiza el procesamiento pesado de forma asincrónica.
+- Ser idempotente. El mismo evento puede ser entregado más de una vez en casos extremos.
+- Registrar la carga útil del evento para depuración si el procesamiento falla.
 
-## Auto-Deactivation
+## Auto-Desactivación
 
-If a webhook endpoint consistently fails, MERX automatically deactivates it to prevent wasting resources on a dead endpoint.
+Si un endpoint de webhook falla consistentemente, MERX lo desactiva automáticamente para evitar desperdiciar recursos en un endpoint muerto.
 
-The deactivation threshold is based on consecutive failures across multiple events. If your endpoint fails to accept deliveries repeatedly, the webhook's `is_active` flag is set to `false`.
+El umbral de desactivación se basa en fallos consecutivos en múltiples eventos. Si tu endpoint falla repetidamente en aceptar entregas, la bandera `is_active` del webhook se establece en `false`.
 
-When a webhook is deactivated:
-- No further events are sent to that URL.
-- The webhook still appears in your list with `is_active: false`.
-- You can fix the endpoint issue and create a new webhook.
+Cuando un webhook es desactivado:
+- No se envían más eventos a esa URL.
+- El webhook sigue apareciendo en tu lista con `is_active: false`.
+- Puedes corregir el problema del endpoint y crear un nuevo webhook.
 
-Monitor your webhook status periodically:
+Monitorea el estado de tus webhooks periódicamente:
 
 ```javascript
 const webhooks = await merx.webhooks.list()
@@ -454,27 +454,27 @@ for wh in webhooks:
         print(f"Webhook {wh.id} ({wh.url}) is deactivated")
 ```
 
-## Managing Webhooks
+## Gestionando Webhooks
 
-### Listing Webhooks
+### Listando Webhooks
 
 ```bash
 curl -H "X-API-Key: sk_live_your_key_here" \
   https://merx.exchange/api/v1/webhooks
 ```
 
-### Deleting a Webhook
+### Eliminando un Webhook
 
 ```bash
 curl -X DELETE -H "X-API-Key: sk_live_your_key_here" \
   https://merx.exchange/api/v1/webhooks/wh_abc123
 ```
 
-Note that the webhook secret cannot be retrieved after creation. If you lose the secret, delete the webhook and create a new one.
+Ten en cuenta que el secreto del webhook no se puede recuperar después de la creación. Si pierdes el secreto, elimina el webhook y crea uno nuevo.
 
-## Testing Webhooks Locally
+## Probando Webhooks Localmente
 
-During development, your webhook URL needs to be publicly accessible. Tools like ngrok can expose a local server:
+Durante el desarrollo, tu URL de webhook debe ser accesible públicamente. Herramientas como ngrok pueden exponer un servidor local:
 
 ```bash
 # Terminal 1: Start your webhook server
@@ -484,35 +484,36 @@ node webhook-server.js
 ngrok http 3000
 ```
 
-Use the ngrok URL (e.g., `https://abc123.ngrok.io/webhooks/merx`) when creating the webhook. Once you verify everything works, replace it with your production URL.
+Usa la URL de ngrok (por ejemplo, `https://abc123.ngrok.io/webhooks/merx`) cuando crees el webhook. Una vez que verifiques que todo funciona, reemplázala con tu URL de producción.
 
-## Best Practices
+## Mejores Prácticas
 
-1. Always verify signatures. Never trust webhook payloads without checking the `X-Merx-Signature` header.
+1. Siempre verifica firmas. Nunca confíes en cargas útiles de webhooks sin verificar el encabezado `X-Merx-Signature`.
 
-2. Respond quickly. Return HTTP 200 within 2-3 seconds. Queue heavy processing for background workers.
+2. Responde rápidamente. Devuelve HTTP 200 dentro de 2-3 segundos. Coloca el procesamiento pesado en la cola para trabajadores en segundo plano.
 
-3. Be idempotent. Use the `order_id` or `deposit_id` as a deduplication key. If you receive the same event twice, the second processing should be a no-op.
+3. Sé idempotente. Usa `order_id` o `deposit_id` como clave de deduplicación. Si recibes el mismo evento dos veces, el segundo procesamiento debe ser una no-operación.
 
-4. Store the raw payload. Log the full JSON body before processing. If your handler has a bug, you can replay the events from logs.
+4. Almacena la carga útil sin procesar. Registra el cuerpo JSON completo antes de procesar. Si tu controlador tiene un error, puedes reproducir los eventos desde los registros.
 
-5. Monitor webhook health. Check `is_active` status regularly. Set up alerts if webhooks are deactivated.
+5. Monitorea la salud del webhook. Verifica regularmente el estado `is_active`. Configura alertas si los webhooks son desactivados.
 
-6. Use HTTPS. MERX requires webhook URLs to use HTTPS. Self-signed certificates are not accepted.
+6. Usa HTTPS. MERX requiere que las URLs de webhooks usen HTTPS. Los certificados autofirmados no se aceptan.
 
-7. Subscribe selectively. Only subscribe to the events you actually handle. Unnecessary events waste bandwidth and processing time.
+7. Suscríbete selectivamente. Solo suscríbete a los eventos que realmente manejas. Los eventos innecesarios desperdician ancho de banda y tiempo de procesamiento.
 
-## Resources
+## Recursos
 
 - Plataforma: [merx.exchange](https://merx.exchange)
-- Documentacion: [merx.exchange/docs](https://merx.exchange/docs)
-- SDK de JavaScript: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) | [npm](https://www.npmjs.com/package/merx-sdk)
-- SDK de Python: [pypi.org/project/merx-sdk](https://pypi.org/project/merx-sdk/)
-- Servidor MCP: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+- Documentación: [merx.exchange/docs](https://merx.exchange/docs)
+- JavaScript SDK: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) | [npm](https://www.npmjs.com/package/merx-sdk)
+- Python SDK: [pypi.org/project/merx-sdk](https://pypi.org/project/merx-sdk/)
+- MCP Server: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -524,6 +525,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregúntale a tu agente de IA: "¿Cuál es la energía TRON más barata ahora mismo?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,116 +1,116 @@
-# MERX vs TronSave: agregador vs proveedor unico
+# MERX vs TronSave: Agregador vs Proveedor Individual
 
-The TRON mercado de energia has grown from a niche concern into a critical cost-optimization layer for any serious blockchain operation. Two names come up frequently in these discussions: TronSave and MERX. They serve similar goals -- reducing costo de transaccions on TRON -- but they approach the problem from fundamentally different angles. This article breaks down the differences, compares features side by side, and helps you decide which solution fits your caso de uso.
+El mercado de energía de TRON ha evolucionado de una preocupación de nicho a una capa crítica de optimización de costos para cualquier operación blockchain seria. Dos nombres salen frecuentemente en estas discusiones: TronSave y MERX. Sirven objetivos similares -- reducir costos de transacción en TRON -- pero abordan el problema desde ángulos fundamentalmente diferentes. Este artículo desglosa las diferencias, compara características lado a lado, y te ayuda a decidir cuál solución se ajusta a tu caso de uso.
 
-## What TronSave Does
+## Qué Hace TronSave
 
-TronSave operates as a peer-to-peer mercado de energiaplace. It connects resource holders -- users who have staked TRX and accumulated energy -- with consumers who need that energy for contrato inteligente interactions. The model is straightforward: sellers list their available energy at a price, buyers browse and purchase.
+TronSave opera como un mercado de energía peer-to-peer. Conecta tenedores de recursos -- usuarios que han puesto en staking TRX y acumulado energía -- con consumidores que necesitan esa energía para interacciones de smart contracts. El modelo es directo: los vendedores listan su energía disponible a un precio, los compradores exploran y compran.
 
-This P2P approach has genuine strengths. For large orders, TronSave can offer competitive pricing because you are negotiating directly with resource holders. The platform handles the delegation mechanics, so sellers freeze their TRX and TronSave facilitates the energy transfer to buyers.
+Este enfoque P2P tiene fortalezas genuinas. Para órdenes grandes, TronSave puede ofrecer precios competitivos porque estás negociando directamente con tenedores de recursos. La plataforma maneja la mecánica de delegación, así que los vendedores congelan su TRX y TronSave facilita la transferencia de energía a los compradores.
 
-TronSave supports multiple duration tiers and allows buyers to specify exactly how much energy they need. For organizations placing bulk orders -- hundreds of thousands of unidad de energias at a time -- the P2P model can yield favorable rates because large sellers are incentivized to move volume.
+TronSave soporta múltiples niveles de duración y permite a los compradores especificar exactamente cuánta energía necesitan. Para organizaciones que colocan órdenes masivas -- cientos de miles de unidades de energía a la vez -- el modelo P2P puede producir tasas favorables porque los vendedores grandes tienen incentivos para mover volumen.
 
-### Where TronSave Falls Short
+### Dónde TronSave Se Queda Corto
 
-The P2P model introduces inherent limitations. Availability depends on seller participation. During high-demand periods, the supply side may thin out, pushing prices upward or leaving orders partially filled. Hay no guaranteed tasa de ejecucion because the platform depends on matching buyers with willing sellers.
+El modelo P2P introduce limitaciones inherentes. La disponibilidad depende de la participación del vendedor. Durante períodos de alta demanda, el lado de la oferta puede agotarse, empujando los precios hacia arriba o dejando órdenes parcialmente completas. No hay una tasa de cumplimiento garantizada porque la plataforma depende de hacer coincidir compradores con vendedores dispuestos.
 
-Price discovery requires effort. Buyers must evaluate multiple listings, compare durations and rates, and make decisions based on incomplete market information. For developers automating transactions, this manual evaluation process does not translate well into API calls.
+El descubrimiento de precios requiere esfuerzo. Los compradores deben evaluar múltiples listados, comparar duraciones y tasas, y tomar decisiones basadas en información incompleta del mercado. Para desarrolladores que automatizan transacciones, este proceso de evaluación manual no se traduce bien en llamadas API.
 
-TronSave is a single provider. When their supply is constrained, your only option is to wait or pay more. Hay no fallback, no alternative routing, no second source of liquidity.
+TronSave es un proveedor único. Cuando su oferta está restringida, tu única opción es esperar o pagar más. No hay alternativa, no hay enrutamiento alternativo, no hay segunda fuente de liquidez.
 
-## What MERX Does Differently
+## Qué Hace MERX Diferente
 
-MERX is an energy aggregator. Rather than operating as a marketplace for a single pool of resources, MERX connects to seven providers simultaneously -- and TronSave is one of them. When you place an order through MERX, the system queries all connected providers in tiempo real, compares prices, and routes your order to the cheapest available source.
+MERX es un agregador de energía. En lugar de operar como un mercado para un único conjunto de recursos, MERX se conecta a siete proveedores simultáneamente -- y TronSave es uno de ellos. Cuando colocas una orden a través de MERX, el sistema consulta todos los proveedores conectados en tiempo real, compara precios, y enruta tu orden a la fuente más barata disponible.
 
-This distinction matters more than it might seem at first glance.
+Esta distinción importa más de lo que podría parecer a primera vista.
 
-### Aggregation as Architecture
+## Agregación como Arquitectura
 
-MERX does not hold energy inventory. It does not ask sellers to list resources on its platform. Instead, it maintains live connections to TronSave, PowerSun, Feee, Catfee, Netts, iTRX, and Sohu. Each provider has different pricing models, different supply dynamics, and different strengths.
+MERX no mantiene inventario de energía. No pide a los vendedores que listen recursos en su plataforma. En cambio, mantiene conexiones en vivo con TronSave, PowerSun, Feee, Catfee, Netts, iTRX y Sohu. Cada proveedor tiene modelos de precios diferentes, dinámicas de oferta diferentes, y fortalezas diferentes.
 
-When you request 65,000 unidad de energias through MERX, the system:
+Cuando solicitas 65,000 unidades de energía a través de MERX, el sistema:
 
-1. Queries all active providers simultaneously
-2. Compares available prices for your specific amount and duration
-3. Routes the order to the provider offering the best rate
-4. Handles the purchase and delegation transparently
+1. Consulta todos los proveedores activos simultáneamente
+2. Compara precios disponibles para tu cantidad y duración específicas
+3. Enruta la orden al proveedor que ofrece la mejor tasa
+4. Maneja la compra y delegación transparentemente
 
-You never need to know which provider ultimately filled your order. The API response includes the provider name for transparency, but the process is automatic.
+Nunca necesitas saber qué proveedor finalmente completó tu orden. La respuesta API incluye el nombre del proveedor para transparencia, pero el proceso es automático.
 
-## Feature Comparison
+## Comparación de Características
 
-| Feature | TronSave | MERX |
+| Característica | TronSave | MERX |
 |---|---|---|
-| Type | P2P Marketplace | Aggregator (7 providers) |
-| Price source | Seller listings | Best across all providers |
-| Includes TronSave | -- | Yes |
-| Additional providers | No | 6 more providers |
+| Tipo | Mercado P2P | Agregador (7 proveedores) |
+| Fuente de precio | Listados de vendedores | Mejor entre todos los proveedores |
+| Incluye TronSave | -- | Sí |
+| Proveedores adicionales | No | 6 proveedores más |
 | API | REST | REST + WebSocket + SDK |
-| Exact energy simulation | No | Yes (triggerConstantContract) |
-| Standing orders | No | Yes (price triggers) |
-| Auto-energy for wallets | No | Yes |
-| MCP server (AI agents) | No | Yes |
-| Payment | TRX / USDT | TRX (account balance) |
-| SDK | Limited | JS + Python |
-| Price comparison | Manual | Automatic |
-| Failover on provider outage | No (single provider) | Automatic rerouting |
+| Simulación exacta de energía | No | Sí (triggerConstantContract) |
+| Órdenes permanentes | No | Sí (disparadores de precio) |
+| Auto-energía para billeteras | No | Sí |
+| Servidor MCP (agentes IA) | No | Sí |
+| Pago | TRX / USDT | TRX (saldo de cuenta) |
+| SDK | Limitado | JS + Python |
+| Comparación de precios | Manual | Automática |
+| Conmutación por error al fallo del proveedor | No (proveedor único) | Enrutamiento automático |
 
-## Price Dynamics
+## Dinámicas de Precio
 
-TronSave prices are set by individual sellers. This creates variability -- you might find an excellent deal from a motivated seller, or you might find the available listings are all above market rate.
+Los precios de TronSave son establecidos por vendedores individuales. Esto crea variabilidad -- podrías encontrar una ganga excelente de un vendedor motivado, o podrías encontrar que todos los listados disponibles están por encima del precio de mercado.
 
-MERX prices reflect the best available rate across all seven providers at the moment of your query. Because providers compete for order flow, the effective price through MERX tends to sit at or near the market floor.
+Los precios de MERX reflejan la mejor tasa disponible entre todos los siete proveedores en el momento de tu consulta. Como los proveedores compiten por flujo de órdenes, el precio efectivo a través de MERX tiende a situarse en o cerca del piso del mercado.
 
-Consider a practical scenario. You need 65,000 energy for a USDT transfer. At a given moment:
+Considera un escenario práctico. Necesitas 65,000 energía para una transferencia de USDT. En un momento dado:
 
-- TronSave lists energy at 35 SUN
-- PowerSun offers 30 SUN
-- Feee offers 28 SUN
+- TronSave lista energía a 35 SUN
+- PowerSun ofrece 30 SUN
+- Feee ofrece 28 SUN
 
-If you go to TronSave directly, you pay 35 SUN. Through MERX, you pay 28 SUN because the system routes to Feee automatically. The savings compound with volume.
+Si vas a TronSave directamente, pagas 35 SUN. A través de MERX, pagas 28 SUN porque el sistema enruta a Feee automáticamente. Los ahorros se acumulan con volumen.
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// Get best price across all providers including TronSave
+// Obtén el mejor precio entre todos los proveedores incluyendo TronSave
 const prices = await merx.getPrices({
   energy_amount: 65000,
   duration: '1h'
 });
 
-// prices.providers shows each provider's offer
-// prices.best is the lowest available rate
-console.log(`Best: ${prices.best.price_sun} SUN via ${prices.best.provider}`);
+// prices.providers muestra la oferta de cada proveedor
+// prices.best es la tasa más baja disponible
+console.log(`Mejor: ${prices.best.price_sun} SUN vía ${prices.best.provider}`);
 ```
 
-## When TronSave Makes Sense
+## Cuándo TronSave Tiene Sentido
 
-TronSave remains a reasonable choice in specific scenarios:
+TronSave sigue siendo una opción razonable en escenarios específicos:
 
-**Very large orders with negotiation.** If you are buying millions of unidad de energias and can negotiate directly with large stakers through TronSave's platform, you may secure a rate that beats open-market aggregation.
+**Órdenes muy grandes con negociación.** Si estás comprando millones de unidades de energía y puedes negociar directamente con grandes stakers a través de la plataforma de TronSave, puedes asegurar una tasa que supere la agregación de mercado abierto.
 
-**Existing integration.** If your system already integrates with TronSave's API and works reliably, the switching cost may not justify the savings -- at least not immediately.
+**Integración existente.** Si tu sistema ya se integra con la API de TronSave y funciona confiablemente, el costo de cambio podría no justificar los ahorros -- al menos no inmediatamente.
 
-**Preference for P2P model.** Some organizations prefer the transparency of knowing exactly who is providing their resources.
+**Preferencia por modelo P2P.** Algunas organizaciones prefieren la transparencia de saber exactamente quién está proporcionando sus recursos.
 
-## When MERX Makes More Sense
+## Cuándo MERX Tiene Más Sentido
 
-For most caso de usos, aggregation provides clear advantages:
+Para la mayoría de casos de uso, la agregación proporciona ventajas claras:
 
-**Automated operations.** If you are running a procesador de pagos, DEX, or any system that sends transactions programmatically, MERX's una sola API removes the need to manage multiple provider integrations.
+**Operaciones automatizadas.** Si estás ejecutando un procesador de pagos, DEX, o cualquier sistema que envía transacciones programáticamente, la API única de MERX elimina la necesidad de manejar múltiples integraciones de proveedores.
 
-**Price sensitivity.** If you want the lowest available rate without manually checking seven providers, MERX handles this automatically.
+**Sensibilidad al precio.** Si quieres la tasa más baja disponible sin verificar manualmente siete proveedores, MERX maneja esto automáticamente.
 
-**Reliability requirements.** If one provider goes down, MERX routes to the next cheapest available option. With TronSave alone, an outage means no energy.
+**Requisitos de confiabilidad.** Si un proveedor se cae, MERX enruta a la siguiente opción más barata disponible. Con TronSave solo, una caída significa sin energía.
 
-**Variable order sizes.** Different providers excel at different order sizes. Small orders might route to one provider, large orders to another. MERX handles this routing automatically.
+**Tamaños de orden variables.** Diferentes proveedores sobresalen en diferentes tamaños de orden. Órdenes pequeñas podrían enrutarse a un proveedor, órdenes grandes a otro. MERX maneja este enrutamiento automáticamente.
 
-**Developer experience.** MERX provides typed SDKs for JavaScript and Python, WebSocket connections for tiempo real actualizacion de precioss, and an MCP server for AI agent integration. The developer tooling is built for modern workflows.
+**Experiencia del desarrollador.** MERX proporciona SDKs tipados para JavaScript y Python, conexiones WebSocket para actualizaciones de precios en tiempo real, y un servidor MCP para integración de agentes IA. Las herramientas para desarrolladores están construidas para flujos de trabajo modernos.
 
 ```typescript
-// Standing order: automatically buy when price drops below threshold
+// Orden permanente: compra automáticamente cuando el precio cae por debajo del umbral
 const standing = await merx.createStandingOrder({
   energy_amount: 65000,
   max_price_sun: 25,
@@ -119,41 +119,41 @@ const standing = await merx.createStandingOrder({
 });
 ```
 
-## Integration Complexity
+## Complejidad de Integración
 
-Integrating with TronSave means learning their specific API, authentication flow, formato de error, and order lifecycle. This is manageable for a single provider.
+Integrarse con TronSave significa aprender su API específica, flujo de autenticación, formato de error, y ciclo de vida de órdenes. Esto es manejable para un proveedor único.
 
-But if you want comparacion de precios across the market, you would need to integrate with multiple providers independently. Each has its own API design, authentication method, and response format. You are looking at weeks of development work to build what MERX provides out of the box.
+Pero si quieres comparación de precios entre el mercado, necesitarías integrarte con múltiples proveedores independientemente. Cada uno tiene su propio diseño de API, método de autenticación, y formato de respuesta. Estás viendo semanas de trabajo de desarrollo para construir lo que MERX proporciona lista para usar.
 
-MERX consolidates all of this behind a single REST API:
+MERX consolida todo esto detrás de una única API REST:
 
 ```bash
-# Get best price - one call, all providers compared
+# Obtén el mejor precio - una llamada, todos los proveedores comparados
 curl https://merx.exchange/api/v1/prices \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{"energy_amount": 65000, "duration": "1h"}'
 ```
 
-The response includes offers from every active provider, sorted by price, with the best option clearly identified. Your code does not need to know about individual provider APIs.
+La respuesta incluye ofertas de cada proveedor activo, ordenadas por precio, con la mejor opción claramente identificada. Tu código no necesita saber sobre APIs de proveedores individuales.
 
-## Failover and Reliability
+## Conmutación por Error y Confiabilidad
 
-This is where the aggregator model shows its most practical benefit. Energy providers experience occasional downtime, API errors, or supply shortages. When you depend on a single provider, any disruption stops your operations.
+Aquí es donde el modelo agregador muestra su beneficio práctico más evidente. Los proveedores de energía experimentan caídas ocasionales, errores de API, o escasez de oferta. Cuando depender de un proveedor único, cualquier disrupción detiene tus operaciones.
 
-MERX monitors provider health continuously. If TronSave becomes unavailable, orders route to the next cheapest provider without any action required from you. Your application code remains unchanged. The respaldo is invisible.
+MERX monitorea continuamente la salud del proveedor. Si TronSave se vuelve no disponible, las órdenes se enrutan al siguiente proveedor más barato sin ninguna acción requerida de tu parte. El código de tu aplicación permanece sin cambios. La conmutación por error es invisible.
 
-En la practica, MERX maintains uptime metrics for each provider and uses this data for routing decisions. Providers with consistently high tasa de ejecucions and low latency receive routing preference when prices are equal.
+En la práctica, MERX mantiene métricas de disponibilidad para cada proveedor y usa estos datos para decisiones de enrutamiento. Los proveedores con tasas de cumplimiento consistentemente altas y baja latencia reciben preferencia de enrutamiento cuando los precios son iguales.
 
-## Exact Energy Simulation
+## Simulación Exacta de Energía
 
-One technical advantage worth highlighting separately: MERX provides exact energy simulation using the TRON network's `triggerConstantContract` dry-run API. Before purchasing energy, you can simulate your specific transaction and learn exactly how much energy it will consume.
+Una ventaja técnica que vale la pena destacar por separado: MERX proporciona simulación exacta de energía usando la API de ejecución seca `triggerConstantContract` de la red TRON. Antes de comprar energía, puedes simular tu transacción específica y aprender exactamente cuánta energía consumirá.
 
-TronSave does not offer this capability. Without simulation, buyers must rely on hardcoded estimates -- 65,000 for a USDT transfer, 200,000 for a DEX swap. These estimates are frequently wrong by 5-30%, leading to either wasted energy (over-purchase) or partial TRX burn (under-purchase).
+TronSave no ofrece esta capacidad. Sin simulación, los compradores deben confiar en estimaciones codificadas -- 65,000 para una transferencia USDT, 200,000 para un swap DEX. Estas estimaciones frecuentemente se equivocan por 5-30%, conduciendo a ya sea energía desperdiciada (sobre-compra) o quema parcial de TRX (bajo-compra).
 
-With MERX, the workflow is precise:
+Con MERX, el flujo de trabajo es preciso:
 
 ```typescript
-// Simulate the exact transaction
+// Simula la transacción exacta
 const estimate = await merx.estimateEnergy({
   contract_address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
   function_selector: 'transfer(address,uint256)',
@@ -161,7 +161,7 @@ const estimate = await merx.estimateEnergy({
   owner_address: senderAddress
 });
 
-// Buy exactly what the simulation says you need
+// Compra exactamente lo que la simulación dice que necesitas
 const order = await merx.createOrder({
   energy_amount: estimate.energy_required, // e.g., 64,285
   duration: '5m',
@@ -169,21 +169,21 @@ const order = await merx.createOrder({
 });
 ```
 
-Over thousands of transactions, the savings from exact estimation versus fixed estimates add up to meaningful amounts.
+En miles de transacciones, los ahorros de estimación exacta versus estimaciones fijas se acumulan a cantidades significativas.
 
-## The Bottom Line
+## La Conclusión
 
-TronSave is a solid mercado de energiaplace with a functioning P2P model. For users who want to interact directly with energy sellers, it serves its purpose well. The platform has an established track record and handles the mechanics of delegacion de energia reliably.
+TronSave es un sólido mercado de energía con un modelo P2P funcional. Para usuarios que quieren interactuar directamente con vendedores de energía, sirve bien su propósito. La plataforma tiene un historial establecido y maneja confiablemente la mecánica de delegación de energía.
 
-MERX is a different category of tool. By aggregating TronSave alongside six other providers, it removes the manual work of comparacion de precios, eliminates single-provider risk, and provides a developer-first API layer. You get TronSave's supply plus the supply of every other connected provider, and the system always routes to the best available price.
+MERX es una categoría diferente de herramienta. Al agregar TronSave junto con seis otros proveedores, elimina el trabajo manual de comparación de precios, elimina el riesgo de proveedor único, y proporciona una capa de API orientada a desarrolladores. Obtienes la oferta de TronSave más la oferta de cada otro proveedor conectado, y el sistema siempre enruta al mejor precio disponible.
 
-The distinction is structural, not qualitative. TronSave is one provider doing its job well. MERX is a layer above that makes TronSave -- and six others -- work together automatically. For developers building automated systems, for businesses processing TRON transactions a escala, and for anyone who values both optimizacion de costos and operational reliability, the aggregation model offers a clear structural advantage.
+La distinción es estructural, no cualitativa. TronSave es un proveedor haciendo bien su trabajo. MERX es una capa encima que hace que TronSave -- y seis otros -- trabajen juntos automáticamente. Para desarrolladores construyendo sistemas automatizados, para negocios procesando transacciones de TRON a escala, y para cualquiera que valore tanto optimización de costos como confiabilidad operacional, el modelo de agregación ofrece una ventaja estructural clara.
 
-Explore the API documentation at [https://merx.exchange/docs](https://merx.exchange/docs) or try the platform at [https://merx.exchange](https://merx.exchange).
+Explora la documentación de API en [https://merx.exchange/docs](https://merx.exchange/docs) o prueba la plataforma en [https://merx.exchange](https://merx.exchange).
 
-## Try It Now with AI
+## Pruébalo Ahora con IA
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP -- cero instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -195,6 +195,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía de TRON más barata ahora?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación MCP completa: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

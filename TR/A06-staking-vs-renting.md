@@ -1,266 +1,266 @@
-# TRON Energy'de Staking ve Kiralama Karsilastirmasi: Basabaas Noktasi Analizi
+# TRON Enerjisi Stake Etme vs Kiralama: Başabaş Analizi
 
-Every business that sends USDT on TRON faces the same decision: should you stake your own TRX to generate energy, or rent energy from a provider? The answer depends on your volume, capital availability, risk tolerance, and time horizon. This article provides the math to make that decision with confidence.
+TRON'da USDT gönderen her işletme aynı kararla karşı karşıya kalır: kendi TRX'inizi stake ederek enerji mi üretmelisiniz, yoksa bir sağlayıcıdan enerji mi kiralamalısınız? Cevap, işlem hacminize, mevcut sermayenize, risk toleransınıza ve zaman ufkunuza bağlıdır. Bu makale, bu kararı güvenle vermek için gerekli matematiği sunmaktadır.
 
-We will build a complete financial model comparing both approaches, find the exact break-even point, and identify the scenarios where each strategy wins.
+Her iki yaklaşımı karşılaştıran bir finansal model oluşturacak, tam başabaş noktasını bulacak ve her stratejinin kazandığı senaryoları belirleyeceğiz.
 
 ---
 
-## How Staking Works
+## Stake Etme Nasıl Çalışır?
 
-Under TRON's Stake 2.0 system, you lock TRX in a staking contract to receive energy. The energy you receive is proportional to your share of the total network stake:
+TRON'un Stake 2.0 sistemi altında, enerji almak için bir stake kontratında TRX kilitlersiniz. Aldığınız enerji, toplam ağ stake'inin payınıza orantılıdır:
 
 ```
 your_daily_energy = (your_staked_trx / total_network_staked_trx) * total_energy_limit
 ```
 
-### Current Staking Parameters (Early 2026)
+### Mevcut Stake Parametreleri (2026 Başı)
 
-- **Staking ratio**: approximately 36,000 TRX per 65,000 energy/day
-- **Lock period**: 14 days (you cannot unstake and access your TRX for 14 days after initiating unstake)
-- **Regeneration**: energy regenerates continuously over 24 hours
-- **Minimum stake**: no protocol minimum, but practical minimum is enough for at least one operation
+- **Stake oranı**: günde yaklaşık 36.000 TRX başına 65.000 enerji
+- **Kilitleme süresi**: 14 gün (unstake başlattıktan sonra 14 gün boyunca TRX'inize erişemezsiniz)
+- **Yenileme**: enerji 24 saat içinde sürekli yenilenir
+- **Minimum stake**: protokol minimum yok, ancak pratik minimum en az bir işlem için yeterli miktar
 
-### What You Get
+### Neleri Alırsınız
 
-Staking gives you a daily energy budget that regenerates automatically. If you stake 36,000 TRX, you get approximately 65,000 energy per day - enough for one standard USDT transfer.
+Stake etme size otomatik olarak yenilenen günlük enerji bütçesi verir. 36.000 TRX stake ederseniz, günde yaklaşık 65.000 enerji alırsınız - standart bir USDT transferi için yeterli.
 
-### What You Give Up
+### Neleri Bırakırsınız
 
-- **Liquidity**: your TRX is locked. You cannot sell it, trade it, or use it for anything else during the lock period.
-- **Capital exposure**: if TRX price drops while staked, your capital loses value.
-- **Flexibility**: your energy budget is fixed. Busy days cannot borrow from quiet days.
-
----
-
-## How Renting Works
-
-Energy rental involves paying a provider (or aggregator) to delegate energy to your TRON address for a specified duration. The provider has already staked TRX and is selling the resulting energy at a markup.
-
-### Current Rental Parameters (Early 2026)
-
-- **Price range**: 80-130 SUN per energy unit (varies by provider, duration, and market)
-- **Durations**: 1 hour, 1 day, 3 days, 7 days, 14 days, 30 days
-- **Delivery**: typically within seconds of payment
-- **Minimum order**: usually 10,000-32,000 energy units
-
-### What You Get
-
-Immediate energy availability with no capital lock-up. You pay only for what you use, when you use it.
-
-### What You Give Up
-
-- **Per-unit cost**: renting is more expensive per energy unit than the effective cost of staking (providers need margin).
-- **Price uncertainty**: rental prices fluctuate with market demand.
-- **Dependency**: you rely on provider availability and uptime.
+- **Likidite**: TRX'iniz kilitlidir. Kilitleme süresi boyunca satamaz, takas edemez veya başka bir amaçla kullanamazsınız.
+- **Sermaye riski**: TRX fiyatı stake ediliyken düşerse, sermayeniz değer kaybeder.
+- **Esneklik**: enerji bütçeniz sabitdir. Yoğun günler sessiz günlerden enerji borç alamaz.
 
 ---
 
-## The Break-Even Model
+## Kiralama Nasıl Çalışır?
 
-To compare staking and renting fairly, we need to account for all costs - not just the obvious ones.
+Enerji kiralaması, bir sağlayıcıya (veya toplayıcıya) belirli bir süre için TRON adresinize enerji devretmesi için ödeme yapmayı içerir. Sağlayıcı zaten TRX stake etmiş ve ortaya çıkan enerjiyi bir farkla satmaktadır.
 
-### Staking Costs
+### Mevcut Kiralama Parametreleri (2026 Başı)
 
-The primary cost of staking is opportunity cost. If your TRX were not staked, you could earn yield elsewhere (lending, liquidity provision, or simply not holding a volatile asset).
+- **Fiyat aralığı**: enerji birimi başına 80-130 SUN (sağlayıcı, süre ve pazar değişir)
+- **Süreler**: 1 saat, 1 gün, 3 gün, 7 gün, 14 gün, 30 gün
+- **Teslimat**: genellikle ödememden sonra saniyeler içinde
+- **Minimum sipariş**: genellikle 10.000-32.000 enerji birimi
+
+### Neleri Alırsınız
+
+Sermaye kilidi olmadan anında enerji kullanılabilirliği. Yalnızca ihtiyaç duyduğunuzda, ihtiyaç duyduğunuz kadar ödeme yaparsınız.
+
+### Neleri Bırakırsınız
+
+- **Birim başına maliyet**: kiralama, stake etmenin etkin maliyetinden daha pahalıdır (sağlayıcıların marjı vardır).
+- **Fiyat belirsizliği**: kiralama fiyatları pazar talebine göre dalgalanır.
+- **Bağımlılık**: sağlayıcının mevcudiyetine ve çalışma süresine bağlısınız.
+
+---
+
+## Başabaş Modeli
+
+Stake etme ve kirayı adil bir şekilde karşılaştırmak için, açık olanlar değil, tüm maliyetleri hesaba katmamız gerekir.
+
+### Stake Etme Maliyetleri
+
+Stake etmenin ana maliyeti fırsat maliyetidir. TRX'iniz stake edilmemiş olsaydı, başka yerde verim elde edebilirdiniz (borç verme, likidite sağlama veya basitçe oynak bir varlığa sahip olmama).
 
 ```
 Annual opportunity cost = Staked TRX value x Expected annual return
 ```
 
-For this analysis, we will use three opportunity cost scenarios:
+Bu analiz için üç fırsat maliyeti senaryosu kullanacağız:
 
-- **Conservative (3%)**: low-risk DeFi yields or stablecoin lending
-- **Moderate (5%)**: typical crypto yield strategies
-- **Aggressive (8%)**: active trading or higher-risk DeFi
+- **Muhafazakar (3%)**: düşük riskli DeFi getirileri veya stablecoin borç verme
+- **Orta (%5)**: tipik kripto getiri stratejileri
+- **Agresif (8%)**: aktif ticaret veya daha yüksek riskli DeFi
 
-### Staking Cost Per Transfer
+### Transfer Başına Stake Etme Maliyeti
 
-For 1 USDT transfer per day (65,000 energy):
-
-```
-TRX required:    36,000 TRX
-Capital at $0.25: $9,000
-
-At 3% opportunity cost: $9,000 x 0.03 / 365 = $0.74/transfer
-At 5% opportunity cost: $9,000 x 0.05 / 365 = $1.23/transfer
-At 8% opportunity cost: $9,000 x 0.08 / 365 = $1.97/transfer
-```
-
-### Rental Cost Per Transfer
-
-Using MERX best-price aggregation at approximately 85 SUN per energy unit:
+Günde 1 USDT transferi için (65.000 enerji):
 
 ```
-65,000 energy x 85 SUN = 5,525,000 SUN = 5.525 TRX
-At $0.25/TRX = $1.38/transfer
+Gerekli TRX:      36.000 TRX
+$0.25'deki sermaye: $9.000
+
+%3 fırsat maliyetinde: $9.000 x 0.03 / 365 = $0.74/transfer
+%5 fırsat maliyetinde: $9.000 x 0.05 / 365 = $1.23/transfer
+%8 fırsat maliyetinde: $9.000 x 0.08 / 365 = $1.97/transfer
 ```
 
-### Break-Even Comparison
+### Transfer Başına Kiralama Maliyeti
 
-| Opportunity Cost Rate | Staking Cost/Transfer | Rental Cost/Transfer | Winner |
+Yaklaşık 85 SUN/enerji biriminde MERX en iyi fiyat toplaması kullanarak:
+
+```
+65.000 enerji x 85 SUN = 5.525.000 SUN = 5.525 TRX
+$0.25/TRX'de = $1.38/transfer
+```
+
+### Başabaş Karşılaştırması
+
+| Fırsat Maliyeti Oranı | Stake Maliyeti/Transfer | Kiralama Maliyeti/Transfer | Kazanan |
 |-----------------------|----------------------|---------------------|--------|
-| 3% | $0.74 | $1.38 | Staking |
-| 5% | $1.23 | $1.38 | Staking (barely) |
-| 6.3% | $1.38 | $1.38 | Break-even |
-| 8% | $1.97 | $1.38 | Renting |
+| 3% | $0.74 | $1.38 | Stake Etme |
+| 5% | $1.23 | $1.38 | Stake Etme (zar zor) |
+| 6.3% | $1.38 | $1.38 | Başabaş |
+| 8% | $1.97 | $1.38 | Kiralama |
 
-**The break-even opportunity cost rate is approximately 6.3%.** If you can earn more than 6.3% on your TRX elsewhere, renting is cheaper. If not, staking wins on pure cost.
+**Başabaş fırsat maliyeti oranı yaklaşık 6.3%'dir.** TRX'iniz üzerinde %6.3'ten daha fazla kazanabiliyorsanız, kiralama daha ucuzdur. Aksi takdirde, salt maliyet açısından stake etme kazanır.
 
 ---
 
-## But Cost Is Not Everything
+## Ama Maliyet Her Şey Değildir
 
-The break-even analysis above only considers direct financial cost. Several other factors should influence the decision.
+Yukarıdaki başabaş analizi yalnızca doğrudan finansal maliyeti dikkate alır. Başka birkaç faktör kararı etkilemelidir.
 
-### Factor 1: Capital Requirements
+### Faktör 1: Sermaye Gereksinimleri
 
-This is often the deciding factor. Here is the TRX required at various volumes:
+Bu genellikle belirleyici faktördür. Çeşitli hacimlerde gerekli TRX şu şekildedir:
 
-| Daily Transfers | Energy Needed | TRX to Stake | Capital Required |
+| Günlük Transferler | Gerekli Enerji | Stake Edilecek TRX | Gerekli Sermaye |
 |----------------|--------------|-------------|-----------------|
-| 1 | 65,000 | 36,000 | $9,000 |
-| 10 | 650,000 | 360,000 | $90,000 |
-| 50 | 3,250,000 | 1,800,000 | $450,000 |
-| 100 | 6,500,000 | 3,600,000 | $900,000 |
-| 500 | 32,500,000 | 18,000,000 | $4,500,000 |
+| 1 | 65.000 | 36.000 | $9.000 |
+| 10 | 650.000 | 360.000 | $90.000 |
+| 50 | 3.250.000 | 1.800.000 | $450.000 |
+| 100 | 6.500.000 | 3.600.000 | $900.000 |
+| 500 | 32.500.000 | 18.000.000 | $4.500.000 |
 
-For a business doing 100 USDT transfers daily, staking requires $900,000 in locked TRX. Many businesses simply do not have this capital available, making renting the only viable option regardless of cost efficiency.
+Günde 100 USDT transferi yapan bir işletme için, stake etme 900.000 dolar değerinde kilitli TRX gerektirir. Birçok işletme bu sermayeye basitçe sahip değildir ve maliyet etkinliği ne olursa olsun kiralama tek uygun seçenektir.
 
-### Factor 2: Demand Variability
+### Faktör 2: Talep Değişkenliği
 
-Staking gives you a fixed daily energy budget. If your transfer volume varies significantly, you face two problems:
+Stake etme size sabit günlük enerji bütçesi verir. Transfer hacminiz önemli ölçüde değişiyorsa, iki sorunla karşı karşıya kalırsınız:
 
-- **Low days**: your energy regenerates and is wasted. You paid for capacity you did not use.
-- **High days**: you exhaust your energy early and must either rent additional energy or burn TRX at a premium.
+- **Düşük günler**: enerjiniz yenilenir ve israf edilir. Kullanmadığınız kapasite için ödeme yaptınız.
+- **Yüksek günler**: enerjiniz erken tükenir ve ya ek enerji kiralamalı ya da TRX'i bir primle yakmalısınız.
 
-Consider a payment processor with the following weekly pattern:
-
-```
-Monday:    150 transfers
-Tuesday:   120 transfers
-Wednesday: 110 transfers
-Thursday:  130 transfers
-Friday:    200 transfers
-Saturday:   40 transfers
-Sunday:     30 transfers
-
-Average: 111/day
-Peak: 200/day
-```
-
-If you stake for peak capacity (200/day), you waste 45% of your energy on weekends. If you stake for average (111/day), you need to rent an additional 89 transfers worth of energy on Fridays.
-
-A hybrid approach often makes sense: stake for your baseline and rent for peaks. But this adds operational complexity.
-
-### Factor 3: TRX Price Risk
-
-When you stake 3,600,000 TRX worth $900,000, you are making a $900,000 bet on TRX's price stability. Consider:
+Aşağıdaki haftalık desene sahip bir ödeme işlemcisini düşünün:
 
 ```
-TRX drops 20%: you lose $180,000 in capital value
-That exceeds years of energy rental savings
+Pazartesi:    150 transfer
+Salı:   120 transfer
+Çarşamba: 110 transfer
+Perşembe:  130 transfer
+Cuma:    200 transfer
+Cumartesi:   40 transfer
+Pazar:     30 transfer
+
+Ortalama: 111/gün
+Tepe: 200/gün
 ```
 
-Conversely, if TRX appreciates, your capital gains offset energy costs. But this is speculation, not cost optimization.
+Tepe kapasitesi için stake ederseniz (200/gün), hafta sonunda enerjinizin %45'ini israf edersiniz. Ortalama için stake ederseniz (111/gün), Cuma günü 89 transfer değerinde ek enerji kiralamanız gerekir.
 
-Renting eliminates price risk entirely. You pay in small increments and never hold more TRX than needed for near-term operations.
+Hibrit bir yaklaşım genellikle mantıklıdır: tabanınız için stake edin, tepeler için kiralayın. Ama bu işletim karmaşıklığını artırır.
 
-### Factor 4: Unstaking Delay
+### Faktör 3: TRX Fiyat Riski
 
-The 14-day unstaking period is a hard constraint. If you need to access your TRX urgently - for example, to cover a margin call or capitalize on a trading opportunity - those funds are inaccessible for two weeks.
+3.600.000 TRX'i $900.000 değerinde stake ettiğinizde, TRX'in fiyat istikrarına $900.000 bahis yapıyorsunuz. Düşünün:
 
-This illiquidity premium is difficult to quantify but very real. For a business that may face cash flow crunches, the inability to access $900,000 for 14 days is a significant risk.
+```
+TRX %20 düşerse: $180.000 sermaye değeri kaybedersiniz
+Bu, yıllarca enerji kiralama tasarrufundan fazladır
+```
 
-### Factor 5: Operational Simplicity
+Tersine, TRX değer kazanırsa, sermaye kazançlarınız enerji maliyetlerini telafi eder. Ama bu spekülasyon, maliyet optimizasyonu değildir.
 
-Staking requires:
-- Managing a TRON wallet with large TRX balances
-- Monitoring staking ratios (they change as network stake changes)
-- Adjusting stake when ratios shift
-- Planning unstaking 14 days in advance when you need to reduce
+Kiralama fiyat riskini tamamen ortadan kaldırır. Küçük artışlarla ödeme yaparsınız ve asla yakın vadeli işlemler için gerekenden daha fazla TRX tutmazsınız.
 
-Renting via MERX requires:
-- Maintaining a MERX deposit balance
-- Making API calls when you need energy
-- Nothing else
+### Faktör 4: Unstake Gecikmesi
 
-For engineering teams already managing complex systems, the operational overhead of staking is non-trivial.
+14 günlük unstake süresi sabit bir kısıttır. TRX'inize acilen erişmeniz gerekirse - örneğin, bir teminat çağrısını karşılamak veya bir ticaret fırsatından yararlanmak için - bu fonlar iki hafta boyunca erişilemez.
+
+Bu likidite primi nicelemeye zor ama çok gerçektir. Nakit akışı sıkıntısı yaşayabilecek bir işletme için $900.000'a 14 gün boyunca erişememek önemli bir risktir.
+
+### Faktör 5: İşletim Basitliği
+
+Stake etme gerektiriyor:
+- Büyük TRX bakiyeleri ile bir TRON cüzdanını yönetmek
+- Stake oranlarını izlemek (ağ stake değiştikçe değişirler)
+- Oranlar değiştiğinde stake'i ayarlamak
+- Azaltmak istediğinizde 14 gün öncesinden unstake planlaması yapmak
+
+MERX aracılığıyla kiralama gerektiriyor:
+- MERX mevduat bakiyesi tutmak
+- Enerjiye ihtiyaç duyduğunuzda API çağrıları yapmak
+- Başka bir şey yok
+
+Zaten karmaşık sistemleri yönetmekte olan mühendislik ekipleri için, stake etmenin işletim ek yükü önemsizdir.
 
 ---
 
-## Decision Framework
+## Karar Çerçevesi
 
-### Stake When
+### Ne Zaman Stake Edin
 
-- You have abundant TRX capital with no better use
-- Your daily volume is consistent and predictable
-- You plan to hold TRX long-term regardless (alignment of interests)
-- Your opportunity cost of capital is below 6%
-- You have engineering capacity to manage staking operations
+- Daha iyi bir kullanım alanı olmayan bol TRX sermayeniz varsa
+- Günlük hacminiz tutarlı ve tahmin edilebilirse
+- Nasıl olsa TRX'i uzun vadede tutmayı planlıyorsanız (çıkarların uyumu)
+- Sermayenizin fırsat maliyeti %6'nın altındaysa
+- Stake etme işlemlerini yönetmek için mühendislik kapasitesi varsa
 
-### Rent When
+### Ne Zaman Kiralayın
 
-- You lack the capital to stake for your volume needs
-- Your volume is variable or unpredictable
-- You want to minimize TRX price exposure
-- Your opportunity cost of capital exceeds 6%
-- You value operational simplicity
-- You are still scaling and do not know your steady-state volume
+- Hacminiz için stake etmek için yeterli sermayeniz yoksa
+- Hacminiz değişken veya tahmin edilemezse
+- TRX fiyat maruziyetini en aza indirmek istiyorsanız
+- Sermayenizin fırsat maliyeti %6'yı aşarsa
+- İşletim basitliğini önemsiyorsanız
+- Hala büyüyor ve sabit durum hacminizi bilmiyorsanız
 
-### Use a Hybrid When
+### Hibrit Kullanın
 
-- You have some capital to stake for baseline coverage
-- Your volume has predictable peaks that exceed your staked capacity
-- You want cost optimization with a safety net
-
----
-
-## Hybrid Strategy in Practice
-
-The most sophisticated operators use a hybrid approach. Here is how to structure it:
-
-```
-Baseline: Stake for 60-70% of your average daily volume
-Peaks:    Rent the rest through MERX on demand
-```
-
-### Example: 100 Transfers/Day Average
-
-```
-Stake for 65 transfers:  2,340,000 TRX ($585,000)
-Opportunity cost at 5%:  $29,250/year = $80.14/day
-
-Rent remaining 35 transfers via MERX:
-  35 x 65,000 energy x 85 SUN = 194,250,000 SUN = 194.25 TRX
-  194.25 TRX x $0.25 = $48.56/day
-
-Total daily cost: $80.14 + $48.56 = $128.70/day
-Annual cost: $46,976
-
-vs. Pure staking (100/day):
-  Capital: $900,000, Opportunity cost: $45,000/year
-  But: no flexibility, full TRX exposure
-
-vs. Pure renting (100/day):
-  100 x 5.525 TRX x $0.25 = $138.13/day = $50,417/year
-  But: zero capital risk, full flexibility
-```
-
-The hybrid saves roughly $3,400/year versus pure renting while requiring only 65% of the capital of pure staking. Whether the reduced capital exposure and increased flexibility justify the modest extra cost is a business judgment.
+- Taban kapsama için stake etmeye başlamak için bazı sermaye varsa
+- Hacminizin stake kapasitenizi aşan tahmin edilebilir tepeleri varsa
+- Maliyet optimizasyonunu bir güvenlik ağı ile istiyorsanız
 
 ---
 
-## Automating the Hybrid with MERX
+## Hibrit Strateji Uygulamada
 
-MERX supports automated resource management that enables the hybrid strategy without manual intervention:
+En sofistike operatörler hibrit bir yaklaşım kullanırlar. İşte nasıl yapılandırılır:
+
+```
+Taban: Ortalama günlük hacminizin %60-70'i için stake edin
+Tepeler: MERX aracılığıyla isteğe bağlı olarak kalanını kiralayın
+```
+
+### Örnek: Günde 100 Transfer Ortalaması
+
+```
+65 transfer için stake edin: 2.340.000 TRX ($585.000)
+%5'te fırsat maliyeti: yıllık $29.250 = günde $80.14
+
+MERX aracılığıyla kalan 35 transferi kiralayın:
+  35 x 65.000 enerji x 85 SUN = 194.250.000 SUN = 194.25 TRX
+  194.25 TRX x $0.25 = günde $48.56
+
+Toplam günlük maliyet: $80.14 + $48.56 = $128.70/gün
+Yıllık maliyet: $46.976
+
+vs. Saf stake etme (100/gün):
+  Sermaye: $900.000, Fırsat maliyeti: yıllık $45.000
+  Ama: esneklik yok, tam TRX maruziyeti
+
+vs. Saf kiralama (100/gün):
+  100 x 5.525 TRX x $0.25 = günde $138.13 = yıllık $50.417
+  Ama: sıfır sermaye riski, tam esneklik
+```
+
+Hibrit, saf kiralama karşısında yaklaşık yıllık 3.400 dolar tasarruf sağlar ve saf stake etmenin sermayesinin sadece %65'ini gerektirirken. Azaltılmış sermaye maruziyeti ve artan esneklik, bu mütevazı ekstra maliyeti haklı gösterip göstermediği bir işletme kararıdır.
+
+---
+
+## MERX ile Hibrit Otomatik Hale Getirme
+
+MERX, manuel müdahale olmadan hibrit stratejisini etkinleştiren otomatik kaynak yönetimini destekler:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 
-// Check if your staked energy is sufficient
+// Stake edilmiş enerjinizin yeterli olup olmadığını kontrol edin
 const resources = await client.checkAddressResources({
   address: 'your-tron-address'
 });
@@ -269,7 +269,7 @@ const energyNeeded = 65000;
 const energyAvailable = resources.energy.remaining;
 
 if (energyAvailable < energyNeeded) {
-  // Rent the shortfall through MERX
+  // Kısa kalanı MERX aracılığıyla kiralayın
   const shortfall = energyNeeded - energyAvailable;
   await client.createOrder({
     energy: shortfall,
@@ -279,27 +279,28 @@ if (energyAvailable < energyNeeded) {
 }
 ```
 
-Standing orders can automate this further, ensuring your address always has sufficient energy before critical operations.
+Sabit siparişler bunu daha da otomatikleştirebilir ve adresinizin kritik işlemlerden önce her zaman yeterli enerjiye sahip olmasını sağlar.
 
 SDK: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 
 ---
 
-## Sonuc
+## Sonuç
 
-The staking-vs-renting decision is not one-size-fits-all. The math favors staking when capital is cheap and abundant, and favors renting when capital is scarce or has better alternative uses. For most growing businesses, renting through an aggregator like MERX is the pragmatic choice: it requires minimal capital, eliminates TRX price risk, scales instantly, and lets you focus on your core product rather than TRON resource management.
+Stake etme ve kiralama kararı tek yüzlü değildir. Matematik, sermayenin ucuz ve bol olduğunda stake etmeyi destekler ve sermayenin kıt olduğunda veya daha iyi alternatif kullanımlara sahip olduğunda kiraylamayı destekler. Büyüyen çoğu işletme için, MERX gibi bir toplayıcı aracılığıyla kiralama pratik seçimdir: minimal sermaye gerektirir, TRX fiyat riskini ortadan kaldırır, anında ölçeklenir ve TRON kaynağı yönetimi yerine temel ürünüze odaklanmanızı sağlar.
 
-If you do choose to stake, consider the hybrid approach: stake for your floor and rent for your ceiling. You capture most of the staking savings while retaining the flexibility that renting provides.
+Stake etmeyi seçerseniz, hibrit yaklaşımı düşünün: tabanınız için stake edin, tavanınız için kiralayın. Stake etme tasarruflarının çoğunu yakalarken, kiralama tarafından sağlanan esnekliği koruyan.
 
-Calculate your optimal strategy with real-time pricing at [https://merx.exchange](https://merx.exchange).
+Gerçek zamanlı fiyatlandırmayla optimal stratejinizi [https://merx.exchange](https://merx.exchange) adresinde hesaplayın.
 
 ---
 
-*Bu makale, TRON altyapisi uzerine MERX bilgi serisinin bir parcasidir. MERX, ilk blokzincir kaynak borsasidir. Dokumantasyon: [https://merx.exchange/docs](https://merx.exchange/docs).*
+*Bu makale, TRON altyapısı hakkında MERX bilgi serisinin bir parçasıdır. MERX ilk blockchain kaynakları değişimidir. Dokümantasyon [https://merx.exchange/docs](https://merx.exchange/docs).*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi Yapay Zeka ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- kurulum yok, salt okuma araçları için API anahtarı gerekli değil:
 
 ```json
 {
@@ -311,6 +312,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI aracınıza sorun: "Şu an en ucuz TRON enerjisi nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP dokümantasyonu: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

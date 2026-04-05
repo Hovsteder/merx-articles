@@ -1,16 +1,16 @@
-# 5 Satir Kodla TRON Energy Satin Alin: MERX JavaScript SDK
+# TRON Enerjisini 5 Satır Kodla Satın Al: MERX JavaScript SDK
 
-The MERX JavaScript SDK lets you buy TRON energy programmatically in five lines of code - install the package, initialize the client, check prices, create an order, and verify the delegation. This article covers the complete SDK from installation through production deployment, including TypeScript types, error handling, and every method available across the four modules: prices, orders, balance, and webhooks.
+MERX JavaScript SDK, beş satır kodla TRON enerjisini programatik olarak satın almanızı sağlar - paketi kurun, istemciyi başlatın, fiyatları kontrol edin, bir sipariş oluşturun ve delegasyonu doğrulayın. Bu makale, kurulumdan üretim dağıtımına kadar tam SDK'yı kapsar; TypeScript türleri, hata işleme ve dört modül (prices, orders, balance ve webhooks) arasında mevcut tüm yöntemleri içerir.
 
-## The Problem with Direct Provider APIs
+## Doğrudan Sağlayıcı API'lerinin Sorunu
 
-Every TRON energy provider has its own API. Integrating with one is straightforward. Integrating with all seven or eight providers to guarantee the best price is an engineering project. You need to handle different authentication schemes, response formats, error codes, rate limits, and failover logic.
+Her TRON energy sağlayıcısının kendi API'si vardır. Bir taneyle entegrasyon basittir. En iyi fiyatı garantilemek için yedi veya sekiz sağlayıcının tümüyle entegrasyon ise bir mühendislik projesidir. Farklı kimlik doğrulama şemaları, yanıt formatları, hata kodları, hız sınırları ve yedekleme mantığını işlemeniz gerekir.
 
-The MERX SDK abstracts all of that into a single client with a consistent interface. Behind the scenes, the MERX platform polls all providers every 30 seconds, maintains a real-time price index, and routes your orders to the cheapest available source with automatic failover.
+MERX SDK, tüm bunları tutarlı bir arayüze sahip tek bir istemciye soyutlar. Arka planda, MERX platformu her 30 saniyede tüm sağlayıcıları yoklar, gerçek zamanlı bir fiyat indeksi tutar ve siparişlerinizi otomatik yedekleme ile en ucuz mevcut kaynağa yönlendirir.
 
 ## Kurulum
 
-The SDK requires Node.js 18 or later. It uses native `fetch` with zero runtime dependencies.
+SDK, Node.js 18 veya daha yeni bir sürümü gerektirir. Sıfır çalışma zamanı bağımlılığı ile yerli `fetch` kullanır.
 
 ```bash
 npm install merx-sdk
@@ -24,11 +24,11 @@ yarn add merx-sdk
 pnpm add merx-sdk
 ```
 
-The package ships as ESM with full TypeScript declarations and source maps.
+Paket, tam TypeScript bildirimleri ve kaynak haritaları ile ESM olarak gönderilir.
 
-## Five Lines to Buy Energy
+## Enerji Satın Almak İçin Beş Satır
 
-Here is the complete flow in its minimal form:
+İşte minimal biçimdeki tam akış:
 
 ```typescript
 import { MerxClient } from 'merx-sdk'
@@ -44,36 +44,36 @@ const order = await merx.orders.create({
 console.log(`Order ${order.id}: ${order.status}`)
 ```
 
-Line by line:
+Satır satır:
 
-1. Import the client class.
-2. Initialize with your API key. The key starts with `sk_live_` and is created in the MERX dashboard at [merx.exchange](https://merx.exchange).
-3. Fetch current prices from all connected providers. This is optional but useful for displaying the market state before ordering.
-4. Create a market order for 65,000 energy units delegated to your target address for one hour. The platform automatically selects the cheapest provider.
-5. Log the order ID and status. The order begins in `PENDING` status and transitions to `FILLED` once the on-chain delegation is confirmed.
+1. İstemci sınıfını içe aktarın.
+2. API anahtarınızla başlatın. Anahtar `sk_live_` ile başlar ve [merx.exchange](https://merx.exchange) adresindeki MERX panosunda oluşturulur.
+3. Bağlı tüm sağlayıcılardan mevcut fiyatları getirin. Bu isteğe bağlıdır ancak siparişten önce pazar durumunu göstermek için yararlıdır.
+4. 65.000 energy biriminin hedef adresinize bir saat süreyle devredilmesi için bir pazar siparişi oluşturun. Platform otomatik olarak en ucuz sağlayıcıyı seçer.
+5. Sipariş ID'sini ve durumunu kaydedin. Sipariş `PENDING` durumunda başlar ve zincir üstü delegasyon doğrulandıktan sonra `FILLED` durumuna geçer.
 
-That is the entire integration. No provider selection, no failover logic, no price comparison code.
+Bu tüm entegrasyondur. Sağlayıcı seçimi yok, yedekleme mantığı yok, fiyat karşılaştırma kodu yok.
 
-## Client Configuration
+## İstemci Yapılandırması
 
 ```typescript
 import { MerxClient } from 'merx-sdk'
 
 const merx = new MerxClient({
-  apiKey: 'sk_live_your_key_here',   // Required
-  baseUrl: 'https://merx.exchange',  // Optional, defaults to production
+  apiKey: 'sk_live_your_key_here',   // Gerekli
+  baseUrl: 'https://merx.exchange',  // İsteğe bağlı, varsayılan olarak üretim
 })
 ```
 
-The `apiKey` is the only required option. The `baseUrl` can be overridden for testing against a staging environment.
+`apiKey`, tek gerekli seçenektir. `baseUrl`, bir hazırlama ortamına karşı test etmek için geçersiz kılınabilir.
 
-## The Prices Module
+## Prices Modülü
 
-The `merx.prices` module provides five methods for querying real-time market data.
+`merx.prices` modülü, gerçek zamanlı pazar verilerini sorgulamak için beş yöntem sağlar.
 
 ### prices.list()
 
-Returns current pricing from all active providers.
+Tüm etkin sağlayıcılardan mevcut fiyatlandırmayı döndürür.
 
 ```typescript
 const prices = await merx.prices.list()
@@ -86,32 +86,32 @@ for (const p of prices) {
 }
 ```
 
-Each `ProviderPrice` object includes:
-- `provider` - provider identifier (e.g., "sohu", "catfee", "tronsave")
-- `is_market` - whether this provider supports market orders with flexible durations
-- `energy_prices` - array of `{ duration_sec, price_sun }` tiers
-- `bandwidth_prices` - same structure for bandwidth
-- `available_energy` - current capacity in energy units
-- `available_bandwidth` - current capacity in bandwidth units
-- `fetched_at` - Unix timestamp of the last successful poll
+Her `ProviderPrice` nesnesi şunları içerir:
+- `provider` - sağlayıcı tanımlayıcısı (örneğin, "sohu", "catfee", "tronsave")
+- `is_market` - bu sağlayıcının esnek sürelerle pazar siparişlerini destekleyip desteklemediği
+- `energy_prices` - `{ duration_sec, price_sun }` katmanlarının dizisi
+- `bandwidth_prices` - bandwidth için aynı yapı
+- `available_energy` - energy birimlerinde mevcut kapasite
+- `available_bandwidth` - bandwidth birimlerinde mevcut kapasite
+- `fetched_at` - son başarılı anketin Unix zaman damgası
 
 ### prices.best(resource, amount?)
 
-Returns the single cheapest price point for a given resource type.
+Verilen bir kaynak türü için tek en ucuz fiyat noktasını döndürür.
 
 ```typescript
 const best = await merx.prices.best('ENERGY')
 console.log(`Cheapest: ${best.price_sun} SUN from ${best.provider}`)
 
-// With minimum amount filter
+// Minimum miktar filtresi ile
 const bestLarge = await merx.prices.best('ENERGY', 500000)
 ```
 
-The optional `amount` parameter filters out providers that do not have enough capacity to fulfill your order.
+İsteğe bağlı `amount` parametresi, siparişinizi yerine getirmek için yeterli kapasitesi olmayan sağlayıcıları filtreler.
 
 ### prices.history(params?)
 
-Returns historical price data for analysis and charting.
+Analiz ve grafik oluşturma için tarihsel fiyat verilerini döndürür.
 
 ```typescript
 const history = await merx.prices.history({
@@ -125,11 +125,11 @@ for (const entry of history) {
 }
 ```
 
-Available periods: `'1h'`, `'6h'`, `'24h'`, `'7d'`, `'30d'`. All filter parameters are optional.
+Mevcut dönemler: `'1h'`, `'6h'`, `'24h'`, `'7d'`, `'30d'`. Tüm filtre parametreleri isteğe bağlıdır.
 
 ### prices.stats()
 
-Returns aggregate statistics across the entire market.
+Tüm pazar üzerinde toplam istatistikler döndürür.
 
 ```typescript
 const stats = await merx.prices.stats()
@@ -141,7 +141,7 @@ console.log(`Cheapest-provider changes (24h): ${stats.cheapest_changes_24h}`)
 
 ### prices.preview(params)
 
-Previews what an order would cost before placing it. Returns the best matching provider and fallback options.
+Bir siparişi yerleştirmeden önce ne kadar tutacağını önizler. En iyi eşleşen sağlayıcıyı ve yedek seçenekleri döndürür.
 
 ```typescript
 const preview = await merx.prices.preview({
@@ -165,13 +165,13 @@ if (preview.no_providers) {
 }
 ```
 
-The `max_price_sun` parameter filters out providers that exceed your price ceiling.
+`max_price_sun` parametresi, fiyat tavanınızı aşan sağlayıcıları filtreler.
 
-## The Orders Module
+## Orders Modülü
 
 ### orders.create(params)
 
-Creates an energy or bandwidth order.
+Bir energy veya bandwidth siparişi oluşturur.
 
 ```typescript
 const order = await merx.orders.create({
@@ -179,26 +179,26 @@ const order = await merx.orders.create({
   amount: 65000,
   target_address: 'TYourTargetAddress',
   duration_sec: 3600,
-  order_type: 'MARKET',          // Optional, defaults to 'MARKET'
-  max_price_sun: 30,             // Optional, required for LIMIT orders
-  idempotency_key: 'unique-id',  // Optional, prevents duplicate orders
+  order_type: 'MARKET',          // İsteğe bağlı, varsayılan olarak 'MARKET'
+  max_price_sun: 30,             // İsteğe bağlı, LIMIT siparişleri için gerekli
+  idempotency_key: 'unique-id',  // İsteğe bağlı, yinelenen siparişleri engeller
 })
 
 console.log(`Order ${order.id} created`)
 console.log(`Status: ${order.status}`)
 ```
 
-Order types:
-- `MARKET` - execute immediately at the best available price
-- `LIMIT` - execute only if price is at or below `max_price_sun`
-- `PERIODIC` - recurring order
-- `BROADCAST` - broadcast a pre-signed delegation transaction
+Sipariş türleri:
+- `MARKET` - mevcut en iyi fiyattan hemen yürütün
+- `LIMIT` - yalnızca fiyat `max_price_sun` değerine eşitse veya altındaysa yürütün
+- `PERIODIC` - yinelenen sipariş
+- `BROADCAST` - önceden imzalanmış bir delegasyon işlemini yayınlayın
 
-The `idempotency_key` is critical for production systems. If a network error occurs and you retry the request with the same key, the API returns the original order instead of creating a duplicate.
+`idempotency_key`, üretim sistemleri için kritiktir. Bir ağ hatası oluşursa ve aynı anahtarla isteği yeniden denerseniz, API orijinal siparişi döndürür ve yinelenen bir sipariş oluşturmaz.
 
 ### orders.list(limit?, offset?, status?)
 
-Lists orders with pagination.
+Sayfalama ile siparişleri listeler.
 
 ```typescript
 const { orders, total } = await merx.orders.list(10, 0, 'FILLED')
@@ -211,7 +211,7 @@ for (const o of orders) {
 
 ### orders.get(id)
 
-Returns a single order with fill details.
+Doldurma ayrıntılarını içeren tek bir siparişi döndürür.
 
 ```typescript
 const order = await merx.orders.get('ord_abc123')
@@ -228,13 +228,13 @@ for (const fill of order.fills) {
 }
 ```
 
-The `fills` array shows exactly how the order was fulfilled. Each fill includes the provider name, the amount allocated, the price per unit, the cost, the on-chain transaction ID, and whether the delegation has been verified on-chain.
+`fills` dizisi, siparişin tam olarak nasıl yerine getirildiğini gösterir. Her doldurma, sağlayıcı adını, ayrılan miktarı, birim fiyatı, maliyeti, zincir üstü işlem ID'sini ve delegasyonun zincir üstünde doğrulanıp doğrulanmadığını içerir.
 
-## The Balance Module
+## Balance Modülü
 
 ### balance.get()
 
-Returns current account balances.
+Mevcut hesap bakiyelerini döndürür.
 
 ```typescript
 const balance = await merx.balance.get()
@@ -243,11 +243,11 @@ console.log(`USDT: ${balance.usdt}`)
 console.log(`Locked: ${balance.trx_locked}`)
 ```
 
-The `trx_locked` field shows TRX that is currently reserved for pending orders.
+`trx_locked` alanı, şu anda bekleyen siparişler için ayrılmış TRX'i gösterir.
 
 ### balance.depositInfo()
 
-Returns the deposit address and memo for funding your MERX account.
+MERX hesabınıza para yatırma adresi ve notunu döndürür.
 
 ```typescript
 const info = await merx.balance.depositInfo()
@@ -256,11 +256,11 @@ console.log(`Include memo: ${info.memo}`)
 console.log(`Minimum deposit: ${info.min_amount_trx} TRX`)
 ```
 
-The memo is required for automated deposit crediting. Deposits without the correct memo require manual processing.
+Not, otomatik para yatırma kredilendirilmesi için gereklidir. Doğru notlanmadan yapılan para yatırmaları manuel işleme gerektirir.
 
 ### balance.withdraw(params)
 
-Withdraws TRX or USDT to an external TRON address.
+TRX veya USDT'yi harici bir TRON adresine çeker.
 
 ```typescript
 const withdrawal = await merx.balance.withdraw({
@@ -273,7 +273,7 @@ const withdrawal = await merx.balance.withdraw({
 console.log(`Withdrawal ${withdrawal.id}: ${withdrawal.status}`)
 ```
 
-### balance.history(period?) and balance.summary()
+### balance.history(period?) ve balance.summary()
 
 ```typescript
 const history = await merx.balance.history('7D')
@@ -285,11 +285,11 @@ console.log(`Total energy: ${summary.total_energy}`)
 console.log(`Average price: ${summary.avg_price_sun} SUN`)
 ```
 
-## The Webhooks Module
+## Webhooks Modülü
 
 ### webhooks.create(params)
 
-Creates a webhook subscription. The `secret` is returned only at creation time.
+Bir webhook aboneliği oluşturur. `secret` yalnızca oluşturma sırasında döndürülür.
 
 ```typescript
 const webhook = await merx.webhooks.create({
@@ -301,7 +301,7 @@ console.log(`Webhook ID: ${webhook.id}`)
 console.log(`Secret: ${webhook.secret}`)
 ```
 
-### webhooks.list() and webhooks.delete(id)
+### webhooks.list() ve webhooks.delete(id)
 
 ```typescript
 const webhooks = await merx.webhooks.list()
@@ -310,9 +310,9 @@ console.log(`${webhooks.filter(w => w.is_active).length} active webhooks`)
 await merx.webhooks.delete('wh_abc123')
 ```
 
-## Hata Yonetimi
+## Hata İşleme
 
-All API errors are thrown as `MerxError` instances with a machine-readable `code` and a human-readable `message`.
+Tüm API hataları, makine tarafından okunabilir bir `code` ve insan tarafından okunabilir bir `message` ile birlikte `MerxError` örnekleri olarak atılır.
 
 ```typescript
 import { MerxClient, MerxError } from 'merx-sdk'
@@ -329,27 +329,27 @@ try {
 } catch (err) {
   if (err instanceof MerxError) {
     console.error(`[${err.code}]: ${err.message}`)
-    // Output: [INVALID_ADDRESS]: Target address is not a valid TRON address
+    // Çıktı: [INVALID_ADDRESS]: Target address is not a valid TRON address
   }
 }
 ```
 
-Common error codes:
+Yaygın hata kodları:
 
-| Code                   | Meaning                                          |
+| Kod                    | Anlamı                                           |
 |------------------------|--------------------------------------------------|
-| `UNAUTHORIZED`         | Invalid or missing API key                       |
-| `INSUFFICIENT_FUNDS`   | Account balance too low                          |
-| `INVALID_ADDRESS`      | Target address is not a valid TRON address        |
-| `ORDER_NOT_FOUND`      | Order ID does not exist                          |
-| `INVALID_AMOUNT`       | Amount below minimum or exceeds limits           |
-| `DUPLICATE_REQUEST`    | Idempotency key already used                     |
-| `RATE_LIMITED`         | Too many requests                                |
-| `PROVIDER_UNAVAILABLE` | No providers available                           |
+| `UNAUTHORIZED`         | Geçersiz veya eksik API anahtarı                |
+| `INSUFFICIENT_FUNDS`   | Hesap bakiyesi çok düşük                        |
+| `INVALID_ADDRESS`      | Hedef adres geçerli bir TRON adresi değil       |
+| `ORDER_NOT_FOUND`      | Sipariş ID'si mevcut değil                      |
+| `INVALID_AMOUNT`       | Miktar minimum altında veya sınırları aşıyor    |
+| `DUPLICATE_REQUEST`    | Eş güdümlülük anahtarı zaten kullanılmış        |
+| `RATE_LIMITED`         | Çok fazla istek                                  |
+| `PROVIDER_UNAVAILABLE` | Sağlayıcı mevcut değil                          |
 
-## TypeScript Types
+## TypeScript Türleri
 
-All types are exported from the package and can be used for type annotations throughout your application:
+Tüm türler paketten dışa aktarılır ve uygulamanız genelinde tür ek açıklamaları için kullanılabilir:
 
 ```typescript
 import type {
@@ -373,11 +373,11 @@ import type {
 } from 'merx-sdk'
 ```
 
-The SDK is strict-mode compatible and produces no `any` types. Every response is fully typed.
+SDK, kesin mod uyumludur ve hiçbir `any` türü üretmez. Her yanıt tam olarak yazılmıştır.
 
-## Production Example: Automated USDT Transfer Flow
+## Üretim Örneği: Otomatik USDT Transfer Akışı
 
-Here is a complete production pattern that checks prices, creates an order, and polls for completion:
+Fiyatları kontrol eden, bir sipariş oluşturan ve tamamlanma için yoklayan tam bir üretim deseni şöyledir:
 
 ```typescript
 import { MerxClient, MerxError } from 'merx-sdk'
@@ -386,7 +386,7 @@ import { randomUUID } from 'node:crypto'
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY! })
 
 async function ensureEnergyAndTransfer(targetAddress: string) {
-  // Preview the cost
+  // Maliyeti önizle
   const preview = await merx.prices.preview({
     resource: 'ENERGY',
     amount: 65000,
@@ -399,7 +399,7 @@ async function ensureEnergyAndTransfer(targetAddress: string) {
 
   console.log(`Best price: ${preview.best!.cost_trx} TRX from ${preview.best!.provider}`)
 
-  // Create the order with idempotency
+  // Eş güdümlülük ile siparişi oluştur
   const order = await merx.orders.create({
     resource_type: 'ENERGY',
     amount: 65000,
@@ -408,7 +408,7 @@ async function ensureEnergyAndTransfer(targetAddress: string) {
     idempotency_key: randomUUID(),
   })
 
-  // Poll until filled (in production, use webhooks instead)
+  // Doldurulana kadar yokla (üretimde bunun yerine webhook kullan)
   let status = order.status
   while (status === 'PENDING' || status === 'EXECUTING') {
     await new Promise(r => setTimeout(r, 2000))
@@ -427,35 +427,36 @@ async function ensureEnergyAndTransfer(targetAddress: string) {
     throw new Error(`Order ${order.id} failed`)
   }
 
-  // Energy is now available on the target address
-  // Proceed with your USDT transfer
+  // Energy artık hedef adres üzerinde mevcut
+  // USDT transferine devam et
 }
 ```
 
-In production, replace the polling loop with a webhook listener. Create a webhook subscription for the `order.filled` event, and your server will be notified the moment the delegation is confirmed on-chain.
+Üretimde, yoklama döngüsünü bir webhook dinleyici ile değiştirin. `order.filled` etkinliği için bir webhook aboneliği oluşturun ve sunucunuz delegasyon zincir üstünde doğrulandığı anda bilgilendirilecektir.
 
 ## Gereksinimler ve Uyumluluk
 
-- Node.js 18+ (uses native `fetch`)
-- Zero runtime dependencies
-- ESM only (ships as ES modules)
-- Full TypeScript 5.4+ support
-- Works with Bun and Deno (any runtime that supports `fetch`)
+- Node.js 18+ (yerli `fetch` kullanır)
+- Sıfır çalışma zamanı bağımlılığı
+- Yalnızca ESM (ES modülleri olarak gönderilir)
+- Tam TypeScript 5.4+ desteği
+- Bun ve Deno ile çalışır (`fetch` destekleyen herhangi bir çalışma zamanı)
 
 ## Kaynaklar
 
-The SDK is open source and available on GitHub. Contributions and bug reports are welcome.
+SDK açık kaynaktır ve GitHub'da mevcuttur. Katkılar ve hata raporları hoş karşılanır.
 
 - Platform: [merx.exchange](https://merx.exchange)
-- Dokumantasyon: [merx.exchange/docs](https://merx.exchange/docs)
+- Belgeler: [merx.exchange/docs](https://merx.exchange/docs)
 - GitHub: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 - npm: [npmjs.com/package/merx-sdk](https://www.npmjs.com/package/merx-sdk)
 - Python SDK: [pypi.org/project/merx-sdk](https://pypi.org/project/merx-sdk/)
-- Yapay zeka ajanlari icin MCP Sunucusu: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+- AI ajanları için MCP Sunucusu: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin - sıfır kurulum, salt okunur araçlar için API anahtarı gerekli değil:
 
 ```json
 {
@@ -467,6 +468,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza şunu sorun: "TRON enerjisinin en ucuz hali şu anda nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

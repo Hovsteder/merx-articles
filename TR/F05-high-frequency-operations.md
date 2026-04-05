@@ -1,45 +1,45 @@
-# Yuksek Frekanli TRON Islemleri: Energy Strateji Rehberi
+# Yüksek Frekans TRON İşlemleri: Enerji Stratejisi Rehberi
 
-When your TRON application sends more than 100 transactions per day, energy management shifts from a cost optimization to a core operational concern. At this volume, ad hoc energy purchasing -- buying energy per transaction as needed -- introduces latency, increases per-unit costs, and creates failure points that can halt your pipeline.
+TRON uygulamanız günde 100'den fazla işlem gönderdiğinde, enerji yönetimi maliyet optimizasyonundan bir temel operasyonel kaygıya dönüşür. Bu hacimde, geçici enerji satın alma -- her işlem için gerektiğinde enerji satın almak -- gecikme oluşturur, birim maliyetlerini artırır ve boru hattınızı durdurabilen hata noktaları yaratır.
 
-This guide covers energy strategies specifically designed for high-frequency TRON operations: duration optimization, standing orders for price triggers, budget planning, and architectural patterns that keep costs low while maintaining throughput.
+Bu rehber, yüksek frekans TRON işlemleri için özel olarak tasarlanan enerji stratejilerini kapsar: süre optimizasyonu, fiyat tetikleyicileri için sabit siparişler, bütçe planlama ve maliyetleri düşük tutarken iş hacmini koruyan mimari desenler.
 
-## The High-Frequency Problem
+## Yüksek Frekans Problemi
 
-At 100+ transactions per day, several issues compound:
+Günde 100+ işlemde, birkaç sorun birleşir:
 
-**Latency accumulates.** If each energy purchase takes 3-5 seconds, and you buy per transaction, you add 5-8 minutes of total delay per day at 100 TX. At 1,000 TX/day, that is nearly an hour of waiting for energy.
+**Gecikme birikir.** Her enerji satın alması 3-5 saniye sürüyorsa ve her işlem için satın alıyorsanız, 100 işlemde günde 5-8 dakika toplam gecikme eklersiniz. 1.000 İŞ/gün olduğunda, bu enerji için yaklaşık bir saat bekleme anlamına gelir.
 
-**API rate limits matter.** Making individual price queries and order placements for each transaction can hit provider rate limits. MERX handles this more gracefully than direct provider APIs, but unnecessary API calls are still waste.
+**API hız sınırları önemlidir.** Her işlem için bireysel fiyat sorguları ve sipariş yerleştirme işlemleri, sağlayıcı hız sınırlarına çarpabilir. MERX bunu doğrudan sağlayıcı API'lerinden daha zarif bir şekilde yönetir, ancak gereksiz API çağrıları yine de israftır.
 
-**Price volatility exposure increases.** Each individual purchase is a separate price event. If prices spike briefly, more of your transactions get caught at the higher rate.
+**Fiyat oynaklığı riskine maruz kalma artar.** Her bireysel satın alma ayrı bir fiyat olayıdır. Fiyatlar kısaca yükselirse, işlemlerinizin daha fazlası yüksek oranda yakalanır.
 
-**Per-transaction overhead.** The fixed cost of an API call, order processing, and delegation mechanics means buying 65,000 energy 100 times costs more than buying 6,500,000 energy once -- even at the same per-unit rate.
+**İşlem başına sabit maliyet.** API çağrısının, sipariş işlemesinin ve delegasyon mekaniklerinin sabit maliyeti, 65.000 enerjiyi 100 kez satın almak, 6.500.000 enerjiyi bir kez satın almaktan daha pahalı olacağı anlamına gelir -- aynı birim oranında bile.
 
-## Duration Optimization
+## Süre Optimizasyonu
 
-The most impactful strategy for high-frequency operations is choosing the right energy duration. MERX supports durations from 5 minutes to 14 days, and the choice dramatically affects both cost and operational patterns.
+Yüksek frekans işlemleri için en etkili strateji, doğru enerji süresini seçmektir. MERX 5 dakika ile 14 gün arasında süreleri destekler ve seçim hem maliyeti hem de operasyonel desenleri dramatik olarak etkiler.
 
-### Short Durations (5m - 30m)
+### Kısa Süreler (5d - 30d)
 
-**Best for:** Burst operations, single transactions, testing
+**En iyi durumlar:** Ani işlemler, tek işlemler, test etme
 
-Short durations cost the least per unit of energy because the provider locks resources for a minimal period. However, for high-frequency operations, the overhead of repeatedly purchasing short-duration energy negates the per-unit savings.
+Kısa süreler, sağlayıcı kaynakları minimal bir dönem için kilitlediği için birim başına en düşük maliyete sahiptir. Ancak yüksek frekans işlemleri için, kısa süreli enerji satın almayı tekrar tekrar yapmanın yükü, birim başına tasarrufu olumsuz kılar.
 
-If you need 65,000 energy per transaction and send 100 transactions over 8 hours, buying 5-minute energy 100 times means 100 API calls, 100 order processing cycles, and 100 delegation operations. The overhead costs more than the per-unit savings.
+İşlem başına 65.000 enerji gerekiyorsa ve 8 saat içinde 100 işlem gönderirseniz, 5 dakikalık enerjiyi 100 kez satın almak 100 API çağrısı, 100 sipariş işlem döngüsü ve 100 delegasyon işlemi anlamına gelir. Yüklerin maliyeti, birim başına tasarrufu aşar.
 
-### Medium Durations (1h - 6h)
+### Orta Süreler (1s - 6s)
 
-**Best for:** Steady operational windows, shift-based processing
+**En iyi durumlar:** Sabit operasyonel pencereler, vardiya tabanlı işleme
 
-Medium durations provide the best balance for most high-frequency use cases. Buy enough energy for your expected transaction volume over the next 1-6 hours in a single purchase.
+Orta süreler, çoğu yüksek frekans kullanım durumu için en iyi dengeyi sağlar. Sonraki 1-6 saat içinde beklenen işlem hacminiz için gereken enerjiyi tek bir satın alma işleminde satın alın.
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// Calculate energy needed for the next operating window
+// Sonraki çalışma penceresi için gereken enerjiyi hesaplayın
 const txPerHour = 50;
 const energyPerTx = 65000;
 const windowHours = 4;
@@ -53,21 +53,21 @@ const order = await merx.createOrder({
 });
 
 console.log(
-  `Purchased ${totalEnergy.toLocaleString()} energy ` +
-  `for ${windowHours}-hour window`
+  `${totalEnergy.toLocaleString()} enerji satın alındı ` +
+  `${windowHours} saatlik pencere için`
 );
 ```
 
-One purchase, one API call, one delegation -- covering 200 transactions.
+Bir satın alma, bir API çağrısı, bir delegasyon -- 200 işlemi kapsayan.
 
-### Long Durations (1d - 14d)
+### Uzun Süreler (1g - 14g)
 
-**Best for:** Continuous operations, predictable daily volume
+**En iyi durumlar:** Sürekli işlemler, öngörülebilir günlük hacim
 
-For systems that run continuously (payment processors, automated trading bots, distribution services), daily or multi-day energy purchases simplify operations further.
+Sürekli çalışan sistemler için (ödeme işlemcileri, otomatik ticaret botları, dağıtım hizmetleri), günlük veya çok günlük enerji satın alımları işlemleri daha da basitleştirir.
 
 ```typescript
-// Daily energy purchase for a payment processor
+// Ödeme işlemcisi için günlük enerji satın alımı
 const dailyTransactions = 500;
 const energyPerTx = 65000;
 const dailyEnergy = dailyTransactions * energyPerTx;
@@ -80,26 +80,26 @@ const order = await merx.createOrder({
 });
 ```
 
-The trade-off is that longer durations cost more per unit. A provider locking 32.5 million energy for 24 hours charges a premium over locking it for 1 hour. However, the reduced operational overhead and guaranteed availability for the full period often justify the premium.
+Ödünleşim, daha uzun süreler birim başına daha pahalı olmasıdır. Bir sağlayıcı 32,5 milyon enerjiyi 24 saat için kilitleyen, onu 1 saat için kilitlemekten daha premium bir ücret alır. Ancak, azalan operasyonel yük ve tam dönem için garantili kullanılabilirlik genellikle primini haklı çıkarır.
 
-### Duration Cost Analysis
+### Süre Maliyet Analizi
 
-| Duration | Relative Cost/Unit | API Calls (100 TX) | Complexity |
+| Süre | Bağıl Maliyet/Birim | API Çağrıları (100 İŞ) | Karmaşıklık |
 |---|---|---|---|
-| 5 min | 1.0x (baseline) | 100 | High |
-| 1 hour | 1.1-1.3x | 5-8 | Low |
-| 6 hours | 1.3-1.5x | 1-2 | Minimal |
-| 1 day | 1.5-2.0x | 1 | Minimal |
-| 14 days | 2.0-3.0x | 1 per 2 weeks | Minimal |
+| 5 dakika | 1.0x (temel) | 100 | Yüksek |
+| 1 saat | 1.1-1.3x | 5-8 | Düşük |
+| 6 saat | 1.3-1.5x | 1-2 | Minimal |
+| 1 gün | 1.5-2.0x | 1 | Minimal |
+| 14 gün | 2.0-3.0x | 2 haftada 1 | Minimal |
 
-For 100+ TX/day, the 1-hour or 6-hour duration tiers typically provide the best cost-to-complexity ratio.
+Günde 100+ İŞ için, 1 saat veya 6 saat süre katmanları tipik olarak en iyi maliyet-karmaşıklık oranını sağlar.
 
-## Standing Orders for Price Optimization
+## Fiyat Optimizasyonu için Sabit Siparişler
 
-High-frequency operators have a unique advantage: flexibility in timing. If your system processes transactions in batches rather than real-time, you can use standing orders to buy energy only when prices drop below your target.
+Yüksek frekans işletmecileri, benzersiz bir avantaja sahiptir: zamanlama esnekliği. Sisteminiz gerçek zamanlı yerine toplu olarak işlemleri işlerse, fiyatlar hedefin altına düştüğünde enerji satın almak için sabit siparişler kullanabilirsiniz.
 
 ```typescript
-// Standing order: buy 10M energy when price drops below 24 SUN
+// Sabit sipariş: fiyat 24 SUN'un altına düştüğünde 10M enerji satın al
 const standing = await merx.createStandingOrder({
   energy_amount: 10000000,
   max_price_sun: 24,
@@ -109,50 +109,50 @@ const standing = await merx.createStandingOrder({
 });
 ```
 
-### How Standing Orders Work at Scale
+### Sabit Siparişlerin Ölçekte Nasıl Çalıştığı
 
-MERX monitors prices across all seven providers continuously. When any provider's rate for your specified amount and duration drops to or below your `max_price_sun`, the order executes automatically.
+MERX, yedi sağlayıcının tümü arasında fiyatları sürekli olarak izler. Herhangi bir sağlayıcının belirtilen miktar ve süre oranı sizin `max_price_sun` değerine veya altına düştüğünde, sipariş otomatik olarak yürütülür.
 
-For high-frequency operators, this creates a pattern:
+Yüksek frekans işletmecileri için bu bir desen oluşturur:
 
-1. Set a standing order at your target price
-2. When price dips, energy is automatically purchased
-3. Use the purchased energy for operations over the duration window
-4. The standing order resets and waits for the next price dip
+1. Hedef fiyatında sabit bir sipariş belirleyin
+2. Fiyat düştüğünde, enerji otomatik olarak satın alınır
+3. Satın alınan enerjiyi süre penceresi boyunca işlemler için kullanın
+4. Sabit sipariş sıfırlanır ve sonraki fiyat düşüşünü bekler
 
-This approach captures intraday price fluctuations that manual purchasing cannot. Energy prices on TRON follow daily patterns -- typically lower during off-peak hours in major time zones. Standing orders exploit these patterns automatically.
+Bu yaklaşım, manuel satın almanın yapamayacağı gün içi fiyat dalgalanmalarını yakalar. TRON'daki enerji fiyatları günlük desenleri takip eder -- tipik olarak büyük zaman dilimlerinde saatler kapalı olduğunda daha düşüktür. Sabit siparişler bu desenleri otomatik olarak kullanır.
 
-### Price Target Strategy
+### Fiyat Hedefi Stratejisi
 
-Setting the right `max_price_sun` requires balancing cost savings against fill probability:
+Doğru `max_price_sun` ayarlama, maliyet tasarrufu ile doldurma olasılığını dengeleme gerektirir:
 
 ```typescript
-// Analyze recent price history to set targets
+// Hedefleri ayarlamak için son fiyat geçmişini analiz edin
 const analysis = await merx.analyzePrices({
   energy_amount: 10000000,
   duration: '6h',
-  period: '7d' // Last 7 days
+  period: '7d' // Son 7 gün
 });
 
-console.log(`Median price: ${analysis.median_sun} SUN`);
-console.log(`25th percentile: ${analysis.p25_sun} SUN`);
-console.log(`10th percentile: ${analysis.p10_sun} SUN`);
+console.log(`Ortanca fiyat: ${analysis.median_sun} SUN`);
+console.log(`25. yüzdelik: ${analysis.p25_sun} SUN`);
+console.log(`10. yüzdelik: ${analysis.p10_sun} SUN`);
 
-// Set target at 25th percentile: fills ~75% of the time
-// Lower target = cheaper but less frequent fills
+// Hedefi 25. yüzdelikliye ayarla: %75 oranında doldurulur
+// Daha düşük hedef = daha ucuz ama daha az sık doldurmalar
 ```
 
-**Aggressive (10th percentile):** Lowest cost, but fills infrequently. Works when you have flexible timing and existing energy reserves.
+**Agresif (10. yüzdelik):** En düşük maliyet, ama nadiren doldurulur. Esnek zamanlama ve mevcut enerji rezervleriniz olduğunda işe yarar.
 
-**Moderate (25th percentile):** Good balance. Fills often enough to maintain operations while capturing below-average prices.
+**Orta (25. yüzdelik):** İyi denge. Operasyonları sürdürmek için yeterince sık doldurulur ve ortalamadan düşük fiyatları yakalar.
 
-**Conservative (median):** Fills quickly but offers only modest savings over market rate.
+**Muhafazakar (ortanca):** Hızlı doldurulur ama pazar oranına kıyasla sadece mütevazı tasarruf sunar.
 
-## Budget Planning
+## Bütçe Planlama
 
-For organizations, energy spend needs to be predictable and budgetable. Here is a framework for planning high-frequency energy costs.
+Kuruluşlar için enerji harcaması öngörülebilir ve bütçelenebilir olması gerekir. İşte yüksek frekans enerji maliyetlerini planlama çerçevesidir.
 
-### Monthly Budget Calculation
+### Aylık Bütçe Hesaplaması
 
 ```typescript
 interface EnergyBudget {
@@ -174,8 +174,8 @@ function calculateMonthlyBudget(
   const monthlyCostTrx = monthlyCostSun / 1e6;
   const monthlyCostUsd = monthlyCostTrx * 0.12;
 
-  // Compare with TRX burn cost
-  const burnCostPerTx = 13.4; // TRX per USDT transfer
+  // TRX yakma maliyeti ile karşılaştır
+  const burnCostPerTx = 13.4; // USDT transferi başına TRX
   const monthlyBurnCost =
     params.dailyTransactions *
     params.operatingDays *
@@ -193,7 +193,7 @@ function calculateMonthlyBudget(
   };
 }
 
-// Example: 500 USDT transfers per day, 30 days
+// Örnek: günde 500 USDT transferi, 30 gün
 const budget = calculateMonthlyBudget({
   dailyTransactions: 500,
   energyPerTransaction: 65000,
@@ -201,16 +201,16 @@ const budget = calculateMonthlyBudget({
   operatingDays: 30
 });
 
-// Output:
-// Monthly energy: 975,000,000
-// Monthly cost: 25,350 TRX ($3,042)
-// Without optimization: 201,000 TRX ($24,120)
-// Savings: $21,078 (87.4%)
+// Çıktı:
+// Aylık enerji: 975,000,000
+// Aylık maliyet: 25,350 TRX ($3,042)
+// Optimizasyon olmadan: 201,000 TRX ($24,120)
+// Tasarruf: $21,078 (87.4%)
 ```
 
-### Budget Monitoring
+### Bütçe İzlemesi
 
-Track actual spend against budget in real time:
+Gerçek harcamayı bütçeye karşı gerçek zamanlı olarak izleyin:
 
 ```typescript
 class BudgetMonitor {
@@ -241,19 +241,19 @@ class BudgetMonitor {
     expected: number
   ): void {
     console.warn(
-      `Budget warning: ${actual.toFixed(1)}% used, ` +
-      `expected ${expected.toFixed(1)}% by day ` +
-      `${new Date().getDate()}`
+      `Bütçe uyarısı: ${actual.toFixed(1)}% kullanıldı, ` +
+      `gün ${new Date().getDate()}'de ` +
+      `${expected.toFixed(1)}% bekleniyor`
     );
   }
 }
 ```
 
-## Architectural Patterns for High Frequency
+## Yüksek Frekans için Mimari Desenler
 
-### Pattern 1: Energy Pool
+### Desen 1: Enerji Havuzu
 
-Maintain a pre-purchased energy reserve and replenish it before it depletes:
+Önceden satın alınmış bir enerji rezervi tutun ve tükenebilmeden önce bunu yenileyin:
 
 ```typescript
 class EnergyPool {
@@ -293,46 +293,46 @@ class EnergyPool {
   }
 }
 
-// Usage: check every minute
+// Kullanım: her dakika kontrol edin
 const pool = new EnergyPool({
   apiKey: process.env.MERX_API_KEY!,
   address: operationsWallet,
-  minReserve: 500000,    // Alert at 500K
-  replenishAmount: 5000000 // Buy 5M when low
+  minReserve: 500000,    // 500K'da uyar
+  replenishAmount: 5000000 // Düşük olduğunda 5M satın al
 });
 
 setInterval(() => pool.checkAndReplenish(), 60000);
 ```
 
-### Pattern 2: Auto-Energy with MERX
+### Desen 2: MERX ile Otomatik Enerji
 
-For the simplest high-frequency setup, use MERX auto-energy:
+En basit yüksek frekans kurulumu için MERX otomatik enerjisi kullanın:
 
 ```typescript
-// Configure once
+// Bir kez yapılandırın
 await merx.enableAutoEnergy({
   address: operationsWallet,
   min_energy: 1000000,    // 1M minimum
-  target_energy: 10000000, // 10M target
+  target_energy: 10000000, // 10M hedefi
   max_price_sun: 30,
   duration: '1h'
 });
 
-// Then just send transactions -- energy is always available
+// Sonra işlemleri göndermeye devam edin -- enerji her zaman kullanılabilir
 for (const tx of pendingTransactions) {
   await sendTransaction(tx);
-  // No energy management needed in the loop
+  // Döngüde enerji yönetimi gerekmez
 }
 ```
 
-Auto-energy shifts energy management from your application code to the MERX platform. Your application sends transactions without any energy awareness.
+Otomatik enerji, enerji yönetimini uygulama kodunuzdan MERX platformuna kaydırır. Uygulamanız enerji farkındalığı olmadan işlem gönderir.
 
-### Pattern 3: Scheduled Batch Purchasing
+### Desen 3: Planlanmış Toplu Satın Alma
 
-For operations with predictable daily schedules:
+Öngörülebilir günlük programları olan işlemler için:
 
 ```typescript
-// Purchase energy at the start of each operating window
+// Her operasyonel pencerenin başında enerji satın alın
 async function dailyEnergySetup(): Promise<void> {
   const windows = [
     { start: '08:00', duration: '6h', txCount: 200 },
@@ -350,20 +350,20 @@ async function dailyEnergySetup(): Promise<void> {
   }
 }
 
-// Run via cron at 07:55 daily
+// Günlük olarak 07:55'te cron aracılığıyla çalıştırın
 ```
 
-## Izleme ve Optimizasyon
+## İzleme ve Optimizasyon
 
-### Key Metrics to Track
+### İzlenecek Temel Metrikler
 
-For high-frequency operations, monitor these metrics:
+Yüksek frekans işlemleri için bu metrikleri izleyin:
 
-1. **Average price paid per unit** -- Is it trending up or down?
-2. **Fill rate** -- What percentage of orders fill successfully?
-3. **Energy utilization** -- What percentage of purchased energy is actually used?
-4. **Burn events** -- How often do transactions burn TRX (indicating energy gaps)?
-5. **Provider distribution** -- Which providers fill your orders most often?
+1. **Birim başına ödenen ortalama fiyat** -- Yukarı mı yoksa aşağı mı trendi var?
+2. **Doldurma oranı** -- Siparişlerinizin yüzde kaçı başarıyla doldurulur?
+3. **Enerji kullanım oranı** -- Satın alınan enerjinin yüzde kaçı gerçekten kullanılır?
+4. **Yakma olayları** -- İşlemler ne sıklıkta TRX yakarlar (enerji boşluklarını gösterir)?
+5. **Sağlayıcı dağılımı** -- Hangi sağlayıcılar siparişlerinizi en sık doldurur?
 
 ```typescript
 interface OperationalMetrics {
@@ -403,31 +403,32 @@ function analyzeMetrics(
 }
 ```
 
-### Optimizing Utilization
+### Kullanım Oranını Optimize Etme
 
-Low utilization (buying more energy than you use) wastes money. High-frequency operators should aim for 85-95% utilization:
+Düşük kullanım (satın aldığınızdan daha fazla enerji satın almak) para israfıdır. Yüksek frekans işletmecileri %85-95 kullanım oranı hedeflemesi gerekir:
 
-- **Below 80%:** You are over-purchasing. Reduce the energy amount or shorten the duration.
-- **85-95%:** Optimal range. Small buffer for variability.
-- **Above 98%:** You are cutting it too close. Some transactions may burn TRX due to insufficient energy. Increase the buffer slightly.
+- **%80 altında:** Fazla satın alıyorsunuz. Enerji miktarını veya süreyi azaltın.
+- **%85-95:** Optimal aralık. Değişkenlik için küçük tampon.
+- **%98 üstünde:** Çok sıkı kesiyorsunuz. Bazı işlemler yetersiz enerji nedeniyle TRX yakabilir. Tamponu biraz artırın.
 
-## Sonuc
+## Sonuç
 
-High-frequency TRON operations require a fundamentally different approach to energy management than occasional transactions. The key principles:
+Yüksek frekans TRON işlemleri, enerji yönetimine ara sıra işlemlerden temel olarak farklı bir yaklaşım gerektirir. Temel ilkeler:
 
-1. **Buy in bulk, not per transaction.** Reduce API overhead and capture better rates.
-2. **Match duration to your operating window.** Do not pay for 24 hours of energy if you process transactions over 4 hours.
-3. **Use standing orders for price optimization.** Let the system capture price dips automatically.
-4. **Monitor utilization.** Buy enough to avoid TRX burns but not so much that energy goes unused.
-5. **Budget proactively.** Use historical data and price analysis to forecast costs.
+1. **Toplu olarak satın alın, işlem başına değil.** API yükünü azaltın ve daha iyi oranları yakala.
+2. **Süreyi operasyonel pencerenizle eşleştirin.** İşlemleri 4 saat içinde işliyorken 24 saat enerji için ödeme yapmayın.
+3. **Fiyat optimizasyonu için sabit siparişler kullanın.** Sistemin fiyat düşüşlerini otomatik olarak yakalamasını sağlayın.
+4. **Kullanım oranını izleyin.** TRX yakılmasını önlemek için yeterli satın alın ama enerji kullanılmamadan da satın almayın.
+5. **Proaktif olarak bütçe yapın.** Maliyetleri tahmin etmek için geçmiş verileri ve fiyat analizini kullanın.
 
-For systems processing 100+ transactions daily, the difference between ad hoc energy purchasing and an optimized strategy can exceed $10,000 per month. The engineering investment to implement these patterns is measured in days; the return is measured in months of savings.
+Günde 100+ işlem işleyen sistemler için, geçici enerji satın alma ile optimize edilmiş bir strateji arasındaki fark ayda $10.000'i aşabilir. Bu desenleri uygulama mühendislik yatırımı gün cinsinden ölçülür; geri dönüş aylar cinsinden tasarruf ölçülür.
 
-Explore MERX's high-frequency capabilities at [https://merx.exchange/docs](https://merx.exchange/docs) or start at [https://merx.exchange](https://merx.exchange).
+MERX'in yüksek frekans yeteneklerini [https://merx.exchange/docs](https://merx.exchange/docs) adresinde keşfedin veya [https://merx.exchange](https://merx.exchange) adresinden başlayın.
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- kurulum yok, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -439,6 +440,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI agenize sorun: "TRON enerjisinin şu anda en ucuz fiyatı nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatları alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

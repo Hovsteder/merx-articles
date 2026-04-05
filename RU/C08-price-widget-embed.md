@@ -1,61 +1,61 @@
-# Виджет цен MERX: встраивание актуальных цен energy TRON на любой сайт
+# Виджет цен MERX: встройте живые цены на энергию TRON на любой сайт
 
-TRON energy prices change constantly. Providers adjust rates based on demand, network conditions, and available capacity. If your website serves TRON users - whether it is a wallet, a dApp, a blockchain explorer, or a resource guide - showing live energy prices adds immediate, practical value for your visitors.
+Цены на энергию TRON постоянно меняются. Поставщики корректируют тарифы в зависимости от спроса, состояния сети и доступных мощностей. Если ваш сайт обслуживает пользователей TRON — будь то кошелек, dApp, обозреватель блокчейна или справочник по ресурсам — отображение живых цен на энергию добавляет для посетителей немедленную практическую ценность.
 
-MERX provides an embeddable price widget that displays real-time energy prices from all major providers, sorted by cost. It requires two lines of HTML, auto-refreshes every 60 seconds, and inherits a professional dark theme that fits most blockchain-related websites without modification.
+MERX предоставляет встраиваемый виджет цен, который отображает цены на энергию в реальном времени от всех крупных поставщиков, отсортированные по стоимости. Требует всего две строки HTML, автоматически обновляется каждые 60 секунд и использует профессиональную темную тему, которая без изменений подходит для большинства сайтов, связанных с блокчейном.
 
-This article covers how to embed the widget, how it works under the hood, and how to customize it for your use case.
+В этой статье рассказывается, как встроить виджет, как он работает внутри и как его настроить под вашу задачу.
 
-## Two Lines of HTML
+## Две строки HTML
 
-The simplest possible integration. Add these two lines anywhere in your HTML:
+Максимально простая интеграция. Добавьте эти две строки в любое место HTML-кода:
 
 ```html
 <div id="merx-prices"></div>
 <script src="https://merx.exchange/widget/prices.js"></script>
 ```
 
-That is it. The script initializes automatically, fetches current prices from the MERX public API, and renders a styled table inside the `div`. No API key required. No build step. No framework dependency.
+Вот и всё. Скрипт инициализируется автоматически, получает текущие цены из открытого API MERX и отображает стилизованную таблицу внутри `div`. Никакой API ключ не требуется. Никакой процесс сборки. Никакой зависимости от фреймворка.
 
-The widget works in any HTML page - static sites, WordPress, Webflow, Squarespace (via custom code blocks), or any framework that renders to the browser. It loads asynchronously and does not block page rendering.
+Виджет работает на любой HTML-странице — статических сайтах, WordPress, Webflow, Squarespace (через блоки пользовательского кода) или любом фреймворке, который отображает содержимое в браузере. Он загружается асинхронно и не блокирует отображение страницы.
 
 ## Что отображает виджет
 
-The widget renders a compact table showing all active TRON energy providers with their current pricing. Each row includes:
+Виджет отображает компактную таблицу со всеми активными поставщиками энергии TRON и их текущими ценами. Каждая строка включает:
 
-- **Provider name** - the energy provider (Sohu, CatFee, NETTs, TronSave, Feee, iTRX, PowerSun).
-- **Price per unit** - current energy price in SUN. This is the cost per unit of energy for a standard delegation.
-- **Min/Max order** - the minimum and maximum energy amount the provider currently accepts.
-- **Duration** - available rental durations (1 hour, 3 hours, 1 day, etc.).
-- **Status** - whether the provider is currently online and accepting orders.
+- **Имя поставщика** — поставщик энергии (Sohu, CatFee, NETTs, TronSave, Feee, iTRX, PowerSun).
+- **Цена за единицу** — текущая цена энергии в SUN. Это стоимость за единицу энергии при стандартной делегации.
+- **Минимум/максимум заказа** — минимальное и максимальное количество энергии, которое поставщик в настоящий момент принимает.
+- **Длительность** — доступные сроки аренды (1 час, 3 часа, 1 день и т. д.).
+- **Статус** — находится ли поставщик в сети и принимает ли заказы.
 
-Providers are sorted by price, cheapest first. The sorting updates with each refresh, so if a provider drops their price, they move up automatically.
+Поставщики отсортированы по цене, дешевле всех в начале. Сортировка обновляется при каждом обновлении, поэтому если поставщик снизит цену, он автоматически переместится вверх.
 
-### Default Appearance
+### Внешний вид по умолчанию
 
-The widget uses a dark theme by default:
+Виджет использует тёмную тему по умолчанию:
 
-- Background: `#0a0a0a` (near-black)
-- Text: `#e0e0e0` (light gray)
-- Table borders: `#1a1a1a` (subtle dark borders)
-- Accent color: `#00d4aa` (MERX green, used for the cheapest price highlight)
-- Font: IBM Plex Mono (loaded from Google Fonts if not already available)
+- Фон: `#0a0a0a` (почти чёрный)
+- Текст: `#e0e0e0` (светло-серый)
+- Границы таблицы: `#1a1a1a` (тонкие тёмные границы)
+- Цвет акцента: `#00d4aa` (зелень MERX, используется для выделения самой низкой цены)
+- Шрифт: IBM Plex Mono (загружается из Google Fonts, если ещё не доступен)
 
-The visual style is deliberately minimal. No rounded corners, no gradients, no shadows. It fits the aesthetic of most cryptocurrency and blockchain interfaces.
+Визуальный стиль специально минималистичен. Никаких скруглённых углов, градиентов, теней. Он гармонирует с эстетикой большинства криптовалютных и блокчейн-интерфейсов.
 
-## Как это работает Under the Hood
+## Как это работает внутри
 
-Understanding the widget's internals helps with customization and troubleshooting.
+Понимание внутреннего устройства виджета помогает с настройкой и устранением неполадок.
 
-### Data Source
+### Источник данных
 
-The widget fetches data from the MERX public prices endpoint:
+Виджет получает данные из открытой точки API цен MERX:
 
 ```
 GET https://merx.exchange/api/v1/prices
 ```
 
-This endpoint is public - no authentication required, no API key needed. It returns current prices from all connected providers:
+Эта точка открыта — не требуется аутентификация, не нужен API ключ. Она возвращает текущие цены от всех подключённых поставщиков:
 
 ```json
 {
@@ -83,31 +83,31 @@ This endpoint is public - no authentication required, no API key needed. It retu
 }
 ```
 
-### Refresh Cycle
+### Цикл обновления
 
-The widget polls the prices endpoint every 60 seconds. Each refresh is silent - no loading spinner, no flash of empty content. The table updates in place. If a fetch fails (network issue, server timeout), the widget retains the last successful data and tries again on the next cycle.
+Виджет опрашивает точку цен каждые 60 секунд. Каждое обновление бесшумно — никакого спиннера загрузки, никакого мерцания пустого содержимого. Таблица обновляется на месте. Если загрузка не удаётся (проблема с сетью, тайм-аут сервера), виджет сохраняет последние успешно полученные данные и повторяет попытку в следующем цикле.
 
-A small timestamp in the widget footer shows when data was last updated, so users can tell at a glance if prices are current.
+Небольшая отметка времени в нижней части виджета показывает, когда данные в последний раз обновлялись, поэтому пользователи могут сразу увидеть, актуальны ли цены.
 
-### Script Loading
+### Загрузка скрипта
 
-The `prices.js` script is served from the MERX CDN with aggressive caching (1 hour) and gzip compression. Typical load time is under 50ms on broadband connections. The script is approximately 8 KB minified and gzipped.
+Скрипт `prices.js` доставляется из CDN MERX с агрессивным кешированием (1 час) и сжатием gzip. Типичное время загрузки — менее 50 мс на широкополосных соединениях. Скрипт занимает приблизительно 8 КБ в сжатом и минифицированном виде.
 
-On load, the script:
+При загрузке скрипт:
 
-1. Finds the `#merx-prices` element (or a custom target if configured).
-2. Injects scoped CSS styles (prefixed to avoid conflicts with your page styles).
-3. Makes the first API call.
-4. Renders the table.
-5. Sets up the 60-second refresh interval.
+1. Находит элемент `#merx-prices` (или пользовательскую цель, если она настроена).
+2. Вводит стили CSS в области видимости (с префиксами, чтобы избежать конфликтов со стилями вашей страницы).
+3. Делает первый вызов API.
+4. Отображает таблицу.
+5. Устанавливает интервал обновления в 60 секунд.
 
-All styles are scoped under `.merx-widget` to prevent CSS conflicts with your existing styles.
+Все стили находятся в области видимости под `.merx-widget`, чтобы предотвратить конфликты CSS с существующими стилями.
 
 ## Параметры настройки
 
-The widget accepts configuration via data attributes on the container `div` or through a JavaScript configuration object.
+Виджет принимает конфигурацию через data-атрибуты на контейнере `div` или через объект конфигурации JavaScript.
 
-### Data Attribute Configuration
+### Конфигурация через data-атрибуты
 
 ```html
 <div
@@ -121,22 +121,22 @@ The widget accepts configuration via data attributes on the container `div` or t
 <script src="https://merx.exchange/widget/prices.js"></script>
 ```
 
-Available data attributes:
+Доступные data-атрибуты:
 
-| Attribute | Default | Description |
+| Атрибут | По умолчанию | Описание |
 |----------|---------|-------------|
-| `data-refresh` | `60` | Refresh interval in seconds (minimum 15) |
-| `data-providers` | all | Comma-separated list of providers to show |
-| `data-duration` | all | Filter to specific duration (1, 3, 24 hours) |
-| `data-theme` | `dark` | `dark` or `light` |
-| `data-max-rows` | all | Maximum number of providers to display |
-| `data-show-header` | `true` | Show or hide the "MERX Energy Prices" header |
-| `data-show-footer` | `true` | Show or hide the timestamp footer |
-| `data-compact` | `false` | Compact mode - fewer columns, smaller text |
+| `data-refresh` | `60` | Интервал обновления в секундах (минимум 15) |
+| `data-providers` | все | Разделённый запятыми список поставщиков для отображения |
+| `data-duration` | все | Фильтр по определённой длительности (1, 3, 24 часа) |
+| `data-theme` | `dark` | `dark` или `light` |
+| `data-max-rows` | все | Максимальное количество поставщиков для отображения |
+| `data-show-header` | `true` | Показать или скрыть заголовок "MERX Energy Prices" |
+| `data-show-footer` | `true` | Показать или скрыть нижний колонтитул с отметкой времени |
+| `data-compact` | `false` | Компактный режим — меньше колонок, меньше текста |
 
-### JavaScript Configuration
+### Конфигурация через JavaScript
 
-For more control, initialize the widget programmatically:
+Для большего контроля инициализируйте виджет программно:
 
 ```html
 <div id="energy-prices"></div>
@@ -162,57 +162,57 @@ For more control, initialize the widget programmatically:
 </script>
 ```
 
-The `onUpdate` and `onError` callbacks let you react to widget events in your own code. The `onUpdate` callback receives the parsed price array on every successful refresh.
+Обратные вызовы `onUpdate` и `onError` позволяют реагировать на события виджета в собственном коде. Обратный вызов `onUpdate` получает разобранный массив цен при каждом успешном обновлении.
 
-### Light Theme
+### Светлая тема
 
-For websites with a light background:
+Для сайтов со светлым фоном:
 
 ```html
 <div id="merx-prices" data-theme="light"></div>
 <script src="https://merx.exchange/widget/prices.js"></script>
 ```
 
-Light theme colors:
+Цвета светлой темы:
 
-- Background: `#ffffff`
-- Text: `#1a1a1a`
-- Table borders: `#e0e0e0`
-- Accent: `#00a88a` (darker green for light backgrounds)
+- Фон: `#ffffff`
+- Текст: `#1a1a1a`
+- Границы таблицы: `#e0e0e0`
+- Акцент: `#00a88a` (более тёмная зелень для светлых фонов)
 
-### Custom Styling
+### Пользовательские стили
 
-The widget's CSS classes are stable and documented. Override them in your own stylesheet:
+CSS-классы виджета стабильны и документированы. Переопределите их в собственной таблице стилей:
 
 ```css
-/* Make the widget full-width */
+/* Сделать виджет во всю ширину */
 .merx-widget {
   width: 100%;
   max-width: none;
 }
 
-/* Custom font */
+/* Пользовательский шрифт */
 .merx-widget table {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
 }
 
-/* Custom accent color */
+/* Пользовательский цвет акцента */
 .merx-widget .merx-best-price {
   color: #ff6b00;
 }
 
-/* Hide specific columns */
+/* Скрыть определённые колонки */
 .merx-widget .merx-col-duration {
   display: none;
 }
 ```
 
-The widget's default `max-width` is 640px. Setting it to `100%` lets it fill its container.
+Значение `max-width` виджета по умолчанию составляет 640 пикселей. Установка его на `100%` позволяет заполнить контейнер.
 
-## Full HTML Page Example
+## Пример полной HTML-страницы
 
-Here is a complete, self-contained HTML page with the widget embedded. Copy it, open it in a browser, and you have a live TRON energy price tracker:
+Вот полная, самодостаточная HTML-страница с встроенным виджетом. Скопируйте её, откройте в браузере, и у вас будет живой трекер цен на энергию TRON:
 
 ```html
 <!DOCTYPE html>
@@ -264,11 +264,11 @@ Here is a complete, self-contained HTML page with the widget embedded. Copy it, 
 </html>
 ```
 
-## Building Your Own Widget with the Public API
+## Создание собственного виджета с открытым API
 
-If the pre-built widget does not fit your needs, you can build your own using the public prices endpoint directly. This gives you complete control over the UI.
+Если готовый виджет не соответствует вашим требованиям, вы можете создать свой собственный, используя точку открытого API цен. Это даёт вам полный контроль над интерфейсом.
 
-### Vanilla JavaScript Example
+### Пример Vanilla JavaScript
 
 ```javascript
 async function fetchMerxPrices() {
@@ -321,7 +321,7 @@ refreshPrices();
 setInterval(refreshPrices, 60000);
 ```
 
-### React Component Example
+### Пример компонента React
 
 ```jsx
 import { useState, useEffect } from 'react';
@@ -382,14 +382,14 @@ function MerxPrices({ refreshInterval = 60000 }) {
 export default MerxPrices;
 ```
 
-## Rate Limits for the Public Endpoint
+## Ограничения скорости для открытой точки
 
-The `GET /api/v1/prices` endpoint is public and does not require authentication, but it is rate-limited to 300 requests per minute per IP address. For a widget refreshing every 60 seconds, you are well within this limit.
+Точка `GET /api/v1/prices` открыта и не требует аутентификации, но ограничена 300 запросами в минуту на IP-адрес. Для виджета, обновляющегося каждые 60 секунд, вы хорошо в пределах этого ограничения.
 
-If you build a custom solution that polls more aggressively - for example, a backend that aggregates prices every 5 seconds - consider caching the results and serving them to your frontend from your own server. This keeps your MERX API usage low and improves response times for your users.
+Если вы создадите пользовательское решение, которое опрашивает более активно — например, бэкенд, который агрегирует цены каждые 5 секунд — рассмотрите возможность кеширования результатов и их отправки на фронтенд с вашего собственного сервера. Это снижает использование API MERX и улучшает время отклика для ваших пользователей.
 
 ```javascript
-// Server-side caching example (Node.js/Express)
+// Пример кеширования на сервере (Node.js/Express)
 let cachedPrices = null;
 let cacheTimestamp = 0;
 
@@ -406,44 +406,45 @@ app.get('/api/energy-prices', async (req, res) => {
 });
 ```
 
-This caches MERX responses for 15 seconds on your server, allowing your frontend to poll as frequently as it wants without increasing load on the MERX API.
+Это кеширует ответы MERX на вашем сервере на 15 секунд, позволяя фронтенду опрашивать так часто, как нужно, без увеличения нагрузки на API MERX.
 
-## Вопросы SEO
+## Соображения о SEO
 
-The widget renders client-side via JavaScript, which means search engines that do not execute JavaScript will not index the price data. If SEO is important for your price page, consider server-side rendering the initial price data and then hydrating with the widget for live updates.
+Виджет отображается клиентской стороной через JavaScript, что означает, что поисковые системы, которые не выполняют JavaScript, не будут индексировать данные цен. Если SEO важна для вашей страницы цен, рассмотрите рендеринг начальных данных о ценах на сервере и последующую гидратацию виджетом для живых обновлений.
 
-Alternatively, structure the page with static content about TRON energy pricing and use the widget as a supplementary live element. The surrounding text provides SEO value while the widget provides real-time utility.
+Как вариант, структурируйте страницу со статическим содержимым о ценах на энергию TRON и используйте виджет как дополнительный элемент в реальном времени. Окружающий текст обеспечивает ценность для SEO, а виджет обеспечивает полезность в реальном времени.
 
 ## Часто задаваемые вопросы
 
-**Does the widget slow down my page?**
-No. The script is approximately 8 KB gzipped and loads asynchronously. It does not block rendering. The initial API call adds one network request, but prices typically respond within 100ms.
+**Замедляет ли виджет мою страницу?**
+Нет. Скрипт занимает приблизительно 8 КБ в сжатом виде и загружается асинхронно. Он не блокирует отображение. Первый вызов API добавляет один сетевой запрос, но цены обычно отвечают в течение 100 мс.
 
-**Can I show only specific providers?**
-Yes. Use `data-providers="sohu,catfee"` to filter the display to specific providers.
+**Можно ли показывать только конкретных поставщиков?**
+Да. Используйте `data-providers="sohu,catfee"`, чтобы отфильтровать отображение по определённым поставщикам.
 
-**What happens if the MERX API is down?**
-The widget displays the last successfully fetched data. If it has never successfully loaded (first page load while the API is down), it shows a message indicating prices are temporarily unavailable.
+**Что происходит, если API MERX выходит из строя?**
+Виджет отображает последние успешно полученные данные. Если он никогда не успешно загружался (первая загрузка страницы при отключённом API), он показывает сообщение о том, что цены временно недоступны.
 
-**Is the widget mobile-responsive?**
-Yes. In compact mode (`data-compact="true"`), it works well on screens as narrow as 320px. The default mode requires approximately 500px minimum width.
+**Адаптивен ли виджет для мобильных устройств?**
+Да. В компактном режиме (`data-compact="true"`) он хорошо работает на экранах шириной всего 320 пикселей. Режим по умолчанию требует минимальную ширину примерно 500 пикселей.
 
-**Can I use the widget commercially?**
-Yes. The widget and the underlying public prices API are free to use. Attribution is appreciated but not required.
+**Могу ли я использовать виджет в коммерческих целях?**
+Да. Виджет и лежащий в его основе открытый API цен бесплатны в использовании. Указание авторства приветствуется, но не требуется.
 
 ## Заключение
 
-Adding live TRON energy prices to your website takes two lines of HTML and zero backend work. The MERX price widget handles data fetching, sorting, styling, and auto-refresh out of the box. For custom implementations, the public prices API is available without authentication.
+Добавление живых цен на энергию TRON на ваш сайт занимает две строки HTML и не требует никакой работы с бэкенда. Виджет цен MERX обрабатывает загрузку данных, сортировку, стилизацию и автоматическое обновление из коробки. Для пользовательских реализаций открытый API цен доступен без аутентификации.
 
-Whether you run a TRON wallet, a blockchain blog, or an energy management tool, showing real-time provider prices gives your users actionable information they cannot easily find elsewhere.
+Независимо от того, управляете ли вы кошельком TRON, блогом о блокчейне или инструментом управления энергией, отображение цен поставщиков в реальном времени предоставляет вашим пользователям полезную информацию, которую они не могут легко найти в других местах.
 
 - Платформа MERX: [merx.exchange](https://merx.exchange)
 - Документация API: [merx.exchange/docs](https://merx.exchange/docs)
-- Full source examples: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
+- Полные примеры исходного кода: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — без установки, без API ключа для инструментов только для чтения:
 
 ```json
 {
@@ -455,6 +456,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите у вашего AI-агента: "What is the cheapest TRON energy right now?" и получите живые цены от всех подключённых поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,62 +1,62 @@
-# Запуск процессора платежей USDT на TRON с MERX
+# Запуск процессора платежей USDT на TRON с помощью MERX
 
-TRON processes more USDT transfers than any other blockchain. If you are building a payment processor -- whether for e-commerce, remittances, or B2B settlements -- TRON is the obvious network choice for USDT. But every USDT transfer on TRON consumes approximately 65,000 energy. Without energy, the network burns TRX from your wallet to cover the cost, and that burn adds up fast.
+TRON обрабатывает больше переводов USDT, чем любой другой блокчейн. Если вы создаёте процессор платежей — будь то для электронной коммерции, денежных переводов или B2B расчётов — TRON является очевидным выбором сети для USDT. Но каждый перевод USDT на TRON потребляет примерно 65 000 energy. Без энергии сеть сжигает TRX с вашего кошелька, чтобы покрыть затраты, и это быстро накапливается.
 
-This article walks through the architecture of a USDT payment processor on TRON, explains how MERX integrates into the pipeline to manage energy costs, and provides concrete implementation details for building a production system.
+Данная статья описывает архитектуру процессора платежей USDT на TRON, объясняет, как MERX интегрируется в конвейер для управления затратами на energy, и предоставляет конкретные детали реализации для создания production-системы.
 
-## The Cost Problem at Scale
+## Проблема стоимости при масштабировании
 
-A single USDT transfer on TRON costs approximately 65,000 energy. Without purchased energy, the network charges roughly 13.4 TRX in fees (at current rates). At $0.12 per TRX, that is about $1.60 per transfer.
+Один перевод USDT на TRON стоит примерно 65 000 energy. Без приобретённой energy сеть взимает примерно 13,4 TRX в комиссиях (по текущим ставкам). При $0,12 за TRX это примерно $1,60 за один перевод.
 
-At 100 transfers per day, that is $160 daily -- $4,800 per month in transaction fees alone.
+При 100 переводах в день это $160 ежедневно — $4 800 в месяц только в комиссиях за транзакции.
 
-Energy rental through the cheapest available provider typically costs 22-35 SUN per unit. For 65,000 energy at 28 SUN, the cost is 1,820,000 SUN = 1.82 TRX -- approximately $0.22. That is an 86% reduction compared to burning TRX.
+Аренда energy через наиболее дешёвого доступного провайдера обычно стоит 22–35 SUN за единицу. Для 65 000 energy по 28 SUN стоимость составляет 1 820 000 SUN = 1,82 TRX — примерно $0,22. Это сокращение на 86% по сравнению с сжиганием TRX.
 
-| Daily Transfers | Without Energy (monthly) | With MERX Energy (monthly) | Monthly Savings |
+| Переводы в день | Без energy (в месяц) | С MERX energy (в месяц) | Экономия в месяц |
 |---|---|---|---|
-| 50 | $2,400 | $330 | $2,070 |
-| 100 | $4,800 | $660 | $4,140 |
-| 500 | $24,000 | $3,300 | $20,700 |
-| 1,000 | $48,000 | $6,600 | $41,400 |
+| 50 | $2 400 | $330 | $2 070 |
+| 100 | $4 800 | $660 | $4 140 |
+| 500 | $24 000 | $3 300 | $20 700 |
+| 1 000 | $48 000 | $6 600 | $41 400 |
 
-At scale, energy optimization is not a nice-to-have. It is the difference between a viable business and one that bleeds money on transaction fees.
+При масштабировании оптимизация energy — это не просто приятный бонус. Это разница между жизнеспособным бизнесом и тем, который теряет деньги на комиссиях за транзакции.
 
 ## Обзор архитектуры
 
-A TRON USDT payment processor has four core components:
+Процессор платежей TRON USDT имеет четыре основных компонента:
 
-1. **Deposit monitoring** -- Watch for incoming USDT payments to generated addresses
-2. **Payment processing** -- Validate, record, and confirm payments
-3. **Settlement/withdrawal** -- Send USDT to merchants or recipients
-4. **Energy management** -- Ensure every outbound transaction has energy
+1. **Мониторинг депозитов** — отслеживание входящих платежей USDT на созданные адреса
+2. **Обработка платежей** — валидация, запись и подтверждение платежей
+3. **Расчёты/вывод средств** — отправка USDT торговцам или получателям
+4. **Управление energy** — обеспечение energy для каждой исходящей транзакции
 
-MERX integrates at step 4, but its impact ripples through the entire architecture.
+MERX интегрируется на этапе 4, но его влияние распространяется на всю архитектуру.
 
 ```
-Customer pays USDT
+Клиент платит USDT
        |
        v
-[Deposit Monitor] -- watches blockchain
+[Мониторинг депозитов] -- отслеживает блокчейн
        |
        v
-[Payment Processor] -- validates, records
+[Процессор платежей] -- валидирует, записывает
        |
        v
-[Settlement Queue] -- batches outbound transfers
+[Очередь расчётов] -- батчит исходящие переводы
        |
        v
-[Energy Manager] -- MERX ensures energy
+[Менеджер energy] -- MERX обеспечивает energy
        |
        v
-[Transaction Sender] -- broadcasts to TRON
+[Отправитель транзакций] -- транслирует в TRON
        |
        v
-[Webhook Notifier] -- notifies merchant
+[Уведомитель вебхуков] -- уведомляет торговца
 ```
 
-## Deposit Monitoring
+## Мониторинг депозитов
 
-Each customer payment gets a unique TRON address. Your system generates these addresses, associates them with orders, and monitors them for incoming USDT transfers.
+Каждый платёж клиента получает уникальный адрес TRON. Ваша система генерирует эти адреса, связывает их с заказами и мониторит их на предмет входящих переводов USDT.
 
 ```typescript
 import TronWeb from 'tronweb';
@@ -77,15 +77,15 @@ async function checkDeposit(
 }
 ```
 
-For production systems, use TronGrid's event API or WebSocket to receive real-time notifications rather than polling.
+Для production-систем используйте event API или WebSocket TronGrid для получения уведомлений в реальном времени вместо опроса.
 
-## The Energy Management Layer
+## Слой управления energy
 
-This is where MERX transforms your cost structure. Before sending any USDT transfer, your system needs to ensure the sending address has sufficient energy.
+Здесь MERX преобразует вашу структуру затрат. Перед отправкой любого перевода USDT ваша система должна убедиться, что отправляющий адрес имеет достаточное количество energy.
 
-### Option 1: Per-Transaction Energy Purchase
+### Вариант 1: Покупка energy для каждой транзакции
 
-For lower volumes, buy energy for each outbound transfer:
+Для небольших объёмов приобретайте energy для каждого исходящего перевода:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -93,18 +93,18 @@ import { MerxClient } from 'merx-sdk';
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
 async function ensureEnergy(senderAddress: string): Promise<void> {
-  // Check current energy
+  // Проверить текущее количество energy
   const resources = await merx.checkResources(senderAddress);
 
   if (resources.energy.available < 65000) {
-    // Buy exactly what is needed at the best available price
+    // Купить ровно столько, сколько нужно, по лучшей доступной цене
     const order = await merx.createOrder({
       energy_amount: 65000,
-      duration: '5m', // Short duration for single transaction
+      duration: '5m', // Короткая длительность для одной транзакции
       target_address: senderAddress
     });
 
-    // Wait for energy delegation to complete
+    // Подождать заполнения order
     await waitForOrderFill(order.id);
   }
 }
@@ -114,10 +114,10 @@ async function sendUSDT(
   to: string,
   amount: number
 ): Promise<string> {
-  // Ensure energy before sending
+  // Обеспечить energy перед отправкой
   await ensureEnergy(from);
 
-  // Now send the USDT transfer with zero TRX burn
+  // Теперь отправить перевод USDT без сжигания TRX
   const contract = await tronWeb.contract().at(USDT_CONTRACT);
   const tx = await contract.transfer(to, amount).send({
     from: from,
@@ -128,26 +128,26 @@ async function sendUSDT(
 }
 ```
 
-### Option 2: Auto-Energy Configuration
+### Вариант 2: Конфигурация автоматической energy
 
-For higher volumes, configure auto-energy on your hot wallets. MERX automatically maintains energy levels without per-transaction intervention:
+Для больших объёмов настройте автоматическую energy на своих горячих кошельках. MERX автоматически поддерживает уровни energy без вмешательства по отдельным транзакциям:
 
 ```typescript
-// Configure once, then forget about energy management
+// Настроить один раз, затем забыть об управлении energy
 await merx.enableAutoEnergy({
   address: hotWalletAddress,
   min_energy: 65000,
-  target_energy: 200000, // Buffer for multiple transactions
+  target_energy: 200000, // Буфер для нескольких транзакций
   max_price_sun: 35,
   duration: '1h'
 });
 ```
 
-With auto-energy, MERX monitors your wallet's energy level and automatically purchases more when it drops below the minimum threshold. Your transaction-sending code does not need any energy awareness.
+С автоматической energy MERX мониторит уровень energy вашего кошелька и автоматически покупает ещё, когда он падает ниже минимального порога. Ваш код отправки транзакций не требует никакой поддержки energy.
 
-### Option 3: Batch Energy for Settlement Runs
+### Вариант 3: Массовая закупка energy для прогонов расчётов
 
-If your payment processor runs settlements in batches (e.g., every hour), you can buy energy for the entire batch at once:
+Если ваш процессор платежей выполняет расчёты пакетами (например, каждый час), вы можете купить energy для всего пакета сразу:
 
 ```typescript
 async function runSettlement(
@@ -155,16 +155,16 @@ async function runSettlement(
 ): Promise<void> {
   const totalEnergy = pendingTransfers.length * 65000;
 
-  // Buy energy for all transfers at once
+  // Купить energy для всех переводов сразу
   const order = await merx.createOrder({
     energy_amount: totalEnergy,
-    duration: '30m', // Enough time to process the batch
+    duration: '30m', // Достаточно времени для обработки пакета
     target_address: settlementWallet
   });
 
   await waitForOrderFill(order.id);
 
-  // Process all transfers with pre-purchased energy
+  // Обработать все переводы с предварительно закупленной energy
   for (const transfer of pendingTransfers) {
     await sendUSDT(
       settlementWallet,
@@ -175,23 +175,23 @@ async function runSettlement(
 }
 ```
 
-Batch purchasing is often more cost-effective because longer durations and larger amounts can unlock better rates from providers.
+Массовая закупка часто более рентабельна, потому что более длительные периоды и большие объёмы могут разблокировать лучшие ставки от провайдеров.
 
-## Webhook Integration
+## Интеграция вебхуков
 
-MERX supports webhooks for asynchronous notifications. This is essential for a payment processor where you cannot block on energy purchase completion:
+MERX поддерживает вебхуки для асинхронных уведомлений. Это необходимо для процессора платежей, где вы не можете блокировать завершение покупки energy:
 
 ```typescript
 import express from 'express';
 
 const app = express();
 
-// Webhook endpoint for MERX order notifications
+// Эндпоинт вебхука для уведомлений order MERX
 app.post('/webhooks/merx', express.json(), async (req, res) => {
   const event = req.body;
 
   if (event.type === 'order.filled') {
-    // Energy is delegated, safe to send the transaction
+    // Energy делегирована, безопасно отправлять транзакцию
     const orderId = event.data.order_id;
     const pendingTx = await getPendingTransaction(orderId);
 
@@ -206,7 +206,7 @@ app.post('/webhooks/merx', express.json(), async (req, res) => {
   }
 
   if (event.type === 'order.failed') {
-    // Handle failure - retry with different parameters
+    // Обработать ошибку — повторить попытку с другими параметрами
     await handleEnergyFailure(event.data.order_id);
   }
 
@@ -214,18 +214,18 @@ app.post('/webhooks/merx', express.json(), async (req, res) => {
 });
 ```
 
-The webhook-driven architecture decouples energy procurement from transaction sending. Your system queues outbound transfers, requests energy, and processes transactions asynchronously as energy becomes available.
+Архитектура, управляемая вебхуками, разделяет закупку energy и отправку транзакций. Ваша система ставит в очередь исходящие переводы, запрашивает energy и асинхронно обрабатывает транзакции по мере доступности energy.
 
-## Cost Optimization Strategies
+## Стратегии оптимизации стоимости
 
-### Standing Orders for Predictable Volume
+### Постоянные заказы для предсказуемого объёма
 
-If you process a predictable number of transactions daily, use standing orders to buy energy at optimal prices:
+Если вы обрабатываете предсказуемое количество транзакций ежедневно, используйте постоянные заказы для покупки energy по оптимальным ценам:
 
 ```typescript
-// Automatically buy energy when price drops below target
+// Автоматически покупать energy, когда цена падает ниже целевой
 const standing = await merx.createStandingOrder({
-  energy_amount: 650000, // Enough for ~10 transactions
+  energy_amount: 650000, // Достаточно для ~10 транзакций
   max_price_sun: 25,
   duration: '1h',
   repeat: true,
@@ -233,11 +233,11 @@ const standing = await merx.createStandingOrder({
 });
 ```
 
-Standing orders capture price dips that occur during low-demand periods, reducing your average energy cost.
+Постоянные заказы захватывают ценовые спады, которые происходят в периоды низкого спроса, снижая вашу среднюю стоимость energy.
 
-### Exact Energy Estimation
+### Точная оценка энергии
 
-MERX can simulate your specific USDT transfer to determine exact energy consumption:
+MERX может смоделировать ваш конкретный перевод USDT, чтобы определить точное потребление energy:
 
 ```typescript
 const estimate = await merx.estimateEnergy({
@@ -247,30 +247,30 @@ const estimate = await merx.estimateEnergy({
   owner_address: senderAddress
 });
 
-console.log(`Exact energy: ${estimate.energy_required}`);
-// Might be 64,285 instead of the assumed 65,000
+console.log(`Точное потребление energy: ${estimate.energy_required}`);
+// Может быть 64 285 вместо предполагаемых 65 000
 ```
 
-Over thousands of transactions, buying 64,285 instead of 65,000 energy per transfer saves roughly 1% on energy costs. Small margins compound at scale.
+Над тысячами транзакций покупка 64 285 вместо 65 000 energy за перевод сэкономит примерно 1% на затратах energy. Небольшие маржи накапливаются при масштабировании.
 
-### Duration Optimization
+### Оптимизация длительности
 
-Shorter durations cost less per unit of energy. If you can process a transaction within 5 minutes of receiving energy, use the 5-minute duration:
+Более короткие длительности стоят дешевле за единицу energy. Если вы можете обработать транзакцию в течение 5 минут после получения energy, используйте 5-минутную длительность:
 
 ```typescript
-// 5-minute duration is cheapest
+// 5-минутная длительность — самая дешёвая
 const order = await merx.createOrder({
   energy_amount: 65000,
-  duration: '5m', // Cheapest duration tier
+  duration: '5m', // Самый дешёвый уровень длительности
   target_address: senderAddress
 });
 ```
 
-For batch settlements where you need energy for 30 minutes of processing, the 30-minute or 1-hour duration provides better value than buying 5-minute slots repeatedly.
+Для массовых расчётов, где вам нужна energy в течение 30 минут обработки, 30-минутная или 1-часовая длительность предоставляет лучшую стоимость, чем повторная покупка 5-минутных слотов.
 
-## Обработка ошибок and Resilience
+## Обработка ошибок и отказоустойчивость
 
-A production payment processor needs robust error handling around energy procurement:
+Production-процессор платежей требует надёжной обработки ошибок при закупке energy:
 
 ```typescript
 async function ensureEnergyWithRetry(
@@ -286,30 +286,30 @@ async function ensureEnergyWithRetry(
       });
 
       await waitForOrderFill(order.id, { timeout: 30000 });
-      return; // Energy secured
+      return; // Energy получена
 
     } catch (error) {
       if (attempt === maxRetries) {
-        // All retries exhausted -- fall back to TRX burn
-        // or queue the transaction for later
+        // Все повторы исчерпаны -- вернуться к сжиганию TRX
+        // или поставить транзакцию в очередь для позднейшей обработки
         await queueForLaterProcessing(address);
         return;
       }
-      // Wait briefly before retrying
+      // Подождать немного перед повторной попыткой
       await delay(2000 * attempt);
     }
   }
 }
 ```
 
-The fallback to TRX burn is important. Energy optimization should never block critical payments. If energy is temporarily unavailable, paying the higher TRX fee is better than failing to process the payment entirely.
+Возврат к сжиганию TRX важен. Оптимизация energy никогда не должна блокировать критические платежи. Если energy временно недоступна, оплата более высокой комиссии TRX лучше, чем невозможность обработать платёж.
 
-## Monitoring and Observability
+## Мониторинг и наблюдаемость
 
-Track key metrics to optimize your energy spending:
+Отслеживайте ключевые метрики для оптимизации затрат на energy:
 
 ```typescript
-// Track energy costs per transaction
+// Отслеживать затраты energy за транзакцию
 interface EnergyMetrics {
   orderId: string;
   provider: string;
@@ -320,7 +320,7 @@ interface EnergyMetrics {
 }
 
 async function trackEnergyCost(order: Order): Promise<void> {
-  const burnCost = 13.4; // TRX cost without energy
+  const burnCost = 13.4; // Стоимость TRX без energy
   const energyCost = (order.price_sun * order.energy_amount) / 1e6;
   const saved = burnCost - energyCost;
 
@@ -335,30 +335,31 @@ async function trackEnergyCost(order: Order): Promise<void> {
 }
 ```
 
-Monitor your average energy cost per transaction, identify which providers fill your orders most often, and track savings versus TRX burn over time.
+Мониторьте среднюю стоимость energy за транзакцию, определяйте, какие провайдеры чаще всего заполняют ваши заказы, и отслеживайте экономию в сравнении с сжиганием TRX во времени.
 
-## Вопросы безопасности
+## Соображения безопасности
 
-Payment processors handle real money. Energy management introduces additional security surface area:
+Процессоры платежей работают с реальными деньгами. Управление energy вводит дополнительную поверхность безопасности:
 
-- **API keys**: Store MERX API keys in environment variables or a secrets manager, never in code
-- **Webhook verification**: Validate webhook signatures to ensure notifications come from MERX
-- **Balance limits**: Set deposit limits on your MERX account to contain exposure
-- **Separate wallets**: Use dedicated hot wallets for energy-related operations, separate from your main treasury
+- **API ключи**: Сохраняйте API ключи MERX в переменных окружения или менеджере секретов, никогда не в коде
+- **Верификация вебхуков**: Проверяйте подписи вебхуков, чтобы гарантировать, что уведомления поступают от MERX
+- **Пределы баланса**: Установите пределы депозитов на вашем аккаунте MERX для ограничения риска
+- **Отдельные кошельки**: Используйте выделенные горячие кошельки для операций, связанных с energy, отдельно от вашей основной казны
 
 ## Заключение
 
-Building a USDT payment processor on TRON without energy management is like running a delivery service without fuel optimization -- technically possible but economically unsound. At any meaningful transaction volume, the cost difference between burning TRX and purchasing energy through an aggregator represents the largest single optimization available.
+Создание процессора платежей USDT на TRON без управления energy подобно запуску служба доставки без оптимизации расхода топлива — технически возможно, но экономически нецелесообразно. При любом значительном объёме транзакций разница в стоимости между сжиганием TRX и покупкой energy через агрегатор представляет самую крупную доступную оптимизацию.
 
-MERX fits into the payment processor architecture as a drop-in energy management layer. Whether you purchase per-transaction, configure auto-energy, or batch-buy for settlement runs, the integration is straightforward and the savings are immediate.
+MERX встраивается в архитектуру процессора платежей как встраиваемый слой управления energy. Независимо от того, покупаете ли вы энергию за транзакцию, настраиваете автоматическую energy или покупаете пакетом для прогонов расчётов, интеграция проста и сбережения немедленны.
 
-For a payment processor handling 500 daily transactions, the difference between TRX burn and optimized energy purchasing is over $20,000 per month. That number alone justifies the integration effort, which typically takes a single developer less than two days.
+Для процессора платежей, обрабатывающего 500 ежедневных транзакций, разница между сжиганием TRX и оптимизированной закупкой energy составляет более $20 000 в месяц. Одного этого числа достаточно, чтобы оправдать усилия интеграции, которые обычно занимают одного разработчика менее двух дней.
 
-Start building at [https://merx.exchange/docs](https://merx.exchange/docs) or explore the platform at [https://merx.exchange](https://merx.exchange).
+Начните разработку на [https://merx.exchange/docs](https://merx.exchange/docs) или исследуйте платформу на [https://merx.exchange](https://merx.exchange).
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте сейчас с ИИ
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — без установки, API ключ не требуется для инструментов только для чтения:
 
 ```json
 {
@@ -370,6 +371,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите вашего ИИ-помощника: "Какая сейчас самая дешёвая TRON energy?" и получите актуальные цены от всех подключённых провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

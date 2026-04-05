@@ -1,61 +1,61 @@
-# De la idea a produccion: construyendo MERX en 30 dias
+# De la Idea a Producción: Construyendo MERX en 30 Días
 
-MERX went from concept to live production system in 30 days. Not a landing page. Not a prototype. A fully operational blockchain resource exchange with seven provider integrations, tiempo real price aggregation, en cadena ejecucion de ordenes, partida doble accounting, comprehensive documentation, SDKs in two languages, and an MCP server with 55 tools for AI agent integration.
+MERX pasó de concepto a sistema de producción en vivo en 30 días. No una página de destino. No un prototipo. Un intercambio de recursos blockchain completamente operativo con siete integraciones de proveedores, agregación de precios en tiempo real, ejecución de órdenes en cadena, contabilidad de doble entrada, documentación completa, SDKs en dos idiomas y un servidor MCP con 55 herramientas para integración de agentes de IA.
 
-This article is the technical story of how it happened - the architecture decisions, the problems we solved, the shortcuts we deliberately did not take, and the lessons from building a financial platform at speed without compromising on the things that matter.
-
----
-
-## Day 0: The Problem Statement
-
-The TRON mercado de energia is fragmented. Seven or more providers offer delegacion de energia services, each with their own API, pricing, and reliability characteristics. If you want el mejor precio, you need to integrate with all of them. If you want respaldo, you need to build routing logic. If you want transparency, you need to build monitoring.
-
-Every business sending USDT on TRON faces this integration tax. The solution is an aggregation layer - a una sola API that handles multi-provider routing, best-price selection, and respaldo automatico.
-
-No one had built it yet. We decided to.
+Este artículo es la historia técnica de cómo sucedió - las decisiones de arquitectura, los problemas que resolvimos, los atajos que deliberadamente no tomamos, y las lecciones de construir una plataforma financiera a velocidad sin comprometer las cosas que importan.
 
 ---
 
-## Week 1: Foundation
+## Día 0: La Declaración del Problema
 
-### Architecture First
+El mercado de energía TRON está fragmentado. Siete o más proveedores ofrecen servicios de delegación de energía, cada uno con su propia API, precios y características de confiabilidad. Si quieres el mejor precio, necesitas integrarte con todos ellos. Si quieres redundancia, necesitas construir lógica de enrutamiento. Si quieres transparencia, necesitas construir monitoreo.
 
-Before writing a single line of code, we spent two days on architecture. The result was a 40-section architecture document covering everything from database schema to API formato de errors to color hex codes. This document became the single fuente de verdad for every implementation decision.
+Cada negocio que envía USDT en TRON enfrenta este costo de integración. La solución es una capa de agregación - una única API que maneje enrutamiento multi-proveedor, selección del mejor precio y conmutación automática por error.
 
-Key architecture decisions made in those two days:
+Nadie lo había construido todavía. Decidimos hacerlo.
 
-**Decision 1: Microservices from day one.**
+---
 
-Not because microservices are trendy, but because financial systems need isolation. The treasury signer must not be accessible from the API service. The monitor de precios must not have write access to user balances. Docker containers provide this isolation naturally.
+## Semana 1: Fundación
+
+### Arquitectura Primero
+
+Antes de escribir una sola línea de código, pasamos dos días en arquitectura. El resultado fue un documento de arquitectura de 40 secciones cubriendo todo desde el esquema de base de datos hasta formatos de errores de API hasta códigos hexadecimales de colores. Este documento se convirtió en la única fuente de verdad para cada decisión de implementación.
+
+Decisiones de arquitectura clave tomadas en esos dos días:
+
+**Decisión 1: Microservicios desde el primer día.**
+
+No porque los microservicios sean tendencia, sino porque los sistemas financieros necesitan aislamiento. El firmante del tesoro no debe ser accesible desde el servicio de API. El monitor de precios no debe tener acceso de escritura a los saldos de usuario. Los contenedores Docker proporcionan este aislamiento naturalmente.
 
 ```
 services/
   api/              HTTP/WebSocket API
-  price-monitor/    Provider price polling
-  order-executor/   Order routing and execution
-  ledger/           Double-entry accounting
-  deposit-monitor/  Incoming payment detection
-  treasury-signer/  Transaction signing (isolated)
+  price-monitor/    Polling de precios de proveedores
+  order-executor/   Enrutamiento y ejecución de órdenes
+  ledger/           Contabilidad de doble entrada
+  deposit-monitor/  Detección de pagos entrantes
+  treasury-signer/  Firma de transacciones (aislado)
 ```
 
-**Decision 2: PostgreSQL + Redis, no exotic databases.**
+**Decisión 2: PostgreSQL + Redis, sin bases de datos exóticas.**
 
-PostgreSQL for everything that needs ACID guarantees (balances, orders, entradas del libro mayor). Redis for everything that needs speed (price cache, pub/sub, limite de velocidading). Both are battle-tested, well-documented, and operationally simple.
+PostgreSQL para todo lo que necesita garantías ACID (saldos, órdenes, entradas de libro mayor). Redis para todo lo que necesita velocidad (caché de precios, pub/sub, limitación de velocidad). Ambas están probadas en batalla, bien documentadas y operacionalmente simples.
 
-**Decision 3: All amounts in SUN.**
+**Decisión 3: Todos los montos en SUN.**
 
-Every financial value stored as an integer in SUN (1 TRX = 1,000,000 SUN). No floating-point anywhere in the financial path. This eliminated an entire category of bugs before we wrote our first function.
+Cada valor financiero almacenado como un entero en SUN (1 TRX = 1.000.000 SUN). Sin punto flotante en ningún lugar de la ruta financiera. Esto eliminó una categoría completa de errores antes de escribir nuestra primera función.
 
-**Decision 4: Node.js + TypeScript for services, Go for the matching engine.**
+**Decisión 4: Node.js + TypeScript para servicios, Go para el motor de coincidencia.**
 
-TypeScript for the bulk of the system - fast development, strong typing, excellent async I/O for API and monitoring workloads. Go reserved for the matching engine where raw performance matters.
+TypeScript para la mayor parte del sistema - desarrollo rápido, tipado fuerte, excelente I/O asincrónico para API y cargas de trabajo de monitoreo. Go reservado para el motor de coincidencia donde el rendimiento bruto importa.
 
-### Database Schema
+### Esquema de Base de Datos
 
-The database migrations were written on day 3. Every table was designed with financial integrity in mind:
+Las migraciones de base de datos se escribieron el día 3. Cada tabla fue diseñada teniendo en mente la integridad financiera:
 
 ```sql
--- Core principle: every balance mutation creates a ledger entry
+-- Principio central: cada mutación de saldo crea una entrada de libro mayor
 CREATE TABLE ledger (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id),
@@ -69,14 +69,14 @@ CREATE TABLE ledger (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- No UPDATE or DELETE triggers - ledger is append-only
+-- Sin triggers UPDATE o DELETE - libro mayor es solo anexo
 ```
 
-One file per migration, named `YYYYMMDD_description.sql`. By the end of the 30 days, there were 14 migration files, each one additive, none destructive.
+Un archivo por migración, nombrado `YYYYMMDD_descripcion.sql`. Al final de los 30 días, había 14 archivos de migración, cada uno aditivo, ninguno destructivo.
 
-### Provider Interface
+### Interfaz de Proveedor
 
-The `IEnergyProvider` interface was defined on day 4. This was the contract every provider adapter would implement:
+La interfaz `IEnergyProvider` fue definida el día 4. Este era el contrato que cada adaptador de proveedor implementaría:
 
 ```typescript
 interface IEnergyProvider {
@@ -88,80 +88,80 @@ interface IEnergyProvider {
 }
 ```
 
-This interface never changed. Seven providers were integrated against it over the following weeks, each in its own file, none requiring changes to the core system.
+Esta interfaz nunca cambió. Siete proveedores fueron integrados contra ella en las siguientes semanas, cada uno en su propio archivo, ninguno requiriendo cambios al sistema central.
 
 ---
 
-## Week 2: Core Services
+## Semana 2: Servicios Centrales
 
-### Price Monitor
+### Monitor de Precios
 
-The monitor de precios was the first service to go live. It polls every provider every 30 seconds, normalizes prices, publishes to Redis, and stores history in PostgreSQL. The implementation is roughly 180 lines of TypeScript across three files.
+El monitor de precios fue el primer servicio en estar en vivo. Realiza polling de cada proveedor cada 30 segundos, normaliza precios, publica a Redis y almacena historial en PostgreSQL. La implementación es aproximadamente 180 líneas de TypeScript en tres archivos.
 
-The hardest part was not the polling logic - it was the normalization. Each provider returns prices in slightly different formats:
+La parte más difícil no fue la lógica de polling - fue la normalización. Cada proveedor devuelve precios en formatos ligeramente diferentes:
 
-- Provider A: SUN per unidad de energia
-- Provider B: total TRX for a fixed cantidad de energia
-- Provider C: SUN per unidad de energia, but with a different minimum order
-- Provider D: tiered pricing based on volume
+- Proveedor A: SUN por unidad de energía
+- Proveedor B: TRX total para una cantidad de energía fija
+- Proveedor C: SUN por unidad de energía, pero con un orden mínimo diferente
+- Proveedor D: precios escalonados basados en volumen
 
-Each adapter translates its provider's format into the standard `ProviderPriceResponse`. The monitor de precios does not care about provider quirks; it only sees normalized data.
+Cada adaptador traduce el formato de su proveedor a la respuesta estándar `ProviderPriceResponse`. El monitor de precios no se preocupa por los peculiaridades del proveedor; solo ve datos normalizados.
 
-### Order Executor
+### Ejecutor de Órdenes
 
-The ejecutor de ordenes is the most complex service. It reads prices from Redis, determines optimal routing, submits orders to providers, monitors for en cadena confirmation, and publishes settlement events.
+El ejecutor de órdenes es el servicio más complejo. Lee precios de Redis, determina enrutamiento óptimo, envía órdenes a proveedores, monitorea confirmación en cadena y publica eventos de liquidación.
 
-The cadena de respaldo was the critical design element. If Provider A fails, try Provider B. If B fails, try C. The buyer's API call succeeds as long as any provider is operational.
+La cadena de conmutación por error fue el elemento de diseño crítico. Si el Proveedor A falla, intenta con el Proveedor B. Si B falla, intenta con C. La llamada de API del comprador tiene éxito mientras cualquier proveedor sea operativo.
 
 ```
-Order received -> Read prices -> Select cheapest
-  -> Execute at Provider A
-    -> Success? Verify on-chain -> Settle
-    -> Failure? Try Provider B
-      -> Success? Verify on-chain -> Settle
-      -> Failure? Try Provider C
-        -> ... and so on
+Orden recibida -> Leer precios -> Seleccionar más barato
+  -> Ejecutar en Proveedor A
+    -> ¿Éxito? Verificar en cadena -> Liquidar
+    -> ¿Error? Intentar Proveedor B
+      -> ¿Éxito? Verificar en cadena -> Liquidar
+      -> ¿Error? Intentar Proveedor C
+        -> ... y así sucesivamente
 ```
 
-### Ledger Service
+### Servicio de Libro Mayor
 
-The ledger service enforces the partida doble constraint. Every mutacion de saldo creates paired entries. The service runs a reconciliation check every hour:
+El servicio de libro mayor refuerza la restricción de doble entrada. Cada mutación de saldo crea entradas pareadas. El servicio ejecuta una verificación de reconciliación cada hora:
 
 ```sql
 SELECT SUM(CASE direction
   WHEN 'DEBIT' THEN amount_sun
   WHEN 'CREDIT' THEN -amount_sun
 END) FROM ledger;
--- Must be 0. If not: alert immediately.
+-- Debe ser 0. Si no: alertar inmediatamente.
 ```
 
-In 30 days of development and testing, this check never fired. The constraint was never violated because the architecture made violations structurally impossible, not just unlikely.
+En 30 días de desarrollo y pruebas, esta verificación nunca se activó. La restricción nunca fue violada porque la arquitectura hizo las violaciones estructuralmente imposibles, no solo improbables.
 
 ---
 
-## Week 3: API, Frontend, and On-Chain Verification
+## Semana 3: API, Frontend y Verificación En Cadena
 
-### API Design
+### Diseño de API
 
-The API follows REST conventions with strict versioning (`/api/v1/...`). Every endpoint was designed before implementation:
+La API sigue convenciones REST con versionado estricto (`/api/v1/...`). Cada endpoint fue diseñado antes de la implementación:
 
 ```
-GET    /api/v1/prices          Current prices from all providers
-GET    /api/v1/prices/best     Best current price
-POST   /api/v1/orders          Create a new order
-GET    /api/v1/orders/:id      Get order status
-GET    /api/v1/balance         Get account balance
-POST   /api/v1/deposit         Get deposit address
-POST   /api/v1/withdraw        Request withdrawal
+GET    /api/v1/prices          Precios actuales de todos los proveedores
+GET    /api/v1/prices/best     Mejor precio actual
+POST   /api/v1/orders          Crear una nueva orden
+GET    /api/v1/orders/:id      Obtener estado de orden
+GET    /api/v1/balance         Obtener saldo de cuenta
+POST   /api/v1/deposit         Obtener dirección de depósito
+POST   /api/v1/withdraw        Solicitar retiro
 ```
 
-Error responses use a consistent format:
+Las respuestas de error usan un formato consistente:
 
 ```json
 {
   "error": {
     "code": "INSUFFICIENT_BALANCE",
-    "message": "Account balance (5.2 TRX) is insufficient for this order (8.1 TRX)",
+    "message": "El saldo de la cuenta (5.2 TRX) es insuficiente para esta orden (8.1 TRX)",
     "details": {
       "balance": 5200000,
       "required": 8100000
@@ -170,25 +170,25 @@ Error responses use a consistent format:
 }
 ```
 
-No endpoint was published without Zod validation on all inputs.
+Ningún endpoint fue publicado sin validación Zod en todas las entradas.
 
 ### Frontend
 
-The frontend is a Next.js application with a strict design system: dark theme only, no rounded corners over 2px, no gradients, no shadows, Cormorant Garamond for headings, IBM Plex Mono for everything else. The visual identity was defined in the architecture document and implemented faithfully.
+El frontend es una aplicación Next.js con un sistema de diseño estricto: solo tema oscuro, sin esquinas redondeadas superiores a 2px, sin gradientes, sin sombras, Cormorant Garamond para encabezados, IBM Plex Mono para todo lo demás. La identidad visual fue definida en el documento de arquitectura e implementada fielmente.
 
-### On-Chain Verification
+### Verificación En Cadena
 
-Every order is verified on the TRON blockchain. The verification service watches for delegation transactions and confirms that energy arrived at the target address. This was the most challenging integration because blockchain confirmation times are variable and provider transaction formats differ.
+Cada orden es verificada en la blockchain TRON. El servicio de verificación observa transacciones de delegación y confirma que la energía llegó a la dirección objetivo. Esta fue la integración más desafiante porque los tiempos de confirmación de blockchain son variables y los formatos de transacción del proveedor difieren.
 
-Eight mainnet transactions were verified during the testing phase, confirming that the end-to-end flow - from API call to en cadena delegation - worked correctly with real TRX and real providers.
+Ocho transacciones de mainnet fueron verificadas durante la fase de pruebas, confirmando que el flujo de extremo a extremo - desde la llamada de API hasta la delegación en cadena - funcionó correctamente con TRX real y proveedores reales.
 
 ---
 
-## Week 4: SDKs, MCP Server, and Documentation
+## Semana 4: SDKs, Servidor MCP y Documentación
 
-### JavaScript SDK
+### SDK de JavaScript
 
-The JavaScript SDK was built for Node.js and browser environments:
+El SDK de JavaScript fue construido para entornos Node.js y navegador:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -204,9 +204,9 @@ const order = await client.createOrder({
 
 Fuente: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 
-### Python SDK
+### SDK de Python
 
-The Python SDK mirrors the JavaScript SDK's API surface:
+El SDK de Python refleja la superficie de API del SDK de JavaScript:
 
 ```python
 from merx import MerxClient
@@ -222,115 +222,116 @@ order = client.create_order(
 
 Fuente: [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
 
-### Servidor MCP: 52 Tools
+### Servidor MCP: 55 Herramientas
 
-The MCP (Model Context Protocol) server was perhaps the most forward-looking component. It exposes MERX functionality as tools that AI agents can use directly.
+El servidor MCP (Protocolo de Contexto de Modelo) fue quizás el componente más visionario. Expone funcionalidad de MERX como herramientas que los agentes de IA pueden usar directamente.
 
-The MCP server grew from 7 tools in its initial version to 55 tools by the end of the 30 days:
+El servidor MCP creció de 7 herramientas en su versión inicial a 55 herramientas al final de los 30 días:
 
 ```
-Account management:    create_account, login, get_balance, get_deposit_info
-Price data:            get_prices, get_best_price, compare_providers, analyze_prices
-Order management:      create_order, get_order, list_orders, create_standing_order
-Resource monitoring:   check_address_resources, estimate_transaction_cost
-TRON utilities:        validate_address, convert_address, get_trx_balance
-On-chain operations:   transfer_trx, transfer_trc20, approve_trc20
-Analytics:             calculate_savings, get_price_history, suggest_duration
-... and 30 more
+Gestión de cuenta:        create_account, login, get_balance, get_deposit_info
+Datos de precios:         get_prices, get_best_price, compare_providers, analyze_prices
+Gestión de órdenes:       create_order, get_order, list_orders, create_standing_order
+Monitoreo de recursos:    check_address_resources, estimate_transaction_cost
+Utilidades TRON:          validate_address, convert_address, get_trx_balance
+Operaciones en cadena:    transfer_trx, transfer_trc20, approve_trc20
+Análisis:                 calculate_savings, get_price_history, suggest_duration
+... y 30 más
 ```
 
 Fuente: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-### Documentation
+### Documentación
 
-Documentation was rebuilt from 5 pages to 36 pages, covering the complete API reference, SDK guides, TRON concepts, and integration tutorials. The documentation lives at [https://merx.exchange/docs](https://merx.exchange/docs).
+La documentación fue reconstruida de 5 páginas a 36 páginas, cubriendo la referencia completa de API, guías de SDK, conceptos de TRON y tutoriales de integración. La documentación se encuentra en [https://merx.exchange/docs](https://merx.exchange/docs).
 
-Additionally, 4 SEO guide pages and 7 provider comparison pages were published, bringing the sitemap to 53 URLs.
-
----
-
-## What We Did Not Compromise On
-
-Speed creates pressure to cut corners. Aqui estan the corners we explicitly did not cut:
-
-### No Floating-Point for Money
-
-Using integers (SUN) for all financial values added complexity in display formatting but eliminated rounding errors entirely. Every test case matched expected values exactly.
-
-### No String Concatenation for SQL
-
-Every database query uses parameterized statements. This was a non-negotiable rule from day one. SQL injection is a solved problem, and we kept it solved.
-
-### No Hardcoded Secrets
-
-Environment variables from day one. Docker secrets for the treasury key. `.gitignore` set up before the first commit.
-
-### No Services Sharing State Directly
-
-Services communicate via Redis pub/sub or REST API calls. No direct imports between services. This made independent deployment possible and prevented cascade failures.
-
-### No Ledger Mutations
-
-Append-only ledger from the first migration. No UPDATE or DELETE on ledger tables. Corrections create new entries, not modifications.
+Además, 4 páginas de guías SEO y 7 páginas de comparación de proveedores fueron publicadas, llevando el mapa del sitio a 53 URLs.
 
 ---
 
-## What We Learned
+## Lo Que No Comprometimos
 
-### Lesson 1: Architecture Documents Pay for Themselves
+La velocidad crea presión para cortar esquinas. Aquí hay esquinas que explícitamente no cortamos:
 
-The two days spent on architecture saved weeks of rework. Every developer question was answered by the document. Every design disagreement was resolved by referencing the spec. The 40 sections were not bureaucratic overhead; they were a forcing function for thinking through problems before they became bugs.
+### Sin Punto Flotante para Dinero
 
-### Lesson 2: Provider APIs Are Unreliable
+Usar enteros (SUN) para todos los valores financieros añadió complejidad en formateo de pantalla pero eliminó errores de redondeo por completo. Cada caso de prueba coincidió con valores esperados exactamente.
 
-Of the seven providers integrated, at least two experienced downtime during the 30-day build period. The cadena de respaldo was not a theoretical nicety - it was exercised within the first week of testing.
+### Sin Concatenación de Strings para SQL
 
-### Lesson 3: The Adapter Pattern Is Worth the Boilerplate
+Cada consulta de base de datos usa sentencias parametrizadas. Esta fue una regla innegociable desde el primer día. La inyección de SQL es un problema resuelto, y lo mantuvimos resuelto.
 
-Writing seven adapters that all implement the same interface felt repetitive. But when Provider C changed their API response format on day 22, we updated one file and nothing else changed. The 10 minutes spent updating the adapter versus the days we would have spent updating every call site made the pattern's value obvious.
+### Sin Secretos Codificados
 
-### Lesson 4: MCP Is the Future of Service Integration
+Variables de entorno desde el primer día. Secretos de Docker para la clave del tesoro. `.gitignore` configurado antes del primer commit.
 
-The MCP server was initially an experiment. But watching AI agents use MERX tools to autonomously manage adquisicion de energia was a revelation. This is how services will be consumed in the future - not through human developers writing integration code, but through AI agents calling tool APIs directly.
+### Sin Servicios Compartiendo Estado Directamente
 
-### Lesson 5: 200-Line File Limit Is a Feature
+Los servicios se comunican a través de Redis pub/sub o llamadas de API REST. Sin importaciones directas entre servicios. Esto hizo posible la implementación independiente y previno fallos en cascada.
 
-We enforced a strict 200-line-per-file limit throughout the project. This forced constant decomposition. Functions stayed small. Responsibilities stayed clear. When a file approached 200 lines, it was time to split, and the split always improved clarity.
+### Sin Mutaciones de Libro Mayor
+
+Libro mayor solo de anexo desde la primera migración. Sin UPDATE o DELETE en tablas de libro mayor. Las correcciones crean nuevas entradas, no modificaciones.
 
 ---
 
-## By the Numbers
+## Lo Que Aprendimos
+
+### Lección 1: Los Documentos de Arquitectura Se Pagan Solos
+
+Los dos días dedicados a la arquitectura ahorraron semanas de refabricación. Cada pregunta de desarrollador fue respondida por el documento. Cada desacuerdo de diseño fue resuelto haciendo referencia a la especificación. Las 40 secciones no eran gastos generales burocráticos; eran una función forzada para pensar en problemas antes de que se convirtieran en errores.
+
+### Lección 2: Las APIs de Proveedores Son Poco Confiables
+
+De los siete proveedores integrados, al menos dos experimentaron tiempo de inactividad durante el período de construcción de 30 días. La cadena de conmutación por error no era una delicadeza teórica - fue utilizada dentro de la primera semana de pruebas.
+
+### Lección 3: El Patrón Adaptador Vale la Pena el Código Repetitivo
+
+Escribir siete adaptadores que todos implementen la misma interfaz se sintió repetitivo. Pero cuando el Proveedor C cambió su formato de respuesta de API el día 22, actualizamos un archivo y nada más cambió. Los 10 minutos dedicados a actualizar el adaptador versus los días que habríamos dedicado a actualizar cada sitio de llamada hicieron que el valor del patrón fuera obvio.
+
+### Lección 4: MCP Es el Futuro de la Integración de Servicios
+
+El servidor MCP fue inicialmente un experimento. Pero ver agentes de IA usar herramientas de MERX para gestionar autónomamente la adquisición de energía fue una revelación. Así es como los servicios serán consumidos en el futuro - no a través de desarrolladores humanos escribiendo código de integración, sino a través de agentes de IA llamando APIs de herramientas directamente.
+
+### Lección 5: Límite de 200 Líneas por Archivo Es una Característica
+
+Aplicamos un límite estricto de 200 líneas por archivo en todo el proyecto. Esto forzó descomposición constante. Las funciones se mantuvieron pequeñas. Las responsabilidades se mantuvieron claras. Cuando un archivo se acercaba a 200 líneas, era hora de dividir, y la división siempre mejoraba la claridad.
+
+---
+
+## Por los Números
 
 ```
-Architecture document:     40 sections
-Services:                  9 Docker containers
-Provider integrations:     7
-Database migrations:       14
-API endpoints:             20+
-MCP tools:                 52 (from initial 7)
-SDK languages:             2 (JavaScript, Python)
-Documentation pages:       36 (from initial 5)
-Sitemap URLs:              53
-Mainnet transactions:      8 verified
-Commission rate:           0%
-Days to production:        30
+Documento de arquitectura:    40 secciones
+Servicios:                    9 contenedores Docker
+Integraciones de proveedores: 7
+Migraciones de base de datos: 14
+Endpoints de API:             20+
+Herramientas MCP:             55 (desde 7 iniciales)
+Idiomas del SDK:              2 (JavaScript, Python)
+Páginas de documentación:     36 (desde 5 iniciales)
+URLs del mapa del sitio:      53
+Transacciones en mainnet:     8 verificadas
+Tasa de comisión:             0%
+Días a producción:            30
 ```
 
 ---
 
-## What Comes Next
+## Lo Que Viene Después
 
-The platform is live at [https://merx.exchange](https://merx.exchange). The immediate focus is testing, optimization, and onboarding the first production users. The foundation is solid - the architecture supports horizontal scaling, new providers can be added in hours, and the cero comision model removes adoption friction.
+La plataforma está en vivo en [https://merx.exchange](https://merx.exchange). El enfoque inmediato es pruebas, optimización e incorporación de los primeros usuarios de producción. La fundación es sólida - la arquitectura soporta escalado horizontal, nuevos proveedores pueden ser añadidos en horas, y el modelo de comisión cero elimina fricción de adopción.
 
-The energy aggregation market on TRON is waiting for a platform that makes it simple. MERX is that platform.
+El mercado de agregación de energía en TRON está esperando una plataforma que lo haga simple. MERX es esa plataforma.
 
 ---
 
-*MERX es el primer exchange de recursos blockchain. Explore la plataforma en [https://merx.exchange](https://merx.exchange). Documentacion en [https://merx.exchange/docs](https://merx.exchange/docs). SDKs de codigo abierto y servidor MCP en GitHub.*
+*MERX es el primer intercambio de recursos blockchain. Explora la plataforma en [https://merx.exchange](https://merx.exchange). Documentación en [https://merx.exchange/docs](https://merx.exchange/docs). SDKs de código abierto y servidor MCP en GitHub.*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -342,6 +343,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

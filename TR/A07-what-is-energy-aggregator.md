@@ -1,179 +1,179 @@
-# TRON Energy Agregatoru Nedir ve Neden Onemlidir
+# TRON Energy Agregatörü Nedir ve Neden Önemlidir
 
-If you have ever traded tokens on a decentralized exchange, you have probably used an aggregator without realizing it. 1inch, for example, does not hold liquidity itself. It scans dozens of DEXs -- Uniswap, SushiSwap, Curve, Balancer -- finds the best price for your swap, and routes your order accordingly. You get a better price than you would on any single DEX, and you do not have to check each one manually.
+Eğer hiç merkezi olmayan bir borsada token ticareti yaptıysanız, muhtemelen bunu fark etmeden bir agregatör kullanmışsınızdır. Örneğin 1inch, kendisi likidite tutmaz. Düzinelerce DEX'i tarar -- Uniswap, SushiSwap, Curve, Balancer -- sizin takas için en iyi fiyatı bulur ve siparişinizi buna göre yönlendirir. Herhangi bir tek DEX'ten daha iyi bir fiyat alırsınız ve her birini manuel olarak kontrol etmeniz gerekmez.
 
-MERX does the same thing for TRON energy.
+MERX de TRON energy için aynı şeyi yapar.
 
-The TRON energy market has grown into a fragmented ecosystem of independent providers, each with their own APIs, pricing models, and availability windows. An energy aggregator sits above these providers, queries them all in real time, and routes your purchase to whichever source offers the best deal at that moment. This article explains what aggregation means in the context of TRON energy, why it matters, and how MERX implements it.
+TRON energy piyasası, kendi API'leri, fiyatlandırma modelleri ve kullanılabilirlik pencereleri olan bağımsız sağlayıcıların parçalanmış bir ekosistemine dönüşmüştür. Bir energy agregatörü bu sağlayıcıların üzerinde yer alır, tümünü gerçek zamanlı olarak sorgular ve satın almanızı o anki en iyi teklifi sunan kaynağa yönlendirir. Bu makale TRON energy bağlamında agregatörün ne anlama geldiğini, neden önemli olduğunu ve MERX'in bunu nasıl uyguladığını açıklar.
 
-## The Problem: Seven Providers, Seven Prices
+## Sorun: Yedi Sağlayıcı, Yedi Fiyat
 
-The TRON network charges energy for every smart contract interaction. A USDT transfer costs roughly 65,000 energy. A DEX swap can exceed 300,000. Without energy, you pay in TRX -- and at current rates, that means burning 13-27 TRX per USDT transfer instead of spending 1-2 TRX through an energy rental.
+TRON ağı, her akıllı kontrat etkileşimi için energy ücretlendirir. Bir USDT transferi yaklaşık 65.000 energy maliyeti. Bir DEX takas 300.000'i aşabilir. Energy olmadan TRX olarak ödersiniz -- ve mevcut oranlarında, bu her bir USDT transferi için 13-27 TRX yakmanız anlamına gelir; bunun yerine energy kiralama yoluyla 1-2 TRX harcayabilirsiniz.
 
-The energy rental market has responded to this demand. As of early 2026, at least seven major providers offer energy delegation services:
+Energy kiralama piyasası bu talebe yanıt vermiştir. 2026 başı itibariyle, en az yedi büyük sağlayıcı energy delegasyon hizmetleri sunmaktadır:
 
-- **TronSave** -- peer-to-peer energy marketplace
-- **Feee** -- competitive pricing with API access
-- **itrx** -- bulk energy focus
-- **CatFee** -- mid-market positioning
-- **Netts** -- aggressive pricing from a newer entrant
-- **SoHu** -- Chinese market focus
-- **PowerSun** -- direct staking and delegation
+- **TronSave** -- eşler arası energy pazarı
+- **Feee** -- rekabetçi fiyatlandırma ve API erişimi
+- **itrx** -- toplu energy odağı
+- **CatFee** -- orta pazar konumlandırması
+- **Netts** -- yeni oyuncudan agresif fiyatlandırma
+- **SoHu** -- Çin pazarına odaklanma
+- **PowerSun** -- doğrudan staking ve delegasyon
 
-Each provider sets their own prices independently. At any given moment, the cheapest provider might be Feee at 28 SUN per energy unit, while TronSave lists at 35 SUN and Netts at 31 SUN. Ten minutes later, the ranking might reverse entirely. Prices shift based on supply availability, demand spikes, staking pool utilization, and competitive dynamics that are impossible to predict.
+Her sağlayıcı bağımsız olarak kendi fiyatlarını belirler. Herhangi bir anda, en ucuz sağlayıcı Feee olabilir (energy birimi başına 28 SUN), TronSave 35 SUN ve Netts 31 SUN'da listelenir. On dakika sonra sıralama tamamen değişebilir. Fiyatlar arz mevcudiyeti, talep dalgalanmaları, staking havuzu kullanımı ve tahmin edilmesi imkansız olan rekabet dinamiklerine göre değişir.
 
-## The DEX Aggregator Analogy
+## DEX Agregatörü Analojisi
 
-The parallel with DEX aggregation is direct and instructive.
+DEX agregatörü ile paralellik doğrudan ve öğreticidir.
 
-Before 1inch existed, a trader who wanted the best price on an ETH-to-USDC swap had to manually check Uniswap, SushiSwap, Curve, and every other relevant pool. They had to account for slippage, gas costs, and timing. In practice, most traders just picked one DEX and accepted whatever price it offered. They left money on the table every single time.
+1inch ortaya çıkmadan önce, ETH'den USDC'ye en iyi fiyattan takas yapmak isteyen bir tüccar, Uniswap, SushiSwap, Curve ve diğer tüm ilgili havuzları manuel olarak kontrol etmek zorundaydı. Kaymayı, gaz maliyetlerini ve zamanlamayı hesaba katması gerekirdi. Pratikte çoğu tüccar bir DEX'i seçti ve sunduğu fiyatı kabul etti. Her seferinde para masaya bıraktılar.
 
-1inch solved this by introducing a routing layer. It queries all available liquidity sources, calculates the optimal split (sometimes routing parts of your order through different pools), and executes the trade. The user interacts with one interface and gets a price that is equal to or better than any individual DEX.
+1inch bunu bir yönlendirme katmanı tanıtarak çözdü. Tüm mevcut likidite kaynaklarını sorgular, optimal bölünmeyi hesaplar (bazen siparişinizin parçalarını farklı havuzlar aracılığıyla yönlendirir) ve ticareti yürütür. Kullanıcı bir arabirim ile etkileşime girer ve herhangi bir tek DEX'e eşit veya daha iyi bir fiyat alır.
 
-The TRON energy market is in the same position today that DEX liquidity was in before aggregators appeared. Individual providers are accessible, but comparing them requires effort. Most users pick one provider and stay with it, paying whatever price it charges, unaware that a better price might be available elsewhere.
+TRON energy piyasası bugün, agregatörler ortaya çıkmadan önceki DEX likidite piyasasındaki aynı konumdadır. Bireysel sağlayıcılara erişim mümkündür, ancak karşılaştırma çaba gerektirir. Çoğu kullanıcı bir sağlayıcı seçer ve kalır, başka bir yerde daha iyi bir fiyatın mevcut olabileceğinden habersiz, o sağlayıcının talep ettiği fiyatı öder.
 
-### Where the Analogy Holds
+### Analojinin Geçerli Olduğu Yerler
 
-| DEX Aggregator | Energy Aggregator |
+| DEX Agregatörü | Energy Agregatörü |
 |---|---|
-| Queries multiple DEXs | Queries multiple energy providers |
-| Routes to best-price liquidity pool | Routes to cheapest energy source |
-| One interface replaces many | One API replaces seven integrations |
-| No custody of user tokens | No custody of user private keys |
-| Adds no markup on trades | Adds no markup on energy price |
+| Birden fazla DEX'i sorgular | Birden fazla energy sağlayıcısını sorgular |
+| En iyi fiyatlı likidite havuzuna yönlendirir | En ucuz energy kaynağına yönlendirir |
+| Bir arabirim birçok yerine geçer | Bir API yedi entegrasyonun yerine geçer |
+| Kullanıcı token'lerinin saklaması yok | Kullanıcı özel anahtarlarının saklaması yok |
+| Ticarete işaretlemeler eklemez | Energy fiyatına işaretlemeler eklemez |
 
-### Where It Differs
+### Farklı Olduğu Yerler
 
-DEX aggregators can split orders across pools. If Uniswap has the best price for the first 50 ETH but Curve is better for the next 50, the aggregator splits the trade. Energy aggregation does not currently split orders across providers -- your entire energy purchase goes to a single provider. This is a function of the delegation mechanism on TRON: energy is delegated from one staking address to one recipient address as a single on-chain operation.
+DEX agregatörleri, siparişleri havuzlara bölebilir. Uniswap ilk 50 ETH için en iyi fiyata sahipse ancak Curve sonraki 50 için daha iyiyse, agregatör ticareti böler. Energy agregatörü şu anda siparişleri sağlayıcılar arasında bölmez -- tüm energy satın almanız tek bir sağlayıcıya gider. Bu, TRON'daki delegasyon mekanizmasinin bir sonucudur: energy, staking adresinden alıcı adrese tek bir zincir üzerindeki işlem olarak delege edilir.
 
-DEX aggregators also deal with slippage -- the price can change between quote and execution. Energy prices are more stable (they change over minutes, not milliseconds), so slippage is not a significant concern. The price you see in the quote is the price you pay.
+DEX agregatörleri de kaymalar ile uğraşır -- fiyat alıntı ile yürütme arasında değişebilir. Energy fiyatları daha kararlıdır (saniyeye değil dakikalara göre değişir), bu yüzden kayma önemli bir sorun değildir. Alıntıda gördüğünüz fiyat, ödediğiniz fiyattır.
 
-## Why No Single Provider Is Always Cheapest
+## Neden Hiçbir Sağlayıcı Her Zaman En Ucuz Değildir
 
-If one provider were consistently the cheapest, you would not need an aggregator. You would integrate with that provider and call it done. But the energy market does not work that way.
+Bir sağlayıcı sürekli en ucuz olsaydı, agregatöre ihtiyacınız olmayacaktı. Bu sağlayıcı ile entegrasyonu sağlardınız ve bitirirdiniz. Ancak energy piyasası bu şekilde çalışmaz.
 
-### Supply-Side Dynamics
+### Arz Tarafı Dinamikleri
 
-Each provider has a finite supply of energy. That supply comes from TRX staked for energy, and the amount of staked TRX determines how much energy the provider can delegate. When a provider's supply runs low -- because many buyers are purchasing simultaneously, or because staking pools are being rebalanced -- that provider raises prices or becomes temporarily unavailable.
+Her sağlayıcının sonlu energy arzı vardır. Bu arz TRX'in energy için stake edilmesinden gelir ve stake edilen TRX miktarı, sağlayıcının ne kadar energy delege edebileceğini belirler. Bir sağlayıcının arzı düştüğünde -- çünkü birçok alıcı aynı anda satın alıyor veya staking havuzları yeniden dengeleniyor -- bu sağlayıcı fiyatları artırır veya geçici olarak kullanılamaz hale gelir.
 
-Provider A might have abundant supply at 8:00 AM UTC and offer the lowest prices on the market. By 10:00 AM, a large buyer might consume most of that supply, pushing Provider A's prices up. Meanwhile, Provider B, which was mid-range at 8:00 AM, now has the lowest price because its supply was not affected.
+Sağlayıcı A'nın UTC 08:00'de bol arzı olabilir ve pazardaki en düşük fiyatları sunabilir. 10:00'de, büyük bir alıcı bu arzın çoğunu tüketebilir, Sağlayıcı A'nın fiyatlarını artırabilir. Bu arada, Sağlayıcı B, 08:00'de orta aralıkta olup, arzı etkilenmediği için artık en düşük fiyata sahiptir.
 
-### Pricing Models Vary
+### Fiyatlandırma Modelleri Değişir
 
-Different providers use different pricing strategies:
+Farklı sağlayıcılar farklı fiyatlandırma stratejileri kullanır:
 
-- **Fixed pricing**: Some providers set a flat rate that changes infrequently. These providers are cheapest during high-demand periods but might be more expensive during low-demand periods.
-- **Dynamic pricing**: Some providers adjust prices based on their current supply utilization. These providers can be very cheap when supply is abundant but expensive when utilization is high.
-- **Duration-dependent**: Prices vary by rental duration. A provider might be cheapest for 1-hour rentals but more expensive for 24-hour rentals, or vice versa.
+- **Sabit fiyatlandırma**: Bazı sağlayıcılar, seyrek olarak değişen düz bir oran belirler. Bu sağlayıcılar yüksek talep dönemlerinde en uygun fiyatlı olup ancak düşük talep dönemlerinde daha pahalı olabilir.
+- **Dinamik fiyatlandırma**: Bazı sağlayıcılar fiyatları mevcut arz kullanım oranına göre ayarlar. Bu sağlayıcılar arz bol olduğunda çok ucuz olabilir ancak kullanım yüksek olduğunda pahalı olabilir.
+- **Süreler bağlı fiyatlandırma**: Fiyatlar kiralama süresine göre değişir. Bir sağlayıcı 1 saatlik kiralamalar için en ucuz olabilir ancak 24 saatlik kiralamalar için daha pahalı olabilir ya da tam tersi.
 
-No single strategy dominates across all conditions. The optimal provider changes based on the time of day, the energy amount you need, the rental duration, and the overall market state.
+Hiçbir tek strateji tüm koşullarda hakim değildir. Optimal sağlayıcı günün saatine, ihtiyacınız olan energy miktarına, kiralama süresine ve genel pazar durumuna göre değişir.
 
-### Empirical Evidence
+### Ampirik Kanıtlar
 
-MERX monitors prices from all seven providers every 30 seconds and stores the results. Analysis of historical price data shows that the cheapest provider changes multiple times per day. On a typical day, the provider offering the lowest 1-hour energy price rotates among three to four different providers, with the gap between the cheapest and most expensive often exceeding 20%.
+MERX, her otuz saniyede tüm yedi sağlayıcıdan fiyatları izler ve sonuçları depolar. Tarihsel fiyat verilerinin analizi, en ucuz sağlayıcının günde birden çok kez değiştiğini gösterir. Tipik bir günde, en düşük 1 saatlik energy fiyatını sunan sağlayıcı, üç ila dört farklı sağlayıcı arasında döner ve en ucuz ile en pahalı arasındaki boşluk genellikle %20'yi aşar.
 
 ```
-Sample price snapshot (SUN per energy unit, 1h duration):
+Örnek fiyat anlık görüntüsü (SUN başına energy birimi, 1s süresi):
 
   TronSave:   35
-  Feee:       28  <-- cheapest
+  Feee:       28  <-- en ucuz
   itrx:       32
   CatFee:     30
   Netts:      31
   SoHu:       34
   PowerSun:   33
 
-Four hours later:
+Dört saat sonra:
 
   TronSave:   30
   Feee:       33
-  itrx:       29  <-- cheapest
+  itrx:       29  <-- en ucuz
   CatFee:     31
-  Netts:      28  <-- tied cheapest
+  Netts:      28  <-- en ucuz bağlantılı
   SoHu:       35
   PowerSun:   32
 ```
 
-If you had integrated exclusively with Feee because it was cheapest at the first snapshot, you would be paying 33 SUN four hours later while the market floor sits at 28-29 SUN. That 15% difference compounds with every transaction.
+İlk anlık görüntüde Feee en ucuz olduğu için yalnızca onunla entegrasyonu yaptıysanız, dört saat sonra 33 SUN ödeyebilirsiniz; pazar tabanı 28-29 SUN'da iken. O %15'lik fark her işlemle birleştirilir.
 
-## How MERX Aggregates
+## MERX Nasıl Agregatör Olur
 
-MERX implements aggregation through three components that operate continuously.
+MERX, sürekli çalışan üç bileşen aracılığıyla agregatörü uygular.
 
-### Price Monitor
+### Fiyat İzleyici
 
-A dedicated service polls every provider's API every 30 seconds. Each response is normalized to a standard format -- price in SUN per energy unit -- and published to a Redis channel. This normalization is critical because providers express prices differently: some quote in SUN, some in TRX, some per unit, some for a bundle. MERX converts everything to SUN per energy unit for direct comparison.
+Özel bir hizmet, her otuz saniyede her sağlayıcının API'sini yoklar. Her yanıt standart bir format'a normalleştirilir -- SUN cinsinden fiyat/energy birimi -- ve bir Redis kanalına yayımlanır. Bu normalleştirme kritiktir çünkü sağlayıcılar fiyatları farklı şekilde ifade ederler: bazıları SUN'da, bazıları TRX'de, bazıları birim başına, bazıları paket için. MERX her şeyi doğrudan karşılaştırma için SUN başına energy birimine dönüştürür.
 
-### Price Cache
+### Fiyat Önbelleği
 
-Redis holds the latest price from each provider with a 60-second TTL. If a provider's data is older than 60 seconds, it is automatically excluded from routing decisions. This prevents stale prices from misleading the router.
+Redis, her sağlayıcıdan en son fiyatı 60 saniyelik TTL ile tutar. Bir sağlayıcının verisi 60 saniyeden eski ise, yönlendirme kararlarından otomatik olarak hariç tutulur. Bu, eski fiyatların yönlendiriciyi yanlış yönlendirmesini önler.
 
-### Order Router
+### Sipariş Yönlendiricisi
 
-When you place an order, the router queries Redis for all current prices, filters for providers that can fulfill your specific request (amount, duration), and selects the cheapest option. The entire process takes milliseconds.
+Sipariş verdiğinizde, yönlendirici Redis'ten tüm mevcut fiyatları sorgular, spesifik isteklerinizi yerine getirebilen sağlayıcıları filtreler (miktar, süre) ve en ucuz seçeneği seçer. Tüm işlem milisaniye cinsindedir.
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// One call. Best price across all providers. No integration tax.
+// Bir çağrı. Tüm sağlayıcılar arasında en iyi fiyat. Entegrasyon vergisi yok.
 const order = await merx.createOrder({
   energy_amount: 65000,
   target_address: 'TRecipientAddress...',
   duration: '1h'
 });
 
-console.log(`Provider: ${order.provider}`);
-console.log(`Price: ${order.price_sun} SUN/unit`);
-console.log(`Total: ${order.total_trx} TRX`);
+console.log(`Sağlayıcı: ${order.provider}`);
+console.log(`Fiyat: ${order.price_sun} SUN/birim`);
+console.log(`Toplam: ${order.total_trx} TRX`);
 ```
 
-You do not choose the provider. MERX chooses for you, and the choice is always the cheapest available option at the moment of your order.
+Sağlayıcıyı siz seçmezsiniz. MERX sizin için seçer ve seçim her zaman siparişiniz anındaki mevcut en ucuz seçenektir.
 
-## Automatic Failover
+## Otomatik Yedekleme
 
-Aggregation provides a second benefit beyond price optimization: reliability. If a single provider goes down -- and they do, regularly -- your integration breaks. With MERX, a provider outage is invisible to you.
+Agregatör, fiyat optimizasyonunun ötesinde ikinci bir avantaj sağlar: güvenilirlik. Tek bir sağlayıcı inerse -- ve gerçekten inerler -- entegrasyonunuz bozulur. MERX ile sağlayıcı kesintisi sizin için görünmezdir.
 
-When the price monitor detects that a provider is unresponsive, it stops publishing prices for that provider. The Redis TTL expires after 60 seconds, and the provider is automatically excluded from routing. Orders continue to flow through the remaining providers without interruption.
+Fiyat izleyici bir sağlayıcının yanıt vermediğini tespit ettiğinde, o sağlayıcı için fiyat yayımlamayı durdurur. Redis TTL 60 saniye sonra sona erer ve sağlayıcı otomatik olarak yönlendirmeden hariç tutulur. Siparişler kesinti olmaksızın kalan sağlayıcılar aracılığıyla akışına devam eder.
 
 ```
-Provider failure scenario:
+Sağlayıcı hata senaryosu:
 
-  1. Feee API returns HTTP 500
-  2. Price monitor marks Feee as unavailable
-  3. Redis TTL for Feee expires (60s)
-  4. Next order routes to second-cheapest provider
-  5. No error visible to the buyer
-  6. Feee recovers, price monitor resumes polling
-  7. Feee re-enters the routing pool
+  1. Feee API, HTTP 500 döndürür
+  2. Fiyat izleyici, Feee'yi kullanılamaz olarak işaretler
+  3. Feee için Redis TTL sona erer (60s)
+  4. Sonraki sipariş, ikinci en ucuz sağlayıcıya yönlendirilir
+  5. Alıcıya görünür hata yok
+  6. Feee kurtarılır, fiyat izleyici yoklamaya devam eder
+  7. Feee yönlendirme havuzuna yeniden girer
 ```
 
-If you had integrated directly with Feee, a 500 error would crash your transaction pipeline. With MERX, you never even know it happened.
+Doğrudan Feee ile entegrasyonu yaptıysanız, 500 hatası işlem ardınızı çökertecekti. MERX ile hiç bunu bilmezsiniz.
 
-## Zero Commission
+## Sıfır Komisyon
 
-MERX adds no markup to provider prices. If the cheapest provider offers energy at 28 SUN per unit, you pay 28 SUN per unit. The aggregation layer is free to use.
+MERX, sağlayıcı fiyatlarına işaretlemeler eklemez. En ucuz sağlayıcı energy'yi birim başına 28 SUN sunuyorsa, birim başına 28 SUN ödersiniz. Agregatör katmanı kullanımı ücretsizdir.
 
-This is possible because MERX is in its market acquisition phase. The value of aggregating volume -- better negotiating leverage with providers, richer data for routing optimization, network effects -- exceeds the value of extracting margin on individual trades. The model mirrors how many successful aggregators launched: free access during growth, monetization through premium features once the user base is established.
+Bu mümkündür çünkü MERX, pazar kazanım aşamasındadır. Hacmi agregatör etme değeri -- sağlayıcılarla daha iyi müzakere kaldıracağı, yönlendirme optimizasyonu için daha zengin veri, ağ etkileri -- bireysel işlemlerden marj çıkarmak değerini aşar. Model, birçok başarılı agregatörün nasıl başladığını yansıtır: büyüme sırasında ücretsiz erişim, kullanıcı tabanı kurulduğunda premium özellikler aracılığıyla para kazanma.
 
-## When You Should Use an Aggregator
+## Agregatör Ne Zaman Kullanmalısınız
 
-An aggregator makes sense when:
+Agregatör şu zaman mantıklıdır:
 
-- **You process multiple transactions daily.** Even small per-transaction savings compound quickly.
-- **You automate TRON operations.** An aggregator's API is simpler than managing seven provider integrations.
-- **Reliability matters.** Automatic failover eliminates single points of failure.
-- **You do not want to monitor provider pricing manually.** The aggregator does this for you, continuously.
+- **Günde birden fazla işleme işlem yaparsınız.** Hatta küçük işlem başına tasarruflar da hızlı birleşir.
+- **TRON işlemlerini otomatize edersiniz.** Agregatörün API'si yedi sağlayıcı entegrasyonunu yönetmekten daha basittir.
+- **Güvenilirlik önemli ise.** Otomatik yedekleme, tek başarısızlık noktalarını ortadan kaldırır.
+- **Sağlayıcı fiyatlandırmasını manuel olarak izlemek istememezsiniz.** Agregatör bunu sizin için sürekli yapar.
 
-An aggregator adds less value when:
+Agregatör daha az değer ekler:
 
-- **You have a long-term contract with a single provider at a fixed rate.** Aggregation benefits come from dynamic routing, which does not apply to fixed-rate contracts.
-- **You make one or two transactions per month.** The savings exist but are minimal at low volume.
+- **Tek bir sağlayıcı ile sabit oran altında uzun vadeli sözleşmeniz varsa.** Agregatör faydaları dinamik yönlendirmeden gelir, bu sabit oran sözleşmelerine uygulanmaz.
+- **Ayda bir veya iki işlem yaparsanız.** Tasarruf var ama düşük hacimde minimum.
 
-## Baslangic
+## Başlarken
 
-MERX offers a REST API, JavaScript and Python SDKs, WebSocket real-time price feeds, and an MCP server for AI agents. The fastest path to integration:
+MERX, REST API, JavaScript ve Python SDK'ları, WebSocket gerçek zamanlı fiyat beslemeleri ve AI ajanları için bir MCP sunucusu sunmaktadır. En hızlı entegrasyon yolu:
 
 ```bash
 npm install merx-sdk
@@ -184,25 +184,26 @@ import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: 'YOUR_API_KEY' });
 
-// Check what you would pay right now
+// Şu anda ne ödeyeceğinizi kontrol edin
 const prices = await merx.getPrices({
   energy_amount: 65000,
   duration: '1h'
 });
 
-// See every provider's price
+// Her sağlayıcının fiyatını görün
 for (const p of prices) {
-  console.log(`${p.provider}: ${p.price_sun} SUN/unit`);
+  console.log(`${p.provider}: ${p.price_sun} SUN/birim`);
 }
 ```
 
-Eksiksiz dokumantasyon: [https://merx.exchange/docs](https://merx.exchange/docs)
-Yapay zeka ajan entegrasyonu icin MCP sunucusu: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+Tam dokümantasyon: [https://merx.exchange/docs](https://merx.exchange/docs)
+AI ajanları için MCP sunucusu: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 Platform: [https://merx.exchange](https://merx.exchange)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## AI ile Şimdi Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır kurulum, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -214,6 +215,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza sorun: "Şu anda en ucuz TRON energy nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatları alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP dokümantasyonu: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

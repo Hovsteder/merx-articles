@@ -1,84 +1,84 @@
-# Ключи идемпотентности: безопасные повторные попытки для ордеров на energy TRON
+# Ключи идемпотентности: Безопасные повторы заказов TRON Energy
 
-Network requests fail. Connections time out. Load balancers drop packets. Mobile clients lose signal mid-request. In any distributed system, the question is not whether failures will happen but how you handle them when they do.
+Сетевые запросы завершаются ошибкой. Соединения истекают по времени. Load balancers теряют пакеты. Мобильные клиенты теряют сигнал посередине запроса. В любой распределённой системе вопрос состоит не в том, произойдут ли сбои, а в том, как вы их обработаете.
 
-For most API calls, the answer is straightforward: retry the request. But when the request involves money - creating an order that debits your balance, or initiating a withdrawal that moves funds on-chain - a naive retry can be catastrophic. You send the request, the server processes it, but the response never reaches you. You retry. The server processes it again. You just paid twice for the same order, or worse, triggered two on-chain withdrawals.
+Для большинства вызовов API ответ прост: повторите запрос. Но когда запрос связан с деньгами — создание заказа, при котором списывается ваш баланс, или инициирование вывода средств, который переводит средства в сеть блокчейна — наивный повтор может быть катастрофичным. Вы отправляете запрос, сервер его обрабатывает, но ответ к вам так и не приходит. Вы повторяете попытку. Сервер обрабатывает его снова. Вы только что заплатили дважды за один заказ или, ещё хуже, инициировали два вывода средств в сеть.
 
-This is the problem that idempotency keys solve. MERX implements idempotency on every financial endpoint, making it safe to retry any request without risk of duplicate execution.
+Это проблема, которую решают ключи идемпотентности. MERX реализует идемпотентность на каждой финансовой точке API, делая безопасным повторение любого запроса без риска дублирования выполнения.
 
-## What Idempotency Means in Practice
+## Что на практике означает идемпотентность
 
-An operation is idempotent if performing it multiple times produces the same result as performing it once. HTTP GET is naturally idempotent - fetching the same URL ten times returns the same data. HTTP DELETE is idempotent by convention - deleting an already-deleted resource is a no-op.
+Операция является идемпотентной, если её выполнение несколько раз дает тот же результат, что и выполнение один раз. HTTP GET по природе идемпотентен — получение одного и того же URL десять раз возвращает одни и те же данные. HTTP DELETE идемпотентен по соглашению — удаление уже удалённого ресурса — это пустая операция.
 
-HTTP POST is not idempotent. Each POST to `/api/v1/orders` creates a new order. Send it three times, get three orders, pay three times.
+HTTP POST не является идемпотентным. Каждый POST на `/api/v1/orders` создаёт новый заказ. Отправьте три раза — получите три заказа и заплатите три раза.
 
-Idempotency keys make POST requests behave idempotently. The client generates a unique identifier and sends it with the request. The server uses this key to detect duplicates. If the same key arrives again, the server returns the result from the first execution instead of processing the request again.
+Ключи идемпотентности делают POST-запросы идемпотентными. Клиент генерирует уникальный идентификатор и отправляет его вместе с запросом. Сервер использует этот ключ для обнаружения дубликатов. Если такой же ключ поступит снова, сервер вернёт результат из первого выполнения вместо повторной обработки запроса.
 
-The distinction matters: the server does not simply reject duplicates. It returns the original response. From the client's perspective, the retry behaves exactly like a successful first attempt. This is critical for automation - your code does not need to distinguish between "first successful call" and "successful retry."
+Различие важно: сервер не просто отклоняет дубликаты. Он возвращает исходный ответ. С точки зрения клиента повтор ведёт себя в точности как успешный первый вызов. Это критично для автоматизации — ваш код не должен различать между «первым успешным вызовом» и «успешным повтором».
 
-## Почему это важно for TRON Energy Trading
+## Почему это важно для торговли TRON Energy
 
-TRON energy orders involve real money moving through real systems. When you create an order through MERX, several things happen in sequence:
+Заказы TRON energy связаны с реальными деньгами, движущимися через реальные системы. Когда вы создаёте заказ через MERX, происходит несколько последовательных действий:
 
-1. Your account balance is debited.
-2. The order is routed to the cheapest available provider.
-3. The provider delegates energy on-chain to your target address.
-4. The order status is updated and webhooks fire.
+1. Ваш баланс счёта списывается.
+2. Заказ маршрутизируется к самому дешёвому доступному провайдеру.
+3. Провайдер делегирует energy в сеть на ваш целевой адрес.
+4. Статус заказа обновляется и срабатывают вебхуки.
 
-If the connection drops after step 1 but before you receive confirmation, you have no way to know whether the order was created. Without idempotency, your options are bad:
+Если соединение разрывается после шага 1, но до получения вами подтверждения, вы не имеете возможности узнать, был ли создан заказ. Без идемпотентности ваши варианты плохи:
 
-- **Do not retry.** You might have a pending order you do not know about, or you might have lost a request that never reached the server. You have to poll the orders list to find out, adding complexity.
-- **Retry blindly.** If the first request did go through, you now have two orders and two balance debits. For an automated system processing hundreds of orders per day, this adds up fast.
-- **Retry with idempotency key.** The server recognizes the duplicate, returns the existing order, and your code continues as normal. No double-spend. No manual reconciliation.
+- **Не повторяйте.** У вас может быть ожидающий заказ, о котором вы не знаете, или вы могли потерять запрос, который никогда не достиг сервера. Вам нужно опросить список заказов, чтобы узнать, добавляя сложность.
+- **Повторяйте вслепую.** Если первый запрос прошёл, у вас теперь два заказа и два списания баланса. Для автоматизированной системы, обрабатывающей сотни заказов в день, это складывается быстро.
+- **Повторяйте с ключом идемпотентности.** Сервер распознаёт дубликат, возвращает существующий заказ, и ваш код продолжает работу как обычно. Никакого двойного расходования. Никакого ручного согласования.
 
-The same logic applies to withdrawals. A duplicate withdrawal request could move funds on-chain twice. With idempotency keys, the retry returns the existing withdrawal record.
+Та же логика применяется к выводам средств. Дубликатный запрос вывода мог бы переместить средства в сеть дважды. С ключами идемпотентности повтор возвращает существующую запись вывода.
 
-## How MERX Implements Idempotency
+## Как MERX реализует идемпотентность
 
-MERX supports the `Idempotency-Key` header on two endpoints:
+MERX поддерживает заголовок `Idempotency-Key` на двух точках API:
 
-- `POST /api/v1/orders` - energy and bandwidth order creation
-- `POST /api/v1/withdraw` - balance withdrawals
+- `POST /api/v1/orders` — создание заказов energy и bandwidth
+- `POST /api/v1/withdraw` — выводы баланса
 
-The implementation follows a straightforward lifecycle.
+Реализация следует простому жизненному циклу.
 
-### Key Format and Generation
+### Формат и генерация ключа
 
-The idempotency key is a client-generated string, up to 64 characters. MERX does not enforce a specific format, but best practice is to use UUIDs (v4) or structured identifiers that encode context:
+Ключ идемпотентности — это строка, сгенерированная клиентом, до 64 символов. MERX не требует определённого формата, но лучшая практика — использовать UUIDs (v4) или структурированные идентификаторы, которые кодируют контекст:
 
 ```
 Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
 ```
 
-Or with business context:
+Или с бизнес-контекстом:
 
 ```
 Idempotency-Key: order-user42-2026-03-30-batch7-item3
 ```
 
-The key must be unique per distinct operation. Reusing a key with different request parameters (different amount, different target address) returns an error rather than silently ignoring the new parameters.
+Ключ должен быть уникален для каждой отдельной операции. Переиспользование ключа с разными параметрами запроса (разные сумма, разный целевой адрес) возвращает ошибку вместо молчаливого игнорирования новых параметров.
 
-### Server-Side Behavior
+### Поведение на стороне сервера
 
-When MERX receives a request with an `Idempotency-Key` header, the following logic runs:
+Когда MERX получает запрос с заголовком `Idempotency-Key`, выполняется следующая логика:
 
-1. **First request with this key.** The server processes the request normally - validates parameters, debits balance, creates the order. It stores the key, the request hash, and the response. Returns the response with HTTP 201.
+1. **Первый запрос с этим ключом.** Сервер обрабатывает запрос в обычном режиме — проверяет параметры, списывает баланс, создаёт заказ. Он сохраняет ключ, хеш запроса и ответ. Возвращает ответ с HTTP 201.
 
-2. **Duplicate request with the same key and same parameters.** The server skips all processing and returns the stored response from the first execution. The response is identical, including the same order ID, status, and timestamps. Returns HTTP 200 (not 201) so the client can distinguish if needed.
+2. **Дублирующийся запрос с тем же ключом и теми же параметрами.** Сервер пропускает всю обработку и возвращает сохранённый ответ из первого выполнения. Ответ идентичен, включая тот же ID заказа, статус и временные метки. Возвращает HTTP 200 (не 201), чтобы клиент мог различить при необходимости.
 
-3. **Duplicate request with the same key but different parameters.** The server returns HTTP 409 Conflict. This prevents a subtle bug where a key collision causes an unrelated order to be returned.
+3. **Дублирующийся запрос с тем же ключом, но разными параметрами.** Сервер возвращает HTTP 409 Conflict. Это предотвращает тонкую ошибку, когда коллизия ключей приводит к возврату несвязанного заказа.
 
-4. **Request while the first is still processing.** The server returns HTTP 409 with a message indicating the original request is still in progress. This handles the race condition where a retry arrives before the first request finishes.
+4. **Запрос во время обработки первого.** Сервер возвращает HTTP 409 с сообщением, указывающим, что исходный запрос всё ещё обрабатывается. Это обрабатывает условие гонки, когда повтор прибывает до завершения первого запроса.
 
-### Key Expiration
+### Истечение ключа
 
-Idempotency keys are stored for 24 hours. After that, the same key can be reused for a new request. In practice, retries happen within seconds or minutes, not days. The 24-hour window is generous enough to cover any realistic retry scenario while preventing unbounded storage growth.
+Ключи идемпотентности сохраняются 24 часа. После этого один и тот же ключ можно переиспользовать для нового запроса. На практике повторы происходят в течение секунд или минут, а не дней. Окно в 24 часа достаточно щедро, чтобы охватить любой реалистичный сценарий повтора, при этом предотвращая безграничный рост хранилища.
 
-## Code Examples
+## Примеры кода
 
-### JavaScript SDK - Retry-Safe Order Creation
+### JavaScript SDK — безопасное создание заказа с повторами
 
-The MERX JavaScript SDK handles idempotency keys automatically when you pass the `idempotencyKey` option. Here is a complete example with retry logic:
+JavaScript SDK MERX автоматически обрабатывает ключи идемпотентности при передаче опции `idempotencyKey`. Вот полный пример с логикой повтора:
 
 ```javascript
 import { MerxClient } from 'merx-sdk';
@@ -132,15 +132,15 @@ const order = await createOrderSafe({
 });
 ```
 
-Key points in this implementation:
+Ключевые моменты в этой реализации:
 
-- The idempotency key is generated once, before the retry loop. Every retry sends the same key.
-- Exponential backoff prevents hammering the server during transient failures.
-- The 409 conflict on parameter mismatch is treated as a non-retryable error because it indicates a logic bug, not a network issue.
+- Ключ идемпотентности генерируется один раз, перед циклом повтора. Каждый повтор отправляет один и тот же ключ.
+- Экспоненциальная задержка предотвращает перегрузку сервера во время временных сбоев.
+- Конфликт 409 на несоответствии параметров трактуется как неповторяемая ошибка, потому что указывает на ошибку логики, а не на проблему с сетью.
 
-### Python SDK - Retry-Safe Withdrawal
+### Python SDK — безопасный вывод средств
 
-The Python SDK follows the same pattern. Here is an example for withdrawals:
+Python SDK следует той же схеме. Вот пример для выводов средств:
 
 ```python
 import uuid
@@ -189,9 +189,9 @@ result = withdraw_safe(
 )
 ```
 
-### Raw HTTP - Direct API Call with curl
+### Raw HTTP — прямой вызов API с curl
 
-If you are not using an SDK, the `Idempotency-Key` header is a standard HTTP header:
+Если вы не используете SDK, `Idempotency-Key` — это стандартный HTTP заголовок:
 
 ```bash
 IDEMPOTENCY_KEY=$(uuidgen)
@@ -207,19 +207,19 @@ curl -X POST https://merx.exchange/api/v1/orders \
   }'
 ```
 
-Retry the exact same curl command (with the same `IDEMPOTENCY_KEY` value) and you will get the original order back instead of a new one.
+Повторите точно такую же команду curl (с тем же значением `IDEMPOTENCY_KEY`) и вы получите исходный заказ вместо нового.
 
-## Лучшие практики for Production Systems
+## Лучшие практики для production-систем
 
-### Generate Keys at the Right Level
+### Генерируйте ключи на правильном уровне
 
-The idempotency key should represent the business intent, not the HTTP request. If a user clicks "Buy Energy" once, that is one business operation with one key - regardless of how many HTTP retries it takes.
+Ключ идемпотентности должен представлять бизнес-намерение, а не HTTP-запрос. Если пользователь один раз кликает «Купить Energy», это одна бизнес-операция с одним ключом — независимо от того, сколько HTTP повторов потребуется.
 
-Do not generate a new key on each retry. That defeats the purpose entirely.
+Не генерируйте новый ключ при каждом повторе. Это полностью лишает идею смысла.
 
-### Store Keys Before Sending
+### Сохраняйте ключи перед отправкой
 
-In a system that processes orders in a queue, write the idempotency key to your database before making the API call. If your process crashes and restarts, it picks up the same key from the database and retries safely.
+В системе, которая обрабатывает заказы в очереди, напишите ключ идемпотентности в вашу базу данных перед вызовом API. Если ваш процесс разбился и перезагрузился, он подберёт один и тот же ключ из базы данных и безопасно повторит попытку.
 
 ```javascript
 // Write the intent to your database first
@@ -243,59 +243,60 @@ await db.orderIntents.update(intent.id, {
 });
 ```
 
-### Handle All Response Codes
+### Обрабатывайте все коды ответов
 
-Your retry logic should handle these cases:
+Ваша логика повтора должна обрабатывать эти случаи:
 
-| HTTP Status | Meaning | Action |
-|------------|---------|--------|
-| 201 | First successful creation | Store result, continue |
-| 200 | Duplicate key, same params | Treat as success (same result) |
-| 409 | Key conflict or still processing | Do not retry - investigate |
-| 429 | Rate limited | Retry after delay |
-| 500+ | Server error | Retry with backoff |
+| HTTP статус | Значение | Действие |
+|------------|----------|---------|
+| 201 | Первое успешное создание | Сохраните результат, продолжайте |
+| 200 | Дубликат ключа, те же параметры | Трактуйте как успех (тот же результат) |
+| 409 | Конфликт ключа или всё ещё обрабатывается | Не повторяйте — расследуйте |
+| 429 | Ограничение частоты запросов | Повторите после задержки |
+| 500+ | Ошибка сервера | Повторите с экспоненциальной задержкой |
 
-### Use Structured Keys for Debugging
+### Используйте структурированные ключи для отладки
 
-While UUIDs work perfectly, structured keys make debugging easier:
+Хотя UUIDs работают идеально, структурированные ключи упрощают отладку:
 
 ```
 order-{userId}-{date}-{sequenceNumber}
 withdraw-{userId}-{timestamp}-{nonce}
 ```
 
-When investigating a support case, a structured key immediately tells you who initiated the operation and when.
+При расследовании обращения в поддержку структурированный ключ сразу подскажет вам, кто инициировал операцию и когда.
 
-### Set Reasonable Retry Limits
+### Устанавливайте разумные пределы повторов
 
-Three to five retries with exponential backoff covers the vast majority of transient failures. If the server is genuinely down, retrying 50 times will not help and will only generate noise in your logs.
+Три-пять повторов с экспоненциальной задержкой охватывает подавляющее большинство временных сбоев. Если сервер действительно упал, повторение 50 раз не поможет и только создаст шум в ваших логах.
 
-A sensible ceiling: retry up to 3 times, with delays of 1 second, 2 seconds, and 4 seconds. If all three fail, surface the error to a monitoring system rather than retrying indefinitely.
+Разумный потолок: повторяйте до 3 раз с задержками 1 секунда, 2 секунды и 4 секунды. Если все три попытки не удались, передайте ошибку в систему мониторинга вместо бесконечного повтора.
 
-## Типичные ошибки
+## Распространённые ошибки
 
-**Generating a new key on each retry.** This is the most common mistake. If each retry has a new key, the server treats each as a unique request. You get duplicate orders.
+**Генерирование нового ключа при каждом повторе.** Это наиболее распространённая ошибка. Если каждый повтор имеет новый ключ, сервер трактует каждый как уникальный запрос. Вы получаете дубликатные заказы.
 
-**Sharing keys across different operations.** Each distinct business operation needs its own key. If you use the same key for two different orders (different amounts, different addresses), the second will fail with a 409.
+**Совместное использование ключей для разных операций.** Каждой отдельной бизнес-операции нужен свой ключ. Если вы используете один и тот же ключ для двух разных заказов (разные суммы, разные адреса), второй завершится ошибкой 409.
 
-**Not handling the 200 vs 201 distinction.** While both indicate success, the status code tells you whether this was the first execution or a replay. This can be useful for logging and metrics - knowing how often retries hit duplicates tells you something about your network reliability.
+**Игнорирование различия между 200 и 201.** Хотя оба указывают успех, код статуса говорит, было ли это первым выполнением или повтором. Это может быть полезно для логирования и метрик — знание того, как часто повторы попадают на дубликаты, говорит вам что-то о надёжности вашей сети.
 
-**Ignoring idempotency for webhooks.** MERX sends webhooks on order status changes. Your webhook handler should be idempotent too - if you receive the same `order.filled` event twice, processing it twice should not cause problems. Use the order ID as a natural idempotency key for your own processing.
+**Игнорирование идемпотентности для вебхуков.** MERX отправляет вебхуки при изменениях статуса заказа. Ваш обработчик вебхуков также должен быть идемпотентным — если вы получите одно и то же событие `order.filled` дважды, обработка его дважды не должна вызвать проблем. Используйте ID заказа как естественный ключ идемпотентности для вашей собственной обработки.
 
 ## Заключение
 
-Idempotency keys are a small addition to your API calls - one header, one UUID - but they eliminate an entire class of financial bugs. For any system that creates TRON energy orders or initiates withdrawals programmatically, they are not optional. They are the difference between a system that handles network failures gracefully and one that creates support tickets every time a connection drops.
+Ключи идемпотентности — небольшое дополнение к вашим вызовам API — один заголовок, один UUID — но они устраняют целый класс финансовых ошибок. Для любой системы, которая создаёт заказы TRON energy или программно инициирует выводы средств, они необязательны. Они разница между системой, которая изящно обрабатывает сетевые сбои, и той, которая создаёт тикеты поддержки каждый раз, когда разрывается соединение.
 
-MERX supports idempotency keys on all financial endpoints. The JavaScript SDK and Python SDK both provide built-in support. Start using them from day one - retrofitting idempotency into a production system that has already experienced duplicate orders is considerably more painful than building it in from the start.
+MERX поддерживает ключи идемпотентности на всех финансовых точках API. JavaScript SDK и Python SDK оба обеспечивают встроенную поддержку. Начните использовать их с дня первого — добавление идемпотентности в production-систему, которая уже столкнулась с дубликатными заказами, значительно более болезненно, чем встроение её с самого начала.
 
 - Платформа MERX: [merx.exchange](https://merx.exchange)
 - Документация API: [merx.exchange/docs](https://merx.exchange/docs)
 - JavaScript SDK: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 - Python SDK: [github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX на Claude Desktop или любого MCP-совместимого клиента — без установки, без API ключа для инструментов только для чтения:
 
 ```json
 {
@@ -307,6 +308,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Попросите вашего AI агента: «Какая самая дешёвая TRON energy прямо сейчас?» и получите живые цены от всех подключённых провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

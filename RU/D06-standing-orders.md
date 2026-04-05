@@ -1,28 +1,28 @@
-# Постоянные ордера: автоматизация закупок energy TRON 24/7
+# Постоянные ордера: Автоматизируйте покупку TRON energy 24/7
 
-## The Manual Approach Does Not Scale
+## Ручной подход не масштабируется
 
-If you are buying TRON energy manually, you are doing it wrong. Not because the process is difficult - placing an order takes seconds - but because the energy market is dynamic. Prices fluctuate throughout the day. Delegations expire on fixed schedules. Your application's energy needs change based on transaction volume. Managing all of this manually means either constant vigilance or wasted money.
+Если вы покупаете TRON energy вручную, вы делаете это неправильно. Не потому, что процесс сложный — размещение ордера занимает секунды, — а потому, что рынок energy динамичен. Цены колеблются в течение дня. Делегирования истекают по установленному графику. Потребности вашего приложения в energy меняются в зависимости от объема транзакций. Управление всем этим вручную означает либо постоянную бдительность, либо пустую трату денег.
 
-Standing orders solve this by letting you define rules that execute automatically, 24 hours a day, 7 days a week. When a condition is met - price drops below your threshold, a schedule fires, or your energy balance falls too low - MERX places the order on your behalf with the parameters you defined in advance.
+Постоянные ордера решают эту проблему, позволяя вам определить правила, которые выполняются автоматически, 24 часа в сутки, 7 дней в неделю. Когда условие выполнено — цена падает ниже вашего порога, расписание срабатывает или баланс energy становится слишком низким, — MERX размещает ордер от вашего имени с параметрами, определенными заранее.
 
-This article covers the full standing order system: trigger types, action types, budget controls, and the practical patterns that save the most money.
+Эта статья охватывает полную систему постоянных ордеров: типы триггеров, типы действий, контроль бюджета и практические паттерны, которые экономят больше всего денег.
 
 ## Как работают постоянные ордера
 
-A standing order is a persistent rule stored in MERX's PostgreSQL database. It consists of three components:
+Постоянный ордер — это заранее определенное правило, хранящееся в базе данных PostgreSQL MERX. Оно состоит из трех компонентов:
 
-1. **Trigger** - the condition that activates the order
-2. **Action** - what happens when the trigger fires
-3. **Constraints** - budget limits, execution frequency, and expiration
+1. **Триггер** — условие, которое активирует ордер
+2. **Действие** — то, что происходит при срабатывании триггера
+3. **Ограничения** — лимиты бюджета, частота выполнения и срок действия
 
-The MERX backend evaluates triggers continuously. Price-based triggers are checked every time a new price quote arrives from any provider (typically every 30 seconds). Schedule-based triggers use cron expressions evaluated by the server. Balance-based triggers are checked periodically by polling on-chain state.
+Бэкенд MERX постоянно оценивает триггеры. Триггеры, основанные на цене, проверяются каждый раз при получении новой котировки цены от любого поставщика (обычно каждые 30 секунд). Триггеры, основанные на расписании, используют cron-выражения, оцениваемые сервером. Триггеры, основанные на балансе, проверяются периодически опросом состояния в цепи.
 
-When a trigger fires and all constraints are satisfied, the action executes immediately without any manual intervention.
+Когда триггер срабатывает и все ограничения соблюдаются, действие выполняется немедленно без какого-либо ручного вмешательства.
 
 ## Создание постоянного ордера
 
-The MCP server exposes standing orders through the `create_standing_order` tool:
+Сервер MCP предоставляет постоянные ордера через инструмент `create_standing_order`:
 
 ```
 Tool: create_standing_order
@@ -48,13 +48,13 @@ Input: {
 }
 ```
 
-This order will purchase 500,000 energy for 24 hours whenever the market price drops below 0.00005 TRX per energy unit, up to 3 times per day, spending no more than 100 TRX daily.
+Этот ордер будет покупать 500 000 energy на 24 часа, каждый раз когда рыночная цена падает ниже 0.00005 TRX за единицу energy, но не более 3 раз в день и не более чем на 100 TRX в день.
 
 ## Типы триггеров
 
 ### price_below
 
-Fires when the best available energy price drops below your specified threshold.
+Срабатывает, когда лучшая доступная цена energy падает ниже вашего указанного порога.
 
 ```json
 {
@@ -64,13 +64,13 @@ Fires when the best available energy price drops below your specified threshold.
 }
 ```
 
-This is the most common trigger for cost optimization. Energy prices on TRON fluctuate based on supply and demand. During off-peak hours (typically 00:00-06:00 UTC), prices often drop 15-25% below peak levels. A `price_below` trigger lets you automatically buy energy during these windows without monitoring prices yourself.
+Это самый распространенный триггер для оптимизации затрат. Цены на energy в TRON колеблются в зависимости от спроса и предложения. В часы низкого спроса (обычно 00:00–06:00 UTC) цены часто падают на 15–25% ниже пиковых уровней. Триггер `price_below` позволяет вам автоматически покупать energy в эти периоды без необходимости самостоятельно отслеживать цены.
 
-**Practical tip:** Set your threshold at the 25th percentile of the last 7 days' prices. This means you buy when prices are in the bottom quarter of their recent range - cheap enough to save money, frequent enough to keep your address supplied.
+**Практический совет:** Установите ваш порог на 25-й процентиль цен за последние 7 дней. Это означает, что вы покупаете, когда цены находятся в нижней четверти своего недавнего диапазона — достаточно дешево, чтобы сэкономить деньги, но часто достаточно, чтобы ваш адрес был снабжен.
 
 ### schedule
 
-Fires on a cron schedule, regardless of market conditions.
+Срабатывает по cron-расписанию независимо от рыночных условий.
 
 ```json
 {
@@ -79,20 +79,20 @@ Fires on a cron schedule, regardless of market conditions.
 }
 ```
 
-This trigger fires every 6 hours. Useful for applications with predictable energy needs - if you know your application processes most transactions during business hours, schedule energy purchases to arrive just before the rush.
+Этот триггер срабатывает каждые 6 часов. Полезен для приложений с предсказуемыми потребностями в energy — если вы знаете, что ваше приложение обрабатывает большинство транзакций в рабочие часы, планируйте покупку energy так, чтобы она прибыла непосредственно перед нагрузкой.
 
-Common cron patterns:
+Распространенные cron-паттерны:
 
 ```
-"0 */6 * * *"    - Every 6 hours
-"0 8 * * 1-5"   - Every weekday at 8:00 UTC
-"*/30 * * * *"   - Every 30 minutes
-"0 0 * * *"      - Daily at midnight UTC
+"0 */6 * * *"    - Каждые 6 часов
+"0 8 * * 1-5"   - Каждый рабочий день в 8:00 UTC
+"*/30 * * * *"   - Каждые 30 минут
+"0 0 * * *"      - Ежедневно в полночь UTC
 ```
 
 ### balance_below
 
-Fires when your address's available energy drops below a threshold.
+Срабатывает, когда доступная energy вашего адреса падает ниже порога.
 
 ```json
 {
@@ -102,17 +102,17 @@ Fires when your address's available energy drops below a threshold.
 }
 ```
 
-This trigger is reactive - it ensures your address never runs out of energy by automatically replenishing when the balance gets low. Combined with a `buy_resource` action, it creates a self-maintaining energy supply.
+Этот триггер реактивный — он гарантирует, что ваш адрес никогда не останется без energy, автоматически пополняя запас, когда баланс становится низким. В сочетании с действием `buy_resource` он создает самоподдерживающийся запас energy.
 
-**How it works:** MERX polls the on-chain resource balance of the specified address at regular intervals (every 60 seconds by default). When the available energy drops below the threshold, the trigger fires.
+**Как это работает:** MERX периодически опрашивает баланс ресурсов указанного адреса в цепи (по умолчанию каждые 60 секунд). Когда доступная energy падает ниже порога, триггер срабатывает.
 
-**Important caveat:** There is inherent latency between the balance dropping and the new energy arriving (polling interval + order placement + delegation confirmation). Set the threshold high enough that your address does not run out during this window. If your application consumes 50,000 energy per minute, a threshold of 100,000 gives you approximately 2 minutes of runway - sufficient for MERX to replenish.
+**Важное примечание:** Существует присущая задержка между падением баланса и поступлением новой energy (интервал опроса + размещение ордера + подтверждение делегирования). Установите порог достаточно высоким, чтобы ваш адрес не исчерпал запас в течение этого окна. Если ваше приложение расходует 50 000 energy в минуту, порог 100 000 дает вам примерно 2 минуты запаса — достаточно для пополнения MERX.
 
 ## Типы действий
 
 ### buy_resource
 
-Purchase energy or bandwidth from the market.
+Покупайте energy или bandwidth на рынке.
 
 ```json
 {
@@ -125,11 +125,11 @@ Purchase energy or bandwidth from the market.
 }
 ```
 
-This is the standard action for energy procurement. MERX automatically selects the cheapest available provider at the time of execution. The `target_address` receives the delegated energy.
+Это стандартное действие для закупок energy. MERX автоматически выбирает самого дешевого доступного поставщика во время выполнения. `target_address` получает делегированную energy.
 
 ### ensure_resources
 
-A higher-level action that checks current resources before purchasing.
+Действие более высокого уровня, которое проверяет текущие ресурсы перед покупкой.
 
 ```json
 {
@@ -142,33 +142,33 @@ A higher-level action that checks current resources before purchasing.
 }
 ```
 
-Unlike `buy_resource`, which always buys the specified amount, `ensure_resources` first checks what the address already has and only purchases the deficit. If the address already has 300,000 energy and the target is 500,000, it buys 200,000.
+В отличие от `buy_resource`, который всегда покупает указанное количество, `ensure_resources` сначала проверяет, что уже есть у адреса, и покупает только дефицит. Если адрес уже имеет 300 000 energy, а целевое значение составляет 500 000, он покупает 200 000.
 
-This is the safer action for `balance_below` triggers, as it prevents over-purchasing when multiple triggers fire in rapid succession.
+Это более безопасное действие для триггеров `balance_below`, так как оно предотвращает чрезмерную покупку, когда несколько триггеров срабатывают в быстрой последовательности.
 
 ### notify_only
 
-Send a notification without taking any on-chain action.
+Отправьте уведомление без какого-либо действия в цепи.
 
 ```json
 {
   "type": "notify_only",
   "params": {
     "channels": ["webhook", "telegram"],
-    "message": "Energy price dropped below threshold"
+    "message": "Цена energy упала ниже порога"
   }
 }
 ```
 
-Use this when you want awareness without automation. The standing order monitors the condition and alerts you, but you make the purchase decision manually. This is a good starting point for teams that are not yet comfortable with fully automated purchases.
+Используйте это, когда вы хотите быть в курсе без автоматизации. Постоянный ордер отслеживает условие и оповещает вас, но вы принимаете решение о покупке вручную. Это хороший начальный вариант для команд, которые еще не совсем готовы к полностью автоматизированным покупкам.
 
 ## Бюджетные лимиты и ограничения
 
-Standing orders without constraints are dangerous. A `price_below` trigger with no spending limit could drain your entire balance during a sustained price dip. MERX provides several constraint mechanisms:
+Постоянные ордера без ограничений опасны. Триггер `price_below` без ограничения расходов может истощить весь ваш баланс при устойчивом снижении цены. MERX предоставляет несколько механизмов ограничения:
 
 ### max_daily_spend_trx
 
-The maximum total TRX the standing order can spend in a rolling 24-hour period.
+Максимальное общее количество TRX, которое постоянный ордер может потратить в скользящем периоде 24 часа.
 
 ```json
 {
@@ -176,11 +176,11 @@ The maximum total TRX the standing order can spend in a rolling 24-hour period.
 }
 ```
 
-Once this limit is reached, the trigger continues to fire but the action is suppressed until the 24-hour window rolls forward.
+После достижения этого лимита триггер продолжает срабатывать, но действие подавляется до тех пор, пока окно 24 часов не сдвинется вперед.
 
 ### max_executions_per_day
 
-The maximum number of times the action can execute in a rolling 24-hour period.
+Максимальное количество раз, когда действие может выполниться в скользящем периоде 24 часа.
 
 ```json
 {
@@ -188,11 +188,11 @@ The maximum number of times the action can execute in a rolling 24-hour period.
 }
 ```
 
-This prevents rapid-fire execution during volatile periods. Even if the price bounces above and below the threshold 20 times in an hour, the action executes at most 5 times per day.
+Это предотвращает быстрое выполнение в периоды волатильности. Даже если цена колеблется выше и ниже порога 20 раз в час, действие выполняется максимум 5 раз в день.
 
 ### min_interval_minutes
 
-The minimum time between consecutive executions.
+Минимальное время между последовательными выполнениями.
 
 ```json
 {
@@ -200,11 +200,11 @@ The minimum time between consecutive executions.
 }
 ```
 
-This enforces a cooldown period. After the action executes, the trigger is suppressed for 60 minutes regardless of conditions.
+Это устанавливает период охлаждения. После выполнения действия триггер подавляется на 60 минут независимо от условий.
 
 ### expires_at
 
-The standing order automatically deactivates after this timestamp.
+Постоянный ордер автоматически деактивируется после этого момента времени.
 
 ```json
 {
@@ -212,11 +212,11 @@ The standing order automatically deactivates after this timestamp.
 }
 ```
 
-Always set an expiration on standing orders. An orphaned standing order that runs indefinitely after you've forgotten about it is a liability.
+Всегда устанавливайте срок действия для постоянных ордеров. Забытый постоянный ордер, работающий бесконечно, — это источник проблем.
 
 ### Total Budget
 
-A hard cap on total spending across the lifetime of the standing order.
+Жесткий лимит на общие расходы в течение всего срока действия постоянного ордера.
 
 ```json
 {
@@ -224,11 +224,11 @@ A hard cap on total spending across the lifetime of the standing order.
 }
 ```
 
-Once the lifetime spend reaches this limit, the standing order is permanently deactivated.
+Когда общие расходы в течение жизни достигают этого лимита, постоянный ордер окончательно деактивируется.
 
 ## Каналы уведомлений
 
-Standing orders can send notifications on trigger activation, successful execution, execution failure, and budget limit reached.
+Постоянные ордера могут отправлять уведомления при активации триггера, успешном выполнении, ошибке выполнения и достижении бюджетного лимита.
 
 ### Webhook
 
@@ -244,7 +244,7 @@ Standing orders can send notifications on trigger activation, successful executi
 }
 ```
 
-The webhook receives a JSON payload with the trigger details, action taken, and execution result.
+Webhook получает JSON-полезную нагрузку с деталями триггера, выполненным действием и результатом выполнения.
 
 ### Telegram
 
@@ -259,11 +259,11 @@ The webhook receives a JSON payload with the trigger details, action taken, and 
 }
 ```
 
-MERX sends a formatted message to the specified Telegram chat. Useful for teams that monitor operations through Telegram groups.
+MERX отправляет форматированное сообщение в указанный чат Telegram. Полезно для команд, которые отслеживают операции через группы Telegram.
 
 ## Управление постоянными ордерами
 
-### List Active Orders
+### Список активных ордеров
 
 ```
 Tool: list_standing_orders
@@ -285,122 +285,123 @@ Response:
 }
 ```
 
-### Pause and Resume
+### Пауза и возобновление
 
-Standing orders can be paused without deleting them. A paused order retains its configuration and execution history but does not fire.
+Постоянные ордера можно приостановить без удаления. Приостановленный ордер сохраняет свою конфигурацию и историю выполнения, но не срабатывает.
 
-### Delete
+### Удаление
 
-Permanently removes the standing order. Execution history is retained for audit purposes.
+Безвозвратно удаляет постоянный ордер. История выполнения сохраняется в целях аудита.
 
 ## Практические паттерны
 
-### Pattern 1: Cost-Optimized 24/7 Coverage
+### Паттерн 1: Экономичное покрытие 24/7
 
-For applications that need continuous energy coverage at the lowest possible cost:
-
-```
-Standing Order 1:
-  Trigger: price_below 0.000045 TRX/energy
-  Action: buy 1,000,000 energy for 24 hours
-  Constraint: max 2 executions/day
-
-Standing Order 2:
-  Trigger: balance_below 200,000 energy
-  Action: ensure_resources to 500,000 energy (1 hour)
-  Constraint: max 100 TRX/day
-```
-
-Order 1 buys large amounts of cheap energy when prices dip, providing 24-hour coverage. Order 2 is the safety net - if prices never dip low enough to trigger Order 1, Order 2 ensures the address never runs dry by buying at market price when the balance gets critically low.
-
-### Pattern 2: Business Hours Optimization
-
-For applications with predictable peak hours:
+Для приложений, которым нужно непрерывное покрытие energy с минимально возможными затратами:
 
 ```
-Standing Order 1:
-  Trigger: schedule "0 7 * * 1-5" (7 AM UTC, weekdays)
-  Action: buy 2,000,000 energy for 12 hours
-  Constraint: max 200 TRX/day
+Постоянный ордер 1:
+  Триггер: price_below 0.000045 TRX/energy
+  Действие: купить 1 000 000 energy на 24 часа
+  Ограничение: максимум 2 выполнения/день
 
-Standing Order 2:
-  Trigger: schedule "0 19 * * 1-5" (7 PM UTC, weekdays)
-  Action: buy 500,000 energy for 14 hours
-  Constraint: max 50 TRX/day
+Постоянный ордер 2:
+  Триггер: balance_below 200 000 energy
+  Действие: обеспечить ресурсы до 500 000 energy (1 час)
+  Ограничение: максимум 100 TRX/день
 ```
 
-Heavy energy before business hours, light energy for overnight. Weekend orders can be separate with lower amounts.
+Ордер 1 покупает большие объемы дешевой energy при падении цен, обеспечивая 24-часовое покрытие. Ордер 2 — это предохранитель: если цены никогда не падают достаточно низко, чтобы активировать ордер 1, ордер 2 гарантирует, что адрес никогда не остается без energy, покупая по рыночной цене, когда баланс становится критически низким.
 
-### Pattern 3: Price Alert Only
+### Паттерн 2: Оптимизация для рабочих часов
 
-For teams that want human decision-making with automated monitoring:
-
-```
-Standing Order:
-  Trigger: price_below 0.000040 TRX/energy
-  Action: notify_only
-  Channels: webhook + telegram
-  Message: "Energy at historic low - consider manual bulk purchase"
-```
-
-No automated purchasing. The team gets alerted when prices are exceptionally low and can decide whether to place a large manual order.
-
-### Pattern 4: Auto-Scaling for Variable Load
-
-For applications where transaction volume varies unpredictably:
+Для приложений с предсказуемыми часами пик:
 
 ```
-Standing Order 1:
-  Trigger: balance_below 500,000 energy
-  Action: ensure_resources to 1,000,000 energy (1 hour)
-  Constraint: min_interval 15 minutes, max 500 TRX/day
+Постоянный ордер 1:
+  Триггер: schedule "0 7 * * 1-5" (7:00 UTC, рабочие дни)
+  Действие: купить 2 000 000 energy на 12 часов
+  Ограничение: максимум 200 TRX/день
 
-Standing Order 2:
-  Trigger: balance_below 100,000 energy
-  Action: ensure_resources to 500,000 energy (1 hour)
-  Constraint: min_interval 5 minutes, max 1000 TRX/day
+Постоянный ордер 2:
+  Триггер: schedule "0 19 * * 1-5" (19:00 UTC, рабочие дни)
+  Действие: купить 500 000 energy на 14 часов
+  Ограничение: максимум 50 TRX/день
 ```
 
-Order 1 handles normal load with moderate top-ups. Order 2 is the high-urgency backstop for traffic spikes, with a shorter interval and higher budget.
+Много energy перед рабочими часами, мало energy на ночь. Ордера на выходные могут быть отдельными с меньшими объемами.
 
-## Standing Orders and Agent Integration
+### Паттерн 3: Только уведомления о цене
 
-For AI agents, standing orders are the mechanism for persistent behavior. An agent session is temporary - when the MCP connection closes, the agent can no longer monitor prices or buy energy. Standing orders run on the MERX server, independent of any client connection.
-
-An agent can set up standing orders during one session and benefit from them across all future sessions:
+Для команд, которые хотят принимать решения человеком при автоматизированном мониторинге:
 
 ```
-Session 1 (setup):
-  Agent creates standing orders for price-based purchasing
-  Agent creates balance monitors with auto-renewal
-
-Session 2 (days later):
-  Agent checks standing order execution history
-  Energy has been purchased automatically 14 times
-  All transactions executed with delegated energy
-  Zero manual intervention required
+Постоянный ордер:
+  Триггер: price_below 0.000040 TRX/energy
+  Действие: notify_only
+  Каналы: webhook + telegram
+  Сообщение: "Energy на историческом минимуме — рассмотрите крупную ручную покупку"
 ```
 
-This is the path to truly autonomous blockchain operations. The agent defines the rules once, and the rules execute continuously.
+Никакой автоматической покупки. Команда получает оповещение, когда цены исключительно низкие, и может решить, размещать ли крупный ручной ордер.
+
+### Паттерн 4: Автоматическое масштабирование при переменной нагрузке
+
+Для приложений, где объем транзакций меняется непредсказуемо:
+
+```
+Постоянный ордер 1:
+  Триггер: balance_below 500 000 energy
+  Действие: обеспечить ресурсы до 1 000 000 energy (1 час)
+  Ограничение: min_interval 15 минут, максимум 500 TRX/день
+
+Постоянный ордер 2:
+  Триггер: balance_below 100 000 energy
+  Действие: обеспечить ресурсы до 500 000 energy (1 час)
+  Ограничение: min_interval 5 минут, максимум 1000 TRX/день
+```
+
+Ордер 1 обрабатывает обычную нагрузку с умеренными пополнениями. Ордер 2 — это высокоприоритетная подстраховка для скачков трафика с более коротким интервалом и больший бюджетом.
+
+## Постоянные ордера и интеграция с агентами
+
+Для AI агентов постоянные ордера — это механизм постоянного поведения. Сеанс агента временный — когда соединение MCP закрывается, агент больше не может отслеживать цены или покупать energy. Постоянные ордера работают на сервере MERX, независимо от любого подключения клиента.
+
+Агент может установить постоянные ордера во время одного сеанса и получить от них пользу во всех будущих сеансах:
+
+```
+Сеанс 1 (установка):
+  Агент создает постоянные ордера для покупок, основанных на цене
+  Агент создает мониторы баланса с автоматическим возобновлением
+
+Сеанс 2 (несколько дней спустя):
+  Агент проверяет историю выполнения постоянного ордера
+  Energy было куплено автоматически 14 раз
+  Все транзакции выполнены с делегированной energy
+  Нулевое ручное вмешательство
+```
+
+Это путь к по-настоящему автономным блокчейн-операциям. Агент определяет правила один раз, и правила выполняются непрерывно.
 
 ## Заключение
 
-Manual energy management is a solved problem. Standing orders replace human monitoring with automated rules that execute faster, more consistently, and at lower cost than any manual process.
+Ручное управление energy — решенная проблема. Постоянные ордера заменяют человеческий контроль автоматизированными правилами, которые выполняются быстрее, последовательнее и с меньшими затратами, чем любой ручной процесс.
 
-Define your triggers. Set your constraints. Let MERX handle the rest.
+Определите ваши триггеры. Установите ваши ограничения. Позвольте MERX сделать остальное.
 
-Your application runs 24/7. Your energy procurement should too.
+Ваше приложение работает 24/7. Ваша закупка energy тоже должна.
 
 ---
 
 **Ссылки:**
 - Платформа MERX: [https://merx.exchange](https://merx.exchange)
-- MCP Server (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
-- MCP Server (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
+- MCP сервер (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+- MCP сервер (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — установка не требуется, API ключ не нужен для инструментов только для чтения:
 
 ```json
 {
@@ -412,6 +413,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Попросите вашего AI агента: "Какова самая дешевая TRON energy прямо сейчас?" и получите текущие цены от всех подключенных поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

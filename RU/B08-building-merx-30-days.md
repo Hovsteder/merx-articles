@@ -1,61 +1,61 @@
-# От идеи до продакшна: создание MERX за 30 дней
+# От идеи к продакшену: создание MERX за 30 дней
 
-MERX went from concept to live production system in 30 days. Not a landing page. Not a prototype. A fully operational blockchain resource exchange with seven provider integrations, real-time price aggregation, on-chain order execution, double-entry accounting, comprehensive documentation, SDKs in two languages, and an MCP server with 55 tools for AI agent integration.
+MERX перешел от концепции к живой production-системе за 30 дней. Не лендинг. Не прототип. Полностью функциональный блокчейн-обменник ресурсов с интеграцией семи провайдеров, агрегацией цен в реальном времени, on-chain выполнением ордеров, двойной бухгалтерией, полной документацией, SDK на двух языках и MCP-сервером с 55 инструментами для интеграции с AI агентами.
 
-This article is the technical story of how it happened - the architecture decisions, the problems we solved, the shortcuts we deliberately did not take, and the lessons from building a financial platform at speed without compromising on the things that matter.
-
----
-
-## Day 0: The Problem Statement
-
-The TRON energy market is fragmented. Seven or more providers offer energy delegation services, each with their own API, pricing, and reliability characteristics. If you want the best price, you need to integrate with all of them. If you want failover, you need to build routing logic. If you want transparency, you need to build monitoring.
-
-Every business sending USDT on TRON faces this integration tax. The solution is an aggregation layer - a single API that handles multi-provider routing, best-price selection, and automatic failover.
-
-No one had built it yet. We decided to.
+Эта статья — техническая история того, как это произошло: архитектурные решения, проблемы, которые мы решили, соглашения, которые мы сознательно не сделали, и уроки из построения финансовой платформы на скорости без компромиссов в том, что имеет значение.
 
 ---
 
-## Week 1: Foundation
+## День 0: Описание проблемы
 
-### Architecture First
+Рынок энергии TRON фрагментирован. Семь или больше провайдеров предлагают услуги делегирования энергии, каждый со своим API, ценами и характеристиками надежности. Если вы хотите лучшую цену, вам нужно интегрироваться со всеми. Если вы хотите failover, вам нужно написать логику маршрутизации. Если вы хотите прозрачность, вам нужно создать мониторинг.
 
-Before writing a single line of code, we spent two days on architecture. The result was a 40-section architecture document covering everything from database schema to API error formats to color hex codes. This document became the single source of truth for every implementation decision.
+Каждый бизнес, отправляющий USDT на TRON, сталкивается с налогом на интеграцию. Решение — слой агрегации: единый API, который обрабатывает многопровайдерскую маршрутизацию, выбор лучшей цены и автоматический failover.
 
-Key architecture decisions made in those two days:
+Никто еще это не построил. Мы решили это сделать.
 
-**Decision 1: Microservices from day one.**
+---
 
-Not because microservices are trendy, but because financial systems need isolation. The treasury signer must not be accessible from the API service. The price monitor must not have write access to user balances. Docker containers provide this isolation naturally.
+## Неделя 1: Фундамент
+
+### Сначала архитектура
+
+Перед написанием первой строки кода мы потратили два дня на архитектуру. Результатом была документация архитектуры из 40 разделов, охватывающая все от схемы базы данных до форматов ошибок API до шестнадцатеричных кодов цветов. Этот документ стал единственным источником истины для каждого решения по реализации.
+
+Ключевые архитектурные решения, принятые за два дня:
+
+**Решение 1: Микросервисы с первого дня.**
+
+Не потому что микросервисы модные, а потому что финансовые системы нуждаются в изоляции. Подписант казначейства не должен быть доступен из сервиса API. Монитор цен не должен иметь доступ на запись к балансам пользователей. Docker-контейнеры обеспечивают эту изоляцию естественным образом.
 
 ```
 services/
   api/              HTTP/WebSocket API
-  price-monitor/    Provider price polling
-  order-executor/   Order routing and execution
-  ledger/           Double-entry accounting
-  deposit-monitor/  Incoming payment detection
-  treasury-signer/  Transaction signing (isolated)
+  price-monitor/    Опрос цен провайдеров
+  order-executor/   Маршрутизация и выполнение ордеров
+  ledger/           Двойная бухгалтерия
+  deposit-monitor/  Обнаружение входящих платежей
+  treasury-signer/  Подписание транзакций (изолировано)
 ```
 
-**Decision 2: PostgreSQL + Redis, no exotic databases.**
+**Решение 2: PostgreSQL + Redis, без экзотических баз данных.**
 
-PostgreSQL for everything that needs ACID guarantees (balances, orders, ledger entries). Redis for everything that needs speed (price cache, pub/sub, rate limiting). Both are battle-tested, well-documented, and operationally simple.
+PostgreSQL для всего, что требует гарантий ACID (балансы, ордеры, записи в бухгалтерию). Redis для всего, что требует скорости (кеш цен, pub/sub, rate limiting). Оба — проверенные в боевых условиях, хорошо задокументированные и операционно простые.
 
-**Decision 3: All amounts in SUN.**
+**Решение 3: Все суммы в SUN.**
 
-Every financial value stored as an integer in SUN (1 TRX = 1,000,000 SUN). No floating-point anywhere in the financial path. This eliminated an entire category of bugs before we wrote our first function.
+Каждое финансовое значение хранится как целое число в SUN (1 TRX = 1 000 000 SUN). Нет floating-point нигде в финансовой цепочке. Это исключило целую категорию ошибок до того, как мы написали нашу первую функцию.
 
-**Decision 4: Node.js + TypeScript for services, Go for the matching engine.**
+**Решение 4: Node.js + TypeScript для сервисов, Go для matching engine.**
 
-TypeScript for the bulk of the system - fast development, strong typing, excellent async I/O for API and monitoring workloads. Go reserved for the matching engine where raw performance matters.
+TypeScript для большинства системы — быстрая разработка, строгая типизация, отличный async I/O для API и мониторинга. Go зарезервирован для matching engine, где сырая производительность имеет значение.
 
-### Database Schema
+### Схема базы данных
 
-The database migrations were written on day 3. Every table was designed with financial integrity in mind:
+Миграции базы данных были написаны на день 3. Каждая таблица была спроектирована с учетом финансовой целостности:
 
 ```sql
--- Core principle: every balance mutation creates a ledger entry
+-- Основной принцип: каждая мутация баланса создает запись в бухгалтерию
 CREATE TABLE ledger (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id),
@@ -69,14 +69,14 @@ CREATE TABLE ledger (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- No UPDATE or DELETE triggers - ledger is append-only
+-- Нет триггеров UPDATE или DELETE — бухгалтерия append-only
 ```
 
-One file per migration, named `YYYYMMDD_description.sql`. By the end of the 30 days, there were 14 migration files, each one additive, none destructive.
+Один файл на миграцию, названный `YYYYMMDD_description.sql`. К концу 30 дней было 14 файлов миграции, каждый аддитивный, ни один деструктивный.
 
-### Provider Interface
+### Интерфейс провайдера
 
-The `IEnergyProvider` interface was defined on day 4. This was the contract every provider adapter would implement:
+Интерфейс `IEnergyProvider` был определен на день 4. Это был контракт, который реализовал бы каждый адаптер провайдера:
 
 ```typescript
 interface IEnergyProvider {
@@ -88,74 +88,74 @@ interface IEnergyProvider {
 }
 ```
 
-This interface never changed. Seven providers were integrated against it over the following weeks, each in its own file, none requiring changes to the core system.
+Этот интерфейс никогда не менялся. Семь провайдеров были интегрированы с ним в следующие недели, каждый в своем файле, ни один не требовал изменений в основной системе.
 
 ---
 
-## Week 2: Core Services
+## Неделя 2: Основные сервисы
 
-### Price Monitor
+### Монитор цен
 
-The price monitor was the first service to go live. It polls every provider every 30 seconds, normalizes prices, publishes to Redis, and stores history in PostgreSQL. The implementation is roughly 180 lines of TypeScript across three files.
+Монитор цен был первым сервисом, выпущенным в production. Он опрашивает каждого провайдера каждые 30 секунд, нормализует цены, публикует в Redis и сохраняет историю в PostgreSQL. Реализация — примерно 180 строк TypeScript в трех файлах.
 
-The hardest part was not the polling logic - it was the normalization. Each provider returns prices in slightly different formats:
+Самой сложной частью было не логика опроса — это была нормализация. Каждый провайдер возвращает цены в немного разных форматах:
 
-- Provider A: SUN per energy unit
-- Provider B: total TRX for a fixed energy amount
-- Provider C: SUN per energy unit, but with a different minimum order
-- Provider D: tiered pricing based on volume
+- Провайдер A: SUN за единицу энергии
+- Провайдер B: всего TRX за фиксированное количество энергии
+- Провайдер C: SUN за единицу энергии, но с другим минимальным ордером
+- Провайдер D: многоуровневое ценообразование на основе объема
 
-Each adapter translates its provider's format into the standard `ProviderPriceResponse`. The price monitor does not care about provider quirks; it only sees normalized data.
+Каждый адаптер переводит формат своего провайдера в стандартный `ProviderPriceResponse`. Монитор цен не волнует причудливость провайдеров; он видит только нормализованные данные.
 
-### Order Executor
+### Исполнитель ордеров
 
-The order executor is the most complex service. It reads prices from Redis, determines optimal routing, submits orders to providers, monitors for on-chain confirmation, and publishes settlement events.
+Исполнитель ордеров — самый сложный сервис. Он читает цены из Redis, определяет оптимальную маршрутизацию, отправляет ордеры провайдерам, мониторит on-chain подтверждение и публикует события расчета.
 
-The failover chain was the critical design element. If Provider A fails, try Provider B. If B fails, try C. The buyer's API call succeeds as long as any provider is operational.
+Цепь failover была критическим элементом дизайна. Если провайдер A падает, попробуй провайдера B. Если B падает, попробуй C. Вызов API покупателя завершается успешно, пока хотя бы один провайдер работает.
 
 ```
-Order received -> Read prices -> Select cheapest
-  -> Execute at Provider A
-    -> Success? Verify on-chain -> Settle
-    -> Failure? Try Provider B
-      -> Success? Verify on-chain -> Settle
-      -> Failure? Try Provider C
-        -> ... and so on
+Ордер получен -> Читай цены -> Выбери дешевейшего
+  -> Выполни у провайдера A
+    -> Успех? Верифицируй on-chain -> Расчет
+    -> Ошибка? Попробуй провайдера B
+      -> Успех? Верифицируй on-chain -> Расчет
+      -> Ошибка? Попробуй провайдера C
+        -> ... и так далее
 ```
 
-### Ledger Service
+### Сервис бухгалтерии
 
-The ledger service enforces the double-entry constraint. Every balance mutation creates paired entries. The service runs a reconciliation check every hour:
+Сервис бухгалтерии обеспечивает ограничение двойной записи. Каждая мутация баланса создает спаренные записи. Сервис запускает проверку сверки каждый час:
 
 ```sql
 SELECT SUM(CASE direction
   WHEN 'DEBIT' THEN amount_sun
   WHEN 'CREDIT' THEN -amount_sun
 END) FROM ledger;
--- Must be 0. If not: alert immediately.
+-- Должно быть 0. Если нет: немедленно алертировать.
 ```
 
-In 30 days of development and testing, this check never fired. The constraint was never violated because the architecture made violations structurally impossible, not just unlikely.
+За 30 дней разработки и тестирования эта проверка никогда не срабатывала. Ограничение никогда не нарушалось, потому что архитектура делала нарушения структурно невозможными, а не просто маловероятными.
 
 ---
 
-## Week 3: API, Frontend, and On-Chain Verification
+## Неделя 3: API, фронтенд и on-chain верификация
 
-### API Design
+### Дизайн API
 
-The API follows REST conventions with strict versioning (`/api/v1/...`). Every endpoint was designed before implementation:
+API следует соглашениям REST со строгой версификацией (`/api/v1/...`). Каждый endpoint был спроектирован до реализации:
 
 ```
-GET    /api/v1/prices          Current prices from all providers
-GET    /api/v1/prices/best     Best current price
-POST   /api/v1/orders          Create a new order
-GET    /api/v1/orders/:id      Get order status
-GET    /api/v1/balance         Get account balance
-POST   /api/v1/deposit         Get deposit address
-POST   /api/v1/withdraw        Request withdrawal
+GET    /api/v1/prices          Текущие цены всех провайдеров
+GET    /api/v1/prices/best     Лучшая текущая цена
+POST   /api/v1/orders          Создать новый ордер
+GET    /api/v1/orders/:id      Получить статус ордера
+GET    /api/v1/balance         Получить баланс аккаунта
+POST   /api/v1/deposit         Получить адрес депозита
+POST   /api/v1/withdraw        Запросить вывод
 ```
 
-Error responses use a consistent format:
+Ответы об ошибках используют согласованный формат:
 
 ```json
 {
@@ -170,25 +170,25 @@ Error responses use a consistent format:
 }
 ```
 
-No endpoint was published without Zod validation on all inputs.
+Ни один endpoint не был опубликован без валидации Zod на всех входных данных.
 
-### Frontend
+### Фронтенд
 
-The frontend is a Next.js application with a strict design system: dark theme only, no rounded corners over 2px, no gradients, no shadows, Cormorant Garamond for headings, IBM Plex Mono for everything else. The visual identity was defined in the architecture document and implemented faithfully.
+Фронтенд — это Next.js приложение со строгой дизайн-системой: только темная тема, без округленных углов больше 2px, без градиентов, без теней, Cormorant Garamond для заголовков, IBM Plex Mono для всего остального. Визуальная идентичность была определена в документе архитектуры и реализована верно.
 
-### On-Chain Verification
+### On-chain верификация
 
-Every order is verified on the TRON blockchain. The verification service watches for delegation transactions and confirms that energy arrived at the target address. This was the most challenging integration because blockchain confirmation times are variable and provider transaction formats differ.
+Каждый ордер верифицируется на блокчейне TRON. Сервис верификации наблюдает транзакции делегирования и подтверждает, что энергия прибыла на целевой адрес. Это была самая сложная интеграция, потому что времена подтверждений блокчейна переменны и форматы транзакций провайдеров отличаются.
 
-Eight mainnet transactions were verified during the testing phase, confirming that the end-to-end flow - from API call to on-chain delegation - worked correctly with real TRX and real providers.
+Восемь mainnet-транзакций были верифицированы во время фазы тестирования, подтверждая, что end-to-end поток — от вызова API к on-chain делегированию — работал корректно с реальными TRX и реальными провайдерами.
 
 ---
 
-## Week 4: SDKs, MCP Server, and Documentation
+## Неделя 4: SDK, MCP-сервер и документация
 
 ### JavaScript SDK
 
-The JavaScript SDK was built for Node.js and browser environments:
+JavaScript SDK был построен для Node.js и браузерных окружений:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -202,11 +202,11 @@ const order = await client.createOrder({
 });
 ```
 
-Source: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
+Источник: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 
 ### Python SDK
 
-The Python SDK mirrors the JavaScript SDK's API surface:
+Python SDK отражает поверхность API JavaScript SDK:
 
 ```python
 from merx import MerxClient
@@ -220,117 +220,118 @@ order = client.create_order(
 )
 ```
 
-Source: [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
+Источник: [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
 
-### MCP Server: 52 Tools
+### MCP-сервер: 52 инструмента
 
-The MCP (Model Context Protocol) server was perhaps the most forward-looking component. It exposes MERX functionality as tools that AI agents can use directly.
+MCP (Model Context Protocol) сервер был, возможно, самым дальновидным компонентом. Он раскрывает функциональность MERX как инструменты, которые AI агенты могут использовать напрямую.
 
-The MCP server grew from 7 tools in its initial version to 55 tools by the end of the 30 days:
+MCP-сервер вырос с 7 инструментов в его начальной версии до 55 инструментов к концу 30 дней:
 
 ```
-Account management:    create_account, login, get_balance, get_deposit_info
-Price data:            get_prices, get_best_price, compare_providers, analyze_prices
-Order management:      create_order, get_order, list_orders, create_standing_order
-Resource monitoring:   check_address_resources, estimate_transaction_cost
-TRON utilities:        validate_address, convert_address, get_trx_balance
-On-chain operations:   transfer_trx, transfer_trc20, approve_trc20
-Analytics:             calculate_savings, get_price_history, suggest_duration
-... and 30 more
+Управление аккаунтом:    create_account, login, get_balance, get_deposit_info
+Данные цен:              get_prices, get_best_price, compare_providers, analyze_prices
+Управление ордерами:     create_order, get_order, list_orders, create_standing_order
+Мониторинг ресурсов:     check_address_resources, estimate_transaction_cost
+Утилиты TRON:            validate_address, convert_address, get_trx_balance
+On-chain операции:       transfer_trx, transfer_trc20, approve_trc20
+Аналитика:               calculate_savings, get_price_history, suggest_duration
+... и 30 больше
 ```
 
-Source: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+Источник: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-### Documentation
+### Документация
 
-Documentation was rebuilt from 5 pages to 36 pages, covering the complete API reference, SDK guides, TRON concepts, and integration tutorials. The documentation lives at [https://merx.exchange/docs](https://merx.exchange/docs).
+Документация была расширена с 5 страниц до 36 страниц, охватывая полный справочник API, руководства по SDK, концепции TRON и учебники по интеграции. Документация находится на [https://merx.exchange/docs](https://merx.exchange/docs).
 
-Additionally, 4 SEO guide pages and 7 provider comparison pages were published, bringing the sitemap to 53 URLs.
+Кроме того, были опубликованы 4 SEO-гайда и 7 страниц сравнения провайдеров, доведя карту сайта до 53 URL.
 
 ---
 
-## What We Did Not Compromise On
+## На чем мы не сделали компромиссов
 
-Speed creates pressure to cut corners. Here are the corners we explicitly did not cut:
+Скорость создает давление для сокращения углов. Вот углы, которые мы сознательно не срезали:
 
-### No Floating-Point for Money
+### Нет floating-point для денег
 
-Using integers (SUN) for all financial values added complexity in display formatting but eliminated rounding errors entirely. Every test case matched expected values exactly.
+Использование целых чисел (SUN) для всех финансовых значений добавило сложность в форматирование отображения, но полностью исключило ошибки округления. Каждый тестовый случай совпадал с ожидаемыми значениями точно.
 
-### No String Concatenation for SQL
+### Нет конкатенации строк для SQL
 
-Every database query uses parameterized statements. This was a non-negotiable rule from day one. SQL injection is a solved problem, and we kept it solved.
+Каждый запрос базы данных использует параметризованные операторы. Это было неоспоримое правило с первого дня. SQL-инъекция — это решенная проблема, и мы держали ее решенной.
 
-### No Hardcoded Secrets
+### Нет hardcoded секретов
 
-Environment variables from day one. Docker secrets for the treasury key. `.gitignore` set up before the first commit.
+Переменные окружения с первого дня. Docker секреты для ключа казначейства. `.gitignore` настроен до первого коммита.
 
-### No Services Sharing State Directly
+### Нет сервисов, напрямую делящих состояние
 
-Services communicate via Redis pub/sub or REST API calls. No direct imports between services. This made independent deployment possible and prevented cascade failures.
+Сервисы общаются через Redis pub/sub или REST API вызовы. Нет прямых импортов между сервисами. Это сделало возможным независимое развертывание и предотвратило каскадные отказы.
 
-### No Ledger Mutations
+### Нет мутаций бухгалтерии
 
-Append-only ledger from the first migration. No UPDATE or DELETE on ledger tables. Corrections create new entries, not modifications.
-
----
-
-## What We Learned
-
-### Lesson 1: Architecture Documents Pay for Themselves
-
-The two days spent on architecture saved weeks of rework. Every developer question was answered by the document. Every design disagreement was resolved by referencing the spec. The 40 sections were not bureaucratic overhead; they were a forcing function for thinking through problems before they became bugs.
-
-### Lesson 2: Provider APIs Are Unreliable
-
-Of the seven providers integrated, at least two experienced downtime during the 30-day build period. The failover chain was not a theoretical nicety - it was exercised within the first week of testing.
-
-### Lesson 3: The Adapter Pattern Is Worth the Boilerplate
-
-Writing seven adapters that all implement the same interface felt repetitive. But when Provider C changed their API response format on day 22, we updated one file and nothing else changed. The 10 minutes spent updating the adapter versus the days we would have spent updating every call site made the pattern's value obvious.
-
-### Lesson 4: MCP Is the Future of Service Integration
-
-The MCP server was initially an experiment. But watching AI agents use MERX tools to autonomously manage energy procurement was a revelation. This is how services will be consumed in the future - not through human developers writing integration code, but through AI agents calling tool APIs directly.
-
-### Lesson 5: 200-Line File Limit Is a Feature
-
-We enforced a strict 200-line-per-file limit throughout the project. This forced constant decomposition. Functions stayed small. Responsibilities stayed clear. When a file approached 200 lines, it was time to split, and the split always improved clarity.
+Append-only бухгалтерия с первой миграции. Нет UPDATE или DELETE на таблицах бухгалтерии. Исправления создают новые записи, а не изменения.
 
 ---
 
-## By the Numbers
+## Что мы узнали
+
+### Урок 1: Документы архитектуры платят за себя
+
+Два дня, потраченные на архитектуру, сэкономили недели переработок. Каждый вопрос разработчика был ответен документом. Каждый дизайн-конфликт был разрешен ссылкой на спецификацию. 40 разделов были не бюрократической нагрузкой; они были принуждающей функцией для обдумывания проблем до того, как они стали ошибками.
+
+### Урок 2: Provider API ненадежны
+
+Из семи интегрированных провайдеров по крайней мере два испытали downtime в течение периода разработки из 30 дней. Цепь failover была не теоретическим удобством — она была задействована в течение первой недели тестирования.
+
+### Урок 3: Adapter Pattern стоит boilerplate
+
+Написание семи адаптеров, которые все реализуют один интерфейс, казалось повторяющимся. Но когда провайдер C изменил формат ответа своего API на день 22, мы обновили один файл и больше ничего не изменилось. 10 минут, потраченные на обновление адаптера, против дней, которые мы потратили бы на обновление каждого места вызова, сделали ценность паттерна очевидной.
+
+### Урок 4: MCP — будущее интеграции сервисов
+
+MCP-сервер был первоначально экспериментом. Но просмотр того, как AI агенты используют MERX инструменты для автономного управления снабжением энергией, был откровением. Это то, как сервисы будут потребляться в будущем — не через разработчиков, пишущих код интеграции, а через AI агентов, вызывающих инструмент API напрямую.
+
+### Урок 5: Лимит 200 строк на файл — это фича
+
+Мы навязали строгий лимит 200 строк на файл во всем проекте. Это вынудило постоянное разложение. Функции остались маленькими. Ответственность осталась ясной. Когда файл приближался к 200 строкам, было время для разделения, и разделение всегда улучшало ясность.
+
+---
+
+## По цифрам
 
 ```
-Architecture document:     40 sections
-Services:                  9 Docker containers
-Provider integrations:     7
-Database migrations:       14
+Документ архитектуры:      40 разделов
+Сервисы:                   9 Docker контейнеров
+Интеграции провайдеров:    7
+Миграции БД:               14
 API endpoints:             20+
-MCP tools:                 52 (from initial 7)
-SDK languages:             2 (JavaScript, Python)
-Documentation pages:       36 (from initial 5)
-Sitemap URLs:              53
-Mainnet transactions:      8 verified
-Commission rate:           0%
-Days to production:        30
+MCP инструменты:           52 (из начальных 7)
+Языки SDK:                 2 (JavaScript, Python)
+Страницы документации:     36 (из начальных 5)
+URL на карте сайта:        53
+Верифицированные mainnet-транзакции: 8
+Комиссия:                  0%
+Дней до production:        30
 ```
 
 ---
 
 ## Что дальше
 
-The platform is live at [https://merx.exchange](https://merx.exchange). The immediate focus is testing, optimization, and onboarding the first production users. The foundation is solid - the architecture supports horizontal scaling, new providers can be added in hours, and the zero-commission model removes adoption friction.
+Платформа живет на [https://merx.exchange](https://merx.exchange). Немедленный фокус — тестирование, оптимизация и подключение первых production пользователей. Фундамент прочный — архитектура поддерживает горизонтальное масштабирование, новых провайдеров можно добавить за часы, и нулевая комиссионная модель убирает трение внедрения.
 
-The energy aggregation market on TRON is waiting for a platform that makes it simple. MERX is that platform.
+Рынок агрегации энергии на TRON ждет платформу, которая делает это просто. MERX — это та платформа.
 
 ---
 
-*MERX is the first blockchain resource exchange. Explore the platform at [https://merx.exchange](https://merx.exchange). Documentation at [https://merx.exchange/docs](https://merx.exchange/docs). Open-source SDKs and MCP server on GitHub.*
+*MERX — первый блокчейн-обменник ресурсов. Исследуйте платформу на [https://merx.exchange](https://merx.exchange). Документация на [https://merx.exchange/docs](https://merx.exchange/docs). Open-source SDK и MCP-сервер на GitHub.*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — нулевая установка, без API ключа для инструментов только для чтения:
 
 ```json
 {
@@ -342,6 +343,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Попросите вашего AI агента: "Какая самая дешевая энергия TRON прямо сейчас?" и получите живые цены от всех подключенных провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная MCP документация: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

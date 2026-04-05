@@ -1,54 +1,54 @@
-# MERX Siparis Yonlendirme: Siparisiniiz En Iyi Fiyati Nasil Alir
+# MERX Sipariş Yönlendirmesi: Siparişiniz En İyi Fiyatı Nasıl Alır
 
-When you submit an energy order to MERX, a sequence of decisions happens in milliseconds: which provider has the best price, can they fill this order, what happens if they fail, how do we verify the delegation landed on-chain. This is the order routing engine - the component that turns a simple API call into an optimized, fault-tolerant, verified energy delivery.
+MERX'e bir energy siparişi gönderdiğinizde, milisaniyeler içinde bir dizi karar alınır: hangi sağlayıcının en iyi fiyatı var, bu siparişi doldurabilir mi, başarısız olursa ne olur, delegasyonun on-chain'de gerçekleştiğini nasıl doğrularız. Bu, sipariş yönlendirme motoru - basit bir API çağrısını optimize edilmiş, hata toleranslı, doğrulanmış energy teslimatına dönüştüren bileşendir.
 
-This article walks through the complete lifecycle of a MERX order, from the moment you call `createOrder` to the moment delegated energy appears at your TRON address.
-
----
-
-## The Order Lifecycle
-
-Every order passes through six stages:
-
-```
-1. Validation    -> Is the order well-formed?
-2. Pricing       -> What is the best price right now?
-3. Routing       -> Which provider(s) will fill it?
-4. Execution     -> Submit to provider(s)
-5. Verification  -> Confirm on-chain delegation
-6. Settlement    -> Debit balance, record in ledger
-```
-
-Let us walk through each stage.
+Bu makale, `createOrder` çağrısından delege edilen energy'nin TRON adresinizde görünmesine kadar MERX siparişinin tam yaşam döngüsünü açıklamaktadır.
 
 ---
 
-## Stage 1: Validation
+## Sipariş Yaşam Döngüsü
 
-Before any routing logic runs, the order is validated:
+Her sipariş altı aşamadan geçer:
+
+```
+1. Doğrulama    -> Sipariş iyi biçimlenmiş mi?
+2. Fiyatlandırma -> Şu an en iyi fiyat nedir?
+3. Yönlendirme  -> Hangi sağlayıcı(lar) bunu dolduracak?
+4. Yürütme      -> Sağlayıcı(lara) gönder
+5. Doğrulama    -> On-chain delegasyonu onayla
+6. Yerleşim     -> Bakiye debit et, defteri kaydet
+```
+
+Her aşamayı adım adım ele alalım.
+
+---
+
+## Aşama 1: Doğrulama
+
+Herhangi bir yönlendirme mantığı çalışmadan önce, sipariş doğrulanır:
 
 ```typescript
-// Input validation with Zod
+// Zod ile giriş doğrulaması
 const OrderSchema = z.object({
   energy: z.number().int().min(10000).max(100000000),
   targetAddress: z.string().refine(isValidTronAddress),
   duration: z.enum(['1h', '1d', '3d', '7d', '14d', '30d']),
-  maxPrice: z.number().optional(),  // SUN per energy unit
+  maxPrice: z.number().optional(),  // energy birimi başına SUN
   idempotencyKey: z.string().optional()
 });
 ```
 
-Key validations:
+Anahtar doğrulamalar:
 
-- **Energy amount**: must be a positive integer within supported range.
-- **Target address**: must be a valid, activated TRON address. The system validates the address format and optionally checks on-chain that the account exists.
-- **Duration**: must be one of the supported delegation periods.
-- **Max price**: optional ceiling. If set, the order only executes if the best available price is at or below this threshold.
-- **Idempotency key**: if provided, duplicate submissions with the same key return the original order instead of creating a new one.
+- **Energy miktarı**: desteklenen aralık içinde pozitif bir tamsayı olmalıdır.
+- **Hedef adres**: geçerli, etkinleştirilmiş bir TRON adresi olmalıdır. Sistem adres biçimini doğrular ve isteğe bağlı olarak hesabın on-chain'de var olup olmadığını kontrol eder.
+- **Süre**: desteklenen delegasyon dönemlerinden biri olmalıdır.
+- **Maksimum fiyat**: isteğe bağlı bir üst sınır. Ayarlanırsa, sipariş yalnızca mevcut en iyi fiyat bu eşik değerin altında veya eşitse yürütülür.
+- **İdempotency anahtarı**: sağlanırsa, aynı anahtarla yinelenen gönderimleri yeni bir tane oluşturmak yerine orijinal siparişin sonucunu döndürür.
 
-### Idempotency
+### İdempotency
 
-The idempotency key is critical for production integrations. Network issues can cause a client to retry a request, potentially creating duplicate orders. With an idempotency key, the second request returns the result of the first:
+İdempotency anahtarı, üretim entegrasyonları için kritiktir. Ağ sorunları, bir istemciyi isteği yeniden denemeye zorlayabilir ve potansiyel olarak yinelenen siparişler oluşturabilir. İdempotency anahtarı ile, ikinci istek ilkinin sonucunu döndürür:
 
 ```typescript
 const order = await client.createOrder({
@@ -58,15 +58,15 @@ const order = await client.createOrder({
   idempotencyKey: 'payment-123-energy'
 });
 
-// If called again with the same key, returns the same order
-// No duplicate delegation, no double charge
+// Aynı anahtarla yeniden çağrılırsa, aynı siparişi döndürür
+// Yinelenen delegasyon yok, çift ücret yok
 ```
 
 ---
 
-## Stage 2: Pricing
+## Aşama 2: Fiyatlandırma
 
-The order executor reads current prices from the Redis cache. The price monitor updates these every 30 seconds, so the data is at most 30 seconds old.
+Sipariş yürütücüsü, Redis önbelleğinden mevcut fiyatları okur. Fiyat monitörü, bunları her 30 saniyede bir günceller, bu nedenle veriler en fazla 30 saniye eski olur.
 
 ```typescript
 async function getBestPrices(
@@ -80,20 +80,20 @@ async function getBestPrices(
   for (const key of allPrices) {
     const price = JSON.parse(await redis.get(key));
 
-    // Filter: must support requested duration
+    // Filtre: istenen süreyi desteklemeli
     if (!price.durations.includes(duration)) continue;
 
-    // Filter: must have sufficient availability
+    // Filtre: yeterli kullanılabilirliğe sahip olmalı
     if (price.availableEnergy < energyAmount) continue;
 
-    // Filter: must pass health threshold
+    // Filtre: sağlık eşiğini geçmeli
     const health = await getProviderHealth(price.provider);
     if (health.fillRate < 0.90) continue;
 
     validPrices.push(price);
   }
 
-  // Sort by effective price (accounting for reliability)
+  // Etkili fiyata göre sırala (güvenilirliği hesaba kat)
   return validPrices.sort((a, b) => {
     const effectiveA = a.energyPricePerUnit / a.fillRate;
     const effectiveB = b.energyPricePerUnit / b.fillRate;
@@ -102,9 +102,9 @@ async function getBestPrices(
 }
 ```
 
-### Max Price Enforcement
+### Maksimum Fiyat Uygulaması
 
-If the buyer specified a `maxPrice`, the order is rejected if no provider can meet it:
+Alıcı bir `maxPrice` belirtirse, hiçbir sağlayıcı bunu karşılayamıyorsa sipariş reddedilir:
 
 ```typescript
 if (maxPrice && bestPrice.energyPricePerUnit > maxPrice) {
@@ -116,66 +116,66 @@ if (maxPrice && bestPrice.energyPricePerUnit > maxPrice) {
 }
 ```
 
-This prevents unexpected charges during price spikes.
+Bu, fiyat dalgalanmaları sırasında beklenmedik ücretleri önler.
 
 ---
 
-## Stage 3: Routing
+## Aşama 3: Yönlendirme
 
-The routing engine decides which provider(s) will fill the order. This is the core intelligence of the system.
+Yönlendirme motoru, hangi sağlayıcı(ların) siparişi dolduracağına karar verir. Bu, sistemin çekirdek zekasıdır.
 
-### Simple Case: Single Provider Fill
+### Basit Durum: Tek Sağlayıcı Doldurması
 
-For orders within a single provider's capacity:
-
-```
-Order: 65,000 energy
-Best provider: itrx at 85 SUN/unit, 500,000 available
-
-Route: 100% to itrx
-```
-
-### Split Case: Multi-Provider Fill
-
-For large orders or when the cheapest provider has limited stock:
+Tek sağlayıcının kapasitesi içindeki siparişler için:
 
 ```
-Order: 500,000 energy
+Sipariş: 65.000 energy
+En iyi sağlayıcı: itrx at 85 SUN/birim, 500.000 kullanılabilir
 
-Provider A: 200,000 available at 85 SUN
-Provider B: 180,000 available at 87 SUN
-Provider C: 300,000 available at 92 SUN
-
-Routing plan:
-  Leg 1: Provider A -> 200,000 energy at 85 SUN
-  Leg 2: Provider B -> 180,000 energy at 87 SUN
-  Leg 3: Provider C -> 120,000 energy at 92 SUN
-
-Blended rate: (200K*85 + 180K*87 + 120K*92) / 500K = 87.28 SUN
+Yönlendirme: itrx'e %100
 ```
 
-The router fills from cheapest to most expensive, taking as much as possible from each provider before moving to the next.
+### Bölünmüş Durum: Çok Sağlayıcı Doldurması
 
-### The Failover Chain
-
-Every routing plan includes a failover chain - an ordered list of alternative providers to try if the primary fails:
+Büyük siparişler veya en ucuz sağlayıcının sınırlı stoku olduğunda:
 
 ```
-Primary:   Provider A (85 SUN)
-Failover 1: Provider B (87 SUN)
-Failover 2: Provider C (92 SUN)
-Failover 3: Provider D (95 SUN)
+Sipariş: 500.000 energy
+
+Sağlayıcı A: 85 SUN'da 200.000 kullanılabilir
+Sağlayıcı B: 87 SUN'da 180.000 kullanılabilir
+Sağlayıcı C: 92 SUN'da 300.000 kullanılabilir
+
+Yönlendirme planı:
+  Bacak 1: Sağlayıcı A -> 85 SUN'da 200.000 energy
+  Bacak 2: Sağlayıcı B -> 87 SUN'da 180.000 energy
+  Bacak 3: Sağlayıcı C -> 92 SUN'da 120.000 energy
+
+Karışık oran: (200K*85 + 180K*87 + 120K*92) / 500K = 87,28 SUN
 ```
 
-If Provider A fails to execute (API error, timeout, insufficient funds), the executor automatically moves to Provider B without any action from the buyer.
+Yönlendirici, en ucuzdan en pahalısına doğru doldurur, bir sonrakine geçmeden önce her sağlayıcıdan mümkün olduğunca çok alır.
+
+### Failover Zinciri
+
+Her yönlendirme planı bir failover zinciri içerir - birincil başarısız olursa denenmesi gereken alternatif sağlayıcıların sıralı listesi:
+
+```
+Birincil:   Sağlayıcı A (85 SUN)
+Failover 1: Sağlayıcı B (87 SUN)
+Failover 2: Sağlayıcı C (92 SUN)
+Failover 3: Sağlayıcı D (95 SUN)
+```
+
+Sağlayıcı A yürütülmezse (API hatası, zaman aşımı, yetersiz fon), yürütücü alıcıdan herhangi bir işlem olmadan otomatik olarak Sağlayıcı B'ye geçer.
 
 ---
 
-## Stage 4: Execution
+## Aşama 4: Yürütme
 
-The executor submits the order to the selected provider(s) and monitors for completion.
+Yürütücü, siparişi seçilen sağlayıcı(lara) gönderir ve tamamlanmayı izler.
 
-### Execution Flow
+### Yürütme Akışı
 
 ```typescript
 async function executeOrder(
@@ -190,7 +190,7 @@ async function executeOrder(
       const result = await executeLeg(leg, order);
       results.push(result);
     } catch (error) {
-      // Primary provider failed - try failover
+      // Birincil sağlayıcı başarısız - failover dene
       const failoverResult = await executeWithFailover(
         leg,
         order,
@@ -222,36 +222,36 @@ async function executeWithFailover(
       );
       return result;
     } catch (error) {
-      // Log and continue to next failover
+      // Kaydet ve sonraki failover'a devam et
       continue;
     }
   }
 
   throw new OrderError({
     code: 'ALL_PROVIDERS_FAILED',
-    message: 'Order could not be filled by any available provider'
+    message: 'Sipariş hiçbir mevcut sağlayıcı tarafından doldurulmadı'
   });
 }
 ```
 
-### Timeout Handling
+### Zaman Aşımı Yönetimi
 
-Each provider execution has a strict timeout. If the provider does not acknowledge the order within the timeout window (typically 30 seconds), the executor moves to the failover chain:
+Her sağlayıcı yürütmesinin katı bir zaman aşımı vardır. Sağlayıcı, zaman aşımı penceresinde (genellikle 30 saniye) siparişi onaylamazsa, yürütücü failover zincirine geçer:
 
 ```
-T+0:    Submit order to Provider A
-T+30s:  No response -> timeout, failover to Provider B
-T+31s:  Submit order to Provider B
-T+35s:  Provider B acknowledges -> proceed to verification
+T+0:    Siparişi Sağlayıcı A'ya gönder
+T+30s:  Cevap yok -> zaman aşımı, Sağlayıcı B'ye failover
+T+31s:  Siparişi Sağlayıcı B'ye gönder
+T+35s:  Sağlayıcı B onayladı -> doğrulamaya geç
 ```
 
 ---
 
-## Stage 5: Verification
+## Aşama 5: Doğrulama
 
-Acknowledgment from the provider is not enough. MERX verifies that the energy delegation actually appears on the TRON blockchain.
+Sağlayıcıdan onay almak yeterli değildir. MERX, energy delegasyonunun aslında TRON blokzincirinde göründüğünü doğrular.
 
-### On-Chain Verification Process
+### On-Chain Doğrulama Süreci
 
 ```typescript
 async function verifyDelegation(
@@ -260,20 +260,20 @@ async function verifyDelegation(
   delegationTxHash: string
 ): Promise<VerificationResult> {
 
-  // Step 1: Verify the delegation transaction exists
+  // Adım 1: Delegasyon işleminin var olduğunu doğrula
   const tx = await tronWeb.trx.getTransaction(delegationTxHash);
   if (!tx || tx.ret[0].contractRet !== 'SUCCESS') {
-    return { verified: false, reason: 'Transaction not found or failed' };
+    return { verified: false, reason: 'İşlem bulunamadı veya başarısız' };
   }
 
-  // Step 2: Check target address resources
+  // Adım 2: Hedef adres kaynaklarını kontrol et
   const resources = await tronWeb.trx.getAccountResources(targetAddress);
   const currentEnergy = resources.EnergyLimit || 0;
 
-  // Step 3: Verify energy increased by expected amount (with tolerance)
-  const tolerance = expectedEnergy * 0.02; // 2% tolerance
+  // Adım 3: Energy'nin beklenen miktar kadar arttığını doğrula (toleransla)
+  const tolerance = expectedEnergy * 0.02; // %2 tolerans
   if (currentEnergy < expectedEnergy - tolerance) {
-    return { verified: false, reason: 'Energy amount below expected' };
+    return { verified: false, reason: 'Energy miktarı beklenenin altında' };
   }
 
   return {
@@ -285,39 +285,39 @@ async function verifyDelegation(
 }
 ```
 
-### Why 2% Tolerance
+### Neden %2 Tolerans
 
-Energy delegation amounts are based on TRX-to-energy conversion ratios that can shift slightly between order placement and delegation confirmation. A 2% tolerance accounts for this without accepting grossly incorrect amounts.
+Energy delegasyonu miktarları, sipariş yerleştirilmesi ile delegasyon onayı arasında biraz değişebilen TRX-to-energy dönüştürme oranlarına dayanır. %2 tolerans, bunu kabul etmeyen büyük ölçüde yanlış miktarları hesaba katmadan hesaba katar.
 
-### Verification Timing
+### Doğrulama Zamanlaması
 
 ```
-T+0:    Provider acknowledges order
-T+3-6s: Delegation transaction confirms on TRON (1 block)
-T+10s:  MERX queries target address resources
-T+10s:  Verification complete, buyer notified
+T+0:    Sağlayıcı siparişi onayladı
+T+3-6s: Delegasyon işlemi TRON'da onaylandı (1 blok)
+T+10s:  MERX hedef adres kaynaklarını sorguladı
+T+10s:  Doğrulama tamamlandı, alıcı bilgilendirildi
 ```
 
-The entire process from order submission to verified delivery typically takes 15-45 seconds.
+Sipariş gönderiminden doğrulanmış teslimatına kadar olan tüm süreç tipik olarak 15-45 saniye sürer.
 
 ---
 
-## Stage 6: Settlement
+## Aşama 6: Yerleşim
 
-After verification, the financial settlement occurs:
+Doğrulamadan sonra, finansal yerleşim gerçekleşir:
 
-### Balance Deduction
+### Bakiye Kesintisi
 
 ```sql
--- Atomic balance check and deduction
+-- Atomik bakiye kontrolü ve kesinti
 BEGIN;
 
 SELECT balance_sun FROM accounts
 WHERE user_id = $1
 FOR UPDATE;
 
--- Verify sufficient balance
--- If insufficient, ROLLBACK and return error
+-- Yeterli bakiye doğrula
+-- Yetersiz ise, ROLLBACK ve hata döndür
 
 UPDATE accounts
 SET balance_sun = balance_sun - $2
@@ -326,11 +326,11 @@ WHERE user_id = $1;
 COMMIT;
 ```
 
-The `SELECT FOR UPDATE` ensures no race condition between balance check and deduction. If two orders are processed simultaneously, the second one will wait for the first to complete before checking the balance.
+`SELECT FOR UPDATE`, bakiye kontrolü ile kesinti arasında yarış koşulu olmadığını sağlar. İki sipariş eşzamanlı olarak işlenirse, ikincisi birincisinin tamamlanmasını bekledikten sonra bakiyeyi kontrol eder.
 
-### Ledger Entry
+### Defter Girişi
 
-Every settlement creates an immutable ledger entry:
+Her yerleşim, değişmez bir defter girişi oluşturur:
 
 ```sql
 INSERT INTO ledger (
@@ -346,116 +346,117 @@ INSERT INTO ledger (
 );
 ```
 
-Ledger entries are append-only. They are never updated or deleted. This creates a complete, auditable history of every financial operation.
+Defter girişleri ekleyen. Hiçbir zaman güncellenmez veya silinmez. Bu, her finansal işlemin tamamen, denetlenebilir bir geçmişini oluşturur.
 
 ---
 
-## Tracking Your Order
+## Siparişinizi İzleme
 
-The MERX API provides real-time order status through both REST and WebSocket:
+MERX API, REST ve WebSocket aracılığıyla gerçek zamanlı sipariş durumu sağlar:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 
-// REST: poll order status
+// REST: sipariş durumunu yokla
 const order = await client.getOrder('ord_abc123');
 console.log(order.status);
 // 'pending' | 'executing' | 'verifying' | 'completed' | 'failed'
 
-// WebSocket: real-time updates
+// WebSocket: gerçek zamanlı güncellemeler
 client.onOrderUpdate('ord_abc123', (update) => {
-  console.log(`Order ${update.orderId}: ${update.status}`);
+  console.log(`Sipariş ${update.orderId}: ${update.status}`);
   if (update.status === 'completed') {
-    console.log(`Delegation TX: ${update.delegationTxHash}`);
+    console.log(`Delegasyon TX: ${update.delegationTxHash}`);
   }
 });
 ```
 
-### Order Status Flow
+### Sipariş Durumu Akışı
 
 ```
 pending -> executing -> verifying -> completed
-                |                       |
-                v                       v
-              failed              partially_filled
+              |                        |
+              v                        v
+            failed              partially_filled
 ```
 
-- **pending**: Order received, awaiting execution.
-- **executing**: Submitted to provider, awaiting acknowledgment.
-- **verifying**: Provider acknowledged, awaiting on-chain confirmation.
-- **completed**: Energy verified at target address.
-- **failed**: All providers failed. Balance not charged.
-- **partially_filled**: Some legs completed, others failed. Balance charged for filled portion.
+- **pending**: Sipariş alındı, yürütmeyi bekliyor.
+- **executing**: Sağlayıcıya gönderildi, onayı bekliyor.
+- **verifying**: Sağlayıcı onayladı, on-chain onayını bekliyor.
+- **completed**: Energy hedef adresinde doğrulandı.
+- **failed**: Tüm sağlayıcılar başarısız. Bakiye ücretlendirilmedi.
+- **partially_filled**: Bazı bacaklar tamamlandı, diğerleri başarısız. Bakiye doldurulmuş kısım için ücretlendirildi.
 
 ---
 
-## Hata Yonetimi
+## Hata Yönetimi
 
-### Provider Errors
+### Sağlayıcı Hataları
 
-Every provider can fail in unique ways. The order executor normalizes all provider errors into standard error codes:
+Her sağlayıcı benzersiz şekillerde başarısız olabilir. Sipariş yürütücüsü, tüm sağlayıcı hatalarını standart hata kodlarına normalleştirir:
 
 ```json
 {
   "error": {
     "code": "PROVIDER_UNAVAILABLE",
-    "message": "Primary provider could not fill the order. Failover to secondary provider.",
+    "message": "Birincil sağlayıcı siparişi dolduramazdı. İkincil sağlayıcıya failover.",
     "details": {
       "primaryProvider": "tronsave",
       "primaryError": "timeout",
       "filledBy": "feee",
-      "priceImpact": "+2 SUN/unit"
+      "priceImpact": "+2 SUN/birim"
     }
   }
 }
 ```
 
-### Partial Fills
+### Kısmi Doldurmalar
 
-For multi-leg orders, some legs may succeed while others fail. MERX handles this by:
+Çok bacaklı siparişler için, bazı bacaklar başarılı olabilirken diğerleri başarısız olabilir. MERX bunu şu şekilde yönetir:
 
-1. Completing successful legs normally.
-2. Attempting failover for failed legs.
-3. If failover also fails, returning a partial fill result.
-4. Charging the buyer only for the energy that was actually delivered.
+1. Başarılı bacakları normal olarak tamamlar.
+2. Başarısız bacaklar için failover'i dener.
+3. Failover da başarısız olursa, kısmi doldurma sonucu döndürür.
+4. Alıcıyı yalnızca aslında teslim edilen energy için ücretlendirir.
 
 ---
 
 ## Performans
 
-Typical order execution times:
+Tipik sipariş yürütme süreleri:
 
 ```
-Validation:    < 5ms
-Pricing:       < 10ms (Redis read)
-Routing:       < 5ms
-Execution:     5-30 seconds (provider API + blockchain)
-Verification:  3-10 seconds (blockchain confirmation)
+Doğrulama:    < 5ms
+Fiyatlandırma: < 10ms (Redis okuma)
+Yönlendirme:   < 5ms
+Yürütme:       5-30 saniye (sağlayıcı API'si + blokzincir)
+Doğrulama:     3-10 saniye (blokzincir onayı)
 
-Total: 10-45 seconds from API call to verified delivery
+Toplam: API çağrısından doğrulanmış teslimatına 10-45 saniye
 ```
 
-The bottleneck is always the blockchain. MERX's internal processing adds less than 50ms of overhead. The rest is waiting for the provider and the TRON network.
+Darboğaz her zaman blokzincirdir. MERX'in iç işlemesi 50ms'den daha az ek yük ekler. Geri kalan, sağlayıcı ve TRON ağını beklemeye harcanır.
 
 ---
 
-## Sonuc
+## Sonuç
 
-Order routing is where MERX's value is most tangible. A single API call triggers a cascade of optimizations: best-price selection, multi-provider splitting, automatic failover, on-chain verification, and atomic settlement. Every step is designed to ensure you get the cheapest energy available, delivered reliably, with full auditability.
+Sipariş yönlendirmesi, MERX'in değerinin en somut olduğu yerdir. Tek bir API çağrısı, bir dizi optimizasyonu tetikler: en iyi fiyat seçimi, çok sağlayıcı bölünmesi, otomatik failover, on-chain doğrulaması ve atomik yerleşim. Her adım, mevcut en ucuz energy'yi güvenilir bir şekilde sunmanızı ve tam denetlenebilirliği sağlamak için tasarlanmıştır.
 
-The complexity is real, but it is MERX's complexity to manage, not yours. Your integration remains a single API call.
+Karmaşıklık gerçektir, ancak yönetmek için MERX'indir, sizin değil. Entegrasyonunuz basit bir API çağrısı olarak kalır.
 
-Start routing orders at [https://merx.exchange](https://merx.exchange). Tam API referansi: [https://merx.exchange/docs](https://merx.exchange/docs).
+[https://merx.exchange](https://merx.exchange) adresinde sipariş yönlendirmesini başlatın. Tam API başvurusu [https://merx.exchange/docs](https://merx.exchange/docs) adresinde.
 
 ---
 
-*Bu makale, MERX teknik serisinin bir parcasidir. MERX, ilk blokzincir kaynak borsasidir. SDK'lar: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) and [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python). MCP sunucusu: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).*
+*Bu makale MERX teknik serisinin bir parçasıdır. MERX ilk blokzincir kaynağı değişimidir. SDK'lar: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) ve [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python). MCP sunucusu: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- kurulum yok, salt okunur araçlar için API anahtarı yok:
 
 ```json
 {
@@ -467,6 +468,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI aracınıza şunu sorun: "Şu an en ucuz TRON energy nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

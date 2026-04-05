@@ -1,19 +1,19 @@
-# MERX Python SDK: ноль зависимостей, полная функциональность
+# MERX Python SDK: Нулевые зависимости, полная мощь
 
-The MERX Python SDK provides a complete interface to the MERX TRON energy exchange using only the Python standard library - no requests, no httpx, no aiohttp. This article covers the four SDK modules (prices, orders, balance, webhooks), every method with working examples, the dataclass type system, error handling, and a comparison with the JavaScript SDK for teams that use both languages.
+MERX Python SDK предоставляет полный интерфейс к обмену TRON энергией MERX, используя только стандартную библиотеку Python — без requests, без httpx, без aiohttp. Эта статья охватывает четыре модуля SDK (цены, заказы, баланс, вебхуки), все методы с рабочими примерами, систему типов dataclass, обработку ошибок и сравнение с JavaScript SDK для команд, использующих оба языка.
 
-## Why Zero Dependencies
+## Почему нулевые зависимости
 
-Most Python HTTP clients pull in a dependency tree. The `requests` library alone brings in `urllib3`, `certifi`, `charset-normalizer`, and `idna`. For a lightweight SDK that makes a handful of API calls, that overhead is unnecessary.
+Большинство Python HTTP-клиентов подтягивают дерево зависимостей. Сама библиотека `requests` устанавливает `urllib3`, `certifi`, `charset-normalizer` и `idna`. Для лёгкого SDK, который делает несколько API-запросов, эта нагрузка ненужна.
 
-The MERX Python SDK uses only `urllib.request` from the standard library. This means:
+MERX Python SDK использует только `urllib.request` из стандартной библиотеки. Это означает:
 
-- No dependency conflicts in your virtual environment
-- No supply chain attack surface from third-party packages
-- Works on any Python 3.10+ installation without `pip install` overhead
-- Deployable to restricted environments where installing packages is difficult
+- Отсутствие конфликтов зависимостей в вашей виртуальной среде
+- Отсутствие поверхности атаки цепи поставок от сторонних пакетов
+- Работает на любой установке Python 3.10+ без нагрузки `pip install`
+- Развёртывается в ограниченных окружениях, где установка пакетов затруднена
 
-The tradeoff is the absence of async support. The SDK uses synchronous HTTP calls. If you need async, the REST API is simple enough to call directly with `aiohttp` or `httpx` using the patterns shown in this article.
+Компромисс — отсутствие асинхронной поддержки. SDK использует синхронные HTTP-вызовы. Если вам нужна асинхронность, REST API достаточно прост для прямого вызова с `aiohttp` или `httpx` по шаблонам, показанным в этой статье.
 
 ## Установка
 
@@ -21,7 +21,7 @@ The tradeoff is the absence of async support. The SDK uses synchronous HTTP call
 pip install merx-sdk
 ```
 
-That is it. No dependencies will be installed alongside it.
+Это всё. Никаких зависимостей не будет установлено рядом с ним.
 
 ## Быстрый старт
 
@@ -30,13 +30,13 @@ from merx import MerxClient
 
 client = MerxClient(api_key="sk_live_your_key_here")
 
-# Check current prices
+# Проверить текущие цены
 prices = client.prices.list()
 for p in prices:
     if p.energy_prices:
         print(f"{p.provider}: {p.energy_prices[0].price_sun} SUN/energy")
 
-# Buy energy
+# Купить энергию
 order = client.orders.create(
     resource_type="ENERGY",
     amount=65000,
@@ -46,20 +46,20 @@ order = client.orders.create(
 print(f"Order {order.id}: {order.status}")
 ```
 
-The client is initialized with your API key from the MERX dashboard at [merx.exchange](https://merx.exchange). The optional `base_url` parameter defaults to `https://merx.exchange`.
+Клиент инициализируется с вашим API-ключом из панели управления MERX на [merx.exchange](https://merx.exchange). Необязательный параметр `base_url` по умолчанию установлен на `https://merx.exchange`.
 
 ```python
 client = MerxClient(
     api_key="sk_live_your_key_here",
-    base_url="https://merx.exchange",  # Optional
+    base_url="https://merx.exchange",  # Опционально
 )
 ```
 
-## The Type System
+## Система типов
 
-Every API response is parsed into a Python dataclass. No raw dictionaries, no untyped data. Your IDE gets full autocompletion and your type checker catches errors before runtime.
+Каждый ответ API преобразуется в Python dataclass. Никаких сырых словарей, никаких нетипизированных данных. Ваша IDE получает полное автодополнение, а ваш проверяющий тип ловит ошибки до выполнения.
 
-The SDK exports 16 dataclass types:
+SDK экспортирует 16 типов dataclass:
 
 ```python
 from merx import (
@@ -82,7 +82,7 @@ from merx import (
 )
 ```
 
-### Key Type Definitions
+### Ключевые определения типов
 
 ```python
 @dataclass
@@ -128,15 +128,15 @@ class Fill:
     tronscan_url: Optional[str] = None
 ```
 
-All dataclasses use standard Python type hints. Fields with defaults are optional API response fields that may not be present in every response.
+Все dataclasses используют стандартные подсказки типов Python. Поля со значениями по умолчанию — это необязательные поля ответа API, которые могут отсутствовать в каждом ответе.
 
-## Module 1: Prices
+## Модуль 1: Цены
 
-The prices module provides five methods for querying real-time and historical price data. All price endpoints are public and do not require authentication, but the SDK always sends the API key header for consistency.
+Модуль цен предоставляет пять методов для запроса данных о ценах в реальном времени и исторических данных. Все конечные точки цен являются открытыми и не требуют аутентификации, но SDK всегда отправляет заголовок API-ключа для согласованности.
 
 ### prices.list()
 
-Returns current pricing from all active providers.
+Возвращает текущие цены от всех активных поставщиков.
 
 ```python
 prices = client.prices.list()
@@ -149,25 +149,25 @@ for p in prices:
         print(f"  {hours}h: {tier.price_sun} SUN/unit")
 ```
 
-Returns `list[ProviderPrice]`. Each entry includes the provider name, whether it supports market orders with flexible durations, price tiers for energy and bandwidth, and current available capacity.
+Возвращает `list[ProviderPrice]`. Каждая запись включает имя поставщика, поддерживает ли он рыночные заказы с гибкой длительностью, ценовые уровни для энергии и пропускной способности, а также текущую доступную ёмкость.
 
 ### prices.best(resource, amount=None)
 
-Returns the cheapest available price for a resource type.
+Возвращает самую дешевую доступную цену для типа ресурса.
 
 ```python
 best = client.prices.best("ENERGY")
 print(f"Cheapest: {best.price_sun} SUN from {best.provider}")
 
-# Only providers with at least 200,000 available
+# Только поставщики с не менее 200 000 доступных
 best_large = client.prices.best("ENERGY", amount=200000)
 ```
 
-Returns `PriceHistoryEntry`. The `amount` parameter filters out providers that lack sufficient capacity.
+Возвращает `PriceHistoryEntry`. Параметр `amount` отфильтровывает поставщиков, у которых недостаточно ёмкости.
 
 ### prices.history(provider=None, resource=None, period="24h")
 
-Returns historical price snapshots for charting and analysis.
+Возвращает исторические снимки цен для графиков и анализа.
 
 ```python
 history = client.prices.history(
@@ -180,11 +180,11 @@ for entry in history:
     print(f"{entry.polled_at}: {entry.price_sun} SUN ({entry.available:,} available)")
 ```
 
-Returns `list[PriceHistoryEntry]`. Available periods: `"1h"`, `"6h"`, `"24h"`, `"7d"`, `"30d"`.
+Возвращает `list[PriceHistoryEntry]`. Доступные периоды: `"1h"`, `"6h"`, `"24h"`, `"7d"`, `"30d"`.
 
 ### prices.stats()
 
-Returns aggregate market statistics.
+Возвращает сводную статистику рынка.
 
 ```python
 stats = client.prices.stats()
@@ -194,18 +194,18 @@ print(f"Providers online: {stats.total_providers}")
 print(f"Cheapest-provider changes (24h): {stats.cheapest_changes_24h}")
 ```
 
-Returns `PriceStats`.
+Возвращает `PriceStats`.
 
 ### prices.preview(resource, amount, duration, max_price_sun=None)
 
-Previews what an order would cost before placing it.
+Предпросмотр, что будет стоить заказ, перед его размещением.
 
 ```python
 preview = client.prices.preview(
     resource="ENERGY",
     amount=100000,
-    duration=86400,       # 24 hours
-    max_price_sun=35,     # Optional ceiling
+    duration=86400,       # 24 часа
+    max_price_sun=35,     # Опциональное ограничение сверху
 )
 
 if preview.best:
@@ -220,13 +220,13 @@ if preview.no_providers:
     print("No providers available for these parameters")
 ```
 
-Returns `OrderPreview` with a `best` match (or `None`), a list of `fallbacks`, and a `no_providers` boolean.
+Возвращает `OrderPreview` с совпадением `best` (или `None`), списком `fallbacks` и булевым значением `no_providers`.
 
-## Module 2: Orders
+## Модуль 2: Заказы
 
 ### orders.create(...)
 
-Creates an energy or bandwidth order.
+Создаёт заказ энергии или пропускной способности.
 
 ```python
 order = client.orders.create(
@@ -234,21 +234,21 @@ order = client.orders.create(
     amount=65000,
     target_address="TYourTargetAddress",
     duration_sec=3600,
-    order_type="MARKET",           # Default
-    max_price_sun=None,            # Required for LIMIT orders
-    idempotency_key="unique-id",   # Prevents duplicate orders
+    order_type="MARKET",           # По умолчанию
+    max_price_sun=None,            # Требуется для заказов LIMIT
+    idempotency_key="unique-id",   # Предотвращает дублирующиеся заказы
 )
 
 print(f"Order {order.id}: {order.status}")
 ```
 
-Returns `Order`. Note that unlike the JavaScript SDK where parameters are passed as a dictionary, the Python SDK uses explicit keyword arguments for clarity.
+Возвращает `Order`. Обратите внимание, что в отличие от JavaScript SDK, где параметры передаются как словарь, Python SDK использует явные ключевые аргументы для ясности.
 
-The `idempotency_key` parameter is critical for production systems. If a network error causes a retry, the API returns the original order instead of creating a duplicate.
+Параметр `idempotency_key` критичен для рабочих систем. Если сетевая ошибка вызывает повтор, API возвращает исходный заказ вместо создания дубликата.
 
 ### orders.list(limit=30, offset=0, status=None)
 
-Lists orders with pagination.
+Список заказов с пагинацией.
 
 ```python
 orders, total = client.orders.list(limit=10, offset=0, status="FILLED")
@@ -259,11 +259,11 @@ for o in orders:
     print(f"  {o.id}: {o.amount:,} {o.resource_type}, {cost_trx:.3f} TRX")
 ```
 
-Returns `tuple[list[Order], int]` - the list of orders and the total count for pagination.
+Возвращает `tuple[list[Order], int]` — список заказов и общее количество для пагинации.
 
 ### orders.get(order_id)
 
-Returns a single order with its fill breakdown.
+Возвращает один заказ с разбивкой по заполнениям.
 
 ```python
 order = client.orders.get("ord_abc123")
@@ -278,13 +278,13 @@ for fill in order.fills:
         print(f"  TX: {fill.tronscan_url}")
 ```
 
-Returns `OrderWithFills`, which extends `Order` with a `fills` list of `Fill` objects.
+Возвращает `OrderWithFills`, который расширяет `Order` списком `fills` объектов `Fill`.
 
-## Module 3: Balance
+## Модуль 3: Баланс
 
 ### balance.get()
 
-Returns current account balances.
+Возвращает текущие остатки счёта.
 
 ```python
 bal = client.balance.get()
@@ -293,11 +293,11 @@ print(f"USDT: {bal.usdt}")
 print(f"Locked: {bal.trx_locked}")
 ```
 
-Returns `Balance`. The `trx_locked` field shows TRX reserved for pending orders.
+Возвращает `Balance`. Поле `trx_locked` показывает TRX, зарезервированный для ожидающих заказов.
 
 ### balance.deposit_info()
 
-Returns the deposit address and memo for funding your account.
+Возвращает адрес депозита и memo для пополнения вашего счёта.
 
 ```python
 info = client.balance.deposit_info()
@@ -306,11 +306,11 @@ print(f"Memo: {info.memo}")
 print(f"Minimum: {info.min_amount_trx} TRX / {info.min_amount_usdt} USDT")
 ```
 
-Returns `DepositInfo`. Always include the memo in your deposit transaction for automatic crediting.
+Возвращает `DepositInfo`. Всегда включайте memo в вашу транзакцию депозита для автоматического зачисления.
 
 ### balance.withdraw(address, amount, currency="TRX", idempotency_key=None)
 
-Withdraws funds to an external TRON address.
+Выводит средства на внешний адрес TRON.
 
 ```python
 withdrawal = client.balance.withdraw(
@@ -322,9 +322,9 @@ withdrawal = client.balance.withdraw(
 print(f"Withdrawal {withdrawal.id}: {withdrawal.status}")
 ```
 
-Returns `Withdrawal`.
+Возвращает `Withdrawal`.
 
-### balance.history(period="30D") and balance.summary()
+### balance.history(period="30D") и balance.summary()
 
 ```python
 history = client.balance.history("7D")
@@ -337,11 +337,11 @@ print(f"Average price: {summary.avg_price_sun} SUN")
 print(f"Total spent: {summary.total_spent_sun / 1_000_000:.3f} TRX")
 ```
 
-## Module 4: Webhooks
+## Модуль 4: Вебхуки
 
 ### webhooks.create(url, events)
 
-Creates a webhook subscription.
+Создаёт подписку вебхука.
 
 ```python
 webhook = client.webhooks.create(
@@ -349,14 +349,14 @@ webhook = client.webhooks.create(
     events=["order.filled", "order.failed", "deposit.received"],
 )
 print(f"Webhook ID: {webhook.id}")
-print(f"Secret: {webhook.secret}")  # Shown only once
+print(f"Secret: {webhook.secret}")  # Показывается только один раз
 ```
 
-Returns `Webhook`. The `secret` field is only included in the creation response and is used for HMAC-SHA256 signature verification.
+Возвращает `Webhook`. Поле `secret` включается только в ответ создания и используется для проверки подписи HMAC-SHA256.
 
-Available event types: `order.filled`, `order.failed`, `deposit.received`, `withdrawal.completed`.
+Доступные типы событий: `order.filled`, `order.failed`, `deposit.received`, `withdrawal.completed`.
 
-### webhooks.list() and webhooks.delete(webhook_id)
+### webhooks.list() и webhooks.delete(webhook_id)
 
 ```python
 webhooks = client.webhooks.list()
@@ -364,12 +364,12 @@ active = [w for w in webhooks if w.is_active]
 print(f"{len(active)} active webhooks")
 
 deleted = client.webhooks.delete("wh_abc123")
-print(f"Deleted: {deleted}")  # True or False
+print(f"Deleted: {deleted}")  # True или False
 ```
 
 ## Обработка ошибок
 
-All API errors raise `MerxError` with a `code` attribute and a human-readable message.
+Все ошибки API вызывают `MerxError` с атрибутом `code` и понятным для человека сообщением.
 
 ```python
 from merx import MerxClient, MerxError
@@ -388,40 +388,40 @@ except MerxError as e:
     # Output: Error [INVALID_ADDRESS]: Target address is not a valid TRON address
 ```
 
-The `MerxError` class extends `Exception`, so it integrates naturally with Python exception handling. The `code` attribute provides machine-readable classification:
+Класс `MerxError` расширяет `Exception`, поэтому он естественно интегрируется с обработкой исключений Python. Атрибут `code` обеспечивает машиночитаемую классификацию:
 
-| Code                   | Meaning                                          |
+| Код                    | Значение                                         |
 |------------------------|--------------------------------------------------|
-| `UNAUTHORIZED`         | Invalid or missing API key                       |
-| `INSUFFICIENT_FUNDS`   | Account balance too low                          |
-| `INVALID_ADDRESS`      | Not a valid TRON address                         |
-| `ORDER_NOT_FOUND`      | Order ID does not exist                          |
-| `DUPLICATE_REQUEST`    | Idempotency key already used                     |
-| `RATE_LIMITED`         | Too many requests, back off                      |
-| `PROVIDER_UNAVAILABLE` | No providers can fulfill the request             |
-| `VALIDATION_ERROR`     | Request body or parameters failed validation     |
+| `UNAUTHORIZED`         | Недействительный или отсутствующий API-ключ     |
+| `INSUFFICIENT_FUNDS`   | Баланс счёта слишком низкий                      |
+| `INVALID_ADDRESS`      | Не действительный адрес TRON                     |
+| `ORDER_NOT_FOUND`      | ID заказа не существует                          |
+| `DUPLICATE_REQUEST`    | Ключ идемпотентности уже использован             |
+| `RATE_LIMITED`         | Слишком много запросов, отступитесь              |
+| `PROVIDER_UNAVAILABLE` | Ни один поставщик не может выполнить запрос      |
+| `VALIDATION_ERROR`     | Корпус запроса или параметры не прошли валидацию |
 
-## Comparison with the JavaScript SDK
+## Сравнение с JavaScript SDK
 
-Both SDKs cover the same four modules with the same methods. The key differences are in language idioms:
+Оба SDK охватывают одинаковые четыре модуля с одинаковыми методами. Ключевые различия заключаются в языковых идиомах:
 
-| Aspect              | Python SDK                       | JavaScript SDK                     |
+| Аспект              | Python SDK                       | JavaScript SDK                     |
 |---------------------|----------------------------------|------------------------------------|
-| HTTP client         | `urllib.request` (stdlib)        | Native `fetch`                     |
-| Dependencies        | Zero                             | Zero                               |
-| Async support       | No (synchronous only)            | Yes (all methods return Promises)  |
-| Types               | Dataclasses                      | TypeScript interfaces              |
-| Order creation      | Keyword arguments                | Object parameter                   |
-| Orders list return  | `tuple[list, int]`               | `{ orders: [], total: number }`    |
-| Webhook delete      | Returns `bool`                   | Returns `{ deleted: boolean }`     |
-| Min runtime         | Python 3.10+                     | Node.js 18+                        |
-| Module system       | Standard imports                 | ESM only                           |
+| HTTP-клиент         | `urllib.request` (stdlib)        | Native `fetch`                     |
+| Зависимости         | Нулевые                          | Нулевые                            |
+| Асинхронная поддержка| Нет (только синхронные)          | Да (все методы возвращают Promises)|
+| Типы                | Dataclasses                      | TypeScript interfaces              |
+| Создание заказа     | Ключевые аргументы               | Параметр объекта                   |
+| Возврат списка заказов| `tuple[list, int]`              | `{ orders: [], total: number }`    |
+| Удаление вебхука    | Возвращает `bool`                | Возвращает `{ deleted: boolean }`  |
+| Минимальная среда выполнения| Python 3.10+                | Node.js 18+                        |
+| Система модулей     | Стандартные импорты              | Только ESM                         |
 
-The two SDKs are designed to feel natural in their respective languages while maintaining functional parity. A team using both Python and JavaScript can expect identical behavior from each.
+Оба SDK разработаны таким образом, чтобы выглядеть естественно в своих соответствующих языках, при этом сохраняя функциональную паритет. Команда, использующая Python и JavaScript, может ожидать идентичного поведения от каждого.
 
-## Production Pattern: Price-Aware Order Placement
+## Производственный паттерн: размещение заказа с учётом цены
 
-Here is a complete production flow that checks current prices, validates the cost, and creates an order with idempotency:
+Вот полный производственный поток, который проверяет текущие цены, проверяет стоимость и создаёт заказ с идемпотентностью:
 
 ```python
 import uuid
@@ -430,9 +430,9 @@ from merx import MerxClient, MerxError
 client = MerxClient(api_key="sk_live_your_key_here")
 
 def buy_energy(target: str, amount: int = 65000, max_cost_trx: float = 5.0):
-    """Buy energy with cost validation and idempotency."""
+    """Купить энергию с проверкой стоимости и идемпотентностью."""
 
-    # Preview the cost first
+    # Сначала предпросмотреть стоимость
     preview = client.prices.preview(
         resource="ENERGY",
         amount=amount,
@@ -448,7 +448,7 @@ def buy_energy(target: str, amount: int = 65000, max_cost_trx: float = 5.0):
             f"Cost {cost:.3f} TRX exceeds limit {max_cost_trx:.3f} TRX"
         )
 
-    # Place the order
+    # Разместить заказ
     order = client.orders.create(
         resource_type="ENERGY",
         amount=amount,
@@ -472,14 +472,14 @@ except RuntimeError as e:
 
 ## Проверка установки
 
-After installing, verify the SDK is working:
+После установки проверьте, что SDK работает:
 
 ```python
 from merx import MerxClient, __version__
 
 print(f"merx-sdk version: {__version__}")
 
-# Public endpoint, no auth required
+# Открытая конечная точка, аутентификация не требуется
 client = MerxClient(api_key="test")
 try:
     prices = client.prices.list()
@@ -491,7 +491,7 @@ except Exception as e:
     print(f"Connection error: {e}")
 ```
 
-The `prices.list()` endpoint is public, so even a placeholder API key will work for testing connectivity.
+Конечная точка `prices.list()` открыта, поэтому даже вспомогательный API-ключ будет работать для проверки подключения.
 
 ## Ресурсы
 
@@ -499,11 +499,12 @@ The `prices.list()` endpoint is public, so even a placeholder API key will work 
 - Документация: [merx.exchange/docs](https://merx.exchange/docs)
 - PyPI: [pypi.org/project/merx-sdk](https://pypi.org/project/merx-sdk/)
 - JavaScript SDK: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) | [npm](https://www.npmjs.com/package/merx-sdk)
-- MCP Server for AI agents: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) | [npm](https://www.npmjs.com/package/merx-mcp)
+- MCP Server для AI-агентов: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) | [npm](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — никакой установки, никакого API-ключа не требуется для инструментов только для чтения:
 
 ```json
 {
@@ -515,6 +516,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите у вашего AI-агента: "What is the cheapest TRON energy right now?" и получите актуальные цены от всех подключённых поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

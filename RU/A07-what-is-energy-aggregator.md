@@ -1,123 +1,123 @@
-# Что такое агрегатор energy TRON и почему это важно
+# Что такое агрегатор энергии TRON и почему это важно
 
-If you have ever traded tokens on a decentralized exchange, you have probably used an aggregator without realizing it. 1inch, for example, does not hold liquidity itself. It scans dozens of DEXs -- Uniswap, SushiSwap, Curve, Balancer -- finds the best price for your swap, and routes your order accordingly. You get a better price than you would on any single DEX, and you do not have to check each one manually.
+Если вы когда-либо торговали токенами на децентрализованной бирже, вы, вероятно, использовали агрегатор, не осознавая этого. 1inch, например, не хранит ликвидность самостоятельно. Он сканирует десятки DEX -- Uniswap, SushiSwap, Curve, Balancer -- находит лучшую цену для вашего обмена и маршрутизирует ваш ордер соответственно. Вы получаете лучшую цену, чем на любой отдельной DEX, и вам не нужно проверять каждую вручную.
 
-MERX does the same thing for TRON energy.
+MERX делает то же самое для энергии TRON.
 
-The TRON energy market has grown into a fragmented ecosystem of independent providers, each with their own APIs, pricing models, and availability windows. An energy aggregator sits above these providers, queries them all in real time, and routes your purchase to whichever source offers the best deal at that moment. This article explains what aggregation means in the context of TRON energy, why it matters, and how MERX implements it.
+Рынок энергии TRON превратился в фрагментированную экосистему независимых поставщиков, каждый со своими API, моделями ценообразования и окнами доступности. Агрегатор энергии находится над этими поставщиками, запрашивает их все в реальном времени и маршрутизирует вашу покупку к источнику, который предлагает лучшую цену в данный момент. Эта статья объясняет, что означает агрегация в контексте энергии TRON, почему это важно и как MERX это реализует.
 
-## Проблема: Seven Providers, Seven Prices
+## Проблема: семь поставщиков, семь цен
 
-The TRON network charges energy for every smart contract interaction. A USDT transfer costs roughly 65,000 energy. A DEX swap can exceed 300,000. Without energy, you pay in TRX -- and at current rates, that means burning 13-27 TRX per USDT transfer instead of spending 1-2 TRX through an energy rental.
+Сеть TRON взимает плату в энергии за каждое взаимодействие со смарт-контрактом. Передача USDT стоит примерно 65 000 энергии. Обмен на DEX может превышать 300 000. Без энергии вы платите в TRX -- и по текущим курсам это означает сжигание 13-27 TRX за передачу USDT вместо траты 1-2 TRX через аренду энергии.
 
-The energy rental market has responded to this demand. As of early 2026, at least seven major providers offer energy delegation services:
+Рынок аренды энергии отреагировал на этот спрос. По состоянию на начало 2026 года по крайней мере семь крупных поставщиков предлагают услуги делегирования энергии:
 
-- **TronSave** -- peer-to-peer energy marketplace
-- **Feee** -- competitive pricing with API access
-- **itrx** -- bulk energy focus
-- **CatFee** -- mid-market positioning
-- **Netts** -- aggressive pricing from a newer entrant
-- **SoHu** -- Chinese market focus
-- **PowerSun** -- direct staking and delegation
+- **TronSave** -- peer-to-peer рынок энергии
+- **Feee** -- конкурентные цены с доступом к API
+- **itrx** -- ориентация на оптовую энергию
+- **CatFee** -- позиционирование на среднем рынке
+- **Netts** -- агрессивное ценообразование нового участника
+- **SoHu** -- ориентация на китайский рынок
+- **PowerSun** -- прямой стейкинг и делегирование
 
-Each provider sets their own prices independently. At any given moment, the cheapest provider might be Feee at 28 SUN per energy unit, while TronSave lists at 35 SUN and Netts at 31 SUN. Ten minutes later, the ranking might reverse entirely. Prices shift based on supply availability, demand spikes, staking pool utilization, and competitive dynamics that are impossible to predict.
+Каждый поставщик устанавливает свои цены независимо. В любой момент времени самым дешевым поставщиком может быть Feee с ценой 28 SUN за единицу энергии, в то время как TronSave указывает 35 SUN, а Netts -- 31 SUN. Десять минут спустя рейтинг может полностью измениться. Цены колеблются в зависимости от доступности предложения, скачков спроса, использования пулов стейкинга и конкурентной динамики, которую невозможно предсказать.
 
-## The DEX Aggregator Analogy
+## Аналогия с агрегатором DEX
 
-The parallel with DEX aggregation is direct and instructive.
+Параллель с агрегацией DEX прямая и поучительная.
 
-Before 1inch existed, a trader who wanted the best price on an ETH-to-USDC swap had to manually check Uniswap, SushiSwap, Curve, and every other relevant pool. They had to account for slippage, gas costs, and timing. In practice, most traders just picked one DEX and accepted whatever price it offered. They left money on the table every single time.
+До появления 1inch трейдер, желавший получить лучшую цену на обмен ETH на USDC, должен был вручную проверять Uniswap, SushiSwap, Curve и каждый другой релевантный пул. Ему приходилось учитывать проскальзывание, комиссии на газ и время. На практике большинство трейдеров просто выбирали один DEX и принимали любую цену, которую он предлагал. Они теряли деньги с каждым разом.
 
-1inch solved this by introducing a routing layer. It queries all available liquidity sources, calculates the optimal split (sometimes routing parts of your order through different pools), and executes the trade. The user interacts with one interface and gets a price that is equal to or better than any individual DEX.
+1inch решил эту проблему, представив слой маршрутизации. Он запрашивает все доступные источники ликвидности, вычисляет оптимальное разделение (иногда маршрутизируя части вашего ордера через разные пулы) и выполняет сделку. Пользователь взаимодействует с одним интерфейсом и получает цену, которая равна или лучше любой отдельной DEX.
 
-The TRON energy market is in the same position today that DEX liquidity was in before aggregators appeared. Individual providers are accessible, but comparing them requires effort. Most users pick one provider and stay with it, paying whatever price it charges, unaware that a better price might be available elsewhere.
+Рынок энергии TRON находится сегодня в том же положении, в котором находилась ликвидность DEX до появления агрегаторов. Отдельные поставщики доступны, но их сравнение требует усилий. Большинство пользователей выбирают одного поставщика и остаются с ним, платя любую цену, которую он устанавливает, не осознавая, что лучшая цена может быть доступна в другом месте.
 
-### Where the Analogy Holds
+### Где аналогия верна
 
-| DEX Aggregator | Energy Aggregator |
+| Агрегатор DEX | Агрегатор энергии |
 |---|---|
-| Queries multiple DEXs | Queries multiple energy providers |
-| Routes to best-price liquidity pool | Routes to cheapest energy source |
-| One interface replaces many | One API replaces seven integrations |
-| No custody of user tokens | No custody of user private keys |
-| Adds no markup on trades | Adds no markup on energy price |
+| Запрашивает несколько DEX | Запрашивает нескольких поставщиков энергии |
+| Маршрутизирует к пулу ликвидности с лучшей ценой | Маршрутизирует к самому дешевому источнику энергии |
+| Один интерфейс заменяет многие | Один API заменяет семь интеграций |
+| Не хранит токены пользователя | Не хранит приватные ключи пользователя |
+| Не добавляет надбавку на торговлю | Не добавляет надбавку на цену энергии |
 
-### Where It Differs
+### Где это отличается
 
-DEX aggregators can split orders across pools. If Uniswap has the best price for the first 50 ETH but Curve is better for the next 50, the aggregator splits the trade. Energy aggregation does not currently split orders across providers -- your entire energy purchase goes to a single provider. This is a function of the delegation mechanism on TRON: energy is delegated from one staking address to one recipient address as a single on-chain operation.
+Агрегаторы DEX могут разделять ордеры между пулами. Если Uniswap имеет лучшую цену для первых 50 ETH, но Curve лучше для следующих 50, агрегатор разделяет сделку. Агрегация энергии в настоящее время не разделяет ордеры между поставщиками -- вся ваша покупка энергии идет к одному поставщику. Это функция механизма делегирования на TRON: энергия делегируется от одного адреса стейкинга одному адресу получателя как одна операция в блокчейне.
 
-DEX aggregators also deal with slippage -- the price can change between quote and execution. Energy prices are more stable (they change over minutes, not milliseconds), so slippage is not a significant concern. The price you see in the quote is the price you pay.
+Агрегаторы DEX также имеют дело с проскальзыванием -- цена может измениться между предложением и исполнением. Цены на энергию более стабильны (они меняются в течение минут, а не миллисекунд), поэтому проскальзывание не является значительной проблемой. Цена, которую вы видите в предложении, -- это цена, которую вы платите.
 
-## Why No Single Provider Is Always Cheapest
+## Почему ни один поставщик не всегда самый дешевый
 
-If one provider were consistently the cheapest, you would not need an aggregator. You would integrate with that provider and call it done. But the energy market does not work that way.
+Если бы один поставщик был постоянно самым дешевым, вам не нужен был бы агрегатор. Вы бы интегрировались с этим поставщиком и считали бы это сделанным. Но рынок энергии не работает таким образом.
 
-### Supply-Side Dynamics
+### Динамика со стороны предложения
 
-Each provider has a finite supply of energy. That supply comes from TRX staked for energy, and the amount of staked TRX determines how much energy the provider can delegate. When a provider's supply runs low -- because many buyers are purchasing simultaneously, or because staking pools are being rebalanced -- that provider raises prices or becomes temporarily unavailable.
+Каждый поставщик имеет конечное предложение энергии. Это предложение поступает от TRX, заблокированного для энергии, и количество заблокированного TRX определяет, сколько энергии поставщик может делегировать. Когда предложение поставщика заканчивается -- потому что много покупателей совершают покупки одновременно или потому что пулы стейкинга переуравновешиваются -- этот поставщик повышает цены или становится временно недоступным.
 
-Provider A might have abundant supply at 8:00 AM UTC and offer the lowest prices on the market. By 10:00 AM, a large buyer might consume most of that supply, pushing Provider A's prices up. Meanwhile, Provider B, which was mid-range at 8:00 AM, now has the lowest price because its supply was not affected.
+Поставщик A может иметь обильное предложение в 8:00 утра по UTC и предложить самые низкие цены на рынке. К 10:00 утра крупный покупатель может потребить большую часть этого предложения, повысив цены поставщика A. Тем временем поставщик B, который был в средней ценовой категории в 8:00 утра, теперь имеет самую низкую цену, потому что его предложение не было затронуто.
 
-### Pricing Models Vary
+### Модели ценообразования различаются
 
-Different providers use different pricing strategies:
+Разные поставщики используют разные стратегии ценообразования:
 
-- **Fixed pricing**: Some providers set a flat rate that changes infrequently. These providers are cheapest during high-demand periods but might be more expensive during low-demand periods.
-- **Dynamic pricing**: Some providers adjust prices based on their current supply utilization. These providers can be very cheap when supply is abundant but expensive when utilization is high.
-- **Duration-dependent**: Prices vary by rental duration. A provider might be cheapest for 1-hour rentals but more expensive for 24-hour rentals, or vice versa.
+- **Фиксированное ценообразование**: некоторые поставщики устанавливают фиксированную ставку, которая редко меняется. Эти поставщики самые дешевые в периоды высокого спроса, но могут быть более дорогими в периоды низкого спроса.
+- **Динамическое ценообразование**: некоторые поставщики корректируют цены в зависимости от текущего использования их предложения. Эти поставщики могут быть очень дешевыми, когда предложение в изобилии, но дорогими, когда использование высоко.
+- **Зависит от длительности**: цены варьируются в зависимости от длительности аренды. Поставщик может быть самым дешевым для аренды на 1 час, но более дорогим для аренды на 24 часа, или наоборот.
 
-No single strategy dominates across all conditions. The optimal provider changes based on the time of day, the energy amount you need, the rental duration, and the overall market state.
+Ни одна стратегия не доминирует при всех условиях. Оптимальный поставщик меняется в зависимости от времени дня, количества энергии, которая вам нужна, длительности аренды и общего состояния рынка.
 
-### Empirical Evidence
+### Эмпирические доказательства
 
-MERX monitors prices from all seven providers every 30 seconds and stores the results. Analysis of historical price data shows that the cheapest provider changes multiple times per day. On a typical day, the provider offering the lowest 1-hour energy price rotates among three to four different providers, with the gap between the cheapest and most expensive often exceeding 20%.
+MERX отслеживает цены от всех семи поставщиков каждые 30 секунд и сохраняет результаты. Анализ исторических данных о ценах показывает, что самый дешевый поставщик меняется несколько раз в день. В типичный день поставщик, предлагающий самую низкую цену на энергию на 1 час, чередуется между тремя-четырьмя разными поставщиками, причем разрыв между самым дешевым и самым дорогим часто превышает 20%.
 
 ```
-Sample price snapshot (SUN per energy unit, 1h duration):
+Пример снимка цен (SUN за единицу энергии, длительность 1h):
 
   TronSave:   35
-  Feee:       28  <-- cheapest
+  Feee:       28  <-- самый дешевый
   itrx:       32
   CatFee:     30
   Netts:      31
   SoHu:       34
   PowerSun:   33
 
-Four hours later:
+Четыре часа спустя:
 
   TronSave:   30
   Feee:       33
-  itrx:       29  <-- cheapest
+  itrx:       29  <-- самый дешевый
   CatFee:     31
-  Netts:      28  <-- tied cheapest
+  Netts:      28  <-- равный самый дешевый
   SoHu:       35
   PowerSun:   32
 ```
 
-If you had integrated exclusively with Feee because it was cheapest at the first snapshot, you would be paying 33 SUN four hours later while the market floor sits at 28-29 SUN. That 15% difference compounds with every transaction.
+Если бы вы интегрировались исключительно с Feee, потому что он был самым дешевым в первом снимке, вы платили бы 33 SUN четыре часа спустя, в то время как рыночное дно находится на уровне 28-29 SUN. Эта 15% разница накапливается с каждой транзакцией.
 
-## How MERX Aggregates
+## Как MERX агрегирует
 
-MERX implements aggregation through three components that operate continuously.
+MERX реализует агрегацию через три компонента, которые работают непрерывно.
 
-### Price Monitor
+### Монитор цен
 
-A dedicated service polls every provider's API every 30 seconds. Each response is normalized to a standard format -- price in SUN per energy unit -- and published to a Redis channel. This normalization is critical because providers express prices differently: some quote in SUN, some in TRX, some per unit, some for a bundle. MERX converts everything to SUN per energy unit for direct comparison.
+Выделенный сервис опрашивает API каждого поставщика каждые 30 секунд. Каждый ответ нормализуется в стандартный формат -- цена в SUN за единицу энергии -- и публикуется в канал Redis. Эта нормализация критична, потому что поставщики выражают цены по-разному: некоторые котируют в SUN, некоторые в TRX, некоторые за единицу, некоторые за комплект. MERX конвертирует все в SUN за единицу энергии для прямого сравнения.
 
-### Price Cache
+### Кэш цен
 
-Redis holds the latest price from each provider with a 60-second TTL. If a provider's data is older than 60 seconds, it is automatically excluded from routing decisions. This prevents stale prices from misleading the router.
+Redis хранит последнюю цену каждого поставщика с TTL 60 секунд. Если данные поставщика старше 60 секунд, они автоматически исключаются из решений маршрутизации. Это предотвращает введение в заблуждение маршрутизатора устаревшими ценами.
 
-### Order Router
+### Маршрутизатор ордеров
 
-When you place an order, the router queries Redis for all current prices, filters for providers that can fulfill your specific request (amount, duration), and selects the cheapest option. The entire process takes milliseconds.
+Когда вы размещаете ордер, маршрутизатор запрашивает Redis для всех текущих цен, фильтрует поставщиков, которые могут выполнить ваш конкретный запрос (количество, длительность), и выбирает самый дешевый вариант. Весь процесс занимает миллисекунды.
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// One call. Best price across all providers. No integration tax.
+// Один вызов. Лучшая цена у всех поставщиков. Без интеграционного сбора.
 const order = await merx.createOrder({
   energy_amount: 65000,
   target_address: 'TRecipientAddress...',
@@ -129,51 +129,51 @@ console.log(`Price: ${order.price_sun} SUN/unit`);
 console.log(`Total: ${order.total_trx} TRX`);
 ```
 
-You do not choose the provider. MERX chooses for you, and the choice is always the cheapest available option at the moment of your order.
+Вы не выбираете поставщика. MERX выбирает за вас, и выбор всегда -- это самый дешевый доступный вариант на момент вашего ордера.
 
-## Automatic Failover
+## Автоматическое переключение при отказе
 
-Aggregation provides a second benefit beyond price optimization: reliability. If a single provider goes down -- and they do, regularly -- your integration breaks. With MERX, a provider outage is invisible to you.
+Агрегация обеспечивает второе преимущество, помимо оптимизации цены: надежность. Если один поставщик выходит из строя -- а они это делают, регулярно -- ваша интеграция нарушается. С MERX перебой в работе поставщика невидим для вас.
 
-When the price monitor detects that a provider is unresponsive, it stops publishing prices for that provider. The Redis TTL expires after 60 seconds, and the provider is automatically excluded from routing. Orders continue to flow through the remaining providers without interruption.
+Когда монитор цен обнаруживает, что поставщик не отвечает, он перестает публиковать цены для этого поставщика. TTL в Redis истекает через 60 секунд, и поставщик автоматически исключается из маршрутизации. Ордеры продолжают поступать через оставшихся поставщиков без перерыва.
 
 ```
-Provider failure scenario:
+Сценарий отказа поставщика:
 
-  1. Feee API returns HTTP 500
-  2. Price monitor marks Feee as unavailable
-  3. Redis TTL for Feee expires (60s)
-  4. Next order routes to second-cheapest provider
-  5. No error visible to the buyer
-  6. Feee recovers, price monitor resumes polling
-  7. Feee re-enters the routing pool
+  1. API Feee возвращает HTTP 500
+  2. Монитор цен отмечает Feee как недоступный
+  3. TTL в Redis для Feee истекает (60s)
+  4. Следующий ордер маршрутизируется ко второму по дешевизне поставщику
+  5. Никакой ошибки для покупателя
+  6. Feee восстанавливается, монитор цен возобновляет опрос
+  7. Feee повторно входит в пул маршрутизации
 ```
 
-If you had integrated directly with Feee, a 500 error would crash your transaction pipeline. With MERX, you never even know it happened.
+Если бы вы интегрировались напрямую с Feee, ошибка 500 нарушила бы ваш конвейер транзакций. С MERX вы никогда даже не узнаете, что это произошло.
 
-## Zero Commission
+## Нулевая комиссия
 
-MERX adds no markup to provider prices. If the cheapest provider offers energy at 28 SUN per unit, you pay 28 SUN per unit. The aggregation layer is free to use.
+MERX не добавляет надбавку к ценам поставщиков. Если самый дешевый поставщик предлагает энергию по 28 SUN за единицу, вы платите 28 SUN за единицу. Слой агрегации бесплатен в использовании.
 
-This is possible because MERX is in its market acquisition phase. The value of aggregating volume -- better negotiating leverage with providers, richer data for routing optimization, network effects -- exceeds the value of extracting margin on individual trades. The model mirrors how many successful aggregators launched: free access during growth, monetization through premium features once the user base is established.
+Это возможно, потому что MERX находится в фазе захвата рынка. Ценность агрегирования объема -- лучшее переговорное влияние с поставщиками, более богатые данные для оптимизации маршрутизации, сетевые эффекты -- превышает ценность извлечения маржи на отдельных сделках. Модель отражает, как запустились многие успешные агрегаторы: бесплатный доступ во время роста, монетизация через премиум-функции после установления базы пользователей.
 
-## When You Should Use an Aggregator
+## Когда вам нужен агрегатор
 
-An aggregator makes sense when:
+Агрегатор имеет смысл, когда:
 
-- **You process multiple transactions daily.** Even small per-transaction savings compound quickly.
-- **You automate TRON operations.** An aggregator's API is simpler than managing seven provider integrations.
-- **Reliability matters.** Automatic failover eliminates single points of failure.
-- **You do not want to monitor provider pricing manually.** The aggregator does this for you, continuously.
+- **Вы обрабатываете несколько транзакций ежедневно.** Даже небольшая экономия на транзакцию быстро накапливается.
+- **Вы автоматизируете операции TRON.** API агрегатора проще, чем управление семью интеграциями поставщиков.
+- **Надежность важна.** Автоматическое переключение при отказе исключает единственные точки отказа.
+- **Вы не хотите вручную отслеживать ценообразование поставщиков.** Агрегатор делает это за вас, непрерывно.
 
-An aggregator adds less value when:
+Агрегатор добавляет меньше ценности, когда:
 
-- **You have a long-term contract with a single provider at a fixed rate.** Aggregation benefits come from dynamic routing, which does not apply to fixed-rate contracts.
-- **You make one or two transactions per month.** The savings exist but are minimal at low volume.
+- **У вас есть долгосрочный контракт с одним поставщиком по фиксированной ставке.** Преимущества агрегации поступают от динамической маршрутизации, которая не применяется к контрактам с фиксированной ставкой.
+- **Вы делаете одну или две транзакции в месяц.** Экономия существует, но минимальна при низком объеме.
 
 ## Начало работы
 
-MERX offers a REST API, JavaScript and Python SDKs, WebSocket real-time price feeds, and an MCP server for AI agents. The fastest path to integration:
+MERX предлагает REST API, JavaScript и Python SDK, WebSocket для получения цен в реальном времени и MCP сервер для AI агентов. Самый быстрый способ интеграции:
 
 ```bash
 npm install merx-sdk
@@ -184,25 +184,26 @@ import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: 'YOUR_API_KEY' });
 
-// Check what you would pay right now
+// Проверьте, сколько вы заплатите прямо сейчас
 const prices = await merx.getPrices({
   energy_amount: 65000,
   duration: '1h'
 });
 
-// See every provider's price
+// Посмотрите цену каждого поставщика
 for (const p of prices) {
   console.log(`${p.provider}: ${p.price_sun} SUN/unit`);
 }
 ```
 
-Full documentation: [https://merx.exchange/docs](https://merx.exchange/docs)
-MCP server for AI agents: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
-Platform: [https://merx.exchange](https://merx.exchange)
+Полная документация: [https://merx.exchange/docs](https://merx.exchange/docs)
+MCP сервер для AI агентов: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+Платформа: [https://merx.exchange](https://merx.exchange)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент -- без установки, без API ключа для инструментов только для чтения:
 
 ```json
 {
@@ -214,6 +215,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите вашего AI агента: "Какая самая дешевая энергия TRON прямо сейчас?" и получите живые цены от всех подключенных поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

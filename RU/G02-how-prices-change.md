@@ -1,112 +1,112 @@
-# Как меняются цены на energy TRON: анализ ценовой динамики
+# Как меняются цены на энергию TRON: анализ динамики цен
 
-Energy prices on TRON are not fixed. They move throughout the day, week, and month in response to supply, demand, and competitive dynamics. If you buy energy regularly -- whether for a payment processor, trading bot, or manual operations -- understanding these price dynamics helps you buy at better rates and avoid overpaying.
+Цены на энергию в TRON не фиксированы. Они колеблются в течение дня, недели и месяца в зависимости от предложения, спроса и конкуренции между поставщиками. Если вы регулярно покупаете энергию — будь то для процессора платежей, торгового бота или ручных операций — понимание этой динамики поможет вам покупать по более выгодным ставкам и избежать переплат.
 
-This article breaks down the forces that drive TRON energy prices, explains the differences between P2P and fixed-price models, and shows how to use price analysis tools to make better purchasing decisions.
+Эта статья разбирает факторы, которые влияют на цены энергии TRON, объясняет различия между P2P и моделями с фиксированной ценой, и показывает, как использовать инструменты анализа цен для принятия более обоснованных решений при покупке.
 
-## What Determines Energy Price
+## Что определяет цену энергии
 
-Energy price is ultimately a function of three things: the cost of producing energy, the demand for it, and competitive pressure among providers.
+Цена энергии в конечном счёте зависит от трёх факторов: стоимости производства энергии, спроса на неё и конкурентного давления со стороны поставщиков.
 
-### Production Cost
+### Стоимость производства
 
-Energy on TRON is produced by staking TRX. When a user freezes (stakes) TRX, the network allocates energy to that address proportional to their stake relative to the total network stake.
+Энергия в TRON производится путём стейкинга TRX. Когда пользователь замораживает (стейкит) TRX, сеть выделяет энергию на этот адрес пропорционально его доле от общего стейка в сети.
 
-The cost of producing energy is therefore the opportunity cost of staking TRX. That staked TRX could be earning yield elsewhere, used for trading, or deployed in DeFi protocols. The energy provider's floor price must cover this opportunity cost plus operational overhead.
+Стоимость производства энергии — это альтернативная стоимость стейкинга TRX. Этот стейкированный TRX мог бы приносить доход в других местах, использоваться для торговли или применяться в протоколах DeFi. Минимальная цена поставщика энергии должна покрывать эту альтернативную стоимость плюс операционные расходы.
 
-Factors that affect production cost:
+Факторы, влияющие на стоимость производства:
 
-- **TRX price.** When TRX price rises, the dollar-denominated opportunity cost of staking increases, putting upward pressure on energy prices.
-- **Alternative yields.** If DeFi protocols on TRON offer attractive staking yields, the opportunity cost of allocating TRX to energy production rises.
-- **Network staking ratio.** As more TRX is staked network-wide, each unit of staked TRX produces less energy (the pool is shared among more stakers). This increases the TRX required to produce a given amount of energy, raising costs.
-- **TRON governance parameters.** The network periodically adjusts parameters that affect energy pricing, such as the total energy pool size or the energy-to-TRX burn rate.
+- **Цена TRX.** Когда цена TRX растёт, долларовая альтернативная стоимость стейкинга увеличивается, создавая восходящее давление на цены энергии.
+- **Альтернативные источники доходности.** Если протоколы DeFi в TRON предлагают привлекательные награды за стейкинг, альтернативная стоимость выделения TRX для производства энергии возрастает.
+- **Сетевой коэффициент стейкинга.** По мере того как в сети стейкируется больше TRX, каждая единица стейкированного TRX производит меньше энергии (пул распределяется между большим количеством стейкеров). Это увеличивает количество TRX, необходимое для производства определённого объёма энергии, повышая затраты.
+- **Параметры управления TRON.** Сеть периодически корректирует параметры, влияющие на ценообразование энергии, такие как размер общего пула энергии или коэффициент конверсии энергии в TRX при сжигании.
 
-### Demand
+### Спрос
 
-Energy demand is driven by TRON transaction volume, which varies based on:
+Спрос на энергию определяется объёмом транзакций в TRON, который варьируется в зависимости от:
 
-- **USDT transfer volume.** The dominant source of energy demand. When USDT activity spikes (market volatility, end-of-month settlements, exchange movements), energy demand rises.
-- **DeFi activity.** DEX trading volume, lending protocol interactions, and yield farming operations all consume energy.
-- **Token events.** New token launches, airdrops, and NFT mints create burst demand.
-- **Time of day.** Activity follows global timezone patterns, with peak demand during Asian and European business hours.
+- **Объёма передач USDT.** Основной источник спроса на энергию. Когда активность USDT резко возрастает (волатильность рынка, урегулирования в конце месяца, движения на биржах), спрос на энергию растёт.
+- **Активности в DeFi.** Объём торговли на DEX, взаимодействия с протоколами кредитования и операции по фермингу доходности требуют энергии.
+- **Событий с токенами.** Новые запуски токенов, раздачи и минты NFT создают всплески спроса.
+- **Времени суток.** Активность следует глобальным часовым поясам, с пиком спроса во время рабочих часов в Азии и Европе.
 
-### Competitive Pressure
+### Конкурентное давление
 
-With seven providers in the market, pricing is not set in isolation. Each provider responds to competitors' rates. When one provider lowers prices to attract volume, others must decide whether to match, undercut, or maintain their rates and accept lower market share.
+На рынке семь поставщиков, поэтому ценообразование не происходит изолированно. Каждый поставщик реагирует на ставки конкурентов. Когда один поставщик снижает цены, чтобы привлечь объём, другие должны решить, следовать ли им, предложить ещё более низкие цены или поддерживать свои ставки, принимая меньшую долю рынка.
 
-This competition benefits buyers, particularly those using aggregators that route to the cheapest available provider. The competitive dynamics ensure that no provider can maintain significantly above-market rates for long.
+Эта конкуренция благоприятна для покупателей, особенно для тех, кто использует агрегаторы, которые маршрутизируют заказы к самому дешёвому доступному поставщику. Конкурентная динамика гарантирует, что ни один поставщик не может длительно поддерживать значительно завышенные ставки.
 
-## P2P vs Fixed-Price Dynamics
+## Динамика P2P и фиксированных цен
 
-The two primary pricing models in the TRON energy market respond differently to market conditions.
+Две основные модели ценообразования на рынке энергии TRON по-разному реагируют на условия рынка.
 
-### P2P Marketplace Pricing (TronSave model)
+### Ценообразование на P2P-рынке (модель TronSave)
 
-In a P2P marketplace, individual sellers set their own prices. This creates a dynamic order book where:
+На P2P-рынке отдельные продавцы устанавливают свои собственные цены. Это создаёт динамичный стакан заявок, где:
 
-- **Prices adjust in real time** as sellers respond to demand
-- **Spread exists** between the cheapest and most expensive listings
-- **Supply depth varies** -- the cheapest prices may only be available for small amounts
-- **Seller behavior drives volatility** -- individual sellers may adjust prices based on their personal liquidity needs, not just market conditions
+- **Цены корректируются в реальном времени** по мере реакции продавцов на спрос
+- **Существует спред** между самыми дешёвыми и самыми дорогими предложениями
+- **Глубина предложения варьируется** — самые низкие цены могут быть доступны только для небольших объёмов
+- **Поведение продавцов вызывает волатильность** — отдельные продавцы могут корректировать цены на основе своих личных потребностей в ликвидности, а не только рыночных условий
 
-P2P pricing tends to be more volatile but can offer the lowest rates during low-demand periods when sellers compete aggressively for limited buyer interest.
+Ценообразование на P2P-рынке, как правило, более волатильно, но может предлагать самые низкие ставки в периоды низкого спроса, когда продавцы агрессивно конкурируют за ограниченный интерес покупателей.
 
-### Fixed-Price Provider Pricing (PowerSun model)
+### Ценообразование поставщиков с фиксированной ценой (модель PowerSun)
 
-Fixed-price providers set rates that remain stable for hours or days. Price changes are deliberate decisions, not automatic market responses.
+Поставщики с фиксированной ценой устанавливают ставки, которые остаются стабильными в течение часов или дней. Изменения цен — это осознанные решения, а не автоматические рыночные реакции.
 
-- **Rates change infrequently** -- typically once per day or less
-- **Prices are predictable** for budgeting purposes
-- **May lag behind market movements** -- prices might not reflect current supply/demand
-- **Stability premium** -- fixed prices are generally slightly above the market average to compensate for the predictability they offer
+- **Ставки меняются нечасто** — обычно один раз в день или реже
+- **Цены предсказуемы** для целей бюджетирования
+- **Могут отставать от движений рынка** — цены могут не отражать текущее предложение и спрос
+- **Премия за стабильность** — фиксированные цены, как правило, немного выше среднего значения по рынку в качестве компенсации за предлагаемую предсказуемость
 
-Fixed-price providers are more expensive on average but provide certainty. For operations that need predictable costs, this premium is acceptable.
+Поставщики с фиксированной ценой в среднем дороже, но обеспечивают определённость. Для операций, требующих предсказуемых затрат, эта премия приемлема.
 
-## Price Patterns
+## Модели цен
 
-### Intraday Patterns
+### Внутридневные модели
 
-Energy prices follow a daily cycle driven by transaction activity in different time zones:
+Цены на энергию следуют суточному циклу, вызванному активностью транзакций в различных часовых поясах:
 
-**UTC 00:00 - 06:00 (Asia morning/afternoon):** Moderate to high demand. This is peak TRON activity time as Asian markets (where TRON usage is concentrated) are active.
+**UTC 00:00 - 06:00 (утро/день в Азии):** Умеренный-высокий спрос. Это пиковое время активности в TRON, так как азиатские рынки (где сосредоточено использование TRON) активны.
 
-**UTC 06:00 - 12:00 (Asia evening, Europe morning):** Transition period. Asian activity winds down, European activity picks up. Prices often soften during this window.
+**UTC 06:00 - 12:00 (вечер в Азии, утро в Европе):** Переходный период. Азиатская активность снижается, европейская возрастает. Цены часто смягчаются в этом окне.
 
-**UTC 12:00 - 18:00 (Europe afternoon, Americas morning):** Moderate demand. TRON activity is present but typically lower than Asian peak hours.
+**UTC 12:00 - 18:00 (день в Европе, утро в Америке):** Умеренный спрос. Активность в TRON присутствует, но обычно ниже, чем в азиатский пик.
 
-**UTC 18:00 - 00:00 (Americas afternoon/evening):** Generally the lowest-demand period. Energy prices often reach their daily minimum during this window.
+**UTC 18:00 - 00:00 (день/вечер в Америке):** Обычно период с наименьшим спросом. Цены на энергию часто достигают суточного минимума в этом окне.
 
-These patterns are tendencies, not rules. Market-moving events (exchange listings, DeFi exploits, regulatory news) can override timezone-based patterns.
+Эти модели — тенденции, а не правила. События, движущие рынок (листинги на биржах, эксплуатация DeFi, новости регулирования), могут нарушить модели, основанные на часовых поясах.
 
-### Weekly Patterns
+### Еженедельные модели
 
-Weekends typically see lower TRON transaction volume than weekdays, leading to softer energy prices. Monday mornings in Asian time zones often see price increases as weekly business activity resumes.
+Выходные обычно показывают более низкий объём транзакций в TRON, чем рабочие дни, что приводит к более мягким ценам на энергию. Понедельники утром по азиатскому времени часто видят рост цен по мере возобновления еженедельной деловой активности.
 
-### Event-Driven Spikes
+### Всплески, вызванные событиями
 
-Certain events cause sharp, temporary price increases:
+Определённые события вызывают резкие временные скачки цен:
 
-- **Large token airdrops:** Thousands of transfers in a short window
-- **Market crashes/rallies:** Increased trading volume across DEXs
-- **New DeFi protocol launches:** Users rushing to interact with new contracts
-- **Network upgrades:** Uncertainty around upgrades can affect staking behavior
+- **Крупные раздачи токенов:** Тысячи передач в короткий промежуток времени
+- **Крахи/ралли рынка:** Увеличенный объём торговли на DEX
+- **Запуски новых протоколов DeFi:** Пользователи спешат взаимодействовать с новыми контрактами
+- **Обновления сети:** Неопределённость вокруг обновлений может повлиять на поведение стейкинга
 
-## How MERX Tracks Price Dynamics
+## Как MERX отслеживает динамику цен
 
-MERX monitors prices across all seven providers continuously, providing tools to analyze and act on price movements:
+MERX непрерывно отслеживает цены всех семи поставщиков, предоставляя инструменты для анализа и реакции на движения цен:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// Get current prices across all providers
+// Получить текущие цены всех поставщиков
 const prices = await merx.getPrices({
   energy_amount: 65000,
   duration: '1h'
 });
 
-// See the spread
+// Посмотреть спред
 const lowest = prices.providers[0].price_sun;
 const highest =
   prices.providers[prices.providers.length - 1].price_sun;
@@ -114,10 +114,10 @@ console.log(`Market spread: ${lowest} - ${highest} SUN`);
 console.log(`Best: ${prices.best.price_sun} SUN via ${prices.best.provider}`);
 ```
 
-### Price History Analysis
+### Анализ истории цен
 
 ```typescript
-// Analyze historical price patterns
+// Анализ исторических моделей цен
 const analysis = await merx.analyzePrices({
   energy_amount: 65000,
   duration: '1h',
@@ -131,14 +131,14 @@ console.log(`90th percentile: ${analysis.p90_sun} SUN`);
 console.log(`Standard deviation: ${analysis.stddev_sun} SUN`);
 ```
 
-This data reveals the typical range and volatility for your specific order profile. The percentile data is particularly useful for setting standing order targets.
+Эти данные показывают типичный диапазон и волатильность для вашего конкретного профиля заказа. Данные по процентилям особенно полезны для установки целевых цен стоящих заказов.
 
-### Standing Orders: Acting on Price Dynamics
+### Стоящие заказы: действие на основе динамики цен
 
-Understanding price patterns enables smarter purchasing through standing orders:
+Понимание моделей цен позволяет более умно покупать через стоящие заказы:
 
 ```typescript
-// Based on analysis showing 25th percentile at 24 SUN
+// На основе анализа, показывающего 25-й процентиль на уровне 24 SUN
 const standing = await merx.createStandingOrder({
   energy_amount: 65000,
   max_price_sun: 24,
@@ -147,87 +147,87 @@ const standing = await merx.createStandingOrder({
   target_address: 'TYourAddress...'
 });
 
-// This order will fill approximately 75% of the time,
-// always at or below 24 SUN
+// Этот заказ будет исполнен примерно в 75% случаев,
+// всегда по цене 24 SUN или ниже
 ```
 
-The standing order captures price dips automatically. When prices temporarily drop below your threshold -- whether due to timezone-based demand patterns, provider competition, or temporary supply increases -- your order executes without manual intervention.
+Стоящий заказ автоматически захватывает падения цен. Когда цены временно падают ниже вашего порога — будь то из-за спроса, связанного с часовыми поясами, конкуренции поставщиков или временного увеличения предложения — ваш заказ исполняется без ручного вмешательства.
 
-## Supply-Side Dynamics
+## Динамика со стороны предложения
 
-Understanding what drives the supply side helps predict price movements:
+Понимание того, что влияет на сторону предложения, помогает предсказать движения цен:
 
-### Staking Incentives
+### Стимулы стейкинга
 
-When TRX staking rewards are high relative to other yield opportunities, more TRX gets staked, increasing the total energy supply. This puts downward pressure on prices.
+Когда награды за стейкинг TRX высоки по сравнению с другими возможностями получения доходности, больше TRX стейкируется, увеличивая общее предложение энергии. Это создаёт нисходящее давление на цены.
 
-Conversely, when DeFi yields on TRON attract TRX away from simple staking, the energy supply contracts and prices rise.
+И наоборот, когда доходность DeFi в TRON привлекает TRX от простого стейкинга, предложение энергии сокращается и цены растут.
 
-### Provider Capital Allocation
+### Распределение капитала поставщиков
 
-Energy providers decide how much TRX to allocate to energy production versus other uses. This allocation shifts based on:
+Поставщики энергии решают, сколько TRX выделить для производства энергии в сравнении с другими использованиями. Это распределение меняется на основе:
 
-- Profitability of energy sales at current rates
-- Demand projections
-- Alternative investment opportunities
-- Competitive positioning
+- Прибыльности продаж энергии по текущим ставкам
+- Прогнозов спроса
+- Альтернативных инвестиционных возможностей
+- Позиционирования перед конкурентами
 
-When multiple providers simultaneously increase their staked TRX (expecting demand growth), a supply glut can temporarily depress prices. When providers reduce staking (perhaps due to better yields elsewhere), supply contracts and prices rise.
+Когда несколько поставщиков одновременно увеличивают свой стейкированный TRX (ожидая роста спроса), временный избыток предложения может подавить цены. Когда поставщики снижают стейкинг (возможно, из-за лучшей доходности в других местах), предложение сокращается и цены растут.
 
-### Network-Level Changes
+### Изменения на уровне сети
 
-TRON's governance can adjust network parameters that affect the energy market:
+Управление TRON может корректировать параметры сети, влияющие на рынок энергии:
 
-- **Total energy pool size:** Increasing the pool means each staked TRX produces more energy, reducing provider costs and enabling lower prices.
-- **Energy-to-fee ratio:** Changes in how much TRX is burned per unit of energy consumed affect the floor price for energy rental.
-- **Staking rules:** Changes to freezing periods, minimum stakes, or staking rewards affect provider economics.
+- **Размер общего пула энергии:** Увеличение пула означает, что каждый стейкированный TRX производит больше энергии, снижая затраты поставщиков и позволяя устанавливать более низкие цены.
+- **Соотношение энергия-комиссия:** Изменения в том, сколько TRX сжигается за единицу потреблённой энергии, влияют на минимальную цену для аренды энергии.
+- **Правила стейкинга:** Изменения в периодах замораживания, минимальных ставках или награждения за стейкинг влияют на экономику поставщиков.
 
-## Price Prediction Limitations
+## Ограничения прогнозирования цен
 
-While patterns exist, predicting exact energy prices is unreliable for the same reasons commodity price prediction is unreliable. Too many variables interact:
+Хотя модели существуют, прогнозирование точных цен на энергию ненадёжно по той же причине, по которой предсказание цен на сырьевые товары ненадёжно. Слишком много переменных взаимодействуют:
 
-- Network transaction volume depends on crypto market conditions, which are inherently unpredictable
-- Provider pricing decisions are private and competitive
-- Demand spikes from token launches and DeFi events are difficult to anticipate
-- Governance changes are infrequent but impactful
+- Объём транзакций в сети зависит от условий крипто-рынка, которые по своей природе непредсказуемы
+- Решения по ценообразованию поставщиков являются конфиденциальными и конкурентными
+- Всплески спроса от запусков токенов и событий DeFi сложно предвидеть
+- Изменения в управлении редки, но влиятельны
 
-The practical approach is not to predict prices but to set target prices and let standing orders execute when the market reaches your target. This approach is robust to prediction errors because it does not require timing the market -- it requires only that prices occasionally reach your target level, which historical data can confirm.
+Практический подход состоит не в прогнозировании цен, а в установлении целевых цен и позволении стоящим заказам исполняться, когда рынок достигнет вашей целевой цены. Такой подход устойчив к ошибкам прогнозирования, так как не требует попадания в начало движения рынка — требуется только, чтобы цены иногда достигали вашего целевого уровня, что исторические данные могут подтвердить.
 
-## Practical Recommendations
+## Практические рекомендации
 
-### For Regular Buyers
+### Для обычных покупателей
 
-1. **Analyze your price history** using MERX's analytics to understand typical ranges for your order profile
-2. **Set standing orders** at your target price (25th percentile is a good starting point)
-3. **Monitor utilization** -- if standing orders fill too rarely, raise the target price slightly
-4. **Avoid peak hours** for non-urgent purchases
+1. **Анализируйте вашу историю цен** с помощью аналитики MERX, чтобы понять типичные диапазоны для вашего профиля заказа
+2. **Установите стоящие заказы** по вашей целевой цене (25-й процентиль — хорошая отправная точка)
+3. **Отслеживайте использование** — если стоящие заказы исполняются редко, немного повысьте целевую цену
+4. **Избегайте пиковых часов** для неспешных покупок
 
-### For High-Volume Operators
+### Для операторов с высоким объёмом
 
-1. **Build price-aware automation** that tracks costs per unit over time
-2. **Use duration optimization** to match energy purchases to your operational windows
-3. **Maintain a buffer** so standing orders can wait for optimal prices without disrupting operations
-4. **Track provider distribution** to understand which providers consistently win your order flow
+1. **Постройте автоматизацию, учитывающую цены**, которая отслеживает затраты на единицу с течением времени
+2. **Используйте оптимизацию по продолжительности** для согласования покупок энергии с вашими операционными окнами
+3. **Поддерживайте буфер** так, чтобы стоящие заказы могли ждать оптимальных цен без нарушения операций
+4. **Отслеживайте распределение поставщиков** для понимания того, какие поставщики последовательно выигрывают ваш поток заказов
 
-### For Budget-Constrained Operations
+### Для операций с ограничениями по бюджету
 
-1. **Use fixed-price providers** (via MERX) for predictable budgeting
-2. **Set conservative standing orders** that fill reliably, prioritizing certainty over optimization
-3. **Estimate monthly costs** using median prices from historical data, not best-case prices
+1. **Используйте поставщиков с фиксированной ценой** (через MERX) для предсказуемого бюджетирования
+2. **Установите консервативные стоящие заказы**, которые исполняются надёжно, отдавая приоритет определённости над оптимизацией
+3. **Оценивайте ежемесячные затраты** используя медианные цены из исторических данных, а не лучший сценарий
 
 ## Заключение
 
-TRON energy prices are dynamic, driven by production costs, transaction demand, and competitive pressure among seven providers. Prices follow daily and weekly patterns, respond to network events, and vary by order size and duration.
+Цены на энергию TRON динамичны, определяются затратами на производство, спросом на транзакции и конкурентным давлением между семью поставщиками. Цены следуют суточным и еженедельным моделям, реагируют на события в сети и варьируются в зависимости от размера заказа и продолжительности.
 
-Understanding these dynamics does not require becoming a market analyst. The practical application is simple: use price analysis tools to understand typical ranges, set standing orders at your target price, and let the system handle the timing. MERX's aggregation ensures you always access the best available rate, and standing orders capture price dips that manual purchasing cannot.
+Понимание этой динамики не требует становления рыночным аналитиком. Практическое применение просто: используйте инструменты анализа цен для понимания типичных диапазонов, установите стоящие заказы по вашей целевой цене и позвольте системе управлять сроками. Агрегация MERX гарантирует, что вы всегда получаете доступ к лучшей доступной ставке, а стоящие заказы захватывают падения цен, которые ручные покупки не могут зафиксировать.
 
-The energy market rewards patience and automation. Operators who buy at market rate whenever they need energy pay more than those who set targets and wait for the market to come to them.
+Рынок энергии вознаграждает терпение и автоматизацию. Операторы, которые покупают по рыночной ставке, когда им нужна энергия, платят больше, чем те, кто устанавливает целевые показатели и ждёт, когда рынок придёт к ним.
 
-Analyze current market conditions at [https://merx.exchange](https://merx.exchange) or explore the price analytics API at [https://merx.exchange/docs](https://merx.exchange/docs).
+Анализируйте текущие условия рынка на [https://merx.exchange](https://merx.exchange) или изучите API аналитики цен на [https://merx.exchange/docs](https://merx.exchange/docs).
 
-## Try It Now with AI
+## Попробуйте прямо сейчас с AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+Добавьте MERX в Claude Desktop или любого MCP-совместимого клиента — нулевая установка, без API ключа для инструментов только для чтения:
 
 ```json
 {
@@ -239,6 +239,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите вашего AI-агента: "What is the cheapest TRON energy right now?" и получите живые цены от всех подключённых поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,22 +1,22 @@
-# Energy Delegasyonunda Yaris Kosullari: Bunlari Nasil Cozduk
+# Enerji Delegasyonunda Yarış Koşulları: Nasıl Çözdük
 
-This is a story about a bug that cost 19 TRX per transaction instead of saving 1.43 TRX. It is a story about a race condition that looked correct in tests, worked on testnet, and only revealed itself under mainnet conditions. And it is a story about the fix -- a polling mechanism that waits for on-chain confirmation before allowing a transaction to proceed.
+Bu, bir işlem başına 1,43 TRX tasarruf etmek yerine 19 TRX maliyeti olan bir hata hakkında bir hikaye. Testlerde doğru görünen, testnette çalışan ve kendini yalnızca mainnet koşullarında ortaya koyan bir yarış koşulu hakkında bir hikaye. Ve düzeltme hakkında bir hikaye -- bir işlemin devam etmesine izin vermeden önce zincir üstü onay için bekleyen bir yoklama mekanizması.
 
-## The Setup
+## Kurulum
 
-MERX buys energy from providers on behalf of users. The flow, in theory, is straightforward:
+MERX, kullanıcılar adına sağlayıcılardan enerji satın alır. Akış, teoride, basittir:
 
-1. User requests energy for their address
-2. MERX selects the cheapest provider
-3. Provider delegates energy to the user's address
-4. User executes their transaction with the delegated energy
-5. Transaction consumes the rented energy instead of burning TRX
+1. Kullanıcı adresleri için enerji talep eder
+2. MERX en ucuz sağlayıcıyı seçer
+3. Sağlayıcı enerjiyi kullanıcının adresine devre dışı bırakır
+4. Kullanıcı, devredilen enerji ile işlemini yürütür
+5. İşlem, TRX yakması yerine kiralanmış enerjiyi tüketir
 
-The critical word is "before." The user's transaction must execute after the delegation is confirmed on-chain. If the transaction broadcasts before the delegation arrives, the transaction will still succeed -- but it will burn TRX at the protocol burn rate instead of consuming the rented energy. The user pays twice: once for the rental, and once through the TRX burn.
+Kritik kelime "önce"dir. Kullanıcının işlemi, delegasyon zincir üstünde doğrulandıktan sonra yürütülmelidir. İşlem, delegasyon gelmeden önce yayınlanırsa, işlem yine de başarılı olur -- ancak protokol yakma oranında TRX yakacaktır ve devredilen enerjiyi tüketmeyecektir. Kullanıcı iki kez öder: bir kez kira için, bir kez TRX yakması aracılığıyla.
 
-## The Bug
+## Hata
 
-The initial implementation followed a sequential pattern:
+İlk uygulama sıralı bir desen izledi:
 
 ```typescript
 async function executeWithEnergy(
@@ -24,110 +24,110 @@ async function executeWithEnergy(
   energyAmount: number,
   transactionFn: () => Promise<string>
 ): Promise<string> {
-  // Step 1: Buy energy
+  // Adım 1: Enerji satın al
   const order = await merx.createOrder({
     energy_amount: energyAmount,
     target_address: targetAddress,
     duration: '1h'
   });
 
-  // Step 2: Wait for order confirmation from MERX
+  // Adım 2: MERX'ten sipariş onayı için bekle
   await waitForOrderStatus(order.id, 'FILLED');
 
-  // Step 3: Execute the transaction
+  // Adım 3: İşlemi yürüt
   const txHash = await transactionFn();
 
   return txHash;
 }
 ```
 
-This looks correct. Buy energy, wait for the order to be filled, then execute the transaction. The `waitForOrderStatus` function polled the MERX API until the order status changed to `FILLED`.
+Bu doğru görünüyor. Enerji satın al, siparişin doldurulmasını bekle, sonra işlemi yürüt. `waitForOrderStatus` işlevi, sipariş durumu `FILLED` olana kadar MERX API'sini yokladı.
 
-The problem is what "FILLED" means. In the MERX system, an order is marked `FILLED` when the provider confirms that it has initiated the delegation. The provider returns a success response: "I have submitted the delegation transaction to the TRON network."
+Sorun "FILLED"in ne anlama geldiğidir. MERX sisteminde, sağlayıcı delegasyona başladığını onayladığında bir sipariş `FILLED` olarak işaretlenir. Sağlayıcı başarılı bir yanıt döndürür: "Delegasyon işlemini TRON ağına gönderdim."
 
-But "submitted" is not "confirmed." The delegation is a TRON transaction that must be included in a block and processed by the network. Between submission and confirmation, there is a window -- typically 3 to 6 seconds, but occasionally longer during network congestion.
+Ancak "gönderilen" "onaylanan" değildir. Delegasyon, bir bloka dahil edilmesi gereken ve ağ tarafından işlenmesi gereken bir TRON işlemidir. Gönderim ile onay arasında bir pencere vardır -- tipik olarak 3 ila 6 saniye, ancak ağ tıkanıklığı sırasında bazen daha uzun.
 
-During that window, the target address does not yet have the delegated energy.
+Bu pencere boyunca, hedef adres henüz devredelen enerjiye sahip değildir.
 
-### What Happened on Mainnet
+### Mainnet'te Ne Oldu
 
-The bug manifested exactly as predicted by the race condition:
-
-```
-Timeline:
-
-  T+0.0s    Order created, sent to provider
-  T+0.3s    Provider responds: delegation TX submitted
-  T+0.4s    Order status -> FILLED
-  T+0.5s    User transaction broadcast (USDT transfer)
-  T+0.6s    User TX included in block N
-  T+3.2s    Delegation TX included in block N+1
-
-  Result:
-    - User TX in block N: no delegation exists yet
-    - Energy consumed: 0 (delegation not active)
-    - TRX burned: 65,000 * 420 SUN = 27,300,000 SUN = 27.3 TRX
-    - Energy rental cost: 1,820,000 SUN = 1.82 TRX
-    - Total cost: 29.12 TRX (rental + burn)
-    - Expected cost: 1.82 TRX (rental only)
-```
-
-The user paid 29.12 TRX instead of 1.82 TRX. The energy rental was wasted because the delegation arrived one block too late.
-
-### The Numbers
-
-On TRON mainnet, each block takes approximately 3 seconds. A delegation transaction submitted by the provider goes through the same block inclusion process as any other transaction. If the user's transaction and the delegation transaction are submitted within a few seconds of each other, they may end up in different blocks -- with no guarantee of ordering.
-
-The cost difference is stark:
+Hata, yarış koşulunun tahmin ettiği gibi ortaya çıktı:
 
 ```
-Without delegation (TRX burn):
-  65,000 energy * 420 SUN/energy = 27,300,000 SUN = 27.3 TRX
+Zaman Çizelgesi:
 
-With delegation (rental):
-  65,000 energy * 28 SUN/energy = 1,820,000 SUN = 1.82 TRX
+  T+0.0s    Sipariş oluşturuldu, sağlayıcıya gönderildi
+  T+0.3s    Sağlayıcı yanıtı: delegasyon TX gönderildi
+  T+0.4s    Sipariş durumu -> FILLED
+  T+0.5s    Kullanıcı işlemi yayınlandı (USDT transferi)
+  T+0.6s    Kullanıcı TX blok N'ye dahil edildi
+  T+3.2s    Delegasyon TX blok N+1'e dahil edildi
 
-Money wasted per race condition occurrence:
-  27.3 + 1.82 = 29.12 TRX total cost
+  Sonuç:
+    - Blok N'deki Kullanıcı TX: delegasyon henüz yok
+    - Tüketilen enerji: 0 (delegasyon aktif değil)
+    - Yakılan TRX: 65.000 * 420 SUN = 27.300.000 SUN = 27,3 TRX
+    - Enerji kira maliyeti: 1.820.000 SUN = 1,82 TRX
+    - Toplam maliyet: 29,12 TRX (kira + yakma)
+    - Beklenen maliyet: 1,82 TRX (yalnızca kira)
+```
+
+Kullanıcı 1,82 TRX yerine 29,12 TRX ödedi. Enerji kiralama, delegasyon bir blok geç geldiği için boşa harcandı.
+
+### Sayılar
+
+TRON mainnet'inde, her blok yaklaşık 3 saniye sürer. Sağlayıcı tarafından gönderilen bir delegasyon işlemi, diğer herhangi bir işlemle aynı blok dahil etme işleminden geçer. Kullanıcının işlemi ve delegasyon işlemi birkaç saniye içinde gönderilirse, farklı bloklarda sonuçlanabilirler -- sıralama garantisi olmadan.
+
+Maliyet farkı açıktır:
+
+```
+Delegasyon olmadan (TRX yakma):
+  65.000 enerji * 420 SUN/enerji = 27.300.000 SUN = 27,3 TRX
+
+Delegasyon ile (kira):
+  65.000 enerji * 28 SUN/enerji = 1.820.000 SUN = 1,82 TRX
+
+Yarış koşulu başına harcanan para:
+  27,3 + 1,82 = 29,12 TRX toplam maliyet
   vs.
-  1.82 TRX expected cost
+  1,82 TRX beklenen maliyet
 
-  Overpayment: 27.3 TRX per incident
+  Fazla ödeme: olay başına 27,3 TRX
 ```
 
-On a bad day, this race condition could trigger on 10-20% of orders where the client executed immediately after receiving the FILLED status.
+Kötü bir günde, bu yarış koşulu, istemcinin FILLED durumunu aldıktan sonra hemen yürüttüğü siparişlerin %10-20'sinde tetiklenebilirdi.
 
-## Why Testing Did Not Catch It
+## Neden Test Bunu Yakalamadı
 
-### Testnet Behavior
+### Testnet Davranışı
 
-On Shasta testnet, block times are similar to mainnet, but network congestion is minimal. Delegation transactions are typically included in the very next block. The window between "submitted" and "confirmed" was consistently under 3 seconds on testnet, and our test harness had a built-in 2-second delay between steps that masked the race condition.
+Shasta testneti'nde, blok süreleri mainnet'e benzer, ancak ağ tıkanıklığı minimumdur. Delegasyon işlemleri tipik olarak hemen sonraki bloka dahil edilir. "Gönderilen" ile "onaylanan" arasındaki pencere, testnette tutarlı bir şekilde 3 saniyenin altındaydı ve test sistemimiz, yarış koşulunu maskelleyen adımlar arasında yerleşik 2 saniyelik bir gecikmeye sahipti.
 
-### Sequential Testing
+### Sıralı Test
 
-Our integration tests were sequential. One test would buy energy, wait, execute a transaction, and verify. There was never concurrent load, never a race between delegation and execution, never the timing pressure that mainnet produced.
+Entegrasyon testlerimiz sıralıydı. Bir test enerji satın alacak, bekleyecek, bir işlem yürütecek ve doğrulayacaktı. Hiç eşzamanlı yük yoktu, delegasyon ve yürütme arasında asla yarış yoktu, mainnet'in ürettiği zamanlama basıncı hiç yoktu.
 
-### The Order Status Trap
+### Sipariş Durumu Tuzağı
 
-The most insidious aspect: the order status was technically correct. The order was FILLED -- the provider had accepted and initiated the delegation. The bug was not in the status tracking. It was in the assumption that FILLED meant "energy is available on-chain."
+En sinsi yön: sipariş durumu teknik olarak doğruydu. Sipariş doldurulmuştu -- sağlayıcı delegasyonu kabul etmiş ve başlatmıştı. Hata durum izlemede değildi. Bu, FILLED'in "enerji zincir üstünde kullanılabilir" anlamına geldiği varsayımındaydı.
 
-## The Fix
+## Düzeltme
 
-The fix has two parts: a verification step that checks the target address's on-chain resources, and a polling loop that waits until the delegation is actually confirmed.
+Düzeltmenin iki bölümü vardır: hedef adresin zincir üstü kaynaklarını kontrol eden bir doğrulama adımı ve delegasyonun fiilen onaylanana kadar bekleyen bir yoklama döngüsü.
 
-### Part 1: check_address_resources
+### Bölüm 1: check_address_resources
 
-TRON provides an API to check the resources (energy and bandwidth) currently available to any address:
+TRON, herhangi bir adres için şu anda mevcut kaynakları (enerji ve bandwidth) kontrol etmek için bir API sağlar:
 
 ```
 GET https://api.trongrid.io/wallet/getaccountresource
 ```
 
-This returns the current energy limit, energy used, bandwidth limit, and bandwidth used for an address. Critically, this reflects the on-chain state -- if a delegation has been confirmed, the energy limit will reflect it. If the delegation is still pending, the energy limit will not include it.
+Bu, bir adres için mevcut enerji limiti, kullanılan enerji, bandwidth limiti ve kullanılan bandwidth'i döndürür. Kritik olarak, bu zincir üstü durumu yansıtır -- delegasyon onaylanmışsa, enerji limiti bunu yansıtacaktır. Delegasyon hala bekliyorsa, enerji limiti bunu içermeyecektir.
 
-### Part 2: Poll Until Confirmed
+### Bölüm 2: Onay Alıncaya Kadar Yokla
 
-The fix replaces the single "wait for FILLED" check with a polling loop that verifies on-chain resources:
+Düzeltme, tek "FILLED için bekle" kontrolünü, zincir üstü kaynakları doğrulayan bir yoklama döngüsü ile değiştirir:
 
 ```typescript
 async function executeWithEnergy(
@@ -135,21 +135,21 @@ async function executeWithEnergy(
   energyAmount: number,
   transactionFn: () => Promise<string>
 ): Promise<string> {
-  // Step 1: Check baseline resources
+  // Adım 1: Temel kaynakları kontrol et
   const baseline = await checkAddressResources(targetAddress);
   const baselineEnergy = baseline.energy_limit - baseline.energy_used;
 
-  // Step 2: Buy energy
+  // Adım 2: Enerji satın al
   const order = await merx.createOrder({
     energy_amount: energyAmount,
     target_address: targetAddress,
     duration: '1h'
   });
 
-  // Step 3: Wait for order to be filled by the provider
+  // Adım 3: Sağlayıcı tarafından doldurulması için siparişi bekle
   await waitForOrderStatus(order.id, 'FILLED');
 
-  // Step 4: Poll on-chain resources until delegation is confirmed
+  // Adım 4: Delegasyon onaylanana kadar zincir üstü kaynakları yokla
   const confirmed = await pollUntilDelegationConfirmed(
     targetAddress,
     baselineEnergy,
@@ -159,12 +159,12 @@ async function executeWithEnergy(
 
   if (!confirmed) {
     throw new Error(
-      'Delegation not confirmed on-chain within timeout. ' +
-      'Do not execute transaction -- energy may not be available.'
+      'Delegasyon zaman aşımı içinde zincir üstünde onaylanmadı. ' +
+      'İşlemi yürütme -- enerji kullanılamayabilir.'
     );
   }
 
-  // Step 5: Execute the transaction (delegation is confirmed on-chain)
+  // Adım 5: İşlemi yürüt (delegasyon zincir üstünde onaylandı)
   const txHash = await transactionFn();
 
   return txHash;
@@ -182,7 +182,7 @@ async function pollUntilDelegationConfirmed(
     const increase = currentEnergy - baselineEnergy;
 
     if (increase >= expectedIncrease * 0.95) {
-      // Allow 5% tolerance for rounding
+      // Yuvarlama için %5 tolerans ver
       return true;
     }
 
@@ -215,100 +215,100 @@ async function checkAddressResources(
 }
 ```
 
-### Why 2-Second Intervals
+### Neden 2 Saniyelik Aralıklar
 
-The polling interval is 2 seconds. This is chosen based on TRON's 3-second block time:
+Yoklama aralığı 2 saniyedir. Bu, TRON'un 3 saniyelik blok süresine dayanarak seçilmiştir:
 
-- Polling every 1 second would result in many redundant checks between blocks
-- Polling every 3 seconds would miss some blocks (clock drift, network latency)
-- Polling every 2 seconds ensures we check within every block cycle
+- Her 1 saniyede yoklama, bloklar arasında birçok gereksiz kontrolle sonuçlanır
+- Her 3 saniyede yoklama, bazı blokları kaçırır (saat kayması, ağ gecikmesi)
+- Her 2 saniyede yoklama, her blok döngüsü içinde kontrol etmemizi sağlar
 
-### Why 15 Attempts
+### Neden 15 Deneme
 
-15 attempts at 2-second intervals = 30-second maximum wait time. In practice, the delegation confirms within 1-2 polls (3-6 seconds). The 30-second timeout handles extreme cases:
+15 deneme 2 saniyelik aralıklarla = 30 saniyelik maksimum bekleme süresi. Pratikte, delegasyon 1-2 yoklama içinde onaylanır (3-6 saniye). 30 saniyelik zaman aşımı aşırı durumları ele alır:
 
-- Network congestion delaying block inclusion
-- Provider submitting the delegation transaction late
-- Temporary RPC node lag
+- Blok dahil etmesini geciktiren ağ tıkanıklığı
+- Sağlayıcı delegasyon işlemini geç gönderme
+- Geçici RPC düğümü gecikmesi
 
-If the delegation is not confirmed after 30 seconds, something is genuinely wrong, and it is safer to fail loudly than to proceed and burn TRX.
+Delegasyon 30 saniye sonra onaylanmamışsa, gerçekten yanlış bir şey vardır ve TRX yakması riskine girmek yerine sessizce başarısız olmak daha güvenlidir.
 
-## Real Mainnet Data
+## Gerçek Mainnet Verileri
 
-After deploying the fix, we measured the polling behavior over one week of production traffic:
-
-```
-Delegation confirmation timing:
-
-  Confirmed on first poll (0-2s):     12%
-  Confirmed on second poll (2-4s):    61%
-  Confirmed on third poll (4-6s):     22%
-  Confirmed on fourth poll (6-8s):    4%
-  Confirmed on fifth+ poll (8s+):     1%
-  Timeout (not confirmed in 30s):     0.04%
-
-Average time from order FILLED to on-chain confirmation: 3.1 seconds
-Median: 2.8 seconds
-P99: 8.2 seconds
-```
-
-The data confirms the race condition window: 3.1 seconds on average between the provider's "FILLED" response and on-chain confirmation. Without the polling fix, any transaction executed within that window would have burned TRX.
-
-### Cost Impact
+Düzeltmeyi dağıttıktan sonra, bir haftalık üretim trafiğinde yoklama davranışını ölçtük:
 
 ```
-Before fix (30 days):
-  Orders affected by race condition:  ~180
-  Average overpayment per incident:   ~19 TRX
-  Total cost of race conditions:      ~3,420 TRX
+Delegasyon onay zamanlaması:
 
-After fix (30 days):
-  Race condition incidents:           0
-  Timeout failures (delegation never confirmed): 2
-    Both caught by the timeout, transaction not executed
-    Orders refunded automatically
+  İlk yoklamada onaylandı (0-2s):     %12
+  İkinci yoklamada onaylandı (2-4s):   %61
+  Üçüncü yoklamada onaylandı (4-6s):   %22
+  Dördüncü yoklamada onaylandı (6-8s): %4
+  Beşinci+ yoklamada onaylandı (8s+): %1
+  Zaman aşımı (30s'de onaylanmadı):   %0,04
+
+Sipariş FILLED'den zincir üstü onaya ortalama süre: 3,1 saniye
+Medyan: 2,8 saniye
+P99: 8,2 saniye
 ```
 
-The fix eliminated the race condition entirely. The two timeout failures were genuine provider-side issues where the delegation transaction was never submitted -- exactly the cases where you want to fail rather than proceed.
+Veriler, yarış koşulu penceresini doğrular: sağlayıcının "FILLED" yanıtı ile zincir üstü onay arasında ortalama 3,1 saniye. Yoklama düzeltmesi olmadan, bu pencere içinde yürütülen herhangi bir işlem TRX yakardı.
 
-## Lessons Learned
-
-### "Submitted" Is Not "Confirmed"
-
-This is the central lesson. In any system that interacts with a blockchain, there is always a gap between submitting a transaction and that transaction being confirmed on-chain. Any logic that treats submission as confirmation will eventually fail.
-
-### Check the Chain, Not the Service
-
-The provider says the delegation is done. MERX says the order is filled. But neither of these statements means the delegation exists on-chain right now. The only authoritative source is the blockchain itself. Check the chain.
-
-### Testnet Hides Timing Bugs
-
-Testnets have lower load, faster inclusion, and more predictable behavior. Timing-sensitive bugs that never trigger on testnet will appear on mainnet. If your logic depends on timing between two on-chain events, test it under realistic load conditions.
-
-### Fail Loudly
-
-When the polling loop times out, the fix throws an error and prevents the transaction from executing. This is the correct behavior. The alternative -- executing anyway and hoping the delegation arrived -- costs 19 TRX per failure. An error message costs nothing.
-
-## The MERX Implementation
-
-The `ensure_resources` tool in the MERX MCP server implements this pattern. When an AI agent calls `ensure_resources` before executing a contract call, the tool:
-
-1. Checks current on-chain resources
-2. Calculates the deficit
-3. Purchases exactly the needed energy
-4. Polls until the delegation is confirmed on-chain
-5. Returns success only when resources are verified
-
-The agent never has to implement polling logic itself. The race condition is handled at the platform level.
+### Maliyet Etkisi
 
 ```
-Tool: ensure_resources
-Input: {
+Düzeltmeden önce (30 gün):
+  Yarış koşulundan etkilenen siparişler: ~180
+  Olay başına ortalama fazla ödeme: ~19 TRX
+  Yarış koşullarının toplam maliyeti: ~3.420 TRX
+
+Düzeltmeden sonra (30 gün):
+  Yarış koşulu olayları: 0
+  Zaman aşımı başarısızlıkları (delegasyon asla onaylanmadı): 2
+    Zaman aşımı tarafından yakalandı, işlem yürütülmedi
+    Siparişler otomatik olarak geri ödendi
+```
+
+Düzeltme, yarış koşulunu tamamen ortadan kaldırdı. İki zaman aşımı başarısızlığı, delegasyon işleminin hiç gönderilmediği gerçek sağlayıcı tarafı sorunlarıydı -- ilerlemek yerine başarısız olmak istediğiniz tam durumlar.
+
+## Öğrendiklerimiz
+
+### "Gönderilen" "Onaylanan" Değildir
+
+Bu merkezi dersidir. Bir blockchain ile etkileşime giren herhangi bir sistemde, bir işlemin gönderilmesi ile bu işlemin zincir üstünde onaylanması arasında her zaman bir boşluk vardır. Gönderimi onay olarak değerlendiren herhangi bir mantık sonunda başarısız olacaktır.
+
+### Hizmete Değil Zinciri Kontrol Et
+
+Sağlayıcı delegasyonun yapıldığını söylüyor. MERX, siparişin doldurulduğunu söylüyor. Ancak bu ifadelerin hiçbiri delegasyonun hemen şimdi zincir üstünde var olduğu anlamına gelmez. Tek yetkili kaynak blockchain'in kendisidir. Zinciri kontrol et.
+
+### Testnet Zamanlama Hatalarını Gizler
+
+Testnette düşük yük, daha hızlı dahil etme ve daha öngörülebilir davranış vardır. Testnette hiç tetiklenmeyen zamanlamaya duyarlı hatalar mainnet'te görünecektir. Mantığınız iki zincir üstü olay arasındaki zamanlama bağımlıysa, bunu gerçekçi yük koşulları altında test et.
+
+### Sessizce Başarısız Ol
+
+Yoklama döngüsü zaman aşımına uğradığında, düzeltme bir hata atar ve işlemin yürütülmesini önler. Bu doğru davranıştır. Alternatif -- yine de yürütmek ve delegasyonun geldiğini ummak -- başarısızlık başına 19 TRX maliyetine neden olur. Bir hata mesajı hiçbir şeye mal olmaz.
+
+## MERX Uygulaması
+
+MERX MCP sunucusundaki `ensure_resources` aracı bu deseni uygular. Bir yapay zeka aracı, bir sözleşme çağrısını yürütmeden önce `ensure_resources` öğesini çağırdığında, araç:
+
+1. Mevcut zincir üstü kaynakları kontrol eder
+2. Açığı hesaplar
+3. Tam olarak gerekli enerjiyi satın alır
+4. Delegasyon zincir üstünde onaylanana kadar yoklar
+5. Kaynaklar doğrulandığında yalnızca başarı döndürür
+
+Aracı, yoklama mantığını kendisi uygulamak zorunda değildir. Yarış koşulu, platform düzeyinde işlenir.
+
+```
+Araç: ensure_resources
+Girdi: {
   "address": "TYourAddress...",
   "energy_needed": 65000
 }
 
-Response: {
+Yanıt: {
   "status": "confirmed",
   "energy_available": 65000,
   "confirmation_time_ms": 4200,
@@ -316,15 +316,16 @@ Response: {
 }
 ```
 
-The `confirmation_time_ms` field tells the agent how long the polling took. The `status: "confirmed"` means the energy is on-chain and safe to use.
+`confirmation_time_ms` alanı, aracıya yoklamanın ne kadar sürdüğünü söyler. `status: "confirmed"` enerjiyi zincir üstünde ve kullanıma güvenlidir.
 
 Platform: [https://merx.exchange](https://merx.exchange)
-Documentation: [https://merx.exchange/docs](https://merx.exchange/docs)
+Dokümantasyon: [https://merx.exchange/docs](https://merx.exchange/docs)
 MCP sunucusu: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi Yapay Zeka ile Dene
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekle -- yükleme yok, salt okunur araçlar için API anahtarı gerekli değildir:
 
 ```json
 {
@@ -336,6 +337,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Yapay zeka aracınıza sor: "Şu an en ucuz TRON enerji nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatları alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP dokümantasyonu: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

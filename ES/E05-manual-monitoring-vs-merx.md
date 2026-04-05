@@ -1,100 +1,100 @@
-# MERX vs monitoreo manual de proveedores: analisis de tiempo y costo
+# MERX vs Monitoreo Manual de Proveedores: Análisis de Tiempo y Costo
 
-If you buy TRON energy regularly, you have probably developed a routine. Open TronSave, check prices. Open PowerSun, check prices. Open Feee. Open Catfee. Compare numbers in your head or a spreadsheet. Pick the cheapest. Place the order. Repeat.
+Si compras energía TRON regularmente, probablemente hayas desarrollado una rutina. Abre TronSave, revisa precios. Abre PowerSun, revisa precios. Abre Feee. Abre Catfee. Compara números en tu cabeza o en una hoja de cálculo. Elige el más barato. Realiza el pedido. Repite.
 
-This process works. It is also a spectacular waste of time.
+Este proceso funciona. También es un desperdicio espectacular de tiempo.
 
-This article quantifies exactly how much time and money manual provider monitoring costs compared to using an aggregation service like MERX. The numbers are not theoretical -- they are based on the actual workflow of comparing seven providers and the real-world implications of doing so manually.
+Este artículo cuantifica exactamente cuánto tiempo y dinero cuesta el monitoreo manual de proveedores comparado con usar un servicio de agregación como MERX. Los números no son teóricos -- se basan en el flujo de trabajo real de comparar siete proveedores y las implicaciones en el mundo real de hacerlo manualmente.
 
-## The Manual Monitoring Workflow
+## El Flujo de Trabajo del Monitoreo Manual
 
-Let us walk through what manual provider comparison actually involves when done properly.
+Veamos lo que implica realmente la comparación manual de proveedores cuando se hace adecuadamente.
 
-### Step 1: Check Each Provider
+### Paso 1: Verifica Cada Proveedor
 
-The TRON mercado de energia currently has seven significant providers: TronSave, PowerSun, Feee, Catfee, Netts, iTRX, and Sohu. Each has its own website or API, its own interface, and its own way of displaying prices.
+El mercado de energía TRON actualmente tiene siete proveedores significativos: TronSave, PowerSun, Feee, Catfee, Netts, iTRX y Sohu. Cada uno tiene su propio sitio web o API, su propia interfaz y su propia forma de mostrar precios.
 
-To compare them manually, you need to:
+Para compararlos manualmente, necesitas:
 
-1. Open each provider's interface (7 browser tabs or API calls)
-2. Enter your desired cantidad de energia on each
-3. Select your desired duration on each
-4. Note the quoted price from each
-5. Account for differences in pricing models (per-unit vs flat rate, SUN vs TRX)
-6. Compare the results
+1. Abrir la interfaz de cada proveedor (7 pestañas del navegador o llamadas API)
+2. Ingresa la cantidad de energía deseada en cada una
+3. Selecciona la duración deseada en cada una
+4. Anota el precio cotizado de cada una
+5. Ten en cuenta las diferencias en modelos de precios (por unidad vs tarifa plana, SUN vs TRX)
+6. Compara los resultados
 
-**Estimated time per comparison: 8-15 minutes.** This assumes you know all seven providers, have accounts on each, and know how to navigate their interfaces efficiently. For a newcomer, add another 30 minutes for initial setup per provider.
+**Tiempo estimado por comparación: 8-15 minutos.** Esto asume que conoces los siete proveedores, tienes cuentas en cada uno y sabes cómo navegar sus interfaces de manera eficiente. Para alguien nuevo, suma otros 30 minutos para la configuración inicial por proveedor.
 
-### Step 2: Account for Availability
+### Paso 2: Ten en Cuenta la Disponibilidad
 
-Price is not the only variable. A provider might quote a great rate but not have sufficient supply to fill your order. Some providers show available supply; others do not. You might place an order at el proveedor mas barato only to find it cannot be fully filled.
+El precio no es la única variable. Un proveedor podría cotizar una excelente tarifa pero no tener suficiente suministro para llenar tu pedido. Algunos proveedores muestran el suministro disponible; otros no. Podrías realizar un pedido con el proveedor más barato solo para descubrir que no puede ser completamente lleno.
 
-**Additional time for availability verification: 2-5 minutes.**
+**Tiempo adicional para verificación de disponibilidad: 2-5 minutos.**
 
-### Step 3: Place the Order
+### Paso 3: Realiza el Pedido
 
-Once you have identified the best option, you need to place the order on that specific provider's platform. Different providers have different order flows, payment methods, and confirmation processes.
+Una vez que hayas identificado la mejor opción, necesitas realizar el pedido en la plataforma de ese proveedor específico. Los diferentes proveedores tienen diferentes flujos de pedidos, métodos de pago y procesos de confirmación.
 
-**Order placement time: 2-5 minutes.**
+**Tiempo de realización de pedido: 2-5 minutos.**
 
-### Total Time Per Order
+### Tiempo Total Por Pedido
 
-For a single, well-executed manual comparison:
+Para una única comparación manual bien ejecutada:
 
-| Step | Time |
+| Paso | Tiempo |
 |---|---|
-| Check 7 providers | 8-15 min |
-| Verify availability | 2-5 min |
-| Place order | 2-5 min |
+| Verifica 7 proveedores | 8-15 min |
+| Verifica disponibilidad | 2-5 min |
+| Realiza pedido | 2-5 min |
 | **Total** | **12-25 min** |
 
-Let us use the conservative middle estimate: 15 minutes per order.
+Usemos la estimación conservadora del medio: 15 minutos por pedido.
 
-## The Cost of Time
+## El Costo del Tiempo
 
-### For Individual Users
+### Para Usuarios Individuales
 
-If you buy energy once a day, that is 15 minutes daily on provider comparison. Over a month, that is 7.5 hours. Over a year, it is 91 hours -- more than two full work weeks spent opening tabs and comparing prices.
+Si compras energía una vez al día, eso son 15 minutos diarios en comparación de proveedores. En un mes, eso son 7.5 horas. En un año, son 91 horas -- más de dos semanas de trabajo completas gastadas abriendo pestañas y comparando precios.
 
-If your time is worth $50/hour (a conservative rate for anyone building on blockchain), that is $4,550 per year in time cost alone.
+Si tu tiempo vale $50/hora (una tarifa conservadora para cualquiera que construya en blockchain), eso son $4,550 por año solo en costo de tiempo.
 
-### For Development Teams
+### Para Equipos de Desarrollo
 
-For teams running automated systems that need energy for each transaction, the manual approach does not even function. You cannot have a developer manually comparing prices every time your procesador de pagos needs to send a USDT transfer.
+Para equipos que ejecutan sistemas automatizados que necesitan energía para cada transacción, el enfoque manual ni siquiera funciona. No puedes tener un desarrollador comparando manualmente precios cada vez que tu procesador de pagos necesita enviar una transferencia USDT.
 
-Teams that try to semi-automate this end up building internal tools: scripts that scrape provider websites, spreadsheets that track historical prices, cron jobs that check rates periodically. These internal tools require maintenance, break when providers change their interfaces, and represent ongoing engineering overhead.
+Los equipos que intentan semi-automatizar esto terminan construyendo herramientas internas: scripts que extraen sitios web de proveedores, hojas de cálculo que rastrean precios históricos, trabajos cron que verifican tarifas periódicamente. Estas herramientas internas requieren mantenimiento, se rompen cuando los proveedores cambian sus interfaces y representan una sobrecarga de ingeniería continua.
 
-**Estimated cost of building and maintaining an internal comparacion de precios system: 40-80 hours of developer time initially, plus 2-4 hours per month for maintenance.** At $100/hour for developer time, that is $4,000-$8,000 upfront plus $200-$400 monthly.
+**Costo estimado de construir y mantener un sistema interno de comparación de precios: 40-80 horas de tiempo de desarrollador inicialmente, más 2-4 horas al mes para mantenimiento.** A $100/hora por tiempo de desarrollador, eso son $4,000-$8,000 inicialmente más $200-$400 mensuales.
 
-### For Businesses at Scale
+### Para Empresas a Gran Escala
 
-Businesses processing hundreds or thousands of TRON transactions daily face an impossible manual task. At 100 transactions per day, manual comparison would require 25 hours daily -- more than a full-time employee doing nothing but checking precios de energia.
+Las empresas que procesan cientos o miles de transacciones TRON diarias enfrentan una tarea manual imposible. Con 100 transacciones por día, la comparación manual requeriría 25 horas diarias -- más que un empleado de tiempo completo haciendo nada más que verificar precios de energía.
 
-Even with batching (buying energy for multiple transactions at once), the comparison workflow does not scale.
+Incluso con agrupamiento (comprar energía para múltiples transacciones a la vez), el flujo de trabajo de comparación no se escala.
 
-## The Price Window Problem
+## El Problema de la Ventana de Precios
 
-Time cost is quantifiable but not the largest issue. The bigger problem is missed price windows.
+El costo de tiempo es cuantificable pero no es el problema más grande. El problema mayor es perder ventanas de precios.
 
-Energy prices on TRON fluctuate throughout the day. Providers adjust rates based on supply, demand, and competitive positioning. A price that was available when you started your 15-minute comparison might not exist when you finish.
+Los precios de energía en TRON fluctúan a lo largo del día. Los proveedores ajustan tarifas según la oferta, la demanda y el posicionamiento competitivo. Un precio que estaba disponible cuando comenzaste tu comparación de 15 minutos podría no existir cuando termines.
 
-### How Price Windows Work
+### Cómo Funcionan las Ventanas de Precios
 
-Suppose you start comparing providers at 10:00 AM. Provider A quotes 26 SUN. By the time you finish checking all seven providers and return to place your order with Provider A, it is 10:12 AM. Their rate has shifted to 29 SUN because another buyer took the available supply at 26 SUN.
+Supongamos que comienzas a comparar proveedores a las 10:00 AM. El Proveedor A cotiza 26 SUN. Para cuando termines de verificar los siete proveedores y regreses para realizar tu pedido con el Proveedor A, son las 10:12 AM. Su tarifa ha cambiado a 29 SUN porque otro comprador tomó el suministro disponible a 26 SUN.
 
-You missed the window.
+Perdiste la ventana.
 
-This happens more frequently than most users realize. The mejor precios are often available for minutes, not hours. Manual comparison is structurally unable to capture short-lived price opportunities.
+Esto sucede más frecuentemente de lo que la mayoría de los usuarios se dan cuenta. Los mejores precios a menudo están disponibles durante minutos, no horas. El monitoreo manual es estructuralmente incapaz de capturar oportunidades de precios de corta duración.
 
-### Quantifying Missed Windows
+### Cuantificando Ventanas Perdidas
 
-Based on typical price volatility in the TRON mercado de energia, prices can swing 10-20% within a single hour during active periods. If you are consistently 10-15 minutes behind the best available price, you are statistically paying 3-8% more than the instantaneous mejor precio.
+Basado en la volatilidad típica de precios en el mercado de energía TRON, los precios pueden fluctuar 10-20% dentro de una sola hora durante períodos activos. Si consistentemente estás 10-15 minutos por detrás del mejor precio disponible, estadísticamente estás pagando 3-8% más que el mejor precio instantáneo.
 
-On energy purchases totaling 1,000,000 SUN per month, a 5% premium from missed windows costs 50,000 SUN -- roughly $2-4 depending on TRX price.
+En compras de energía totalizando 1,000,000 SUN por mes, una prima del 5% por ventanas perdidas cuesta 50,000 SUN -- aproximadamente $2-4 dependiendo del precio de TRX.
 
-## The MERX Alternative
+## La Alternativa MERX
 
-MERX eliminates the manual comparison workflow entirely. A una sola API call queries all seven providers simultaneously and returns the best available price:
+MERX elimina completamente el flujo de trabajo de comparación manual. Una única llamada API consulta los siete proveedores simultáneamente y devuelve el mejor precio disponible:
 
 ```bash
 curl https://merx.exchange/api/v1/prices \
@@ -102,11 +102,11 @@ curl https://merx.exchange/api/v1/prices \
   -d '{"energy_amount": 65000, "duration": "1h"}'
 ```
 
-**Time per comparison: under 500 milliseconds.** Not 15 minutes. Half a second.
+**Tiempo por comparación: menos de 500 milisegundos.** No 15 minutos. Medio segundo.
 
-The response includes prices from all active providers, sorted by rate, with the best option identified. No tabs to open, no interfaces to navigate, no manual comparison needed.
+La respuesta incluye precios de todos los proveedores activos, ordenados por tarifa, con la mejor opción identificada. Sin pestañas que abrir, sin interfaces que navegar, sin comparación manual necesaria.
 
-### Placing an Order
+### Realizando un Pedido
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -119,15 +119,15 @@ const order = await merx.createOrder({
   target_address: 'TYourAddress...'
 });
 
-// Order placed at the best available price
-// Total time from price check to order: < 1 second
+// Pedido realizado al mejor precio disponible
+// Tiempo total desde verificación de precio hasta pedido: < 1 segundo
 ```
 
-The entire workflow -- comparacion de precios across seven providers, mejor precio selection, and order placement -- takes less than one second programmatically.
+El flujo de trabajo completo -- comparación de precios en siete proveedores, selección del mejor precio y realización del pedido -- toma menos de un segundo programáticamente.
 
-## Standing Orders: Eliminating Active Monitoring Entirely
+## Órdenes Permanentes: Eliminando Completamente el Monitoreo Activo
 
-MERX orden permanentes go further than just speeding up the comparison process. They eliminate the need for you to be present at all.
+Las órdenes permanentes de MERX van más allá de solo acelerar el proceso de comparación. Eliminan la necesidad de que estés presente en absoluto.
 
 ```typescript
 const standing = await merx.createStandingOrder({
@@ -139,78 +139,79 @@ const standing = await merx.createStandingOrder({
 });
 ```
 
-This creates a persistent order that monitors prices across all seven providers continuously. When any provider's rate drops to or below 25 SUN for your specified amount and duration, the order executes automatically.
+Esto crea una orden persistente que monitorea precios en los siete proveedores continuamente. Cuando la tarifa de cualquier proveedor cae a o por debajo de 25 SUN para tu cantidad y duración especificadas, la orden se ejecuta automáticamente.
 
-### Why Standing Orders Change the Economics
+### Por Qué las Órdenes Permanentes Cambian la Economía
 
-With manual monitoring, you can check prices a few times per day at best. Each check takes 15 minutes and captures a single snapshot of the market.
+Con monitoreo manual, puedes verificar precios algunas pocas veces al día en el mejor de los casos. Cada verificación toma 15 minutos y captura una única instantánea del mercado.
 
-A orden permanente monitors the market continuously -- every actualizacion de precios from every provider. It captures price dips that last minutes or even seconds, opportunities that no human monitoring process could catch.
+Una orden permanente monitorea el mercado continuamente -- cada actualización de precio de cada proveedor. Captura caídas de precios que duran minutos o incluso segundos, oportunidades que ningún proceso de monitoreo humano podría captar.
 
-For organizations with flexible timing on their energy purchases, orden permanentes consistently achieve lower average prices than manual buying. The system never sleeps, never gets distracted, and never misses a window.
+Para organizaciones con flexibilidad en el tiempo de sus compras de energía, las órdenes permanentes logran consistentemente precios promedio más bajos que la compra manual. El sistema nunca duerme, nunca se distrae y nunca pierde una ventana.
 
-## Time and Cost Comparison
+## Comparación de Tiempo y Costo
 
-| Metric | Manual Monitoring | MERX |
+| Métrica | Monitoreo Manual | MERX |
 |---|---|---|
-| Time per comparison | 12-25 minutes | < 1 second |
-| Orders per day (1 order) | 15 min/day | Seconds/day |
-| Monthly time cost (1/day) | 7.5 hours | Negligible |
-| Annual time cost (1/day) | 91 hours | Negligible |
-| Price window capture | Often missed | Real-time |
-| Off-hours monitoring | Not feasible | Continuous |
-| Provider outage handling | Manual switchover | Automatic |
-| Scaling to 100 orders/day | Impossible manually | Same API call |
+| Tiempo por comparación | 12-25 minutos | < 1 segundo |
+| Pedidos por día (1 pedido) | 15 min/día | Segundos/día |
+| Costo de tiempo mensual (1/día) | 7.5 horas | Negligible |
+| Costo de tiempo anual (1/día) | 91 horas | Negligible |
+| Captura de ventana de precios | Frecuentemente perdida | Tiempo real |
+| Monitoreo fuera de horario | No es factible | Continuo |
+| Manejo de outage de proveedor | Cambio manual | Automático |
+| Escalado a 100 pedidos/día | Imposible manualmente | Misma llamada API |
 
-### Dollar Comparison (1 order/day, $50/hr time value)
+### Comparación en Dólares (1 pedido/día, $50/hr valor de tiempo)
 
-| Cost Component | Manual | MERX |
+| Componente de Costo | Manual | MERX |
 |---|---|---|
-| Time cost per year | $4,550 | ~$0 |
-| Missed price windows (est.) | $500-2,000/yr | $0 |
-| Internal tooling (if built) | $4,000-8,000 + $200-400/mo | $0 |
-| MERX service cost | $0 | Included in spread |
-| **Net annual cost** | **$5,050 - $14,550** | **Spread on orders** |
+| Costo de tiempo por año | $4,550 | ~$0 |
+| Ventanas de precios perdidas (est.) | $500-2,000/año | $0 |
+| Herramientas internas (si se construyen) | $4,000-8,000 + $200-400/mes | $0 |
+| Costo del servicio MERX | $0 | Incluido en spread |
+| **Costo anual neto** | **$5,050 - $14,550** | **Spread en pedidos** |
 
-The MERX cost model is built into the price spread -- the difference between provider cost and the rate charged to you. For most users, this spread is significantly less than the time and costo de oportunidad of manual monitoring.
+El modelo de costo de MERX se construye en el spread del precio -- la diferencia entre el costo del proveedor y la tarifa que se te cobra. Para la mayoría de los usuarios, este spread es significativamente menor que el costo de tiempo y oportunidad del monitoreo manual.
 
-## The Automation Multiplier
+## El Multiplicador de Automatización
 
-The real value of aggregation becomes clear a escala. Manual monitoring is a linear cost -- more orders mean proportionally more time. MERX's cost is per-order, and the API call time remains constant regardless of volume.
+El valor real de la agregación se hace evidente a escala. El monitoreo manual es un costo lineal -- más pedidos significan proporcionalmente más tiempo. El costo de MERX es por pedido y el tiempo de llamada API permanece constante independientemente del volumen.
 
-A procesador de pagos handling 500 USDT transfers per day cannot manually compare precios de energia for each transaction. The only options are:
+Un procesador de pagos que maneja 500 transferencias USDT por día no puede comparar manualmente precios de energía para cada transacción. Las únicas opciones son:
 
-1. Pick one provider and accept whatever they charge (overpaying on average)
-2. Build an internal comparison system (high upfront and maintenance cost)
-3. Use an aggregator (immediate best-price access with zero operational overhead)
+1. Elige un proveedor y acepta lo que cobran (pagando en exceso en promedio)
+2. Construye un sistema de comparación interno (alto costo inicial y de mantenimiento)
+3. Usa un agregador (acceso inmediato al mejor precio sin sobrecarga operativa)
 
-Option 3 is the only one tha escalas without proportional cost increase.
+La opción 3 es la única que se escala sin aumento de costo proporcional.
 
-## Beyond Price Comparison
+## Más Allá de la Comparación de Precios
 
-Manual monitoring only addresses the price question. MERX also handles:
+El monitoreo manual solo aborda la cuestión del precio. MERX también maneja:
 
-- **Exact estimacion de energia** using transaction simulation, so you never over-purchase or under-purchase
-- **Automatic respaldo** if a provider is down, with no manual intervention needed
-- **WebSocket flujo de precioss** for applications that need tiempo real market data
-- **Webhooks** for asynchronous estado de la orden notifications
-- **Auto-energy** configuration for wallets that should always have energia disponible
+- **Estimación exacta de energía** usando simulación de transacciones, para que nunca compres en exceso o deficiencia
+- **Conmutación automática** si un proveedor está inactivo, sin intervención manual necesaria
+- **Feeds de precios WebSocket** para aplicaciones que necesitan datos de mercado en tiempo real
+- **Webhooks** para notificaciones de estado de pedido asincrónicas
+- **Configuración de auto-energía** para billeteras que siempre deben tener energía disponible
 
-Each of these capabilities would require additional manual processes or custom development if handled outside an aggregator.
+Cada una de estas capacidades requeriría procesos manuales adicionales o desarrollo personalizado si se manejaran fuera de un agregador.
 
-## Conclusion
+## Conclusión
 
-Manual provider monitoring is a remnant of the early TRON mercado de energia when there were two or three providers and checking them took minutes. With seven active providers and a dynamic pricing environment, the manual approach costs more in time and missed opportunities than any aggregation fee.
+El monitoreo manual de proveedores es una reliquia del mercado temprano de energía TRON cuando había dos o tres proveedores y verificarlos tomaba minutos. Con siete proveedores activos y un entorno de precios dinámico, el enfoque manual cuesta más en tiempo y oportunidades perdidas que cualquier tarifa de agregación.
 
-The math is straightforward. If you value your time at any meaningful rate, the hours spent on manual comparison exceed the cost of using an aggregator within the first month. Add the costo de oportunidad of missed price windows, and the case becomes even clearer.
+Las matemáticas son sencillas. Si valoras tu tiempo a cualquier tarifa significativa, las horas gastadas en comparación manual exceden el costo de usar un agregador dentro del primer mes. Suma el costo de oportunidad de ventanas de precios perdidas y el caso se vuelve aún más claro.
 
-MERX replaces a 15-minute manual workflow with a sub-second API call, captures price opportunities that manual monitoring cannot, and scales from one order per day to thousands without additional effort.
+MERX reemplaza un flujo de trabajo manual de 15 minutos con una llamada API de sub-segundo, captura oportunidades de precios que el monitoreo manual no puede, y se escala de un pedido por día a miles sin esfuerzo adicional.
 
-Try the platform at [https://merx.exchange](https://merx.exchange) or explore the documentation at [https://merx.exchange/docs](https://merx.exchange/docs).
+Prueba la plataforma en [https://merx.exchange](https://merx.exchange) o explora la documentación en [https://merx.exchange/docs](https://merx.exchange/docs).
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin necesidad de clave API para herramientas de solo lectura:
 
 ```json
 {
@@ -222,6 +223,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,20 +1,20 @@
-# Monitores de delegacion: nunca deje que su energia en TRON expire
+# Monitores de Delegación: Nunca Dejes que tu Energía TRON Expire
 
-## The Expiration Problem
+## El Problema de la Expiración
 
-TRON delegacion de energias have a fixed duration. When you buy energy for 1 hour, you get exactly 1 hour. When that hour ends, the delegation is revoked, and your address returns to zero delegated energy. If your application sends a USDT transfer 61 minutes after the delegation started, that transaction burns TRX at full price.
+Las delegaciones de energía TRON tienen una duración fija. Cuando compras energía por 1 hora, obtienes exactamente 1 hora. Cuando esa hora termina, la delegación se revoca y tu dirección vuelve a cero energía delegada. Si tu aplicación envía una transferencia USDT 61 minutos después de que comenzó la delegación, esa transacción quema TRX al precio completo.
 
-For applications running 24/7, this creates a management burden. You need to track when each delegation expires, purchase a replacement before the current one lapses, and handle the gap between expiration and the new delegation arriving. Miss a renewal by even a few seconds, and transactions executed during that window incur the full TRX burn.
+Para aplicaciones que funcionan 24/7, esto crea una carga de gestión. Necesitas rastrear cuándo expira cada delegación, comprar un reemplazo antes de que la actual caduque y manejar la brecha entre la expiración y la llegada de la nueva delegación. Si pierdes una renovación por apenas unos segundos, las transacciones ejecutadas durante esa ventana incurren en la quema completa de TRX.
 
-MERX delegation monitors eliminate this problem. They watch your delegations, track expiration times, and automatically renew before your energy runs out. The monitor runs on the MERX server 24/7 - it does not depend on your application being online, your MCP client being connected, or your AI agent being active.
+Los monitores de delegación MERX eliminan este problema. Observan tus delegaciones, rastrean los tiempos de expiración y renuevan automáticamente antes de que se agote tu energía. El monitor se ejecuta en el servidor MERX 24/7 - no depende de que tu aplicación esté en línea, de que tu cliente MCP esté conectado o de que tu agente de IA esté activo.
 
-## Monitor Types
+## Tipos de Monitor
 
-The MERX monitoring system supports three types of monitors, each designed for a different operational concern.
+El sistema de monitoreo MERX admite tres tipos de monitores, cada uno diseñado para una preocupación operativa diferente.
 
 ### delegation_expiry
 
-Watches active delegacion de energias and takes action before they expire.
+Observa las delegaciones de energía activas y toma medidas antes de que expiren.
 
 ```
 Tool: create_monitor
@@ -35,17 +35,17 @@ Input: {
 }
 ```
 
-This monitor tracks all active delegations to the specified address. When any delegation is within 10 minutes of expiring, the monitor takes action:
+Este monitor rastrea todas las delegaciones activas a la dirección especificada. Cuando cualquier delegación está a 10 minutos de expirar, el monitor toma medidas:
 
-1. If `auto_renew` is true and the current mejor precio is at or below `max_price_per_unit`, it automatically places a new order for `renewal_amount` energy with `renewal_duration_hours` duration.
-2. If the price exceeds `max_price_per_unit`, the monitor sends a notification instead of purchasing, alerting you that prices are too high for automatic renewal.
-3. If `auto_renew` is false, the monitor only sends notifications, giving you time to act manually.
+1. Si `auto_renew` es verdadero y el precio actual mejor es igual o inferior a `max_price_per_unit`, coloca automáticamente una nueva orden por `renewal_amount` de energía con duración de `renewal_duration_hours`.
+2. Si el precio excede `max_price_per_unit`, el monitor envía una notificación en lugar de comprar, alertándote de que los precios son demasiado altos para la renovación automática.
+3. Si `auto_renew` es falso, el monitor solo envía notificaciones, dándote tiempo para actuar manualmente.
 
-The `renew_before_minutes` parameter is critical. Set it high enough that the new delegation can be placed, confirmed, and activated before the old one expires. A 10-minute window provides ample time for order placement (seconds), provider processing (1-2 minutes), and delegation confirmation (3-6 seconds), with margin for network congestion.
+El parámetro `renew_before_minutes` es crítico. Establécelo lo suficientemente alto para que la nueva delegación pueda colocarse, confirmarse y activarse antes de que expire la anterior. Una ventana de 10 minutos proporciona tiempo amplio para la colocación de orden (segundos), procesamiento del proveedor (1-2 minutos) y confirmación de delegación (3-6 segundos), con margen para congestión de red.
 
 ### balance_threshold
 
-Monitors the en cadena energy balance and triggers when it falls below a specified level.
+Monitorea el saldo de energía en cadena y se activa cuando cae por debajo de un nivel especificado.
 
 ```
 Tool: create_monitor
@@ -66,17 +66,17 @@ Input: {
 }
 ```
 
-Unlike `delegation_expiry`, which is time-based, `balance_threshold` is consumption-based. It fires when your address's available energy drops below 200,000, regardless of why. This covers scenarios that expiry monitoring cannot:
+A diferencia de `delegation_expiry`, que se basa en el tiempo, `balance_threshold` se basa en el consumo. Se activa cuando el energía disponible de tu dirección cae por debajo de 200,000, independientemente del motivo. Esto cubre escenarios que el monitoreo de expiración no puede:
 
-- Multiple transactions consuming energy faster than expected
-- A delegation being revoked early by the provider
-- Staked energy decreasing due to a change in staking parameters
+- Múltiples transacciones consumiendo energía más rápido de lo esperado
+- Una delegación siendo revocada anticipadamente por el proveedor
+- Energía en staking disminuyendo debido a un cambio en los parámetros de staking
 
-When triggered, the `ensure_resources` action checks the current balance, calculates the deficit to reach the target, and purchases only what is needed.
+Cuando se activa, la acción `ensure_resources` verifica el saldo actual, calcula el déficit para alcanzar el objetivo y compra solo lo necesario.
 
 ### price_alert
 
-Monitors mercado de energia prices and notifies when conditions are met.
+Monitorea los precios del mercado de energía y notifica cuando se cumplen las condiciones.
 
 ```
 Tool: create_monitor
@@ -97,17 +97,17 @@ Input: {
 }
 ```
 
-Price alerts are informational by default - they notify without purchasing. This is useful for teams that want to buy energy at historically low prices but prefer a human in the loop for purchase decisions.
+Las alertas de precio son solo informativas por defecto - notifican sin comprar. Esto es útil para equipos que desean comprar energía a precios históricamente bajos pero prefieren una persona revisando las decisiones de compra.
 
-The `cooldown_minutes` parameter prevents alert fatigue. If the price stays below the threshold for hours, you receive one alert every 6 hours instead of one every 30 seconds.
+El parámetro `cooldown_minutes` previene la fatiga de alertas. Si el precio se mantiene por debajo del umbral durante horas, recibes una alerta cada 6 horas en lugar de una cada 30 segundos.
 
-## Auto-Renewal in Detail
+## Renovación Automática en Detalle
 
-The auto-renewal flow for `delegation_expiry` monitors works as follows:
+El flujo de renovación automática para monitores `delegation_expiry` funciona de la siguiente manera:
 
-### Step 1: Track Active Delegations
+### Paso 1: Rastrear Delegaciones Activas
 
-MERX maintains a record of all energy orders placed through the platform. Each order includes the delegation start time, duration, and expiration time. The monitor checks these records against the current time.
+MERX mantiene un registro de todas las órdenes de energía colocadas a través de la plataforma. Cada orden incluye la hora de inicio de delegación, duración y hora de expiración. El monitor verifica estos registros contra la hora actual.
 
 ```
 Active delegations for TYourAddress:
@@ -115,9 +115,9 @@ Active delegations for TYourAddress:
   Order #1235: 200,000 energy, expires 2026-03-30T15:30:00Z (137 min remaining)
 ```
 
-### Step 2: Evaluate Renewal Window
+### Paso 2: Evaluar Ventana de Renovación
 
-When any delegation enters the renewal window (e.g., 10 minutes before expiry):
+Cuando cualquier delegación entra en la ventana de renovación (p. ej., 10 minutos antes de expirar):
 
 ```
 Order #1234: 500,000 energy, expires in 9 minutes 42 seconds
@@ -125,9 +125,9 @@ Order #1234: 500,000 energy, expires in 9 minutes 42 seconds
 -> Initiating renewal check
 ```
 
-### Step 3: Price Check
+### Paso 3: Verificación de Precio
 
-The monitor queries current market prices:
+El monitor consulta los precios de mercado actuales:
 
 ```
 Best price for 500,000 energy / 24 hours:
@@ -139,7 +139,7 @@ Max allowed: 0.00006 per unit
   0.0000526 <= 0.00006: PASS
 ```
 
-### Step 4: Place Renewal Order
+### Paso 4: Colocar Orden de Renovación
 
 ```
 Order placed:
@@ -151,9 +151,9 @@ Order placed:
   Status: CONFIRMED
 ```
 
-### Step 5: Verify Delegation
+### Paso 5: Verificar Delegación
 
-The monitor polls the address to confirm the new delegation has been received:
+El monitor sondea la dirección para confirmar que la nueva delegación ha sido recibida:
 
 ```
 Delegation confirmed:
@@ -161,7 +161,7 @@ Delegation confirmed:
   New energy: 987,231 (previous + new delegation)
 ```
 
-### Step 6: Notify
+### Paso 6: Notificar
 
 ```
 Webhook sent:
@@ -177,13 +177,13 @@ Webhook sent:
 }
 ```
 
-The entire flow completes in under 30 seconds. The address never experienced a gap in energy coverage.
+El flujo completo se completa en menos de 30 segundos. La dirección nunca experimentó una brecha en la cobertura de energía.
 
-## Price Protection
+## Protección de Precio
 
-The `max_price_per_unit` parameter on auto-renewal monitors is a critical safety mechanism. Energy prices can spike during periods of high demand. Without price protection, an auto-renewal during a pico de precios could cost 2-3x the normal rate.
+El parámetro `max_price_per_unit` en monitores de renovación automática es un mecanismo de seguridad crítico. Los precios de energía pueden aumentar durante períodos de alta demanda. Sin protección de precio, una renovación automática durante un pico de precio podría costar 2-3 veces la tasa normal.
 
-When the market price exceeds the maximum:
+Cuando el precio de mercado excede el máximo:
 
 ```
 Best price for 500,000 energy / 24 hours:
@@ -199,33 +199,33 @@ Action: Notification sent instead of purchase
    market price 0.0000850 exceeds maximum 0.00006. Manual action required."
 ```
 
-The notification gives you the option to:
-- Accept the higher price and place a manual order
-- Wait for prices to normalize and accept a brief gap in coverage
-- Adjust the max_price_per_unit on the monitor
+La notificación te da la opción de:
+- Aceptar el precio más alto y colocar una orden manual
+- Esperar a que los precios se normalicen y aceptar una brecha breve en la cobertura
+- Ajustar el max_price_per_unit en el monitor
 
-### Setting the Right Maximum Price
+### Establecer el Precio Máximo Correcto
 
-To set an effective maximum price:
+Para establecer un precio máximo efectivo:
 
-1. Check the `get_price_history` resource for the last 30 days
-2. Identify the 95th percentile price (the price that 95% of quotes were at or below)
-3. Set your maximum at or slightly above this level
+1. Consulta el recurso `get_price_history` para los últimos 30 días
+2. Identifica el precio del percentil 95 (el precio que 95% de las cotizaciones estuvieron en o por debajo)
+3. Establece tu máximo en o ligeramente por encima de este nivel
 
-This approach catches normal fluctuations while rejecting genuine pico de precioss.
+Este enfoque detecta fluctuaciones normales mientras rechaza picos de precio genuinos.
 
-## Running 24/7 Without an Agent
+## Ejecutándose 24/7 Sin un Agente
 
-This is the key differentiator of MERX monitors compared to agent-side logic. An AI agent runs during a conversation session. When the session ends, the agent stops. If you implemented delegation tracking in your agent's code, it would only work while the agent is active.
+Esta es la diferenciación clave de los monitores MERX en comparación con la lógica del lado del agente. Un agente de IA se ejecuta durante una sesión de conversación. Cuando la sesión termina, el agente se detiene. Si implementaras el rastreo de delegación en el código de tu agente, solo funcionaría mientras el agente está activo.
 
-MERX monitors run on the MERX server infrastructure:
+Los monitores MERX se ejecutan en la infraestructura del servidor MERX:
 
-- **PostgreSQL persistence** - Monitor configurations are stored in the database and survive server restarts
-- **Server-side evaluation** - Triggers are evaluated by the MERX backend process, not by any client
-- **Independent of MCP connections** - No client needs to be connected for monitors to function
-- **Crash recovery** - If the MERX service restarts, monitors resume automatically from their last known state
+- **Persistencia PostgreSQL** - Las configuraciones de monitor se almacenan en la base de datos y sobreviven a los reinicios del servidor
+- **Evaluación del lado del servidor** - Los disparadores se evalúan por el proceso backend de MERX, no por ningún cliente
+- **Independiente de conexiones MCP** - Ningún cliente necesita estar conectado para que los monitores funcionen
+- **Recuperación de fallos** - Si el servicio MERX se reinicia, los monitores se reanudan automáticamente desde su último estado conocido
 
-An agent creates a monitor once. That monitor runs indefinitely (or until its expiration date) regardless of whether the agent ever connects again.
+Un agente crea un monitor una vez. Ese monitor se ejecuta indefinidamente (o hasta su fecha de expiración) independientemente de si el agente se conecta nuevamente.
 
 ```
 Day 1: Agent creates delegation_expiry monitor
@@ -238,11 +238,11 @@ Day 7: Agent reconnects. Checks monitor history:
   - Average price: 0.0000526 per energy unit
 ```
 
-## Combining Monitors for Robust Coverage
+## Combinar Monitores para Cobertura Robusta
 
-A single monitor type cannot cover all failure modes. The recommended configuration for production use combines two or three monitor types:
+Un único tipo de monitor no puede cubrir todos los modos de fallo. La configuración recomendada para uso en producción combina dos o tres tipos de monitor:
 
-### Recommended Setup
+### Configuración Recomendada
 
 ```
 Monitor 1: delegation_expiry
@@ -270,16 +270,16 @@ Monitor 3: price_alert
     action: notify_only
 ```
 
-Monitor 1 handles the normal case - scheduled renewals at acceptable prices. Monitor 2 handles abnormal cases - sudden consumo de energia spikes, early delegation revocations, or Monitor 1 being blocked by price protection. Monitor 3 alerts you to exceptional opportunities for manual bulk purchasing.
+Monitor 1 maneja el caso normal - renovaciones programadas a precios aceptables. Monitor 2 maneja casos anormales - picos de consumo de energía repentinos, revocaciones anticipadas de delegación o Monitor 1 siendo bloqueado por protección de precio. Monitor 3 te alerta sobre excepcionales oportunidades para compra manual a granel.
 
-Together, these three monitors provide:
-- Zero-gap energy coverage under normal conditions
-- Automatic fallback when prices spike temporarily
-- Alerts for optimizacion de costos opportunities
+Juntos, estos tres monitores proporcionan:
+- Cobertura de energía sin brechas en condiciones normales
+- Respaldo automático cuando los precios suben temporalmente
+- Alertas para oportunidades de optimización de costos
 
-## Managing Monitors
+## Gestionar Monitores
 
-### Listing Active Monitors
+### Listar Monitores Activos
 
 ```
 Tool: list_monitors
@@ -310,9 +310,9 @@ Response:
 }
 ```
 
-### Monitor History
+### Historial de Monitor
 
-Each monitor maintains a detailed execution log:
+Cada monitor mantiene un registro de ejecución detallado:
 
 ```json
 {
@@ -338,13 +338,13 @@ Each monitor maintains a detailed execution log:
 }
 ```
 
-This history provides full auditability. You can see exactly when each renewal happened, how much it cost, which provider was used, and why any renewals were skipped.
+Este historial proporciona trazabilidad completa. Puedes ver exactamente cuándo ocurrió cada renovación, cuánto costó, qué proveedor se utilizó y por qué se omitieron las renovaciones.
 
-## Economics of Never Expiring
+## Economía de Nunca Expirar
 
-Consider an application that processes 500 USDT transfers per day. Each transfer requires approximately 65,000 energy.
+Considera una aplicación que procesa 500 transferencias USDT por día. Cada transferencia requiere aproximadamente 65,000 energía.
 
-Without monitors (manual management with occasional gaps):
+Sin monitores (gestión manual con brechas ocasionales):
 
 ```
 Average gaps per week: 3 (each lasting ~15 minutes)
@@ -353,7 +353,7 @@ TRX burned during gaps: ~15 x 27 = 405 TRX/week
 Annual burn from gaps: ~21,060 TRX (~$5,475)
 ```
 
-With MERX delegation monitors:
+Con monitores de delegación MERX:
 
 ```
 Gaps per week: 0
@@ -362,26 +362,27 @@ Monitor cost (auto-renewal): ~0 additional (same energy would be purchased anywa
 Annual savings: ~$5,475
 ```
 
-The monitors do not cost extra. You are purchasing the same energy either way - the monitors just ensure there are no gaps between purchases. The savings come entirely from eliminating the TRX burn during unmanaged expiration windows.
+Los monitores no cuestan extra. Estarías comprando la misma energía de cualquier forma - los monitores solo aseguran que no haya brechas entre compras. El ahorro proviene enteramente de eliminar la quema de TRX durante ventanas de expiración sin gestionar.
 
-## Conclusion
+## Conclusión
 
-Energy delegations expire. This is a fact of the TRON network that cannot be avoided. What can be avoided is the cost of letting them expire without a replacement ready.
+Las delegaciones de energía expiran. Este es un hecho de la red TRON que no puede evitarse. Lo que puede evitarse es el costo de dejar que expiren sin un reemplazo listo.
 
-MERX delegation monitors turn a manual, error-prone process into an automated, reliable system. They run on the server, independent of any client connection. They renew delegations before they expire. They respect your price limits. They notify you of exceptions.
+Los monitores de delegación MERX convierten un proceso manual y propenso a errores en un sistema automatizado y confiable. Se ejecutan en el servidor, independientemente de cualquier conexión de cliente. Renuevan delegaciones antes de que expiren. Respetan tus límites de precio. Te notifican sobre excepciones.
 
-Set them up once. Never think about delegation expiry again.
+Configúralos una vez. Nunca pienses en la expiración de delegación nuevamente.
 
 ---
 
 **Enlaces:**
-- MERX Plataforma: [https://merx.exchange](https://merx.exchange)
+- Plataforma MERX: [https://merx.exchange](https://merx.exchange)
 - Servidor MCP (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - Servidor MCP (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -393,6 +394,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

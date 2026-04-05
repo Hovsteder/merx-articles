@@ -1,20 +1,20 @@
-# Delegasyon Izleyicileri: TRON Energy'nizin Asla Suresi Dolmasin
+# Delegasyon İzleyicileri: TRON Enerjinizin Asla Süresi Dolmasın
 
-## The Expiration Problem
+## Süre Bitme Sorunu
 
-TRON energy delegations have a fixed duration. When you buy energy for 1 hour, you get exactly 1 hour. When that hour ends, the delegation is revoked, and your address returns to zero delegated energy. If your application sends a USDT transfer 61 minutes after the delegation started, that transaction burns TRX at full price.
+TRON enerji delegasyonları sabit bir süreye sahiptir. 1 saat için enerji satın aldığınızda, tam olarak 1 saat elde edersiniz. O saat sona erdiğinde, delegasyon iptal edilir ve adresiniz sıfır delege enerjiye döner. Delegasyon başladıktan 61 dakika sonra uygulamanız bir USDT transferi gönderse, o işlem TRX'ı tam fiyatla yakar.
 
-For applications running 24/7, this creates a management burden. You need to track when each delegation expires, purchase a replacement before the current one lapses, and handle the gap between expiration and the new delegation arriving. Miss a renewal by even a few seconds, and transactions executed during that window incur the full TRX burn.
+24/7 çalışan uygulamalar için bu bir yönetim yükü oluşturur. Her delegasyonun ne zaman sona ereceğini izlemeniz, mevcut olanın süresi bitmeden bir yenisini satın almanız ve sona erme ile yeni delegasyonun varması arasındaki boşluğu yönetmeniz gerekir. Yenilemeyi sadece birkaç saniye kaçırırsanız, bu pencere sırasında yürütülen işlemler tam TRX yakmasına neden olur.
 
-MERX delegation monitors eliminate this problem. They watch your delegations, track expiration times, and automatically renew before your energy runs out. The monitor runs on the MERX server 24/7 - it does not depend on your application being online, your MCP client being connected, or your AI agent being active.
+MERX delegasyon izleyicileri bu sorunu ortadan kaldırır. Delegasyonlarınızı izlerler, sona erme zamanlarını takip ederler ve enerjiniz bitmeden otomatik olarak yenilerler. İzleyici MERX sunucusunda 24/7 çalışır - uygulamanızın çevrimiçi olmasına, MCP istemcinizin bağlı olmasına veya AI ajanınızın etkin olmasına bağlı değildir.
 
-## Monitor Types
+## İzleyici Türleri
 
-The MERX monitoring system supports three types of monitors, each designed for a different operational concern.
+MERX izleme sistemi, her biri farklı bir operasyonel kaygı için tasarlanmış üç tür izleyiciyi destekler.
 
 ### delegation_expiry
 
-Watches active energy delegations and takes action before they expire.
+Aktif enerji delegasyonlarını izler ve süresi bitmeden önce harekete geçer.
 
 ```
 Tool: create_monitor
@@ -35,17 +35,17 @@ Input: {
 }
 ```
 
-This monitor tracks all active delegations to the specified address. When any delegation is within 10 minutes of expiring, the monitor takes action:
+Bu izleyici, belirtilen adrese yapılan tüm aktif delegasyonları takip eder. Herhangi bir delegasyon süresinin bitmesine 10 dakika kaldığında, izleyici harekete geçer:
 
-1. If `auto_renew` is true and the current best price is at or below `max_price_per_unit`, it automatically places a new order for `renewal_amount` energy with `renewal_duration_hours` duration.
-2. If the price exceeds `max_price_per_unit`, the monitor sends a notification instead of purchasing, alerting you that prices are too high for automatic renewal.
-3. If `auto_renew` is false, the monitor only sends notifications, giving you time to act manually.
+1. `auto_renew` true ise ve mevcut en iyi fiyat `max_price_per_unit` değerinde veya altındaysa, `renewal_duration_hours` süresi ile `renewal_amount` enerji için otomatik olarak yeni bir sipariş verir.
+2. Fiyat `max_price_per_unit` değerini aşarsa, izleyici satın almak yerine bir bildirim gönderir ve fiyatların otomatik yenileme için çok yüksek olduğunu sizi uyarır.
+3. `auto_renew` false ise, izleyici sadece bildirim gönderir ve siz manuel işlem yapma zamanı kazanırsınız.
 
-The `renew_before_minutes` parameter is critical. Set it high enough that the new delegation can be placed, confirmed, and activated before the old one expires. A 10-minute window provides ample time for order placement (seconds), provider processing (1-2 minutes), and delegation confirmation (3-6 seconds), with margin for network congestion.
+`renew_before_minutes` parametresi kritiktir. Yeni delegasyonun yerleştirilmesi, onaylanması ve eski olanın süresi bitmeden etkinleştirilmesi için yeterince yüksek ayarlayın. 10 dakikalık bir pencere, sipariş yerleştirme (saniyeler), sağlayıcı işleme (1-2 dakika) ve delegasyon onayı (3-6 saniye) için, ağ tıkanıklığı için bir marj ile geniş zaman sağlar.
 
 ### balance_threshold
 
-Monitors the on-chain energy balance and triggers when it falls below a specified level.
+Zincir üstü enerji bakiyesini izler ve belirtilen seviyenin altına düştüğünde tetiklenir.
 
 ```
 Tool: create_monitor
@@ -66,17 +66,17 @@ Input: {
 }
 ```
 
-Unlike `delegation_expiry`, which is time-based, `balance_threshold` is consumption-based. It fires when your address's available energy drops below 200,000, regardless of why. This covers scenarios that expiry monitoring cannot:
+`delegation_expiry`'den farklı olarak, `balance_threshold` tüketim temelli değildir. Adresinizin kullanılabilir enerjisi neden olursa olsun 200.000'in altına düştüğünde tetiklenir. Bu, sona erme izleyicisinin karşılayamayacağı senaryoları kapsar:
 
-- Multiple transactions consuming energy faster than expected
-- A delegation being revoked early by the provider
-- Staked energy decreasing due to a change in staking parameters
+- Birden fazla işlem enerjiyi beklenenden daha hızlı tüketme
+- Bir delegasyonun sağlayıcı tarafından erken iptal edilmesi
+- Staking parametrelerindeki değişiklik nedeniyle stake edilen enerjinin azalması
 
-When triggered, the `ensure_resources` action checks the current balance, calculates the deficit to reach the target, and purchases only what is needed.
+Tetiklendiğinde, `ensure_resources` eylemi mevcut bakiyeyi kontrol eder, hedefi ulaşmak için gereken açığı hesaplar ve sadece gereken miktarı satın alır.
 
 ### price_alert
 
-Monitors energy market prices and notifies when conditions are met.
+Enerji pazar fiyatlarını izler ve koşullar karşılandığında bildirir.
 
 ```
 Tool: create_monitor
@@ -97,17 +97,17 @@ Input: {
 }
 ```
 
-Price alerts are informational by default - they notify without purchasing. This is useful for teams that want to buy energy at historically low prices but prefer a human in the loop for purchase decisions.
+Fiyat uyarıları varsayılan olarak bilgilendiricidir - satın almadan bildirir. Bu, enerjinin tarihsel olarak düşük fiyatlarda satın almak isteyen ancak satın alma kararları için bir insanın sürece dâhil olmasını tercih eden ekipler için yararlıdır.
 
-The `cooldown_minutes` parameter prevents alert fatigue. If the price stays below the threshold for hours, you receive one alert every 6 hours instead of one every 30 seconds.
+`cooldown_minutes` parametresi uyarı yorgunluğunu önler. Fiyat saatlerce eşik altında kalırsa, her 30 saniyede bir yerine her 6 saatte bir uyarı alırsınız.
 
-## Auto-Renewal in Detail
+## Otomatik Yenileme Ayrıntılı
 
-The auto-renewal flow for `delegation_expiry` monitors works as follows:
+`delegation_expiry` izleyicileri için otomatik yenileme akışı şu şekilde çalışır:
 
-### Step 1: Track Active Delegations
+### Adım 1: Aktif Delegasyonları İzle
 
-MERX maintains a record of all energy orders placed through the platform. Each order includes the delegation start time, duration, and expiration time. The monitor checks these records against the current time.
+MERX, platform aracılığıyla yerleştirilen tüm enerji siparişlerinin bir kaydını tutar. Her sipariş, delegasyon başlama zamanı, süresi ve sona erme zamanını içerir. İzleyici bu kayıtları mevcut zaman ile karşılaştırır.
 
 ```
 Active delegations for TYourAddress:
@@ -115,9 +115,9 @@ Active delegations for TYourAddress:
   Order #1235: 200,000 energy, expires 2026-03-30T15:30:00Z (137 min remaining)
 ```
 
-### Step 2: Evaluate Renewal Window
+### Adım 2: Yenileme Penceresini Değerlendir
 
-When any delegation enters the renewal window (e.g., 10 minutes before expiry):
+Herhangi bir delegasyon yenileme penceresine girdiğinde (örn. sona ermesine 10 dakika kalmış):
 
 ```
 Order #1234: 500,000 energy, expires in 9 minutes 42 seconds
@@ -125,9 +125,9 @@ Order #1234: 500,000 energy, expires in 9 minutes 42 seconds
 -> Initiating renewal check
 ```
 
-### Step 3: Price Check
+### Adım 3: Fiyat Kontrolü
 
-The monitor queries current market prices:
+İzleyici mevcut pazar fiyatlarını sorgular:
 
 ```
 Best price for 500,000 energy / 24 hours:
@@ -139,7 +139,7 @@ Max allowed: 0.00006 per unit
   0.0000526 <= 0.00006: PASS
 ```
 
-### Step 4: Place Renewal Order
+### Adım 4: Yenileme Siparişi Yerleştir
 
 ```
 Order placed:
@@ -151,9 +151,9 @@ Order placed:
   Status: CONFIRMED
 ```
 
-### Step 5: Verify Delegation
+### Adım 5: Delegasyonu Doğrula
 
-The monitor polls the address to confirm the new delegation has been received:
+İzleyici, yeni delegasyonun alındığını onaylamak için adresi yoklar:
 
 ```
 Delegation confirmed:
@@ -161,7 +161,7 @@ Delegation confirmed:
   New energy: 987,231 (previous + new delegation)
 ```
 
-### Step 6: Notify
+### Adım 6: Bildir
 
 ```
 Webhook sent:
@@ -177,13 +177,13 @@ Webhook sent:
 }
 ```
 
-The entire flow completes in under 30 seconds. The address never experienced a gap in energy coverage.
+Tüm akış 30 saniyeden kısa sürede tamamlanır. Adres hiçbir zaman enerji kapsamında bir boşluk yaşamaz.
 
-## Price Protection
+## Fiyat Koruması
 
-The `max_price_per_unit` parameter on auto-renewal monitors is a critical safety mechanism. Energy prices can spike during periods of high demand. Without price protection, an auto-renewal during a price spike could cost 2-3x the normal rate.
+Otomatik yenileme izleyicilerindeki `max_price_per_unit` parametresi kritik bir güvenlik mekanizmasıdır. Yüksek talep dönemlerinde enerji fiyatları artabilir. Fiyat koruması olmaksızın, bir fiyat artışı sırasında otomatik yenileme normal oranın 2-3 katına mal olabilir.
 
-When the market price exceeds the maximum:
+Pazar fiyatı maksimumu aştığında:
 
 ```
 Best price for 500,000 energy / 24 hours:
@@ -199,33 +199,33 @@ Action: Notification sent instead of purchase
    market price 0.0000850 exceeds maximum 0.00006. Manual action required."
 ```
 
-The notification gives you the option to:
-- Accept the higher price and place a manual order
-- Wait for prices to normalize and accept a brief gap in coverage
-- Adjust the max_price_per_unit on the monitor
+Bildirim size aşağıdaki seçenekleri verir:
+- Daha yüksek fiyatı kabul edin ve manuel sipariş verin
+- Fiyatların normalleşmesini bekleyin ve kapsama da kısa bir boşluk kabul edin
+- İzleyici üzerindeki max_price_per_unit değerini ayarlayın
 
-### Setting the Right Maximum Price
+### Doğru Maksimum Fiyat Ayarlama
 
-To set an effective maximum price:
+Etkili bir maksimum fiyat ayarlamak için:
 
-1. Check the `get_price_history` resource for the last 30 days
-2. Identify the 95th percentile price (the price that 95% of quotes were at or below)
-3. Set your maximum at or slightly above this level
+1. Son 30 gün için `get_price_history` kaynağını kontrol edin
+2. 95. persentil fiyatını tanımlayın (tekliklerin %95'inin o seviyede veya altında olduğu fiyat)
+3. Maksimumunuzu bu seviyede veya biraz üzerinde ayarlayın
 
-This approach catches normal fluctuations while rejecting genuine price spikes.
+Bu yaklaşım normal dalgalanmaları yakalarken gerçek fiyat artışlarını reddeder.
 
-## Running 24/7 Without an Agent
+## Bir Ajan Olmadan 24/7 Çalıştırma
 
-This is the key differentiator of MERX monitors compared to agent-side logic. An AI agent runs during a conversation session. When the session ends, the agent stops. If you implemented delegation tracking in your agent's code, it would only work while the agent is active.
+Bu, MERX izleyicilerinin ajan tarafı mantığına kıyasla temel ayırt edici özelliktir. Bir AI ajan bir konuşma oturumu sırasında çalışır. Oturum sona erdiğinde, ajan durur. Delegasyon izlemeyi ajanınızın kodunda uyguladıysanız, yalnızca ajan etkin olsa çalışırdı.
 
-MERX monitors run on the MERX server infrastructure:
+MERX izleyicileri MERX sunucu altyapısında çalışır:
 
-- **PostgreSQL persistence** - Monitor configurations are stored in the database and survive server restarts
-- **Server-side evaluation** - Triggers are evaluated by the MERX backend process, not by any client
-- **Independent of MCP connections** - No client needs to be connected for monitors to function
-- **Crash recovery** - If the MERX service restarts, monitors resume automatically from their last known state
+- **PostgreSQL kalıcılığı** - İzleyici konfigürasyonları veritabanında depolanır ve sunucu yeniden başlatmalarından sonra da kalır
+- **Sunucu tarafı değerlendirme** - Tetikleyiciler, herhangi bir istemci tarafından değil, MERX arka uç işlemi tarafından değerlendirilir
+- **MCP bağlantılarından bağımsız** - İzleyicilerin çalışması için herhangi bir istemcinin bağlı olması gerekmez
+- **Kilitlenme kurtarma** - MERX hizmeti yeniden başlatılırsa, izleyiciler son bilinen durumlarından otomatik olarak devam eder
 
-An agent creates a monitor once. That monitor runs indefinitely (or until its expiration date) regardless of whether the agent ever connects again.
+Bir ajan bir monitörü bir kere oluşturur. Bu izleyici süresiz olarak (veya son kullanma tarihine kadar) ajan tekrar bağlanıp bağlanmasa da çalışır.
 
 ```
 Day 1: Agent creates delegation_expiry monitor
@@ -238,11 +238,11 @@ Day 7: Agent reconnects. Checks monitor history:
   - Average price: 0.0000526 per energy unit
 ```
 
-## Combining Monitors for Robust Coverage
+## Sağlam Kapsama için İzleyicileri Birleştirme
 
-A single monitor type cannot cover all failure modes. The recommended configuration for production use combines two or three monitor types:
+Tek bir izleyici türü tüm arıza modlarını kapsamaz. Üretim kullanımı için önerilen konfigürasyon iki veya üç izleyici türünü birleştirir:
 
-### Recommended Setup
+### Önerilen Kurulum
 
 ```
 Monitor 1: delegation_expiry
@@ -270,16 +270,16 @@ Monitor 3: price_alert
     action: notify_only
 ```
 
-Monitor 1 handles the normal case - scheduled renewals at acceptable prices. Monitor 2 handles abnormal cases - sudden energy consumption spikes, early delegation revocations, or Monitor 1 being blocked by price protection. Monitor 3 alerts you to exceptional opportunities for manual bulk purchasing.
+İzleyici 1 normal durumu işler - kabul edilebilir fiyatlarda planlanan yenilemeleri. İzleyici 2 anormal durumları işler - ani enerji tüketim artışlarını, delegasyonun erken iptal edilmesini veya İzleyici 1'in fiyat koruması tarafından engellenmesini. İzleyici 3 sizi manuel toplu satın alma için olağanüstü fırsatlar konusunda uyarır.
 
-Together, these three monitors provide:
-- Zero-gap energy coverage under normal conditions
-- Automatic fallback when prices spike temporarily
-- Alerts for cost optimization opportunities
+Birlikte, bu üç izleyici sağlar:
+- Normal koşullar altında sıfır boşluk enerji kapsamı
+- Fiyatlar geçici olarak artarken otomatik geri dönüş
+- Maliyet optimizasyonu fırsatları için uyarılar
 
-## Managing Monitors
+## İzleyicileri Yönetme
 
-### Listing Active Monitors
+### Aktif İzleyicileri Listele
 
 ```
 Tool: list_monitors
@@ -310,9 +310,9 @@ Response:
 }
 ```
 
-### Monitor History
+### İzleyici Geçmişi
 
-Each monitor maintains a detailed execution log:
+Her izleyici ayrıntılı bir yürütme günlüğü tutar:
 
 ```json
 {
@@ -338,50 +338,51 @@ Each monitor maintains a detailed execution log:
 }
 ```
 
-This history provides full auditability. You can see exactly when each renewal happened, how much it cost, which provider was used, and why any renewals were skipped.
+Bu geçmiş tam denetlenebilirlik sağlar. Her yenilemenin tam olarak ne zaman gerçekleştiğini, ne kadar maliyeti olduğunu, hangi sağlayıcının kullanıldığını ve herhangi bir yenilemenin neden atlandığını görebilirsiniz.
 
-## Economics of Never Expiring
+## Hiçbir Zaman Süresi Bitmeyen Ekonomisi
 
-Consider an application that processes 500 USDT transfers per day. Each transfer requires approximately 65,000 energy.
+Günde 500 USDT transferi işleyen bir uygulamayı düşünün. Her transfer yaklaşık 65.000 enerji gerektirir.
 
-Without monitors (manual management with occasional gaps):
-
-```
-Average gaps per week: 3 (each lasting ~15 minutes)
-Transactions during gaps: ~15
-TRX burned during gaps: ~15 x 27 = 405 TRX/week
-Annual burn from gaps: ~21,060 TRX (~$5,475)
-```
-
-With MERX delegation monitors:
+İzleyiciler olmadan (bazen boşluk ile manuel yönetim):
 
 ```
-Gaps per week: 0
-TRX burned from gaps: 0
-Monitor cost (auto-renewal): ~0 additional (same energy would be purchased anyway)
-Annual savings: ~$5,475
+Haftada ortalama boşluk: 3 (her biri ~15 dakika süren)
+Boşluklar sırasında işlemler: ~15
+Boşluklarda yakalanan TRX: ~15 x 27 = 405 TRX/hafta
+Boşluklarda yıllık yakma: ~21.060 TRX (~$5.475)
 ```
 
-The monitors do not cost extra. You are purchasing the same energy either way - the monitors just ensure there are no gaps between purchases. The savings come entirely from eliminating the TRX burn during unmanaged expiration windows.
+MERX delegasyon izleyicileri ile:
 
-## Sonuc
+```
+Haftada boşluk: 0
+Boşluklarda yakalanan TRX: 0
+İzleyici maliyeti (otomatik yenileme): ~0 ek (aynı enerji yine de satın alınırdı)
+Yıllık tasarruf: ~$5.475
+```
 
-Energy delegations expire. This is a fact of the TRON network that cannot be avoided. What can be avoided is the cost of letting them expire without a replacement ready.
+İzleyicilerin ekstra maliyeti yoktur. Her iki durumda da aynı enerjiyi satın alırsınız - izleyiciler sadece satın almalar arasında boşluk olmadığını garanti eder. Tasarruflar tamamen yönetilmeyen sona erme pencerelerinde TRX yakmasını ortadan kaldırmaktan gelir.
 
-MERX delegation monitors turn a manual, error-prone process into an automated, reliable system. They run on the server, independent of any client connection. They renew delegations before they expire. They respect your price limits. They notify you of exceptions.
+## Sonuç
 
-Set them up once. Never think about delegation expiry again.
+Enerji delegasyonlarının süresi biter. Bu, TRON ağında kaçınılamayan bir gerçektir. Kaçınılabilir olan şey, hazır bir yenisi olmaksızın süresi bitirmesini izlemektir.
+
+MERX delegasyon izleyicileri manuel, hatalara açık bir süreci otomatikleştirilmiş, güvenilir bir sisteme dönüştürür. Sunucuda çalışırlar, herhangi bir istemci bağlantısından bağımsızlar. Delegasyonları süresi bitmeden yenilerler. Fiyat limitinize saygı duyarlar. İstisnalar hakkında sizi bildirir.
+
+Bir kere ayarlayın. Delegasyon süresinin bitmesi hakkında bir daha asla düşünmeyin.
 
 ---
 
-**Baglantilar:**
+**Bağlantılar:**
 - MERX Platformu: [https://merx.exchange](https://merx.exchange)
 - MCP Sunucusu (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - MCP Sunucusu (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin - sıfır kurulum, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -393,6 +394,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgelendirmesi: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

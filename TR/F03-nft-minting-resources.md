@@ -1,52 +1,52 @@
-# Kaynak Duyarli Islemlerle NFT Basimini Otomatiklestirme
+# NFT Basımını Kaynak Farkında İşlemlerle Otomatikleştirme
 
-NFT minting on TRON is a smart contract operation, and every smart contract operation consumes energy. Whether you are minting a single collectible or launching a 10,000-piece collection, energy costs are a significant and often underestimated line item. A single NFT mint can consume 100,000 to 300,000 energy depending on the contract's complexity, metadata handling, and on-chain storage requirements.
+TRON üzerinde NFT basımı bir akıllı kontrat işlemidir ve her akıllı kontrat işlemi energy tüketir. İster tek bir koleksiyonerlik basıyor ister 10.000 parçalık bir koleksiyonla başlatıyor olun, energy maliyetleri önemli ve sıklıkla eksik değerlendirilen bir gider kalemiydir. Tek bir NFT basımı, kontratın karmaşıklığına, metadata işlemesine ve zincir üstü depolama gereksinimlerine bağlı olarak 100.000 ila 300.000 energy tüketebilir.
 
-This article examines the energy economics of NFT minting on TRON, demonstrates how to build resource-aware minting pipelines, and shows how MERX aggregation reduces per-mint costs while maintaining high throughput.
+Bu makale, TRON üzerinde NFT basımının energy ekonomisini incelemekte, kaynak farkında basım boru hatlarını nasıl oluşturacağınızı göstermekte ve MERX toplaması yüksek verimliliği korurken birim başına maliyetleri nasıl azalttığını göstermektedir.
 
-## Energy Cost Anatomy of an NFT Mint
+## NFT Basımının Energy Maliyeti Anatomisi
 
-When you call a mint function on a TRC-721 contract, several things happen at the EVM level:
+TRC-721 kontratı üzerinde bir basım işlemi çağırdığınızda, EVM seviyesinde birkaç şey gerçekleşir:
 
-1. **Storage allocation**: A new token ID is created and mapped to an owner address. This is the most energy-expensive operation because writing to blockchain storage costs significantly more than computation.
-2. **Metadata assignment**: If the contract stores a token URI on-chain, this is another storage write.
-3. **Counter increment**: The total supply counter updates.
-4. **Event emission**: A Transfer event is logged.
-5. **Access control checks**: Ownership verification, minting limits, whitelist checks.
+1. **Depolama tahsisi**: Yeni bir jeton kimliği oluşturulur ve bir sahip adresine eşlenir. Bu, blokzincir depolamasına yazmanın hesaplamadan çok daha pahalı olması nedeniyle en pahalı energy işlemidir.
+2. **Metadata ataması**: Kontrat bir jeton URI'sini zincir üstünde saklıyorsa, bu başka bir depolama yazısıdır.
+3. **Sayaç artışı**: Toplam arz sayacı güncellenir.
+4. **Olay yayını**: Bir Transfer olayı kaydedilir.
+5. **Erişim kontrol kontrolleri**: Mülkiyet doğrulaması, basım sınırları, beyaz liste kontrolleri.
 
-Simple mint functions (single storage write, counter increment, event) consume approximately 100,000-120,000 energy. Complex mints with on-chain metadata, royalty configuration, and enumerable tracking can reach 250,000-300,000 energy.
+Basit basım işlevleri (tek depolama yazısı, sayaç artışı, olay) yaklaşık 100.000-120.000 energy tüketir. Zincir üstü metadata, royalti konfigürasyonu ve numaralandırılabilir takibi olan karmaşık basımlar 250.000-300.000 energy'ye ulaşabilir.
 
-### Cost Without Energy
+### Energy Olmadan Maliyet
 
-| Mint Complexity | Energy | TRX Burn | USD Cost |
+| Basım Karmaşıklığı | Energy | TRX Yakılması | USD Maliyeti |
 |---|---|---|---|
-| Simple (counter + owner) | ~100,000 | ~21 TRX | ~$2.50 |
-| Standard (+ metadata URI) | ~150,000 | ~31 TRX | ~$3.70 |
-| Complex (+ royalties, enum) | ~250,000 | ~52 TRX | ~$6.20 |
+| Basit (sayaç + sahip) | ~100.000 | ~21 TRX | ~$2,50 |
+| Standart (+ metadata URI) | ~150.000 | ~31 TRX | ~$3,70 |
+| Karmaşık (+ royalties, enum) | ~250.000 | ~52 TRX | ~$6,20 |
 
-For a 10,000-piece collection with standard minting complexity, the total energy cost without optimization is approximately 310,000 TRX ($37,000). With energy purchased through MERX at market rates, that drops to approximately 42,000 TRX ($5,040) -- an 86% reduction.
+Standart basım karmaşıklığına sahip 10.000 parçalık bir koleksiyonda, optimizasyon olmadan toplam energy maliyeti yaklaşık 310.000 TRX ($37.000)'dır. MERX aracılığıyla pazar oranlarında satın alınan energy ile bu, yaklaşık 42.000 TRX ($5.040)'e düşer - %86'lık bir azalma.
 
-## Why Fixed Energy Estimates Fail for NFTs
+## Neden Sabit Energy Tahminleri NFT'ler için Başarısız Olur
 
-NFT contracts are particularly problematic for fixed energy estimates because the cost per mint is not constant. The energy consumed can vary based on:
+NFT kontratları, birim başına maliyet sabit olmadığı için sabit energy tahminleri açısından özellikle problematiktir. Tüketilen energy şunlara göre değişebilir:
 
-- **Token ID**: Larger token IDs require more bytes to store, marginally increasing energy
-- **First-time minting to an address**: If the recipient has never held a token from this contract, creating the balance mapping costs more than incrementing an existing one
-- **On-chain randomness**: Contracts with randomized attributes perform additional computation
-- **Batch size**: Batch minting N tokens in a single transaction does not cost N times a single mint
+- **Jeton Kimliği**: Daha büyük jeton kimlikleri, depolanması için daha fazla bayt gerektirir ve energy'i marjinal olarak artırır
+- **Bir adrese ilk kez basım**: Alıcı bu kontrattan hiç jeton tutmadıysa, bakiye eşlemesi oluşturmak var olan birini artırmaktan daha pahalıydır
+- **Zincir üstü randomlığı**: Rastgele niteliklere sahip kontratlar ek hesaplama gerçekleştirir
+- **Toplu iş boyutu**: N jetonu tek bir işlemde toplu olarak basmak N kez tek bir basım maliyetine mal olmaz
 
-These variations mean that a hardcoded estimate of 150,000 energy per mint will sometimes over-purchase (wasting money) and sometimes under-purchase (causing partial TRX burn).
+Bu varyasyonlar, birim başına 150.000 energy'lik sabit kodlanmış bir tahmin bazen fazla satın almak (para boşa harcamak) ve bazen eksik satın almak (kısmi TRX yakılmasına neden olmak) anlamına gelir.
 
-## Exact Simulation for NFT Minting
+## NFT Basımı için Tam Simülasyon
 
-MERX's energy estimation uses `triggerConstantContract` to simulate the exact mint operation before execution:
+MERX'in energy tahmini, yürütmeden önce tam basım işlemini simüle etmek için `triggerConstantContract` kullanır:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// Simulate the exact mint call
+// Tam basım çağrısını simüle edin
 const estimate = await merx.estimateEnergy({
   contract_address: NFT_CONTRACT_ADDRESS,
   function_selector: 'mint(address,string)',
@@ -57,24 +57,24 @@ const estimate = await merx.estimateEnergy({
   owner_address: minterAddress
 });
 
-console.log(`Energy required for this mint: ${estimate.energy_required}`);
-// Output might be: 143,287
+console.log(`Bu basım için gerekli energy: ${estimate.energy_required}`);
+// Çıktı şöyle olabilir: 143,287
 ```
 
-This returns the exact energy for your specific mint, with the current contract state. No guessing.
+Bu, mevcut kontrat durumunuyla birlikte özel basımınız için tam energy'yi döndürür. Tahmin yok.
 
-## Building a Resource-Aware Minting Pipeline
+## Kaynak Farkında Basım Boru Hattı Oluşturma
 
-For collection launches or ongoing minting operations, you need a pipeline that handles energy procurement automatically.
+Koleksiyon başlatmaları veya devam eden basım işlemleri için, energy tedarikini otomatik olarak işleyen bir boru hattına ihtiyacınız var.
 
-### Single Mint with Energy
+### Energy ile Tek Basım
 
 ```typescript
 async function mintWithEnergy(
   recipient: string,
   metadataURI: string
 ): Promise<string> {
-  // 1. Estimate exact energy
+  // 1. Tam energy'yi tahmin edin
   const estimate = await merx.estimateEnergy({
     contract_address: NFT_CONTRACT,
     function_selector: 'mint(address,string)',
@@ -82,11 +82,11 @@ async function mintWithEnergy(
     owner_address: MINTER_WALLET
   });
 
-  // 2. Check existing energy
+  // 2. Mevcut energy'yi kontrol edin
   const resources = await merx.checkResources(MINTER_WALLET);
   const deficit = estimate.energy_required - resources.energy.available;
 
-  // 3. Buy energy if needed
+  // 3. Gerekirse energy satın alın
   if (deficit > 0) {
     const order = await merx.createOrder({
       energy_amount: deficit,
@@ -96,15 +96,15 @@ async function mintWithEnergy(
     await waitForOrderFill(order.id);
   }
 
-  // 4. Execute the mint with zero TRX burn
+  // 4. Sıfır TRX yakılması ile basımı yürütün
   const tx = await mintNFT(recipient, metadataURI);
   return tx;
 }
 ```
 
-### Batch Minting Pipeline
+### Toplu Basım Boru Hattı
 
-For collection launches where you are minting many NFTs in sequence:
+Sırayla birçok NFT bastığınız koleksiyon başlatmaları için:
 
 ```typescript
 async function batchMint(
@@ -113,11 +113,11 @@ async function batchMint(
 ): Promise<MintResult[]> {
   const results: MintResult[] = [];
 
-  // Process in batches
+  // Toplu işlerde işleyin
   for (let i = 0; i < mintRequests.length; i += batchSize) {
     const batch = mintRequests.slice(i, i + batchSize);
 
-    // Estimate energy for each mint in the batch
+    // Toplu işte her basım için energy'yi tahmin edin
     let totalEnergy = 0;
     for (const req of batch) {
       const estimate = await merx.estimateEnergy({
@@ -129,11 +129,11 @@ async function batchMint(
       totalEnergy += estimate.energy_required;
     }
 
-    // Add 5% buffer for state changes between estimation
-    // and execution
+    // Tahmin ve yürütme arasındaki durum değişiklikleri için
+    // %5 arabellek ekleyin
     totalEnergy = Math.ceil(totalEnergy * 1.05);
 
-    // Buy energy for the entire batch
+    // Tüm toplu iş için energy satın alın
     const order = await merx.createOrder({
       energy_amount: totalEnergy,
       duration: '30m',
@@ -141,7 +141,7 @@ async function batchMint(
     });
     await waitForOrderFill(order.id);
 
-    // Execute all mints in the batch
+    // Toplu işte tüm basımları yürütün
     for (const req of batch) {
       try {
         const tx = await mintNFT(req.recipient, req.metadataURI);
@@ -152,8 +152,8 @@ async function batchMint(
     }
 
     console.log(
-      `Batch ${Math.floor(i / batchSize) + 1}: ` +
-      `${batch.length} mints completed`
+      `Toplu iş ${Math.floor(i / batchSize) + 1}: ` +
+      `${batch.length} basım tamamlandı`
     );
   }
 
@@ -161,25 +161,25 @@ async function batchMint(
 }
 ```
 
-The batch approach provides several advantages:
+Toplu iş yaklaşımı birçok avantaj sağlar:
 
-- **Better pricing**: Larger energy purchases often get better per-unit rates
-- **Fewer API calls**: One energy purchase per batch instead of per mint
-- **Predictable timing**: Energy is available for the entire batch
-- **State awareness**: The 5% buffer accounts for minor energy variations between estimation and execution
+- **Daha iyi fiyatlandırma**: Daha büyük energy satın alımları genellikle daha iyi birim başına oranlar alır
+- **Daha az API çağrısı**: Birim başına yerine toplu iş başına bir energy satın alması
+- **Öngörülebilir zamanlama**: Tüm toplu iş için energy mevcuttur
+- **Durum farkındalığı**: %5 arabellek, tahmin ve yürütme arasındaki küçük energy varyasyonlarını hesaplar
 
-## Collection Launch Strategy
+## Koleksiyon Başlatma Stratejisi
 
-Launching a large NFT collection requires planning around energy costs. Here is a strategy for a 10,000-piece collection:
+Büyük bir NFT koleksiyonu başlatmak energy maliyetleri etrafında planlama gerektirir. İşte 10.000 parçalık bir koleksiyon için bir strateji:
 
-### Pre-Launch: Cost Estimation
+### Ön Başlatma: Maliyet Tahmini
 
 ```typescript
 async function estimateCollectionCost(
   totalMints: number,
   sampleSize: number = 20
 ): Promise<CostEstimate> {
-  // Simulate a sample of mints to get average energy
+  // Ortalama energy elde etmek için basımların bir örneğini simüle edin
   let totalEnergy = 0;
 
   for (let i = 0; i < sampleSize; i++) {
@@ -194,7 +194,7 @@ async function estimateCollectionCost(
 
   const avgEnergy = totalEnergy / sampleSize;
 
-  // Get current best energy price
+  // Mevcut en iyi energy fiyatını alın
   const prices = await merx.getPrices({
     energy_amount: Math.round(avgEnergy),
     duration: '5m'
@@ -213,7 +213,7 @@ async function estimateCollectionCost(
 }
 ```
 
-### During Launch: Adaptive Batch Processing
+### Başlatma Sırasında: Uyarlanabilir Toplu İş İşlemesi
 
 ```typescript
 async function launchCollection(
@@ -224,8 +224,7 @@ async function launchCollection(
   const totalBatches = Math.ceil(metadata.length / BATCH_SIZE);
 
   console.log(
-    `Launching ${metadata.length} NFTs ` +
-    `in ${totalBatches} batches`
+    `${metadata.length} NFT ${totalBatches} toplu işte başlatılıyor`
   );
 
   for (let batch = 0; batch < totalBatches; batch++) {
@@ -234,8 +233,8 @@ async function launchCollection(
     const batchMeta = metadata.slice(start, end);
     const batchRecipients = recipients.slice(start, end);
 
-    // Use standing order logic: if price is above threshold,
-    // wait for a dip
+    // Duran sipariş mantığını kullanın: fiyat eşikten yüksekse,
+    // daha iyi bir oran için bekleyin
     const prices = await merx.getPrices({
       energy_amount: 150000 * batchMeta.length,
       duration: '1h'
@@ -243,76 +242,76 @@ async function launchCollection(
 
     if (prices.best.price_sun > 35) {
       console.log(
-        `Price at ${prices.best.price_sun} SUN. ` +
-        `Waiting for better rate...`
+        `Fiyat ${prices.best.price_sun} SUN'da. ` +
+        `Daha iyi oran için bekleniyor...`
       );
-      // Implement wait logic or use standing order
+      // Bekleme mantığı uygulayın veya duran siparişi kullanın
     }
 
-    // Proceed with batch minting
+    // Toplu basımla devam edin
     await processBatch(batchMeta, batchRecipients);
 
     console.log(
-      `Batch ${batch + 1}/${totalBatches} complete. ` +
-      `${end}/${metadata.length} minted.`
+      `Toplu iş ${batch + 1}/${totalBatches} tamamlandı. ` +
+      `${end}/${metadata.length} basıldı.`
     );
   }
 }
 ```
 
-## Cost Per Mint Comparison
+## Birim Başına Maliyet Karşılaştırması
 
-| Method | Energy per Mint | Cost per Mint (TRX) | Cost per Mint (USD) | 10K Collection (USD) |
+| Yöntem | Birim Başına Energy | Birim Başına Maliyet (TRX) | Birim Başına Maliyet (USD) | 10K Koleksiyon (USD) |
 |---|---|---|---|---|
-| No optimization (TRX burn) | 150,000 | 30.9 | $3.71 | $37,100 |
-| Fixed estimate + single provider | 200,000 (over-buy) | 5.6 | $0.67 | $6,700 |
-| Exact simulation + MERX (28 SUN) | 143,000 (exact) | 4.0 | $0.48 | $4,800 |
-| Exact + standing orders (23 SUN) | 143,000 (exact) | 3.3 | $0.40 | $3,960 |
+| Optimizasyon yok (TRX yakılması) | 150.000 | 30,9 | $3,71 | $37.100 |
+| Sabit tahmin + tek sağlayıcı | 200.000 (fazla satın alma) | 5,6 | $0,67 | $6.700 |
+| Tam simülasyon + MERX (28 SUN) | 143.000 (tam) | 4,0 | $0,48 | $4.800 |
+| Tam + duran siparişler (23 SUN) | 143.000 (tam) | 3,3 | $0,40 | $3.960 |
 
-The difference between no optimization and full MERX integration is $33,000 on a 10,000-piece collection. Even compared to using a single provider with fixed estimates, MERX saves approximately $2,000 through exact simulation and price aggregation.
+Optimizasyon olmayan ile tam MERX entegrasyonu arasındaki fark 10.000 parçalık bir koleksiyonda $33.000'dır. Sabit tahminlerle tek bir sağlayıcı kullanmak ile karşılaştırırken bile, MERX tam simülasyon ve fiyat toplaması yoluyla yaklaşık $2.000 tasarruf sağlar.
 
-## Auto-Energy for Ongoing Minting
+## Devam Eden Basım için Otomatik Energy
 
-If your platform supports continuous minting (user-driven mints, not a fixed collection), configure auto-energy on your minting wallet:
+Platformunuz sürekli basımı destekliyorsa (sabit bir koleksiyon değil, kullanıcı tarafından yönlendirilen basımlar), basım cüzdanında otomatik energy'yi yapılandırın:
 
 ```typescript
 await merx.enableAutoEnergy({
   address: MINTER_WALLET,
-  min_energy: 300000,    // ~2 mints buffer
-  target_energy: 1000000, // ~6-7 mints buffer
+  min_energy: 300000,    // ~2 basım arabellegi
+  target_energy: 1000000, // ~6-7 basım arabellegi
   max_price_sun: 30,
   duration: '1h'
 });
 ```
 
-This ensures the minting wallet always has enough energy for at least two mints, automatically replenishing when the buffer drops. User-facing minting experiences stay fast because energy is pre-purchased rather than acquired on demand.
+Bu, basım cüzdanının her zaman en az iki basım için yeterli energy'ye sahip olmasını sağlar, arabellek düştüğünde otomatik olarak yenilenir. Kullanıcıya açık basım deneyimleri hızlı kalır çünkü energy talep üzerine satın alınmak yerine önceden satın alınır.
 
-## Webhook-Driven Minting
+## Webhook Tarafından Yönlendirilen Basım
 
-For platforms where minting is triggered by user actions (purchases, claims), use a webhook-driven architecture:
+Basımın kullanıcı eylemleri tarafından tetiklendiği platformlar için (satın almalar, talepler), webhook tabanlı bir mimari kullanın:
 
 ```typescript
-// When a user requests a mint
+// Bir kullanıcı basım istediğinde
 app.post('/api/mint', async (req, res) => {
   const { recipient, tokenId } = req.body;
 
-  // Queue the mint request
+  // Basım isteğini kuyruğa alın
   const mintJob = await queueMint(recipient, tokenId);
 
-  // Request energy
+  // Energy iste
   const order = await merx.createOrder({
     energy_amount: 150000,
     duration: '5m',
     target_address: MINTER_WALLET
   });
 
-  // Associate energy order with mint job
+  // Energy siparişini basım işine ilişkilendir
   await linkOrderToMint(order.id, mintJob.id);
 
   res.json({ status: 'processing', mintId: mintJob.id });
 });
 
-// MERX webhook: energy is ready
+// MERX webhook: energy hazır
 app.post('/webhooks/merx', async (req, res) => {
   const event = req.body;
 
@@ -328,19 +327,20 @@ app.post('/webhooks/merx', async (req, res) => {
 });
 ```
 
-## Sonuc
+## Sonuç
 
-NFT minting on TRON does not need to be expensive. The combination of exact energy simulation and multi-provider aggregation through MERX transforms minting from a high-cost operation into a manageable expense.
+TRON üzerinde NFT basımı pahalı olmak zorunda değildir. Tam energy simülasyonu ve MERX aracılığıyla çoklu sağlayıcı toplaması kombinasyonu, basımı yüksek maliyetli bir işlemden yönetilebilir bir masrafa dönüştürür.
 
-For collection launches, the savings are measured in tens of thousands of dollars. For ongoing minting platforms, auto-energy and webhook integration keep per-mint costs at their minimum while maintaining a responsive user experience.
+Koleksiyon başlatmaları için tasarruflar on binlerce dolar cinsinden ölçülür. Devam eden basım platformları için, otomatik energy ve webhook entegrasyonu birim başına maliyetleri minimum'da tutarken yanıtlayıcı bir kullanıcı deneyimi korur.
 
-The key insight is precision: buy exactly the energy you need, at the best available price, exactly when you need it. Exact simulation eliminates waste from over-purchasing. Aggregation eliminates overpaying. Together, they reduce NFT minting costs by 85-90% compared to unoptimized approaches.
+Kilit anlayış kesinliktir: tam olarak ihtiyacınız olan energy'yi, mevcut en iyi fiyattan, tam olarak ihtiyacınız olduğu zaman satın alın. Tam simülasyon fazla satın almaktan gelen israfı ortadan kaldırır. Toplama aşırı ödemeyi ortadan kaldırır. Birlikte, NFT basımı maliyetlerini optimize edilmemiş yaklaşımlara kıyasla %85-90 oranında azaltırlar.
 
-Start building at [https://merx.exchange/docs](https://merx.exchange/docs) or explore the platform at [https://merx.exchange](https://merx.exchange).
+[https://merx.exchange/docs](https://merx.exchange/docs) adresinden derlemeyeye başlayın veya [https://merx.exchange](https://merx.exchange) adresindeki platformu keşfedin.
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- kurulum yok, salt okuma araçları için API anahtarı gerekmez:
 
 ```json
 {
@@ -352,6 +352,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza sorun: "TRON energy'sinin en ucuzu şu an ne?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

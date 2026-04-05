@@ -1,26 +1,26 @@
-# Simulacion exacta de energia: como MERX sabe con precision lo que cuesta un intercambio
+# Simulación Exacta de Energía: Cómo MERX Sabe Precisamente Cuánto Cuesta un Swap
 
-## The Problem with Guessing
+## El Problema de Adivinar
 
-Most TRON tools and wallets use hardcoded energy estimates. A USDT transfer? Budget 65,000 energy. A swap on SunSwap? Maybe 200,000. An approval? Around 50,000. These numbers are stored as constants somewhere in the codebase, and every transaction uses them regardless of the actual conditions.
+La mayoría de herramientas y carteras de TRON utilizan estimaciones de energía codificadas. ¿Una transferencia de USDT? Presupuesta 65,000 de energía. ¿Un swap en SunSwap? Quizás 200,000. ¿Una aprobación? Alrededor de 50,000. Estos números se almacenan como constantes en algún lugar del código, y cada transacción los utiliza independientemente de las condiciones reales.
 
-This approach has two failure modes, and both cost you money.
+Este enfoque tiene dos modos de fallo, y ambos te cuestan dinero.
 
-If the estimate is too low, the transaction runs out of energy mid-execution. The entire transaction fails, but you still pay for the bandwidth consumed by the attempt. The energy you purchased is wasted on a transaction that produced no result. You have to buy more energy and try again.
+Si la estimación es demasiado baja, la transacción se queda sin energía a mitad de la ejecución. Toda la transacción falla, pero aún pagas por el ancho de banda consumido por el intento. La energía que compraste se desperdicia en una transacción que no produjo resultado alguno. Tienes que comprar más energía e intentarlo de nuevo.
 
-If the estimate is too high, you purchase energy you never use. Delegated energy has a minimum rental period - typically one hour. Whatever is left over when the delegation expires is simply lost. Overshoot by 30% on every transaction, and over thousands of transactions, the waste adds up to serious money.
+Si la estimación es demasiado alta, compras energía que nunca usas. La energía delegada tiene un período de alquiler mínimo, típicamente una hora. Lo que sobra cuando expira la delegación simplemente se pierde. Si te pasas por un 30% en cada transacción, a lo largo de miles de transacciones, el desperdicio suma dinero serio.
 
-MERX eliminates guessing entirely. Every energy estimate is produced by simulating the exact transaction against the live blockchain state. The result is not an approximation or a range - it is the precise number of unidad de energias the transaction will consume.
+MERX elimina las adivinanzas completamente. Cada estimación de energía se produce simulando la transacción exacta contra el estado actual de la blockchain. El resultado no es una aproximación ni un rango, es el número preciso de unidades de energía que la transacción consumirá.
 
-## How triggerConstantContract Works
+## Cómo funciona triggerConstantContract
 
-The TRON network provides a read-only simulation endpoint called `triggerConstantContract`. This endpoint executes a contrato inteligente call in a virtual environment that mirrors the current blockchain state but does not modify it. No transaction is broadcast. No resources are consumed. No state changes are committed.
+La red TRON proporciona un endpoint de simulación de solo lectura llamado `triggerConstantContract`. Este endpoint ejecuta una llamada a contrato inteligente en un entorno virtual que refleja el estado actual de la blockchain pero no lo modifica. Ninguna transacción se transmite. Ningún recurso se consume. Ningún cambio de estado se confirma.
 
-The simulation runs the exact same bytecode that would execute in a real transaction. It uses the same storage slots, the same account balances, the same contract logic. The only difference is that the results are discarded instead of being written to the blockchain.
+La simulación ejecuta exactamente el mismo bytecode que se ejecutaría en una transacción real. Usa los mismos espacios de almacenamiento, los mismos saldos de cuenta, la misma lógica del contrato. La única diferencia es que los resultados se descartan en lugar de escribirse en la blockchain.
 
-The key output is `energy_used` - the exact number of unidad de energias consumed by the simulated execution.
+El resultado clave es `energy_used`, el número exacto de unidades de energía consumidas por la ejecución simulada.
 
-### The API Call
+### La Llamada API
 
 ```javascript
 const result = await tronWeb.transactionBuilder.triggerConstantContract(
@@ -37,53 +37,53 @@ const result = await tronWeb.transactionBuilder.triggerConstantContract(
 const energyUsed = result.energy_used;
 ```
 
-This is not a gas estimation heuristic like Ethereum's `eth_estimateGas`, which returns an upper bound with a safety margin. `triggerConstantContract` returns the exact energy consumed by the execution trace. When MERX simulates a swap that returns 223,354 energy, the en cadena execution will consume 223,354 energy.
+Esto no es una heurística de estimación de gas como `eth_estimateGas` de Ethereum, que devuelve un límite superior con margen de seguridad. `triggerConstantContract` devuelve la energía exacta consumida por el rastro de ejecución. Cuando MERX simula un swap que devuelve 223,354 de energía, la ejecución en cadena consumirá 223,354 de energía.
 
-## Why the Sender Address Matters
+## Por Qué la Dirección del Remitente Importa
 
-A subtle but critical detail: the sender address affects the simulation result.
+Un detalle sutil pero crítico: la dirección del remitente afecta el resultado de la simulación.
 
-Consider a USDT transfer. If the sender has never interacted with the USDT contract before, the contract must allocate a new storage slot for the sender's balance. This allocation costs energy. If the sender already has a balance entry, the contract only needs to update an existing slot - cheaper by thousands of unidad de energias.
+Considera una transferencia de USDT. Si el remitente nunca ha interactuado con el contrato de USDT antes, el contrato debe asignar un nuevo espacio de almacenamiento para el saldo del remitente. Esta asignación cuesta energía. Si el remitente ya tiene una entrada de saldo, el contrato solo necesita actualizar un espacio existente, más barato por miles de unidades de energía.
 
-Similarly, the recipient address matters. Transferring USDT to an address that has never held USDT triggers a storage slot creation for the recipient. Transferring to an address that already has a USDT balance does not.
+Asimismo, la dirección del destinatario importa. Transferir USDT a una dirección que nunca ha tenido USDT activa la creación de un espacio de almacenamiento para el destinatario. Transferir a una dirección que ya tiene saldo de USDT no.
 
-These differences can shift the costo de energia by 10,000-20,000 units for a simple transfer. For complex DeFi operations with multiple internal calls and storage modifications, the variance is even larger.
+Estas diferencias pueden cambiar el costo de energía en 10,000-20,000 unidades para una transferencia simple. Para operaciones complejas de DeFi con múltiples llamadas internas y modificaciones de almacenamiento, la varianza es aún mayor.
 
-Es por esto que MERX simulates with the real sender and real recipient addresses for every transaction. A generic simulation with placeholder addresses would return a different energy value than the actual execution.
+Por eso MERX simula con las direcciones reales de remitente y destinatario para cada transacción. Una simulación genérica con direcciones de marcador de posición devolvería un valor de energía diferente al de la ejecución real.
 
-## Hardcoded Estimates vs Exact Simulation
+## Estimaciones Codificadas vs Simulación Exacta
 
-Aqui esta a concrete comparison using real data from TRON mainnet.
+Aquí hay una comparación concreta usando datos reales de la red principal de TRON.
 
-### USDT Transfer Scenarios
+### Escenarios de Transferencia de USDT
 
-| Scenario | Hardcoded Estimate | Exact Simulation |
+| Escenario | Estimación Codificada | Simulación Exacta |
 |---|---|---|
-| Sender has USDT, recipient has USDT | 65,000 | 29,631 |
-| Sender has USDT, recipient never held USDT | 65,000 | 64,895 |
-| Sender never approved, recipient new | 65,000 | 64,895 |
-| Transfer to contract address | 65,000 | 47,222 |
+| Remitente tiene USDT, destinatario tiene USDT | 65,000 | 29,631 |
+| Remitente tiene USDT, destinatario nunca tuvo USDT | 65,000 | 64,895 |
+| Remitente nunca aprobó, destinatario nuevo | 65,000 | 64,895 |
+| Transferencia a dirección de contrato | 65,000 | 47,222 |
 
-The hardcoded approach uses 65,000 for all cases. Exact simulation reveals a 2x range in actual costs. In the first scenario, a hardcoded estimate causes you to purchase more than double the energy actually needed.
+El enfoque codificado usa 65,000 para todos los casos. La simulación exacta revela un rango de 2x en los costos reales. En el primer escenario, una estimación codificada te hace comprar más del doble de la energía realmente necesaria.
 
-### SunSwap V2 Swap
+### Swap SunSwap V2
 
-| Scenario | Hardcoded Estimate | Exact Simulation |
+| Escenario | Estimación Codificada | Simulación Exacta |
 |---|---|---|
-| TRX -> USDT, direct pool | 200,000 | 223,354 |
-| USDT -> TRX, direct pool | 200,000 | 218,847 |
-| Token A -> Token B, multi-hop | 250,000 | 312,668 |
-| Small amount, same pool | 200,000 | 223,354 |
+| TRX -> USDT, pool directo | 200,000 | 223,354 |
+| USDT -> TRX, pool directo | 200,000 | 218,847 |
+| Token A -> Token B, multi-salto | 250,000 | 312,668 |
+| Cantidad pequeña, mismo pool | 200,000 | 223,354 |
 
-For the direct TRX -> USDT swap, a hardcoded estimate of 200,000 would underestimate by 23,354 units. That transaction would fail. The alternative - bumping the hardcoded estimate to 250,000 to be safe - wastes 26,646 unidad de energias on every single swap.
+Para el swap directo de TRX a USDT, una estimación codificada de 200,000 subestimaría por 23,354 unidades. Esa transacción fallaría. La alternativa, aumentar la estimación codificada a 250,000 para estar seguro, desperdicia 26,646 unidades de energía en cada swap.
 
-## How MERX Uses Exact Simulation
+## Cómo MERX Usa Simulación Exacta
 
-The MERX MCP server exposes simulation through two tools that operate at different levels of abstraction.
+El servidor MCP de MERX expone la simulación a través de dos herramientas que operan en diferentes niveles de abstracción.
 
-### Low-Level: estimate_contract_call
+### Bajo Nivel: estimate_contract_call
 
-This tool lets you simulate any arbitrary contract call:
+Esta herramienta te permite simular cualquier llamada a contrato arbitraria:
 
 ```
 Tool: estimate_contract_call
@@ -106,11 +106,11 @@ Response:
 }
 ```
 
-The response includes both the costo de energia and the return value of the simulated call. For a transfer, the return value indicates whether the transfer would succeed. For a swap, it returns the output amount.
+La respuesta incluye tanto el costo de energía como el valor de retorno de la llamada simulada. Para una transferencia, el valor de retorno indica si la transferencia tendría éxito. Para un swap, devuelve la cantidad de salida.
 
-### High-Level: get_swap_quote
+### Alto Nivel: get_swap_quote
 
-For DEX operations, MERX provides a specialized tool that combines simulation with price quoting:
+Para operaciones de DEX, MERX proporciona una herramienta especializada que combina simulación con cotización de precios:
 
 ```
 Tool: get_swap_quote
@@ -132,15 +132,15 @@ Response:
 }
 ```
 
-The `energy_required` field comes from an exact simulation of the swap with the real parameters. The `output_amount` also comes from the simulation, so the quote reflects the actual output the swap would produce at the current block.
+El campo `energy_required` proviene de una simulación exacta del swap con los parámetros reales. El `output_amount` también proviene de la simulación, así que la cotización refleja la salida real que el swap produciría en el bloque actual.
 
-## Real Data: Simulation vs On-Chain Execution
+## Datos Reales: Simulación vs Ejecución En Cadena
 
-Aqui esta a real swap executed through the MERX MCP server on TRON mainnet.
+Aquí hay un swap real ejecutado a través del servidor MCP de MERX en la red principal de TRON.
 
-**Transaction: Swap 0.1 TRX for USDT via SunSwap V2**
+**Transacción: Intercambiar 0.1 TRX por USDT vía SunSwap V2**
 
-Pre-execution simulation:
+Simulación pre-ejecución:
 
 ```
 triggerConstantContract(
@@ -161,7 +161,7 @@ Result:
   return_value: [32847]  // 0.032847 USDT
 ```
 
-On-chain execution (after delegacion de energia):
+Ejecución en cadena (después de delegación de energía):
 
 ```
 Transaction: abc123...
@@ -171,30 +171,30 @@ Transaction: abc123...
   Output: 0.032847 USDT received
 ```
 
-The simulation returned 223,354 energy. The en cadena execution consumed 223,354 energy. Exact match. Not an approximation. Not a range. The same number.
+La simulación devolvió 223,354 de energía. La ejecución en cadena consumió 223,354 de energía. Coincidencia exacta. No una aproximación. No un rango. El mismo número.
 
-## Edge Cases and How MERX Handles Them
+## Casos Especiales y Cómo MERX los Maneja
 
-### State Changes Between Simulation and Execution
+### Cambios de Estado Entre Simulación y Ejecución
 
-The blockchain state can change between the time you simulate and the time you broadcast. Another transaction might modify the same contract storage, changing the costo de energia. MERX mitigates this in three ways:
+El estado de la blockchain puede cambiar entre el momento en que simulas y el momento en que transmites. Otra transacción podría modificar el mismo almacenamiento de contrato, cambiando el costo de energía. MERX lo mitiga de tres maneras:
 
-1. **Minimize the gap.** The pipeline simulates, purchases energy, polls for delegation, and broadcasts in the tightest possible sequence. Typical gap: 5-10 seconds.
+1. **Minimizar la brecha.** El pipeline simula, compra energía, sondea delegación y transmite en la secuencia más ajustada posible. Brecha típica: 5-10 segundos.
 
-2. **Add a small buffer for volatile operations.** For DEX swaps where liquidity pool state changes frequently, MERX adds a 5% buffer to the energy purchase. This buffer covers minor state variations without significantly increasing cost.
+2. **Añadir un pequeño amortiguador para operaciones volátiles.** Para swaps de DEX donde el estado del fondo de liquidez cambia frecuentemente, MERX añade un amortiguador del 5% a la compra de energía. Este amortiguador cubre variaciones menores de estado sin aumentar significativamente el costo.
 
-3. **Fail safely.** If the transaction runs out of energy despite the buffer, it fails before modifying state. The energy is consumed, but no tokens are incorrectly transferred. The agent can retry with a fresh simulation.
+3. **Fallar de forma segura.** Si la transacción se queda sin energía a pesar del amortiguador, falla antes de modificar el estado. La energía se consume, pero ningún token se transfiere incorrectamente. El agente puede reintentar con una simulación fresca.
 
-### Reverted Simulations
+### Simulaciones Revertidas
 
-Sometimes `triggerConstantContract` returns a revert. Esto significa the transaction would fail en cadena. Common causes:
+A veces `triggerConstantContract` devuelve una reversión. Esto significa que la transacción fallaría en cadena. Las causas comunes incluyen:
 
-- Insufficient token balance
-- Swap output below minimum (slippage exceeded)
-- Approval not set for token spending
-- Contract paused or restricted
+- Saldo de token insuficiente
+- Salida de swap por debajo del mínimo (deslizamiento excedido)
+- Aprobación no establecida para gasto de token
+- Contrato pausado o restringido
 
-MERX surfaces these reverts before any energy is purchased:
+MERX muestra estas reversiones antes de que se compre energía alguna:
 
 ```
 Response:
@@ -206,11 +206,11 @@ Response:
 }
 ```
 
-This prevents el mas caro type of failure: buying energy for a transaction that was never going to succeed.
+Esto previene el tipo de fallo más caro: comprar energía para una transacción que nunca iba a tener éxito.
 
-### Approval Transactions
+### Transacciones de Aprobación
 
-TRC20 token swaps on SunSwap require an approval transaction before the swap. This is a separate contract call with its own costo de energia. MERX detects when approval is needed and simulates both transactions:
+Los swaps de tokens TRC20 en SunSwap requieren una transacción de aprobación antes del swap. Esta es una llamada a contrato separada con su propio costo de energía. MERX detecta cuándo se necesita aprobación y simula ambas transacciones:
 
 ```
 Simulation results:
@@ -219,19 +219,19 @@ Simulation results:
   Total: 269,666 energy
 ```
 
-The agent can then purchase energy for both operations in a single order, avoiding the overhead of two separate mercado de energia interactions.
+El agente puede entonces comprar energía para ambas operaciones en una única orden, evitando la sobrecarga de dos interacciones separadas del mercado de energía.
 
-## Building Simulation Into Your Workflow
+## Integrar Simulación en Tu Flujo de Trabajo
 
-If you are building on TRON and not using exact simulation, you are leaving money on the table or exposing yourself to transaction failures. Aqui esta how to integrate it:
+Si estás construyendo en TRON y no estás usando simulación exacta, estás dejando dinero sobre la mesa o exponiéndote a fallos de transacción. Aquí está cómo integrarlo:
 
-### For MCP Agent Developers
+### Para Desarrolladores de Agentes MCP
 
-Use the MERX MCP server. The `ensure_resources` and `execute_swap` tools run simulation automatically. You do not need to call `estimate_contract_call` separately unless you want to inspect the results.
+Usa el servidor MCP de MERX. Las herramientas `ensure_resources` y `execute_swap` ejecutan simulación automáticamente. No necesitas llamar a `estimate_contract_call` por separado a menos que quieras inspeccionar los resultados.
 
-### For API Integrators
+### Para Integradores de API
 
-Call the MERX estimation endpoint before every transaction:
+Llama al endpoint de estimación de MERX antes de cada transacción:
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/estimate \
@@ -245,9 +245,9 @@ curl -X POST https://merx.exchange/api/v1/estimate \
   }'
 ```
 
-### For Direct TronWeb Users
+### Para Usuarios Directos de TronWeb
 
-Call `triggerConstantContract` yourself before every contrato inteligente interaction:
+Llama a `triggerConstantContract` tú mismo antes de cada interacción con contrato inteligente:
 
 ```javascript
 const simulation = await tronWeb.transactionBuilder.triggerConstantContract(
@@ -267,49 +267,50 @@ const energyNeeded = simulation.energy_used;
 // Now purchase exactly this much energy before broadcasting
 ```
 
-## The Economics of Precision
+## La Economía de la Precisión
 
-Consider an application that processes 1,000 USDT transfers per day.
+Considera una aplicación que procesa 1,000 transferencias de USDT por día.
 
-With hardcoded estimates (65,000 energy per transfer):
-
-```
-Daily energy purchased: 65,000,000
-Average actual usage: 47,000,000  (varies by scenario)
-Daily waste: 18,000,000 energy
-Daily waste cost: ~94 TRX (~$24)
-Annual waste: ~$8,760
-```
-
-With exact simulation:
+Con estimaciones codificadas (65,000 energía por transferencia):
 
 ```
-Daily energy purchased: 47,200,000  (actual + 0.4% rounding)
-Daily waste: 200,000  (rounding to minimum order units)
-Daily waste cost: ~1 TRX (~$0.26)
-Annual waste: ~$95
+Energía diaria comprada: 65,000,000
+Uso real promedio: 47,000,000  (varía por escenario)
+Desperdicio diario: 18,000,000 energía
+Costo del desperdicio diario: ~94 TRX (~$24)
+Desperdicio anual: ~$8,760
 ```
 
-The difference is $8,665 per year for a single operation type. For applications that run multiple transaction types at higher volumes, the savings scale linearly.
+Con simulación exacta:
 
-## Conclusion
+```
+Energía diaria comprada: 47,200,000  (actual + 0.4% redondeo)
+Desperdicio diario: 200,000  (redondeo a unidades de pedido mínimo)
+Costo del desperdicio diario: ~1 TRX (~$0.26)
+Desperdicio anual: ~$95
+```
 
-Exact energy simulation is not a feature. It is a requirement for any serious TRON application. The difference between a hardcoded estimate and an exact simulation is the difference between guessing and knowing. MERX chooses knowing.
+La diferencia es $8,665 por año para un único tipo de operación. Para aplicaciones que ejecutan múltiples tipos de transacción a volúmenes más altos, los ahorros escalan linealmente.
 
-Every transaction simulated. Every unidad de energia accounted for. Every swap quoted precisely. The simulation says 223,354, and the chain confirms 223,354.
+## Conclusión
 
-That is not an approximation. That is engineering.
+La simulación exacta de energía no es una característica. Es un requisito para cualquier aplicación seria en TRON. La diferencia entre una estimación codificada y una simulación exacta es la diferencia entre adivinar y saber. MERX elige saber.
+
+Cada transacción simulada. Cada unidad de energía contabilizada. Cada swap cotizado precisamente. La simulación dice 223,354, y la cadena confirma 223,354.
+
+Eso no es una aproximación. Eso es ingeniería.
 
 ---
 
 **Enlaces:**
-- MERX Plataforma: [https://merx.exchange](https://merx.exchange)
+- Plataforma MERX: [https://merx.exchange](https://merx.exchange)
 - Servidor MCP (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - Servidor MCP (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP - sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -321,6 +322,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente IA: "¿Cuál es la energía de TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,102 +1,102 @@
-# MERX и PowerSun: агрегатор против одного провайдера
+# MERX vs PowerSun: агрегатор vs единственный провайдер
 
-PowerSun has been a reliable name in the TRON energy rental space. It offers a straightforward model: fixed prices across ten duration tiers, predictable availability, and a simple API. MERX takes a different approach, operating as an aggregator that includes PowerSun among its seven connected providers. This article examines both platforms, compares their models, and clarifies when each makes sense.
+PowerSun — надежное имя в сфере аренды энергии TRON. Он предлагает простую модель: фиксированные цены по десяти ценовым категориям, предсказуемая доступность и простой API. MERX использует другой подход, работая как агрегатор, в который входит PowerSun и еще шесть провайдеров. В этой статье мы рассмотрим обе платформы, сравним их модели и уточним, когда каждая из них имеет смысл.
 
-## How PowerSun Works
+## Как работает PowerSun
 
-PowerSun is a fixed-price energy provider. Unlike P2P marketplaces where prices fluctuate based on seller listings, PowerSun sets its own rates. You pick a duration, specify the amount of energy you need, and pay the listed price. The model is simple and predictable.
+PowerSun — провайдер с фиксированными ценами на энергию. В отличие от P2P-маркетплейсов, где цены колеблются в зависимости от предложений продавцов, PowerSun устанавливает собственные ставки. Вы выбираете длительность, указываете необходимое количество энергии и платите указанную цену. Модель проста и предсказуема.
 
-### Duration Tiers
+### Ценовые категории по длительности
 
-PowerSun offers ten duration options:
+PowerSun предлагает десять вариантов длительности:
 
-| Duration | Typical Use Case |
+| Длительность | Типичный случай использования |
 |---|---|
-| 5 minutes | Single transaction |
-| 10 minutes | Quick batch |
-| 30 minutes | Short session |
-| 1 hour | Standard operations |
-| 3 hours | Extended session |
-| 6 hours | Half-day operations |
-| 12 hours | Extended processing |
-| 1 day | Daily operations |
-| 3 days | Multi-day campaigns |
-| 14 days | Long-term needs |
+| 5 минут | Одна транзакция |
+| 10 минут | Быстрый пакет |
+| 30 минут | Короткая сессия |
+| 1 час | Стандартные операции |
+| 3 часа | Расширенная сессия |
+| 6 часов | Полудневные операции |
+| 12 часов | Расширенная обработка |
+| 1 день | Ежедневные операции |
+| 3 дня | Многодневные кампании |
+| 14 дней | Долгосрочные потребности |
 
-Each tier has a fixed price per unit of energy. Longer durations cost more per unit because the provider locks resources for a longer period. The pricing is transparent -- you know exactly what you will pay before placing an order.
+Каждая категория имеет фиксированную цену за единицу энергии. Более длительные периоды стоят дороже за единицу, потому что провайдер блокирует ресурсы на более длительный период. Ценообразование прозрачно — вы точно знаете, сколько будете платить перед размещением заказа.
 
-### PowerSun Strengths
+### Преимущества PowerSun
 
-**Predictability.** Fixed pricing eliminates the guesswork. You can budget exactly, forecast costs for next month, and build those numbers into your product pricing.
+**Предсказуемость.** Фиксированное ценообразование исключает неопределенность. Вы можете точно планировать бюджет, прогнозировать затраты на следующий месяц и интегрировать эти цифры в ценообразование вашего продукта.
 
-**Reliability.** PowerSun maintains its own infrastructure and energy supply. When the platform quotes availability, it generally delivers.
+**Надежность.** PowerSun содержит собственную инфраструктуру и запасы энергии. Когда платформа указывает доступность, она обычно ее обеспечивает.
 
-**Simple integration.** The API is straightforward. Authenticate, check prices, place an order. No marketplace dynamics to navigate.
+**Простая интеграция.** API простой. Аутентификация, проверка цен, размещение заказа. Нет динамики маркетплейса для навигации.
 
-**Multiple durations.** Ten tiers cover most use cases, from single transactions (5 minutes) to multi-week operations (14 days).
+**Несколько ценовых категорий.** Десять вариантов охватывают большинство случаев использования, от одной транзакции (5 минут) до многонедельных операций (14 дней).
 
-### PowerSun Limitations
+### Ограничения PowerSun
 
-**Single source pricing.** You get PowerSun's price. It might be competitive, or it might not -- you have no visibility into what other providers charge without checking them separately.
+**Единственный источник цен.** Вы получаете цену PowerSun. Она может быть конкурентной или нет — у вас нет информации о том, сколько берут другие провайдеры, без отдельной проверки.
 
-**No aggregation.** If PowerSun's price for your specific amount and duration is not the best on the market, you still pay it unless you manually check alternatives.
+**Отсутствие агрегации.** Если цена PowerSun на ваше конкретное количество и длительность не лучшая на рынке, вы все равно платите ее, если только не проверяете альтернативы вручную.
 
-**Fixed model inflexibility.** Fixed prices do not adjust to market conditions in real time. When the market softens and competitors drop prices, PowerSun's rates may lag behind.
+**Негибкость фиксированной модели.** Фиксированные цены не корректируются в соответствии с рыночными условиями в реальном времени. Когда рынок ослабевает и конкуренты снижают цены, ставки PowerSun могут отставать.
 
-## How MERX Approaches the Problem
+## Как MERX решает проблему
 
-MERX is not a direct competitor to PowerSun in the traditional sense. MERX is an aggregator that includes PowerSun as one of its seven provider connections. When you place an order through MERX, the system queries PowerSun alongside TronSave, Feee, Catfee, Netts, iTRX, and Sohu, then routes your order to whichever provider offers the best price.
+MERX не является прямым конкурентом PowerSun в традиционном смысле. MERX — это агрегатор, который включает PowerSun как один из семи подключенных провайдеров. Когда вы размещаете заказ через MERX, система запрашивает PowerSun одновременно с TronSave, Feee, Catfee, Netts, iTRX и Sohu, а затем направляет ваш заказ к провайдеру с лучшей ценой.
 
-This means you always have access to PowerSun's rates -- but only when they are the best available option.
+Это означает, что у вас всегда есть доступ к ценам PowerSun — но только когда они являются лучшим доступным вариантом.
 
-### How Aggregation Works in Practice
+### Как агрегация работает на практике
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// MERX queries all providers including PowerSun
+// MERX запрашивает все провайдеры, включая PowerSun
 const prices = await merx.getPrices({
   energy_amount: 100000,
   duration: '1h'
 });
 
-// See what each provider offers
+// Посмотрите, что предлагает каждый провайдер
 for (const offer of prices.providers) {
   console.log(`${offer.provider}: ${offer.price_sun} SUN`);
 }
 
-// The best price might be PowerSun, or it might be another provider
-console.log(`Best: ${prices.best.price_sun} SUN via ${prices.best.provider}`);
+// Лучшая цена может быть от PowerSun или другого провайдера
+console.log(`Лучшая: ${prices.best.price_sun} SUN от ${prices.best.provider}`);
 ```
 
-When PowerSun has the lowest rate for your specific request, MERX routes the order to PowerSun. When another provider undercuts PowerSun, MERX routes there instead. You always get the market-best price without managing multiple integrations.
+Когда PowerSun имеет самую низкую ставку для вашего конкретного запроса, MERX направляет заказ к PowerSun. Когда другой провайдер предлагает меньшую цену, MERX направляет туда. Вы всегда получаете лучшую рыночную цену без управления несколькими интеграциями.
 
 ## Сравнение функций
 
-| Feature | PowerSun | MERX |
+| Функция | PowerSun | MERX |
 |---|---|---|
-| Type | Fixed-price provider | Aggregator (7 providers) |
-| Pricing model | Fixed per duration tier | Best across all providers |
-| Includes PowerSun | -- | Yes |
-| Duration options | 10 tiers | Flexible (minutes to days) |
-| Price competitiveness | May or may not be best | Always market-best |
-| Exact energy simulation | No | Yes |
-| Standing orders | No | Yes |
-| Auto-energy | No | Yes |
-| WebSocket updates | No | Yes |
-| MCP for AI agents | No | Yes |
-| SDK | Basic | JS + Python |
-| Failover | No | Automatic |
+| Тип | Провайдер с фиксированными ценами | Агрегатор (7 провайдеров) |
+| Модель ценообразования | Фиксированная по категориям длительности | Лучшая среди всех провайдеров |
+| Включает PowerSun | — | Да |
+| Варианты длительности | 10 категорий | Гибкие (минуты до дней) |
+| Конкурентоспособность цен | Может быть или не быть лучшей | Всегда лучшая на рынке |
+| Точное моделирование энергии | Нет | Да |
+| Стоящие заказы | Нет | Да |
+| Автоматическая энергия | Нет | Да |
+| WebSocket обновления | Нет | Да |
+| MCP для AI-агентов | Нет | Да |
+| SDK | Базовый | JS + Python |
+| Отказоустойчивость | Нет | Автоматическая |
 
 ## Анализ цен
 
-Let us walk through a realistic comparison. You need 100,000 energy units for one hour.
+Проведем реалистичное сравнение. Вам нужно 100 000 единиц энергии на один час.
 
-PowerSun quotes a fixed rate -- say, 32 SUN per unit. Your cost is fixed and known.
+PowerSun приводит фиксированную ставку — скажем, 32 SUN за единицу. Ваша стоимость фиксирована и известна.
 
-Through MERX, the system queries all seven providers:
+Через MERX система запрашивает всех семь провайдеров:
 
 - Sohu: 34 SUN
 - TronSave: 31 SUN
@@ -106,22 +106,22 @@ Through MERX, the system queries all seven providers:
 - Netts: 33 SUN
 - iTRX: 30 SUN
 
-MERX routes to Feee at 28 SUN. You save 4 SUN per unit -- a 12.5% reduction. On 100,000 energy units, that difference adds up.
+MERX направляет к Feee по 28 SUN. Вы экономите 4 SUN за единицу — снижение на 12,5%. На 100 000 единиц энергии эта разница существенна.
 
-Now consider the reverse scenario. PowerSun runs a promotional rate at 24 SUN while other providers sit at 28-35 SUN. MERX queries all providers, sees PowerSun's rate is the best, and routes the order to PowerSun. You get the promotional rate automatically without needing to know about it.
+Теперь рассмотрим обратный сценарий. PowerSun запускает промо-ставку в 24 SUN, в то время как другие провайдеры берут 28-35 SUN. MERX запрашивает всех провайдеров, видит, что ставка PowerSun лучшая, и направляет заказ к PowerSun. Вы автоматически получаете промо-ставку, не зная о ней.
 
-The point is not that PowerSun is always more expensive. The point is that an aggregator ensures you never overpay regardless of which provider happens to be cheapest at any given moment.
+Смысл не в том, что PowerSun всегда дороже. Смысл в том, что агрегатор гарантирует, что вы никогда не переплатите независимо от того, какой провайдер оказывается самым дешевым в данный момент.
 
-## The Fixed Price Trade-off
+## Компромисс фиксированных цен
 
-PowerSun's fixed pricing is both its strength and its limitation. Fixed prices enable budgeting and forecasting. You know your cost today, tomorrow, and next week (assuming rates stay stable).
+Фиксированное ценообразование PowerSun — это и его сила, и его ограничение. Фиксированные цены позволяют планировать бюджет и делать прогнозы. Вы знаете свою стоимость сегодня, завтра и на следующей неделе (при условии, что ставки останутся стабильными).
 
-But the TRON energy market is not static. Prices shift based on network utilization, staking dynamics, and competitive pressure among providers. A fixed price that was competitive yesterday might be above market today.
+Но рынок энергии TRON не статичен. Цены колеблются в зависимости от использования сети, динамики стейкинга и конкурентного давления между провайдерами. Фиксированная цена, которая была конкурентной вчера, может быть выше рынка сегодня.
 
-MERX provides real-time price data through its API:
+MERX предоставляет данные о ценах в реальном времени через свой API:
 
 ```typescript
-// Track price movements across all providers
+// Отслеживайте движение цен всех провайдеров
 const ws = merx.connectWebSocket();
 
 ws.on('price_update', (data) => {
@@ -129,14 +129,14 @@ ws.on('price_update', (data) => {
 });
 ```
 
-This real-time visibility lets you understand market dynamics. Even if you choose to use PowerSun directly for its predictability, knowing the broader market context helps you evaluate whether you are getting competitive rates.
+Эта видимость в реальном времени позволяет вам понять рыночную динамику. Даже если вы выберете использовать PowerSun напрямую для его предсказуемости, знание более широкого рыночного контекста помогает вам оценить, получаете ли вы конкурентные ставки.
 
-## Standing Orders and Automation
+## Стоящие заказы и автоматизация
 
-One capability MERX offers that has no equivalent in PowerSun is standing orders. These are conditional orders that execute automatically when market conditions meet your criteria.
+Одна из возможностей MERX, у которой нет эквивалента в PowerSun, — это стоящие заказы. Это условные заказы, которые выполняются автоматически при соответствии рыночных условий вашим критериям.
 
 ```typescript
-// Buy energy when any provider drops below 25 SUN
+// Покупайте энергию, когда любой провайдер упадет ниже 25 SUN
 const standing = await merx.createStandingOrder({
   energy_amount: 100000,
   max_price_sun: 25,
@@ -146,46 +146,46 @@ const standing = await merx.createStandingOrder({
 });
 ```
 
-This feature is particularly relevant for cost-conscious operators. Rather than accepting the current rate -- whether from PowerSun or any other provider -- you define the price you are willing to pay and let the system execute when the market reaches that level.
+Эта функция особенно актуальна для экономных операторов. Вместо принятия текущей ставки — будь то от PowerSun или любого другого провайдера — вы определяете цену, которую готовы платить, и позволяете системе выполняться, когда рынок достигает этого уровня.
 
-For operations that are not time-critical (batch processing, scheduled distributions, periodic maintenance), standing orders can significantly reduce average energy costs by capturing price dips automatically.
+Для операций, которые не критичны по времени (пакетная обработка, запланированные распределения, периодическое обслуживание), стоящие заказы могут значительно снизить среднюю стоимость энергии путем автоматического захвата спадов цен.
 
-## Reliability and Failover
+## Надежность и отказоустойчивость
 
-PowerSun is generally reliable, but no single provider guarantees 100% uptime. API maintenance, supply constraints, and infrastructure issues affect every provider periodically.
+PowerSun обычно надежен, но ни один единственный провайдер не гарантирует 100% uptime. Техническое обслуживание API, ограничения предложения и проблемы инфраструктуры время от времени влияют на каждого провайдера.
 
-When you depend solely on PowerSun and it experiences an outage, your operations stop. You need to detect the failure, switch to an alternative provider, handle the different API format, and manage the transition -- all while your transactions wait.
+Когда вы зависите только от PowerSun и он испытывает сбой, ваши операции останавливаются. Вам нужно обнаружить отказ, переключиться на альтернативного провайдера, обработать другой формат API и управлять переходом — все в то время, пока ваши транзакции ждут.
 
-MERX handles this automatically. If PowerSun is unavailable, orders route to the next cheapest provider. If that provider is also down, the system continues down the list. Your application code never changes:
+MERX обрабатывает это автоматически. Если PowerSun недоступен, заказы направляются к следующему самому дешевому провайдеру. Если этот провайдер тоже отключен, система продолжает по списку. Ваш код приложения никогда не меняется:
 
 ```typescript
-// This code works regardless of which provider is available
+// Этот код работает независимо от того, какой провайдер доступен
 const order = await merx.createOrder({
   energy_amount: 65000,
   duration: '1h',
   target_address: 'TRecipientAddress...'
 });
-// order.provider tells you who filled it
+// order.provider показывает, кто его заполнил
 ```
 
-The failover is transparent. Your logs show which provider filled each order, but your application logic does not need to handle provider-specific error cases.
+Отказоустойчивость прозрачна. Ваши логи показывают, какой провайдер заполнил каждый заказ, но ваша логика приложения не должна обрабатывать провайдер-специфичные случаи ошибок.
 
 ## Опыт разработчика
 
-PowerSun offers a basic API that handles energy purchases. It works, and for simple use cases, simplicity is an advantage.
+PowerSun предлагает базовый API, который обрабатывает покупки энергии. Это работает, и для простых случаев использования простота — это преимущество.
 
-MERX provides a more comprehensive developer toolkit:
+MERX предоставляет более полный набор инструментов разработчика:
 
-- **Typed SDKs** for JavaScript and Python with full IDE support
-- **WebSocket connections** for real-time price and order updates
-- **Webhooks** for asynchronous notifications
-- **MCP server** at [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) for AI agent integration
-- **Exact energy simulation** using triggerConstantContract for precise estimates
+- **Типизированные SDK** для JavaScript и Python с полной поддержкой IDE
+- **WebSocket соединения** для обновлений цен и заказов в реальном времени
+- **Webhooks** для асинхронных уведомлений
+- **MCP сервер** по адресу [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) для интеграции AI-агентов
+- **Точное моделирование энергии** с использованием triggerConstantContract для точных оценок
 
-The exact simulation capability deserves special mention. Rather than guessing or using hardcoded energy estimates, MERX can simulate your specific transaction against the TRON network and tell you exactly how much energy it will consume. This eliminates the common problem of over-purchasing or under-purchasing energy.
+Возможность точного моделирования заслуживает особого упоминания. Вместо угадывания или использования жестко закодированных оценок энергии, MERX может смоделировать вашу конкретную транзакцию в сети TRON и сказать вам точно, сколько энергии она потребит. Это устраняет распространенную проблему чрезмерного или недостаточного приобретения энергии.
 
 ```typescript
-// Know exactly how much energy your transaction needs
+// Узнайте точно, сколько энергии потребует ваша транзакция
 const estimate = await merx.estimateEnergy({
   contract_address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', // USDT
   function_selector: 'transfer(address,uint256)',
@@ -193,42 +193,43 @@ const estimate = await merx.estimateEnergy({
   owner_address: senderAddress
 });
 
-console.log(`Exact energy needed: ${estimate.energy_required}`);
+console.log(`Точно необходимая энергия: ${estimate.energy_required}`);
 ```
 
-## When PowerSun Alone Makes Sense
+## Когда только PowerSun имеет смысл
 
-**Budget predictability is paramount.** If your organization requires exact cost forecasting and the convenience of fixed rates outweighs potential savings from market-rate purchasing, PowerSun's model delivers that predictability.
+**Предсказуемость бюджета имеет первостепенное значение.** Если ваша организация требует точного прогноза затрат и удобство фиксированных ставок перевешивает потенциальные сбережения от рыночного ценообразования, модель PowerSun обеспечивает эту предсказуемость.
 
-**Existing deep integration.** If your systems are deeply integrated with PowerSun's API and everything works reliably, the marginal savings from aggregation may not justify the integration effort -- though MERX's SDK makes switching straightforward.
+**Существующая глубокая интеграция.** Если ваши системы глубоко интегрированы с API PowerSun и все работает надежно, маржинальные сбережения от агрегации могут не оправдать усилия интеграции — хотя SDK MERX делает переключение простым.
 
-**Simple use case.** If you make occasional energy purchases manually and do not need automation, standing orders, or real-time price tracking, PowerSun's direct interface might be sufficient.
+**Простой случай использования.** Если вы время от времени приобретаете энергию вручную и не нуждаетесь в автоматизации, стоящих заказах или отслеживании цен в реальном времени, прямой интерфейс PowerSun может быть достаточным.
 
-## When MERX Makes More Sense
+## Когда MERX имеет больше смысла
 
-**Cost optimization.** If you want the lowest available rate every time, aggregation provides a structural advantage over any single provider.
+**Оптимизация затрат.** Если вы хотите каждый раз получить самую низкую доступную ставку, агрегация обеспечивает структурное преимущество над любым единственным провайдером.
 
-**Automated systems.** If your application sends transactions programmatically, MERX's SDK, webhooks, and WebSocket support are built for that workflow.
+**Автоматизированные системы.** Если ваше приложение программно отправляет транзакции, SDK, webhooks и поддержка WebSocket в MERX разработаны для этого рабочего процесса.
 
-**Scale.** As transaction volume grows, the per-unit savings from aggregation compound. A few SUN per unit across millions of energy units represents meaningful cost reduction.
+**Масштаб.** По мере роста объема транзакций экономия за единицу от агрегации компенсируется. Несколько SUN за единицу на миллионах единиц энергии представляют значительное снижение затрат.
 
-**Reliability.** If your operations cannot tolerate provider downtime, multi-provider failover is essential.
+**Надежность.** Если ваши операции не могут допустить простоев провайдера, многопровайдерская отказоустойчивость необходима.
 
-**Advanced features.** Standing orders, exact simulation, auto-energy, and AI agent integration are capabilities that extend beyond basic energy purchasing.
+**Продвинутые функции.** Стоящие заказы, точное моделирование, автоматическая энергия и интеграция AI-агентов — это возможности, которые выходят за рамки базовой покупки энергии.
 
 ## Заключение
 
-PowerSun is a solid, reliable energy provider with a clear pricing model. It does one thing well: sell energy at fixed rates across multiple duration tiers.
+PowerSun — это надежный провайдер энергии с четкой моделью ценообразования. Он делает одно хорошо: продает энергию по фиксированным ставкам в нескольких ценовых категориях.
 
-MERX operates at a different level. By aggregating PowerSun alongside six other providers, it ensures you get PowerSun's rates when they are the best -- and better rates when another provider undercuts them. The aggregation model adds failover, real-time price comparison, standing orders, and developer tools that a single provider cannot offer.
+MERX работает на другом уровне. Агрегируя PowerSun вместе с шестью другими провайдерами, он гарантирует, что вы получите ставки PowerSun, когда они лучшие — и лучшие ставки, когда другой провайдер их снижает. Модель агрегации добавляет отказоустойчивость, сравнение цен в реальном времени, стоящие заказы и инструменты разработчика, которые единственный провайдер не может предложить.
 
-For most developers and businesses operating on TRON, the aggregator model provides better pricing, higher reliability, and more powerful tooling. PowerSun's supply remains available through MERX, so choosing the aggregator does not mean losing access to PowerSun -- it means gaining access to everything else alongside it.
+Для большинства разработчиков и предприятий, работающих на TRON, модель агрегатора обеспечивает лучшее ценообразование, более высокую надежность и более мощные инструменты. Предложение PowerSun остается доступным через MERX, поэтому выбор агрегатора не означает потерю доступа к PowerSun — это означает получение доступа ко всему остальному вместе с ним.
 
-Start exploring at [https://merx.exchange](https://merx.exchange) or review the API documentation at [https://merx.exchange/docs](https://merx.exchange/docs).
+Начните исследование по адресу [https://merx.exchange](https://merx.exchange) или просмотрите документацию API по адресу [https://merx.exchange/docs](https://merx.exchange/docs).
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — без установки, без необходимости API-ключа для инструментов только для чтения:
 
 ```json
 {
@@ -240,6 +241,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите у вашего AI-агента: "Какая самая дешевая энергия TRON прямо сейчас?" и получите живые цены от всех подключенных провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

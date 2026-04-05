@@ -1,24 +1,24 @@
 # Экономика ресурсов TRON: руководство для разработчиков
 
-Every transaction on TRON consumes resources. If you do not understand how those resources work, you will overpay for every operation your application performs. This is not a theoretical concern -- the difference between a resource-optimized TRON application and a naive one can exceed 90% in operating costs.
+Каждая транзакция на TRON потребляет ресурсы. Если вы не понимаете, как работают эти ресурсы, вы переплачиваете за каждую операцию вашего приложения. Это не теоретическая проблема — разница в расходах между оптимизированным по ресурсам приложением TRON и наивным может превышать 90%.
 
-This article is a complete developer reference for TRON resource economics. It covers energy costs per operation type, bandwidth mechanics, staking ratios, burn rates, the rental market, and a decision framework for choosing the right resource strategy for your use case.
+Эта статья является полным справочником разработчика по экономике ресурсов TRON. Она охватывает затраты энергии по типам операций, механику bandwidth, коэффициенты стейкинга, скорости сжигания, рынок аренды и фреймворк для выбора правильной стратегии ресурсов для вашего случая использования.
 
-## The Two Resources: Energy and Bandwidth
+## Два ресурса: Energy и Bandwidth
 
-TRON has two computational resources that transactions consume:
+TRON имеет два вычислительных ресурса, которые потребляют транзакции:
 
-**Energy** is consumed by smart contract execution. Every opcode in the TVM (TRON Virtual Machine) has an energy cost. The more complex the contract interaction, the more energy it consumes. Energy is the expensive resource -- it drives the majority of transaction costs on TRON.
+**Energy** потребляется выполнением смарт-контрактов. Каждый опкод в TVM (виртуальная машина TRON) имеет стоимость в energy. Чем сложнее взаимодействие с контрактом, тем больше energy оно потребляет. Energy — это дорогой ресурс, он определяет большую часть затрат на транзакции в TRON.
 
-**Bandwidth** is consumed by the raw data size of a transaction. Every byte of transaction data costs bandwidth. Simple TRX transfers, token transfers, and contract calls all consume bandwidth proportional to their serialized size. Bandwidth is the cheaper resource, and TRON grants a daily free allowance of 600 bandwidth points to every active address.
+**Bandwidth** потребляется сырым размером данных транзакции. Каждый байт данных транзакции стоит bandwidth. Простые переводы TRX, переводы токенов и вызовы контрактов все потребляют bandwidth пропорционально их сериализованному размеру. Bandwidth — более дешевый ресурс, и TRON предоставляет ежедневное бесплатное пособие в размере 600 пунктов bandwidth каждому активному адресу.
 
-The critical distinction: a simple TRX transfer consumes only bandwidth (no smart contract involved). A USDT transfer, a DEX swap, or any other smart contract interaction consumes both energy and bandwidth.
+Критическое различие: простой перевод TRX потребляет только bandwidth (смарт-контракт не задействован). Перевод USDT, обмен на DEX или любое другое взаимодействие со смарт-контрактом потребляет и energy, и bandwidth.
 
-## Energy Costs by Operation Type
+## Затраты Energy по типам операций
 
-Energy consumption varies dramatically by operation type. Here are empirical measurements from mainnet transactions:
+Потребление energy сильно варьируется в зависимости от типа операции. Вот эмпирические измерения из транзакций мейннета:
 
-### TRC-20 Token Transfers
+### Переводы TRC-20 токенов
 
 ```
 USDT transfer (existing recipient):     ~31,895 - 64,285 energy
@@ -28,9 +28,9 @@ USDC transfer:                          ~32,000 - 65,000 energy
 Custom TRC-20 transfer:                 ~30,000 - 100,000+ energy
 ```
 
-The variance in USDT transfers deserves explanation. When the recipient has never held USDT before, the contract must allocate a new storage slot in its internal mapping. This SSTORE operation costs significantly more energy than updating an existing balance (SLOAD + SSTORE on existing slot). The difference between a first-time and repeat recipient can exceed 30,000 energy.
+Вариативность переводов USDT заслуживает объяснения. Когда получатель никогда раньше не владел USDT, контракт должен выделить новую ячейку хранилища в своём внутреннем маппинге. Эта операция SSTORE стоит значительно больше energy, чем обновление существующего баланса (SLOAD + SSTORE на существующей ячейке). Разница между первичным и повторным получателем может превышать 30,000 energy.
 
-### DEX Operations
+### Операции DEX
 
 ```
 SunSwap V2 single-pair swap:            ~200,000 - 300,000 energy
@@ -39,9 +39,9 @@ Add liquidity:                          ~250,000 - 350,000 energy
 Remove liquidity:                       ~200,000 - 300,000 energy
 ```
 
-DEX operations are expensive because they involve multiple contract calls within a single transaction: router contract, pair contract, token approvals, price calculations, and token transfers.
+Операции DEX дорогие, потому что они включают несколько вызовов контрактов в одной транзакции: контракт роутера, контракт пары, одобрения токенов, вычисления цен и переводы токенов.
 
-### NFT Operations
+### Операции с NFT
 
 ```
 TRC-721 mint:                           ~100,000 - 200,000 energy
@@ -50,7 +50,7 @@ TRC-1155 mint (single):                 ~80,000 - 150,000 energy
 TRC-1155 batch mint:                    ~150,000 - 500,000+ energy
 ```
 
-### Contract Deployment
+### Развёртывание контракта
 
 ```
 Simple contract deployment:             ~500,000 - 1,000,000 energy
@@ -58,19 +58,19 @@ Complex contract (DEX pair):            ~2,000,000 - 5,000,000 energy
 Proxy contract deployment:              ~300,000 - 600,000 energy
 ```
 
-### Key Insight: Do Not Hardcode
+### Ключевое замечание: не жёсткодируйте значения
 
-These numbers are ranges, not constants. The actual energy consumed depends on the contract's internal state at the moment of execution. Use `triggerConstantContract` to simulate the exact cost before purchasing energy. MERX exposes this through the `estimate_contract_call` tool and the `/api/v1/estimate` endpoint.
+Эти числа — диапазоны, не константы. Фактическое потребление energy зависит от внутреннего состояния контракта в момент выполнения. Используйте `triggerConstantContract` для имитации точной стоимости перед покупкой energy. MERX предоставляет доступ к этому через инструмент `estimate_contract_call` и конечную точку `/api/v1/estimate`.
 
-## Bandwidth Costs
+## Затраты Bandwidth
 
-Bandwidth is simpler than energy. Every transaction consumes bandwidth proportional to its serialized byte size. The formula:
+Bandwidth проще, чем energy. Каждая транзакция потребляет bandwidth пропорционально размеру её сериализованных байтов. Формула:
 
 ```
 bandwidth_consumed = transaction_size_bytes
 ```
 
-Typical bandwidth costs:
+Типичные затраты bandwidth:
 
 ```
 Simple TRX transfer:                    ~270 bandwidth
@@ -79,40 +79,40 @@ DEX swap:                               ~400 - 600 bandwidth
 Contract deployment:                    ~1,000 - 10,000 bandwidth
 ```
 
-### The Free Allowance
+### Бесплатное пособие
 
-Every TRON address receives 600 free bandwidth points per day, replenished at midnight UTC. This is enough for 1-2 simple TRX transfers per day but falls short for contract interactions.
+Каждый адрес TRON получает 600 бесплатных пунктов bandwidth в день, пополняемых в полночь UTC. Этого достаточно для 1-2 простых переводов TRX в день, но недостаточно для взаимодействия с контрактами.
 
-If your bandwidth is exhausted, the network burns TRX from your account to cover the cost. The burn rate is currently 1,000 SUN (0.001 TRX) per bandwidth point. For a 345-bandwidth USDT transfer, that is 0.345 TRX burned for bandwidth -- relatively small compared to energy costs, but it adds up at volume.
+Если ваш bandwidth исчерпан, сеть сжигает TRX с вашего счёта для покрытия стоимости. Текущая скорость сжигания составляет 1,000 SUN (0.001 TRX) за пункт bandwidth. Для перевода USDT из 345 bandwidth это 0.345 TRX, сожженных за bandwidth — относительно мало по сравнению с затратами energy, но накапливается при больших объёмах.
 
-### Bandwidth Staking
+### Стейкинг Bandwidth
 
-You can stake TRX for bandwidth just as you can for energy. The bandwidth-per-TRX ratio depends on total network stake for bandwidth:
+Вы можете зафиксировать TRX для получения bandwidth так же, как для energy. Соотношение bandwidth-на-TRX зависит от общего сетевого стейка для bandwidth:
 
 ```
 your_bandwidth = (your_staked_trx / total_network_bandwidth_stake) * total_bandwidth_limit
 ```
 
-Bandwidth staking is less commonly discussed because:
-1. The free 600-point daily allowance covers light usage
-2. Bandwidth costs are small relative to energy costs
-3. Most developers focus on energy optimization first
+Стейкинг bandwidth обсуждается реже, потому что:
+1. Бесплатное дневное пособие из 600 пунктов покрывает лёгкое использование
+2. Затраты bandwidth малы относительно затрат energy
+3. Большинство разработчиков сначала фокусируются на оптимизации energy
 
-For high-volume applications processing hundreds of transactions daily, bandwidth staking can save meaningful amounts. But energy optimization should always come first.
+Для высокопроизводительных приложений, обрабатывающих сотни транзакций ежедневно, стейкинг bandwidth может сэкономить значительные суммы. Но оптимизация energy всегда должна быть на первом месте.
 
-## Staking Ratios
+## Коэффициенты стейкинга
 
-Staking TRX is the first-party method for obtaining resources. You lock TRX in Stake 2.0 and receive energy or bandwidth in return.
+Стейкинг TRX — это первичный метод получения ресурсов. Вы блокируете TRX в Stake 2.0 и получаете energy или bandwidth взамен.
 
-### Energy Staking Ratio
+### Коэффициент стейкинга Energy
 
-The energy you receive from staking depends on two factors: how much TRX you stake and how much TRX the entire network has staked for energy.
+Energy, который вы получаете от стейкинга, зависит от двух факторов: сколько TRX вы зафиксировали и сколько TRX весь сетевой зафиксировал для energy.
 
 ```
 your_energy = (your_staked_trx / total_network_energy_stake) * total_energy_limit
 ```
 
-As of early 2026, the approximate ratio is:
+По состоянию на начало 2026 года приблизительное соотношение составляет:
 
 ```
 Total network energy limit:     ~90,000,000,000 energy/day
@@ -121,22 +121,22 @@ Total network energy stake:     ~50,000,000,000 TRX
 Energy per TRX staked:          ~1.8 energy/day per TRX staked
 ```
 
-To cover a single USDT transfer (65,000 energy), you would need to stake approximately:
+Чтобы покрыть один перевод USDT (65,000 energy), вам нужно было бы зафиксировать примерно:
 
 ```
 65,000 / 1.8 = ~36,111 TRX staked
 ```
 
-At current TRX prices, that is a significant capital commitment -- and you get enough energy for one USDT transfer per day. This is why the rental market exists: renting energy is dramatically more capital-efficient than staking.
+При текущих ценах TRX это значительное обязательство в капитале — и вы получаете энергии для одного перевода USDT в день. Вот почему существует рынок аренды: аренда energy намного эффективнее по капиталу, чем стейкинг.
 
-### The Staking Paradox
+### Парадокс стейкинга
 
-Staking has zero marginal cost (you get your TRX back when you unstake after a 14-day waiting period), but the opportunity cost is real. The TRX you stake cannot be used for trading, lending, or other yield-generating activities. For most developers and businesses, renting energy from the market is more cost-effective than locking up the capital required to self-stake.
+Стейкинг имеет нулевую предельную стоимость (вы получаете свой TRX обратно, когда отменяете стейкинг после 14-дневного периода ожидания), но альтернативная стоимость реальна. TRX, который вы зафиксировали, не может быть использован для торговли, кредитования или других деятельности, генерирующей доход. Для большинства разработчиков и предприятий аренда energy с рынка более рентабельна, чем блокировка капитала, необходимого для самостейкинга.
 
-The crossover point depends on your daily energy consumption:
+Точка безубыточности зависит от вашей ежедневной потребности в energy:
 
 ```
-Break-even analysis (approximate):
+Анализ безубыточности (приблизительный):
 
   Daily energy need:    65,000 (one USDT transfer)
   Rental cost:          ~1.5 TRX/day
@@ -154,47 +154,47 @@ Break-even analysis (approximate):
   Verdict: Renting is still cheaper (150 < 395 TRX/day)
 ```
 
-For most use cases, renting wins on pure economics. Staking makes sense when you need guaranteed resource availability regardless of market conditions, or when you are a validator who stakes for governance purposes and treats energy as a byproduct.
+Для большинства случаев использования аренда побеждает по чистой экономике. Стейкинг имеет смысл, когда вам нужна гарантированная доступность ресурсов независимо от условий рынка, или когда вы валидатор, который стейкит для целей управления и рассматривает energy как побочный продукт.
 
-## Burn Rates: What Happens Without Resources
+## Скорости сжигания: что происходит без ресурсов
 
-If you execute a transaction without sufficient energy or bandwidth, TRON does not reject the transaction. Instead, it burns TRX from your account to cover the deficit.
+Если вы выполняете транзакцию без достаточного energy или bandwidth, TRON не отклоняет транзакцию. Вместо этого он сжигает TRX с вашего счёта для покрытия дефицита.
 
-### Energy Burn Rate
+### Скорость сжигания Energy
 
 ```
 1 energy unit = 420 SUN burned (0.00042 TRX)
 ```
 
-For a 65,000-energy USDT transfer without any energy:
+Для перевода USDT из 65,000 energy без какого-либо energy:
 
 ```
 65,000 * 420 = 27,300,000 SUN = 27.3 TRX burned
 ```
 
-Compare this to renting 65,000 energy through MERX at 28 SUN per unit:
+Сравните это с арендой 65,000 energy через MERX по 28 SUN за единицу:
 
 ```
 65,000 * 28 = 1,820,000 SUN = 1.82 TRX rental cost
 ```
 
-The savings: 27.3 - 1.82 = 25.48 TRX saved, or a 93% cost reduction. This is why the energy rental market exists and why it matters.
+Экономия: 27.3 - 1.82 = 25.48 TRX сэкономлено, или снижение на 93%. Вот почему существует рынок аренды energy и почему это важно.
 
-### Bandwidth Burn Rate
+### Скорость сжигания Bandwidth
 
 ```
 1 bandwidth point = 1,000 SUN burned (0.001 TRX)
 ```
 
-For a 345-bandwidth USDT transfer:
+Для перевода USDT из 345 bandwidth:
 
 ```
 345 * 1,000 = 345,000 SUN = 0.345 TRX burned
 ```
 
-### Partial Coverage
+### Частичное покрытие
 
-If you have some energy but not enough, TRON uses your available energy first and burns TRX for the remainder:
+Если у вас есть некоторое energy, но недостаточно, TRON сначала использует доступный energy и сжигает TRX для остатка:
 
 ```
 Energy needed:      65,000
@@ -203,15 +203,15 @@ Energy deficit:     25,000
 TRX burned:         25,000 * 420 = 10,500,000 SUN = 10.5 TRX
 ```
 
-This is why accurate energy estimation matters. Buying 40,000 energy when you need 65,000 wastes the rental cost and still results in a significant TRX burn.
+Вот почему точная оценка energy важна. Покупка 40,000 energy, когда вам нужно 65,000, тратит стоимость аренды и всё ещё приводит к значительному сжиганию TRX.
 
-## The Rental Market Overview
+## Обзор рынка аренды
 
-The energy rental market has evolved into a structured ecosystem with predictable patterns.
+Рынок аренды energy эволюционировал в структурированную экосистему с предсказуемыми паттернами.
 
-### How Rentals Work
+### Как работает аренда
 
-Energy providers stake large amounts of TRX and accumulate energy. They then delegate that energy to buyers for a fee. The delegation is an on-chain operation: the provider's address delegates a specified amount of energy to the buyer's address for a specified duration.
+Поставщики energy стейкят большие суммы TRX и накапливают energy. Затем они делегируют эту energy покупателям за плату. Делегирование — это операция в цепи: адрес поставщика делегирует указанную сумму energy адресу покупателя на указанный период.
 
 ```
 Provider stakes 1,000,000 TRX
@@ -221,9 +221,9 @@ Provider stakes 1,000,000 TRX
   -> TRX remains staked (principal preserved)
 ```
 
-### Duration Options
+### Варианты продолжительности
 
-Most providers offer multiple duration tiers:
+Большинство поставщиков предлагают несколько уровней продолжительности:
 
 ```
 1 hour      Cheapest per-unit price, ideal for single transactions
@@ -234,11 +234,11 @@ Most providers offer multiple duration tiers:
 30 days     Best rates, requires confidence in demand
 ```
 
-The optimal duration depends on your usage pattern. If you process 10 USDT transfers per day, a 24-hour rental of 650,000 energy is more cost-effective than ten separate 1-hour rentals of 65,000 energy each.
+Оптимальная продолжительность зависит от вашей схемы использования. Если вы обрабатываете 10 переводов USDT в день, 24-часовая аренда 650,000 energy более рентабельна, чем десять отдельных часовых аренд по 65,000 energy каждая.
 
-### Price Discovery
+### Обнаружение цены
 
-Energy prices fluctuate based on supply and demand. Typical price ranges as of early 2026:
+Цены на energy колеблются в зависимости от предложения и спроса. Типичные диапазоны цен по состоянию на начало 2026 года:
 
 ```
 1-hour rental:      25 - 40 SUN per energy unit
@@ -247,15 +247,15 @@ Energy prices fluctuate based on supply and demand. Typical price ranges as of e
 30-day rental:      10 - 25 SUN per energy unit
 ```
 
-Prices are lowest during off-peak hours (roughly 00:00-08:00 UTC) and highest during peak transaction periods. The MERX price monitor captures these fluctuations across all providers every 30 seconds.
+Цены самые низкие в часы низкого спроса (примерно 00:00-08:00 UTC) и самые высокие в период пиковых транзакций. Монитор цен MERX фиксирует эти колебания у всех поставщиков каждые 30 секунд.
 
-## Decision Framework: Choosing Your Resource Strategy
+## Фреймворк решений: выбор вашей стратегии ресурсов
 
-### Low Volume (1-10 transactions/day)
+### Низкий объём (1-10 транзакций в день)
 
-**Recommended strategy: Rent per transaction through MERX**
+**Рекомендуемая стратегия: аренда за транзакцию через MERX**
 
-At low volume, the simplest approach is to buy energy for each transaction as needed. The overhead of staking or maintaining long-duration rentals is not justified.
+При низком объёме самый простой подход — покупать energy для каждой транзакции по мере необходимости. Накладные расходы на стейкинг или поддержание длительных аренд не оправданы.
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -277,11 +277,11 @@ const order = await merx.createOrder({
 });
 ```
 
-### Medium Volume (10-100 transactions/day)
+### Средний объём (10-100 транзакций в день)
 
-**Recommended strategy: Daily energy rentals with buffer**
+**Рекомендуемая стратегия: дневная аренда energy с буфером**
 
-Buy a 24-hour energy rental sized for your expected daily volume plus a 20% buffer. This gives you a lower per-unit price than hourly rentals and avoids the overhead of per-transaction purchases.
+Покупайте 24-часовую аренду energy, рассчитанную на ожидаемый ежедневный объём плюс буфер в 20%. Это даёт вам более низкую цену за единицу, чем часовые аренды, и избегает накладных расходов на покупку за транзакцию.
 
 ```
 Daily USDT transfers:     50
@@ -291,11 +291,11 @@ With 20% buffer:          3,900,000
 Duration:                 24 hours
 ```
 
-### High Volume (100+ transactions/day)
+### Высокий объём (100+ транзакций в день)
 
-**Recommended strategy: Weekly or monthly rentals with standing orders**
+**Рекомендуемая стратегия: недельная или месячная аренда с постоянными заказами**
 
-At high volume, longer durations offer the best per-unit pricing. Use MERX standing orders to automatically purchase energy when prices drop below your threshold:
+При высоком объёме более длительные периоды предлагают лучшую цену за единицу. Используйте постоянные заказы MERX для автоматической покупки energy, когда цены упадут ниже вашего порога:
 
 ```typescript
 // Standing order: auto-buy when price drops below 25 SUN
@@ -307,37 +307,38 @@ await merx.createStandingOrder({
 });
 ```
 
-### Enterprise / Infrastructure
+### Предприятие / инфраструктура
 
-**Recommended strategy: Hybrid staking + rental**
+**Рекомендуемая стратегия: гибридный стейкинг + аренда**
 
-For infrastructure operators processing thousands of transactions daily, a combination of self-staking (for baseline capacity) and market rentals (for burst capacity) provides the best economics and reliability:
+Для операторов инфраструктуры, обрабатывающих тысячи транзакций ежедневно, комбинация самостейкинга (для базовой ёмкости) и рыночной аренды (для пиковой ёмкости) обеспечивает лучшую экономику и надёжность:
 
 ```
 Baseline (staked):    Cover 60% of average daily energy need
 Burst (rented):       Cover remaining 40% + spikes via MERX
 ```
 
-This ensures resource availability even during market disruptions while keeping capital efficiency reasonable.
+Это гарантирует доступность ресурсов даже во время нарушений на рынке, сохраняя при этом разумную эффективность капитала.
 
-## Monitoring and Optimization
+## Мониторинг и оптимизация
 
-Whatever strategy you choose, monitor your actual energy consumption against your estimates. MERX provides tools for this:
+Какую бы стратегию вы ни выбрали, мониторьте ваше фактическое потребление energy в сравнении с вашими оценками. MERX предоставляет инструменты для этого:
 
-- **Price history API**: Track how energy prices change over time
-- **Order history**: Review what you have paid and optimize
-- **WebSocket price feeds**: React to price movements in real time
-- **Delegation monitors**: Get notified when your delegated energy is about to expire
+- **API истории цен**: отслеживайте, как цены на energy меняются со временем
+- **История заказов**: проверьте, сколько вы заплатили, и оптимизируйте
+- **WebSocket потоки цен**: реагируйте на изменения цен в режиме реального времени
+- **Мониторы делегирования**: получайте уведомления, когда ваша делегированная energy вот-вот истечёт
 
-The TRON resource model rewards developers who understand it. Energy costs dominate transaction economics, and the difference between burning TRX at the protocol level and renting energy at market rates is consistently 90% or more. Whether you rent per transaction, buy daily blocks, or self-stake, the key is to never let a transaction burn TRX that could have been covered by rented energy.
+Модель ресурсов TRON вознаграждает разработчиков, которые её понимают. Затраты на energy определяют экономику транзакций, и разница между сжиганием TRX на уровне протокола и арендой energy по рыночным ставкам постоянно составляет 90% или больше. Будь то аренда за транзакцию, покупка дневных блоков или самостейкинг, ключ заключается в том, чтобы никогда не допустить, чтобы транзакция сожгла TRX, который мог бы быть покрыт арендованной energy.
 
-Full documentation: [https://merx.exchange/docs](https://merx.exchange/docs)
-Platform: [https://merx.exchange](https://merx.exchange)
-MCP server: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+Полная документация: [https://merx.exchange/docs](https://merx.exchange/docs)
+Платформа: [https://merx.exchange](https://merx.exchange)
+MCP сервер: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте сейчас с AI
+
+Добавьте MERX в Claude Desktop или любого MCP-совместимого клиента — без установки, без ключа API для инструментов только для чтения:
 
 ```json
 {
@@ -349,6 +350,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Попросите вашего AI агента: "What is the cheapest TRON energy right now?" и получите живые цены от всех подключённых поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

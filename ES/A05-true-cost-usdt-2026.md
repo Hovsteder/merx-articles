@@ -1,281 +1,282 @@
 # El costo real de las transferencias de USDT en TRON en 2026
 
-Tether (USDT) en TRON procesa mas transacciones diarias que cualquier otra stablecoin en cualquier blockchain. La razon es directa: TRON ofrece comisiones mas bajas y confirmaciones mas rapidas que Ethereum. Pero "mas bajo" no significa "gratis", y el costo real de una transferencia de USDT en 2026 depende enteramente de como gestione el modelo de recursos de TRON.
+Tether (USDT) en TRON procesa más transacciones diarias que cualquier otro stablecoin en cualquier blockchain. La razón es directa: TRON ofrece tarifas más bajas y confirmaciones más rápidas que Ethereum. Pero "más bajo" no significa "gratuito", y el costo real de una transferencia de USDT en 2026 depende completamente de cómo gestiones el modelo de recursos de TRON.
 
-Este articulo desglosa los numeros reales. Sin afirmaciones vagas sobre "comisiones bajas" - calcularemos el costo exacto por transferencia en cada escenario, en cada nivel de volumen, usando datos reales de mercado de principios de 2026.
-
----
-
-## Por que las transferencias de USDT cuestan algo
-
-Una transferencia de USDT en TRON es una llamada a un contrato inteligente. Especificamente, invoca la funcion `transfer(address,uint256)` en el contrato USDT TRC-20. Esta operacion consume dos recursos de red:
-
-- **Energia**: aproximadamente 65,000 unidades por transferencia
-- **Ancho de banda**: aproximadamente 350 bytes por transferencia
-
-Si no dispone de estos recursos a traves de staking o alquiler, la red TRON quema TRX de su cuenta para cubrirlos. Este es el costo "predeterminado" que la mayoria de los usuarios casuales pagan sin darse cuenta de que existen alternativas mas economicas.
+Este artículo desglosa los números reales. Sin afirmaciones vagas sobre "tarifas bajas" - calcularemos el costo exacto por transferencia en cada escenario, en cada nivel de volumen, utilizando datos de mercado reales de principios de 2026.
 
 ---
 
-## Escenario 1: quemar TRX (sin gestion de recursos)
+## Por qué las transferencias de USDT cuestan algo en absoluto
 
-Cuando envia una transferencia de USDT con cero energia y cero ancho de banda, la red quema TRX para cubrir ambos.
+Una transferencia de USDT en TRON es una llamada a contrato inteligente. Específicamente, invoca la función `transfer(address,uint256)` en el contrato USDT TRC-20. Esta operación consume dos recursos de red:
 
-### Costo de quema de energia
+- **Energy**: aproximadamente 65.000 unidades por transferencia
+- **Bandwidth**: aproximadamente 350 bytes por transferencia
 
-El precio de quema de energia en TRON lo establece la gobernanza de la red. A principios de 2026, el costo efectivo de quemar TRX por energia es de aproximadamente **420 SUN por unidad de energia**.
+Si no tienes estos recursos disponibles a través de staking o alquiler, la red TRON quema TRX de tu cuenta para cubrirlos. Este es el costo "predeterminado" que la mayoría de usuarios casuales pagan sin darse cuenta de que existen alternativas más económicas.
+
+---
+
+## Escenario 1: Quemar TRX (Sin gestión de recursos)
+
+Cuando envías una transferencia de USDT sin energía ni bandwidth, la red quema TRX para cubrir ambos.
+
+### Costo de quema de energía
+
+El precio de quema de energía en TRON se establece por gobernanza de red. A principios de 2026, el costo efectivo de quemar TRX por energía es aproximadamente **420 SUN por unidad de energía**.
 
 ```
-65,000 energia x 420 SUN = 27,300,000 SUN = 27.3 TRX
+65.000 energía x 420 SUN = 27.300.000 SUN = 27,3 TRX
 ```
 
-### Costo de quema de ancho de banda
+### Costo de quema de bandwidth
 
-Los costos de quema de ancho de banda son menores pero estan presentes:
+Los costos de quema de bandwidth son más bajos pero aún presentes:
 
 ```
-350 bytes x 1,000 SUN/byte = 350,000 SUN = 0.35 TRX
+350 bytes x 1.000 SUN/byte = 350.000 SUN = 0,35 TRX
 ```
 
 ### Costo total de quema por transferencia
 
 ```
-Quema de energia:     27.30 TRX
-Quema de ancho de banda: 0.35 TRX
+Quema de energía:    27,30 TRX
+Quema de bandwidth:   0,35 TRX
 --------------------------
-Total:               27.65 TRX
+Total:               27,65 TRX
 ```
 
-A un precio de TRX de $0.25, eso es aproximadamente **$6.91 por transferencia de USDT**.
+A un precio de TRX de $0,25, eso es aproximadamente **$6,91 por transferencia de USDT**.
 
-Este es el precio que sorprende a la gente. La reputacion de TRON de "transferencias baratas" se basa en la suposicion de que usted esta gestionando sus recursos. Sin gestion, una sola transferencia de USDT cuesta casi $7, comparable a Ethereum durante periodos de gas bajo.
+Este es el precio de etiqueta que sorprende a la gente. La reputación de TRON de transferencias "económicas" se basa en la suposición de que estás gestionando tus recursos. Sin gestión, una sola transferencia de USDT cuesta casi $7 - comparable a Ethereum durante períodos de gas bajo.
 
 ---
 
-## Escenario 2: staking de su propio TRX
+## Escenario 2: Hacer staking de tu propio TRX
 
-Bajo el sistema Stake 2.0 de TRON, puede bloquear TRX para recibir energia. La energia se regenera en 24 horas, dandole un presupuesto diario.
+Bajo el sistema Stake 2.0 de TRON, puedes bloquear TRX para recibir energía. La energía se regenera cada 24 horas, dándote un presupuesto diario.
 
-### Proporciones actuales de staking
+### Ratios de staking actuales
 
-A principios de 2026, la proporcion aproximada de staking es:
+A principios de 2026, el ratio de staking aproximado es:
 
 ```
-~36,000 TRX en staking = ~65,000 energia/dia = 1 transferencia de USDT/dia
+~36.000 TRX bloqueados = ~65.000 energía/día = 1 transferencia de USDT/día
 ```
 
-Esta proporcion fluctua a medida que cambia el staking total de la red. Cuando se pone mas TRX en staking a nivel de toda la red, necesita mas TRX para obtener la misma participacion de energia.
+Este ratio fluctúa a medida que cambia el stake total de la red. Cuando más TRX se bloquea en toda la red, necesitas más TRX para obtener la misma cuota de energía.
 
-### Analisis de costos del staking
+### Análisis de costo para staking
 
 El costo del staking es el costo de oportunidad del capital bloqueado:
 
-| Transferencias diarias | TRX requerido | Capital (a $0.25) | Costo de oportunidad anual (5%) |
-|----------------|-------------|-------------------|--------------------------|
-| 1 | 36,000 | $9,000 | $450 |
-| 10 | 360,000 | $90,000 | $4,500 |
-| 100 | 3,600,000 | $900,000 | $45,000 |
-| 1,000 | 36,000,000 | $9,000,000 | $450,000 |
+| Transferencias diarias | TRX requeridos | Capital (a $0,25) | Costo de oportunidad anual (5%) |
+|----------------------|----------------|-------------------|--------------------------------|
+| 1 | 36.000 | $9.000 | $450 |
+| 10 | 360.000 | $90.000 | $4.500 |
+| 100 | 3.600.000 | $900.000 | $45.000 |
+| 1.000 | 36.000.000 | $9.000.000 | $450.000 |
 
 Consideraciones adicionales:
 
-- **Periodo de bloqueo**: 14 dias para retirar el staking. Su capital es iliquido durante este periodo.
-- **Riesgo del precio de TRX**: si TRX cae 20% mientras esta en staking, pierde valor del capital mas alla del costo de oportunidad.
-- **Sin acumulacion**: la energia se regenera diariamente. No puede guardar energia no utilizada para dias ocupados.
+- **Período de bloqueo**: 14 días para desbloquear. Tu capital está ilíquido durante este período.
+- **Riesgo de precio de TRX**: Si TRX cae un 20% mientras está bloqueado, pierdes valor de capital más allá del costo de oportunidad.
+- **Sin acumulación**: La energía se regenera diariamente. No puedes ahorrar energía sin usar para días ocupados.
 
-### Costo efectivo por transferencia (staking)
+### Costo efectivo por transferencia (Staking)
 
-Si contabilizamos el costo de oportunidad del capital a un retorno anual del 5%:
+Si contabilizamos el costo de oportunidad del capital al 5% de retorno anual:
 
 ```
-1 transferencia/dia:    $450/ano / 365 = $1.23/transferencia
-10 transferencias/dia:  $4,500/ano / 3,650 = $1.23/transferencia
-100 transferencias/dia: $45,000/ano / 36,500 = $1.23/transferencia
+1 transferencia/día:    $450/año / 365 = $1,23/transferencia
+10 transferencias/día:  $4.500/año / 3.650 = $1,23/transferencia
+100 transferencias/día: $45.000/año / 36.500 = $1,23/transferencia
 ```
 
-El costo por transferencia es constante porque la relacion es lineal. Necesita proporcionalmente mas TRX para proporcionalmente mas transferencias. A $1.23 por transferencia, el staking es significativamente mas barato que quemar ($6.91) pero sigue siendo sustancial.
+El costo por transferencia es constante porque la relación es lineal. Necesitas proporcionalmente más TRX para proporcionalmente más transferencias. A $1,23 por transferencia, el staking es significativamente más económico que quemar ($6,91) pero aún sustancial.
 
 ---
 
-## Escenario 3: alquilar energia de un unico proveedor
+## Escenario 3: Alquilar energía de un único proveedor
 
-El mercado de alquiler de energia en TRON consiste en multiples proveedores que ponen en staking grandes cantidades de TRX y delegan energia a clientes por una tarifa. Los principales proveedores en 2026 incluyen TronSave, Feee, itrx, CatFee, Netts, SoHu y otros.
+El mercado de alquiler de energía en TRON consiste en múltiples proveedores que bloquean grandes cantidades de TRX y delegan energía a clientes por una tarifa. Los principales proveedores en 2026 incluyen TronSave, Feee, itrx, CatFee, Netts, SoHu y otros.
 
-### Precios actuales de proveedores (principios de 2026)
+### Precios actuales de proveedores (Principios de 2026)
 
-Los precios de los proveedores varian segun duracion, volumen y condiciones de mercado:
+Los precios de los proveedores varían según duración, volumen y condiciones de mercado:
 
-| Duracion | Rango de precio tipico (SUN/energia) | Costo por transferencia (TRX) |
-|----------|--------------------------------|------------------------|
-| 1 hora | 80-130 SUN | 5.20-8.45 TRX |
-| 1 dia | 85-120 SUN | 5.53-7.80 TRX |
-| 3 dias | 90-115 SUN | 5.85-7.48 TRX |
-| 7 dias | 95-125 SUN | 6.18-8.13 TRX |
-| 30 dias | 100-140 SUN | 6.50-9.10 TRX |
+| Duración | Rango de precio típico (SUN/energía) | Costo por transferencia (TRX) |
+|----------|--------------------------------------|------------------------------|
+| 1 hora | 80-130 SUN | 5,20-8,45 TRX |
+| 1 día | 85-120 SUN | 5,53-7,80 TRX |
+| 3 días | 90-115 SUN | 5,85-7,48 TRX |
+| 7 días | 95-125 SUN | 6,18-8,13 TRX |
+| 30 días | 100-140 SUN | 6,50-9,10 TRX |
 
-Las duraciones mas cortas son generalmente mas baratas por unidad porque el capital del proveedor esta bloqueado por menos tiempo. Sin embargo, las duraciones mas cortas significan renovaciones mas frecuentes y mayor complejidad operativa.
+Las duraciones más cortas generalmente son más económicas por unidad porque el capital del proveedor se bloquea durante menos tiempo. Sin embargo, duraciones más cortas significan más renovaciones frecuentes y más complejidad operativa.
 
-### El problema del proveedor unico
+### El problema del proveedor único
 
-Cuando se integra con un proveedor, obtiene el precio y la disponibilidad de ese proveedor. Si estan sin stock, tienen tiempo de inactividad o aumentan precios, no tiene alternativa. Esto es aceptable para uso aficionado pero inaceptable para sistemas de produccion.
+Cuando te integras con un proveedor, obtienes el precio y disponibilidad de ese proveedor. Si se quedan sin existencias, tienen tiempo de inactividad o suben los precios, no tienes alternativa. Esto está bien para uso aficionado pero inaceptable para sistemas de producción.
 
 ---
 
-## Escenario 4: alquilar via agregacion de MERX
+## Escenario 4: Alquiler a través de agregación MERX
 
-MERX agrega todos los principales proveedores de energia en una sola API y enruta ordenes a la opcion mas barata disponible en tiempo real. El monitor de precios consulta a cada proveedor cada 30 segundos, manteniendo un flujo de precios en vivo.
+MERX agrega todos los principales proveedores de energía en una sola API y enruta órdenes a la opción más económica disponible en tiempo real. El monitor de precios consulta a cada proveedor cada 30 segundos, manteniendo un feed de precios en vivo.
 
-### Enrutamiento al mejor precio de MERX
+### Enrutamiento de mejor precio de MERX
 
-En lugar de obtener el precio de un proveedor, obtiene el mejor precio entre todos los proveedores en el momento de su orden:
+En lugar de obtener el precio de un proveedor, obtienes el mejor precio en todos los proveedores en el momento de tu orden:
 
 ```
-Mejor precio disponible (principios 2026): ~80-90 SUN/energia
-Costo por transferencia: ~5.20-5.85 TRX
+Mejor precio disponible (principios de 2026): ~80-90 SUN/energía
+Costo por transferencia: ~5,20-5,85 TRX
 ```
 
-A $0.25/TRX, eso es aproximadamente **$1.30-$1.46 por transferencia de USDT**.
+A $0,25/TRX, eso es aproximadamente **$1,30-$1,46 por transferencia de USDT**.
 
 ### Precios por volumen de MERX
 
-Para usuarios de alto volumen, los ahorros se multiplican:
+Para usuarios de alto volumen, los ahorros se componen:
 
-| Transferencias diarias | Costo mensual (quema) | Costo mensual (MERX) | Ahorro mensual |
-|----------------|--------------------|--------------------|----------------|
-| 10 | $2,073 | $420 | $1,653 (80%) |
-| 50 | $10,365 | $2,100 | $8,265 (80%) |
-| 100 | $20,730 | $4,200 | $16,530 (80%) |
-| 500 | $103,650 | $21,000 | $82,650 (80%) |
-| 1,000 | $207,300 | $42,000 | $165,300 (80%) |
+| Transferencias diarias | Costo mensual (Quemar) | Costo mensual (MERX) | Ahorros mensuales |
+|----------------------|----------------------|----------------------|-------------------|
+| 10 | $2.073 | $420 | $1.653 (80%) |
+| 50 | $10.365 | $2.100 | $8.265 (80%) |
+| 100 | $20.730 | $4.200 | $16.530 (80%) |
+| 500 | $103.650 | $21.000 | $82.650 (80%) |
+| 1.000 | $207.300 | $42.000 | $165.300 (80%) |
 
-MERX actualmente opera con cero comision para adoptantes tempranos, lo que significa que paga exactamente el precio mayorista del proveedor sin ningun recargo.
+MERX actualmente opera sin comisión para usuarios tempranos, lo que significa que pagas exactamente el precio mayorista del proveedor sin margen.
 
 ---
 
-## Proyecciones de costo mensual: el panorama completo
+## Proyecciones de costo mensual: el cuadro completo
 
-Pongamos los cuatro escenarios lado a lado para un negocio que realiza 100 transferencias de USDT por dia:
+Pongamos los cuatro escenarios lado a lado para un negocio que realiza 100 transferencias de USDT por día:
 
 ```
-Transferencias mensuales: 3,000
+Transferencias mensuales: 3.000
 
 Escenario 1 - Quemar todo:
-  3,000 x 27.65 TRX = 82,950 TRX = $20,738/mes
+  3.000 x 27,65 TRX = 82.950 TRX = $20.738/mes
 
-Escenario 2 - Staking de su propio TRX:
-  Capital requerido: 3,600,000 TRX ($900,000)
-  Costo de oportunidad: $3,750/mes
-  Costos de ancho de banda: ~$26/mes
-  Total: ~$3,776/mes
+Escenario 2 - Hacer staking de tu propio TRX:
+  Capital requerido: 3.600.000 TRX ($900.000)
+  Costo de oportunidad: $3.750/mes
+  Costos de bandwidth: ~$26/mes
+  Total: ~$3.776/mes
 
-Escenario 3 - Proveedor unico (promedio):
-  3,000 x 6.50 TRX = 19,500 TRX = $4,875/mes
+Escenario 3 - Proveedor único (promedio):
+  3.000 x 6,50 TRX = 19.500 TRX = $4.875/mes
 
 Escenario 4 - MERX (mejor precio):
-  3,000 x 5.50 TRX = 16,500 TRX = $4,125/mes
+  3.000 x 5,50 TRX = 16.500 TRX = $4.125/mes
 ```
 
-### Que escenario gana
+### ¿Qué escenario gana?
 
-Depende de sus restricciones:
+Depende de tus restricciones:
 
-- **Menor costo continuo**: staking, si tiene $900,000 en TRX y puede tolerar el riesgo de precio y la iliquidez.
-- **Menor requisito de capital + menor costo**: agregacion de MERX, requiriendo solo un saldo de deposito (sin capital bloqueado).
-- **Integracion mas simple**: MERX, con una sola API reemplazando multiples integraciones de proveedores.
-- **Peor opcion**: quemar. No hay escenario donde quemar tenga sentido financiero para transferencias regulares.
+- **Costo continuo más bajo**: Staking, si tienes $900.000 en TRX y puedes tolerar el riesgo de precio e iliquidez.
+- **Menor requisito de capital + costo más bajo**: Agregación MERX, requiriendo solo un saldo de depósito (sin capital bloqueado).
+- **Integración más simple**: MERX, con una sola API reemplazando múltiples integraciones de proveedores.
+- **Peor opción**: Quemar. No existe escenario donde quemar tenga sentido financiero para transferencias regulares.
 
 ---
 
-## Costos ocultos que la mayoria de calculadoras omiten
+## Costos ocultos que la mayoría de calculadores ignoran
 
-### El ancho de banda no es gratuito a volumen
+### El bandwidth no es gratis en volumen
 
-Los 600 de ancho de banda gratuitos por dia cubren aproximadamente una o dos transferencias simples. A 100 transferencias de USDT por dia (350 bytes cada una), necesita 35,000 bytes de ancho de banda diariamente. Despues de los 600 gratuitos, quema TRX por el resto:
+El bandwidth gratis de 600 diarios cubre aproximadamente una o dos transferencias simples. Con 100 transferencias de USDT por día (350 bytes cada una), necesitas 35.000 bytes de bandwidth diarios. Después de los 600 gratis, quemas TRX por el resto:
 
 ```
-34,400 bytes x 1,000 SUN = 34,400,000 SUN = 34.4 TRX/dia
-Mensual: ~1,032 TRX = ~$258
+34.400 bytes x 1.000 SUN = 34.400.000 SUN = 34,4 TRX/día
+Mensual: ~1.032 TRX = ~$258
 ```
 
-No es enorme, pero tampoco es cero. La mayoria de calculadoras de costos ignoran esto por completo.
+No es enorme, pero tampoco es cero. La mayoría de calculadores de costo ignoran esto completamente.
 
 ### Costos de transacciones fallidas
 
-En TRON, las transacciones fallidas aun consumen ancho de banda (pero no energia). Si su aplicacion tiene una tasa de fallo del 2%, esta pagando costos de ancho de banda por transacciones que no logran nada.
+En TRON, las transacciones fallidas aún consumen bandwidth (pero no energía). Si tu aplicación tiene una tasa de fallo del 2%, estás pagando costos de bandwidth por transacciones que no logran nada.
 
 ### Volatilidad de precios
 
-Todos los costos denominados en TRX estan sujetos a las fluctuaciones del precio de TRX. Un aumento del 20% en el precio de TRX aumenta sus costos en USD un 20%. MERX muestra precios tanto en SUN como en USD para ayudarlo a rastrear costos reales.
+Todos los costos denominados en TRX están sujetos a fluctuaciones de precio de TRX. Un aumento del 20% en el precio de TRX aumenta tus costos en USD en un 20%. MERX muestra precios tanto en SUN como en USD para ayudarte a rastrear costos reales.
 
-### Integracion y mantenimiento
+### Integración y mantenimiento
 
-Si se integra directamente con multiples proveedores, asume el costo de mantener esas integraciones: cambios de API, manejo de tiempos de inactividad, particularidades especificas de cada proveedor. MERX abstrae esto, pero vale la pena cuantificarlo si esta evaluando construir versus comprar.
+Si te integras directamente con múltiples proveedores, asumes el costo de mantener esas integraciones: cambios de API, manejo de tiempo de inactividad, características específicas del proveedor. MERX abstrae esto, pero vale la pena cuantificarlo si estás evaluando construir versus comprar.
 
 ---
 
-## Estrategias de optimizacion de costos
+## Estrategias de optimización de costos
 
-### 1. Nunca quemar
+### 1. Nunca quemes
 
-Esta es la optimizacion de mayor impacto. Pasar de quemar a cualquier forma de adquisicion de energia (staking, alquiler o agregacion) ahorra aproximadamente 80%.
+Esta es la optimización de mayor impacto. Pasar de quemar a cualquier forma de obtención de energía (staking, alquiler o agregación) ahorra aproximadamente el 80%.
 
-### 2. Agrupar cuando sea posible
+### 2. Agrupa cuando sea posible
 
-Si su aplicacion puede agrupar transferencias (por ejemplo, procesar retiros cada hora en lugar de bajo demanda), puede alquilar energia en bloques que se alineen con su calendario de lotes. Los alquileres de energia de una hora son tipicamente los mas baratos por unidad.
+Si tu aplicación puede agrupar transferencias (por ejemplo, procesar retiros cada hora en lugar de bajo demanda), puedes alquilar energía en bloques que se alineen con tu horario de lotes. Los alquileres de energía de una hora son típicamente los más económicos por unidad.
 
-### 3. Usar un agregador
+### 3. Usa un agregador
 
-Incluso si tiene un proveedor preferido, enrutar a traves de un agregador como MERX asegura que automaticamente obtenga el mejor precio cuando su proveedor preferido esta caro o no disponible.
+Incluso si tienes un proveedor preferido, enrutar a través de un agregador como MERX asegura que automáticamente obtengas el mejor precio cuando tu proveedor preferido es caro o no está disponible.
 
-### 4. Monitorear y adaptar
+### 4. Monitorea y adapta
 
-Los precios de energia fluctuan segun la demanda de la red. MERX proporciona historial de precios y feeds de precios por WebSocket para que pueda programar operaciones no urgentes para periodos de precios bajos:
+Los precios de energía fluctúan según la demanda de la red. MERX proporciona historial de precios y feeds de precios WebSocket para que puedas programar operaciones no urgentes durante períodos de precios bajos:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
-const client = new MerxClient({ apiKey: 'your-key' });
+const client = new MerxClient({ apiKey: 'tu-clave' });
 
-// Get current best price
+// Obtén el mejor precio actual
 const prices = await client.getPrices({ energy: 65000 });
-console.log(`Best price: ${prices.bestPrice.perUnit} SUN/energy`);
+console.log(`Mejor precio: ${prices.bestPrice.perUnit} SUN/energía`);
 
-// Get price history for analysis
+// Obtén historial de precios para análisis
 const history = await client.getPriceHistory({ period: '24h' });
 ```
 
-Documentacion del SDK y la API: [https://merx.exchange/docs](https://merx.exchange/docs)
+Documentación de SDK y API: [https://merx.exchange/docs](https://merx.exchange/docs)
 
-### 5. Configurar ordenes permanentes
+### 5. Establece órdenes permanentes
 
-Para necesidades recurrentes predecibles, las ordenes permanentes de MERX adquieren automaticamente energia a su precio objetivo o por debajo de el:
+Para necesidades recurrentes predecibles, las órdenes permanentes de MERX procuran automáticamente energía en o por debajo de tu precio objetivo:
 
 ```typescript
 await client.createStandingOrder({
   energy: 65000,
-  maxPrice: 90, // SUN per energy unit
+  maxPrice: 90, // SUN por unidad de energía
   frequency: 'daily',
-  targetAddress: 'your-tron-address'
+  targetAddress: 'tu-direccion-tron'
 });
 ```
 
 ---
 
-## La conclusion
+## La conclusión
 
-El costo real de una transferencia de USDT en TRON en 2026 no es un numero unico. Varia desde $1.30 (alquiler optimizado y agregado) hasta $6.91 (quema ingenua), una diferencia de 5x determinada enteramente por como gestione el modelo de recursos de TRON.
+El costo real de una transferencia de USDT en TRON en 2026 no es un número único. Oscila entre $1,30 (alquiler optimizado y agregado) y $6,91 (quema ingenua), una diferencia de 5x determinada completamente por cómo gestiones el modelo de recursos de TRON.
 
-Para cualquier aplicacion que realice mas de un punado de transferencias por dia, la eleccion es clara: deje de quemar TRX por energia. Los ahorros incluso del alquiler basico de energia son dramaticos, y la agregacion a traves de MERX lleva los costos a la tasa de mercado mas baja disponible sin complejidad adicional.
+Para cualquier aplicación que realice más que un puñado de transferencias por día, la elección es clara: deja de quemar TRX por energía. Los ahorros de incluso alquiler de energía básico son dramáticos, y la agregación a través de MERX empuja los costos a la tasa de mercado más baja disponible sin complejidad adicional.
 
-Consulte los precios actuales de energia y calcule sus ahorros potenciales en [https://merx.exchange](https://merx.exchange).
+Verifica los precios de energía actuales y calcula tus posibles ahorros en [https://merx.exchange](https://merx.exchange).
 
 ---
 
-*Este articulo es parte de la serie de conocimiento de MERX sobre infraestructura TRON. MERX es el primer exchange de recursos blockchain, agregando todos los principales proveedores de energia en una sola API. Codigo fuente y SDKs disponibles en [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) y [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python).*
+*Este artículo forma parte de la serie de conocimiento de MERX sobre infraestructura de TRON. MERX es el primer intercambio de recursos blockchain, que agrega todos los principales proveedores de energía en una sola API. Código fuente y SDKs disponibles en [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) y [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python).*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -287,6 +288,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía de TRON más económica en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

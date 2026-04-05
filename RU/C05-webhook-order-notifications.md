@@ -1,21 +1,21 @@
-# Интеграция вебхуков: уведомления об исполнении ордеров на energy
+# Интеграция вебхуков: получайте уведомления о заполнении заказов energy
 
-MERX webhooks deliver real-time HTTP notifications when events occur on your account - orders filling, orders failing, deposits arriving, withdrawals completing. This article covers all four event types, the payload format, HMAC-SHA256 signature verification using the `X-Merx-Signature` header, the retry policy with exponential backoff, auto-deactivation after repeated failures, and complete server implementations in Express.js and Flask with signature verification.
+Вебхуки MERX доставляют уведомления в реальном времени через HTTP когда происходят события на вашем аккаунте — заполнение заказов, отказы в заказах, поступления депозитов, завершение снятий средств. Эта статья охватывает все четыре типа событий, формат payload, проверку подписи HMAC-SHA256 используя заголовок `X-Merx-Signature`, политику повторных попыток с экспоненциальной задержкой, автоматическую деактивацию после повторных отказов и полные реализации серверов на Express.js и Flask с проверкой подписи.
 
-## Why Webhooks Instead of Polling
+## Почему вебхуки лучше, чем polling
 
-The alternative to webhooks is polling the `/api/v1/orders/:id` endpoint in a loop, waiting for the status to change from `PENDING` to `FILLED`. This works for simple cases but has clear drawbacks:
+Альтернатива вебхукам — polling эндпоинта `/api/v1/orders/:id` в цикле, ожидание изменения статуса с `PENDING` на `FILLED`. Это работает для простых случаев, но имеет явные недостатки:
 
-- Wasted requests. Most polls return the same unchanged status.
-- Latency. Your application only discovers a state change at the next poll interval.
-- Rate limits. With a 10-request-per-minute limit on the orders endpoint, aggressive polling quickly hits the ceiling.
-- Complexity. Polling logic needs retry handling, timeout management, and state tracking.
+- Потраченные запросы. Большинство polling запросов возвращают неизменный статус.
+- Задержка. Ваше приложение обнаруживает изменение состояния только на следующем интервале polling.
+- Rate limits. С лимитом 10 запросов в минуту на эндпоинт заказов, агрессивный polling быстро достигает потолка.
+- Сложность. Логика polling требует обработку повторных попыток, управление timeout и отслеживание состояния.
 
-Webhooks invert the model. Instead of asking MERX "has anything changed?", MERX tells you the moment something happens. Your server receives an HTTP POST with the full event payload, processes it, and moves on. No polling loops, no wasted requests, no artificial delays.
+Вебхуки инвертируют модель. Вместо вопроса к MERX "что-нибудь изменилось?", MERX сообщает вам сразу же когда что-нибудь произойдёт. Ваш сервер получает HTTP POST с полным payload события, обрабатывает его и идёт дальше. Нет polling циклов, нет потраченных запросов, нет искусственных задержек.
 
-## Creating a Webhook
+## Создание вебхука
 
-You can create webhooks via the REST API or the SDK.
+Вы можете создавать вебхуки через REST API или SDK.
 
 ### REST API
 
@@ -29,7 +29,7 @@ curl -X POST https://merx.exchange/api/v1/webhooks \
   }'
 ```
 
-Response:
+Ответ:
 
 ```json
 {
@@ -44,7 +44,7 @@ Response:
 }
 ```
 
-The `secret` field is a 64-character hex string generated from 32 random bytes. It is returned only in the creation response. Store it securely - you will need it to verify incoming webhook signatures.
+Поле `secret` — это 64-символная шестнадцатеричная строка, сгенерированная из 32 случайных байтов. Оно возвращается только в ответе на создание. Сохраняйте его в безопасности — он вам понадобится для проверки подписей входящих вебхуков.
 
 ### JavaScript SDK
 
@@ -80,11 +80,11 @@ print(f"Secret: {webhook.secret}")  # Store this securely
 
 ## Типы событий
 
-MERX supports four webhook event types. When creating a webhook, you choose which events to subscribe to. You can subscribe to all four or just the ones you need.
+MERX поддерживает четыре типа событий вебхука. При создании вебхука вы выбираете, на какие события подписываться. Вы можете подписаться на все четыре или только на нужные вам.
 
 ### order.filled
 
-Sent when an order has been completely fulfilled. All provider delegations have been confirmed on-chain.
+Отправляется когда заказ полностью исполнен. Все делегирования поставщиков подтверждены на цепи.
 
 ```json
 {
@@ -112,11 +112,11 @@ Sent when an order has been completely fulfilled. All provider delegations have 
 }
 ```
 
-This is the most important event for automated systems. When you receive it, the energy has been delegated and the target address can proceed with its TRON transactions.
+Это наиболее важное событие для автоматизированных систем. Когда вы его получите, energy делегирован и целевой адрес может перейти к своим TRON транзакциям.
 
 ### order.failed
 
-Sent when an order could not be fulfilled. This can happen when all providers are unavailable, capacity is exhausted, or a provider-side error occurs.
+Отправляется когда заказ не может быть исполнен. Это может произойти когда все поставщики недоступны, мощность исчерпана или произойдёт ошибка на стороне поставщика.
 
 ```json
 {
@@ -134,11 +134,11 @@ Sent when an order could not be fulfilled. This can happen when all providers ar
 }
 ```
 
-When an order fails, any reserved balance is refunded. The `refunded` field confirms this, and `refund_amount_sun` shows the amount returned if payment was already deducted.
+Когда заказ отклоняется, любой зарезервированный баланс возвращается. Поле `refunded` подтверждает это, а `refund_amount_sun` показывает сумму возврата, если платёж уже был вычтен.
 
 ### deposit.received
 
-Sent when a deposit to your MERX account has been detected and credited.
+Отправляется когда обнаружен депозит на ваш аккаунт MERX и он зачислен.
 
 ```json
 {
@@ -157,7 +157,7 @@ Sent when a deposit to your MERX account has been detected and credited.
 
 ### withdrawal.completed
 
-Sent when a withdrawal request has been processed and the on-chain transaction is confirmed.
+Отправляется когда запрос на снятие обработан и транзакция на цепи подтверждена.
 
 ```json
 {
@@ -176,25 +176,25 @@ Sent when a withdrawal request has been processed and the on-chain transaction i
 
 ## Проверка подписи
 
-Every webhook delivery includes an `X-Merx-Signature` header containing an HMAC-SHA256 signature of the request body, computed using your webhook secret as the key.
+Каждая доставка вебхука включает заголовок `X-Merx-Signature` содержащий подпись HMAC-SHA256 тела запроса, вычисленную используя ваш секрет вебхука как ключ.
 
-The verification process:
+Процесс проверки:
 
-1. Read the raw request body (before JSON parsing).
-2. Compute HMAC-SHA256 of the raw body using your stored webhook secret.
-3. Compare the computed signature with the `X-Merx-Signature` header value.
-4. If they match, the request is authentic. If not, reject it.
+1. Прочитайте сырое тело запроса (до парсинга JSON).
+2. Вычислите HMAC-SHA256 сырого тела используя ваш сохранённый секрет вебхука.
+3. Сравните вычисленную подпись со значением заголовка `X-Merx-Signature`.
+4. Если они совпадают, запрос аутентичен. Если нет, отклоните его.
 
-This protects against:
-- Forged requests from third parties who do not know your secret.
-- Tampered payloads where the body has been modified in transit.
-- Replay attacks (combined with timestamp validation).
+Это защищает от:
+- Поддельных запросов от третьих сторон которые не знают ваш секрет.
+- Повреждённых payload где тело было изменено при передаче.
+- Атак повторного воспроизведения (в сочетании с проверкой временной метки).
 
-Always use a constant-time comparison function when checking signatures. Standard string equality (`===` or `==`) is vulnerable to timing attacks.
+Всегда используйте функцию сравнения с постоянным временем при проверке подписей. Стандартное сравнение строк (`===` или `==`) уязвимо для timing атак.
 
-## Express.js Webhook Handler
+## Express.js обработчик вебхука
 
-Here is a complete Express.js server that receives and verifies MERX webhooks:
+Вот полный сервер Express.js который получает и проверяет вебхуки MERX:
 
 ```javascript
 import express from 'express'
@@ -293,15 +293,15 @@ app.listen(3000, () => {
 })
 ```
 
-Key implementation details:
+Ключевые детали реализации:
 
-- Use `express.raw({ type: 'application/json' })` instead of `express.json()` for the webhook route. You need the raw bytes for signature computation.
-- Use `crypto.timingSafeEqual()` for constant-time signature comparison.
-- Respond with HTTP 200 as quickly as possible. Do heavy processing asynchronously after acknowledging receipt.
+- Используйте `express.raw({ type: 'application/json' })` вместо `express.json()` для маршрута вебхука. Вам нужны сырые байты для вычисления подписи.
+- Используйте `crypto.timingSafeEqual()` для сравнения подписей с постоянным временем.
+- Отвечайте с HTTP 200 максимально быстро. Выполняйте тяжёлую обработку асинхронно после подтверждения получения.
 
-## Flask Webhook Handler
+## Flask обработчик вебхука
 
-Here is the equivalent implementation in Python using Flask:
+Вот эквивалентная реализация на Python используя Flask:
 
 ```python
 import hashlib
@@ -397,46 +397,46 @@ if __name__ == "__main__":
     app.run(port=3000)
 ```
 
-Key Python-specific details:
+Ключевые детали специфичные для Python:
 
-- Use `request.get_data()` to get the raw request body as bytes.
-- Use `hmac.compare_digest()` for constant-time string comparison. Python's `==` operator is not constant-time.
-- Use `hmac.new()` with `hashlib.sha256` to compute the HMAC.
+- Используйте `request.get_data()` для получения сырого тела запроса как байтов.
+- Используйте `hmac.compare_digest()` для сравнения строк с постоянным временем. Оператор `==` Python не использует постоянное время.
+- Используйте `hmac.new()` с `hashlib.sha256` для вычисления HMAC.
 
 ## Политика повторных попыток
 
-MERX retries failed webhook deliveries using an exponential backoff schedule:
+MERX повторяет отказанные доставки вебхука используя график экспоненциальной задержки:
 
-| Attempt | Delay after failure |
+| Попытка | Задержка после отказа |
 |---------|---------------------|
-| 1       | Immediate           |
-| 2       | 30 seconds          |
-| 3       | 5 minutes           |
+| 1       | Немедленно           |
+| 2       | 30 секунд          |
+| 3       | 5 минут           |
 
-A delivery is considered failed if:
-- Your server does not respond within 10 seconds.
-- Your server returns an HTTP status code outside the 2xx range.
-- The connection cannot be established (DNS failure, connection refused, TLS error).
+Доставка считается отказанной если:
+- Ваш сервер не отвечает в течение 10 секунд.
+- Ваш сервер возвращает статус код HTTP вне диапазона 2xx.
+- Соединение не может быть установлено (сбой DNS, отказ в соединении, ошибка TLS).
 
-After 3 failed attempts for a single event, the event is dropped. No further retries are made for that specific delivery.
+После 3 неудачных попыток для одного события, событие отбрасывается. Нет дальнейших повторных попыток для этой конкретной доставки.
 
-Your webhook handler should:
-- Respond with HTTP 200 within a few seconds. Do heavy processing asynchronously.
-- Be idempotent. The same event may be delivered more than once in edge cases.
-- Log the event payload for debugging if processing fails.
+Ваш обработчик вебхука должен:
+- Отвечать с HTTP 200 в течение нескольких секунд. Выполняйте тяжёлую обработку асинхронно.
+- Быть идемпотентным. Одно и то же событие может быть доставлено более одного раза в граничных случаях.
+- Логировать payload события для отладки если обработка отказана.
 
 ## Автоматическая деактивация
 
-If a webhook endpoint consistently fails, MERX automatically deactivates it to prevent wasting resources on a dead endpoint.
+Если эндпоинт вебхука постоянно отказывает, MERX автоматически деактивирует его чтобы не тратить ресурсы на мёртвый эндпоинт.
 
-The deactivation threshold is based on consecutive failures across multiple events. If your endpoint fails to accept deliveries repeatedly, the webhook's `is_active` flag is set to `false`.
+Порог деактивации основан на последовательных отказах для множества событий. Если ваш эндпоинт повторно не может принять доставки, флаг `is_active` вебхука устанавливается в `false`.
 
-When a webhook is deactivated:
-- No further events are sent to that URL.
-- The webhook still appears in your list with `is_active: false`.
-- You can fix the endpoint issue and create a new webhook.
+Когда вебхук деактивирован:
+- События на этот URL больше не отправляются.
+- Вебхук все ещё появляется в вашем списке с `is_active: false`.
+- Вы можете исправить проблему эндпоинта и создать новый вебхук.
 
-Monitor your webhook status periodically:
+Мониторьте статус вебхука периодически:
 
 ```javascript
 const webhooks = await merx.webhooks.list()
@@ -456,25 +456,25 @@ for wh in webhooks:
 
 ## Управление вебхуками
 
-### Listing Webhooks
+### Список вебхуков
 
 ```bash
 curl -H "X-API-Key: sk_live_your_key_here" \
   https://merx.exchange/api/v1/webhooks
 ```
 
-### Deleting a Webhook
+### Удаление вебхука
 
 ```bash
 curl -X DELETE -H "X-API-Key: sk_live_your_key_here" \
   https://merx.exchange/api/v1/webhooks/wh_abc123
 ```
 
-Note that the webhook secret cannot be retrieved after creation. If you lose the secret, delete the webhook and create a new one.
+Заметьте что секрет вебхука не может быть получен после создания. Если вы потеряли секрет, удалите вебхук и создайте новый.
 
-## Локальное тестирование вебхуков
+## Тестирование вебхуков локально
 
-During development, your webhook URL needs to be publicly accessible. Tools like ngrok can expose a local server:
+Во время разработки URL вебхука должен быть публично доступен. Инструменты вроде ngrok могут открыть локальный сервер:
 
 ```bash
 # Terminal 1: Start your webhook server
@@ -484,23 +484,23 @@ node webhook-server.js
 ngrok http 3000
 ```
 
-Use the ngrok URL (e.g., `https://abc123.ngrok.io/webhooks/merx`) when creating the webhook. Once you verify everything works, replace it with your production URL.
+Используйте URL ngrok (например, `https://abc123.ngrok.io/webhooks/merx`) при создании вебхука. Как только вы проверите что всё работает, замените его на URL вашего production.
 
 ## Лучшие практики
 
-1. Always verify signatures. Never trust webhook payloads without checking the `X-Merx-Signature` header.
+1. Всегда проверяйте подписи. Никогда не доверяйте payload вебхуков без проверки заголовка `X-Merx-Signature`.
 
-2. Respond quickly. Return HTTP 200 within 2-3 seconds. Queue heavy processing for background workers.
+2. Отвечайте быстро. Верните HTTP 200 в течение 2-3 секунд. Поставьте в очередь тяжёлую обработку для фоновых рабочих.
 
-3. Be idempotent. Use the `order_id` or `deposit_id` as a deduplication key. If you receive the same event twice, the second processing should be a no-op.
+3. Будьте идемпотентны. Используйте `order_id` или `deposit_id` как ключ дедупликации. Если вы получите одно и то же событие дважды, вторая обработка должна быть холостой.
 
-4. Store the raw payload. Log the full JSON body before processing. If your handler has a bug, you can replay the events from logs.
+4. Сохраняйте сырой payload. Логируйте полное тело JSON до обработки. Если ваш обработчик имеет баг, вы можете воспроизвести события из логов.
 
-5. Monitor webhook health. Check `is_active` status regularly. Set up alerts if webhooks are deactivated.
+5. Мониторьте здоровье вебхука. Регулярно проверяйте статус `is_active`. Установите оповещения если вебхуки деактивированы.
 
-6. Use HTTPS. MERX requires webhook URLs to use HTTPS. Self-signed certificates are not accepted.
+6. Используйте HTTPS. MERX требует чтобы URL вебхуков использовали HTTPS. Самозаверяющие сертификаты не принимаются.
 
-7. Subscribe selectively. Only subscribe to the events you actually handle. Unnecessary events waste bandwidth and processing time.
+7. Подписывайтесь выборочно. Подписывайтесь только на события которые вы фактически обрабатываете. Ненужные события тратят пропускную способность и время обработки.
 
 ## Ресурсы
 
@@ -510,9 +510,10 @@ Use the ngrok URL (e.g., `https://abc123.ngrok.io/webhooks/merx`) when creating 
 - Python SDK: [pypi.org/project/merx-sdk](https://pypi.org/project/merx-sdk/)
 - MCP Server: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой совместимый MCP клиент — без установки, без API ключей для read-only инструментов:
 
 ```json
 {
@@ -524,6 +525,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Попросите своего AI агента: "Какова самая дешёвая TRON energy прямо сейчас?" и получите живые цены от всех подключённых поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

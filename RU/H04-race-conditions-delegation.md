@@ -1,22 +1,22 @@
-# Состояния гонки при делегировании energy: как мы их решили
+# Состояния гонки в делегировании энергии: как мы их решили
 
-This is a story about a bug that cost 19 TRX per transaction instead of saving 1.43 TRX. It is a story about a race condition that looked correct in tests, worked on testnet, and only revealed itself under mainnet conditions. And it is a story about the fix -- a polling mechanism that waits for on-chain confirmation before allowing a transaction to proceed.
+Это история об ошибке, которая стоила 19 TRX за транзакцию вместо того, чтобы сэкономить 1.43 TRX. Это история о состоянии гонки, которое выглядело правильно в тестах, работало на тестнете и проявилось только в условиях мейннета. И это история о решении — механизме опроса, который ждет подтверждения в сети перед тем, как позволить транзакции продолжиться.
 
-## The Setup
+## Предпосылки
 
-MERX buys energy from providers on behalf of users. The flow, in theory, is straightforward:
+MERX покупает энергию у провайдеров от имени пользователей. Процесс в теории прямолинеен:
 
-1. User requests energy for their address
-2. MERX selects the cheapest provider
-3. Provider delegates energy to the user's address
-4. User executes their transaction with the delegated energy
-5. Transaction consumes the rented energy instead of burning TRX
+1. Пользователь запрашивает энергию для своего адреса
+2. MERX выбирает самого дешевого провайдера
+3. Провайдер делегирует энергию на адрес пользователя
+4. Пользователь выполняет свою транзакцию с делегированной энергией
+5. Транзакция потребляет арендованную энергию вместо сжигания TRX
 
-The critical word is "before." The user's transaction must execute after the delegation is confirmed on-chain. If the transaction broadcasts before the delegation arrives, the transaction will still succeed -- but it will burn TRX at the protocol burn rate instead of consuming the rented energy. The user pays twice: once for the rental, and once through the TRX burn.
+Критическое слово здесь — "до". Транзакция пользователя должна выполниться после подтверждения делегирования в сети. Если транзакция транслируется до того, как делегирование прибудет, транзакция все равно будет успешной — но она будет сжигать TRX по протокольному курсу сжигания вместо потребления арендованной энергии. Пользователь платит дважды: один раз за аренду и один раз через сжигание TRX.
 
-## The Bug
+## Ошибка
 
-The initial implementation followed a sequential pattern:
+Первоначальная реализация следовала последовательному паттерну:
 
 ```typescript
 async function executeWithEnergy(
@@ -41,93 +41,93 @@ async function executeWithEnergy(
 }
 ```
 
-This looks correct. Buy energy, wait for the order to be filled, then execute the transaction. The `waitForOrderStatus` function polled the MERX API until the order status changed to `FILLED`.
+Это выглядит правильно. Купить энергию, ждать, пока ордер будет заполнен, затем выполнить транзакцию. Функция `waitForOrderStatus` опрашивала API MERX до тех пор, пока статус ордера не изменялся на `FILLED`.
 
-The problem is what "FILLED" means. In the MERX system, an order is marked `FILLED` when the provider confirms that it has initiated the delegation. The provider returns a success response: "I have submitted the delegation transaction to the TRON network."
+Проблема в том, что означает "FILLED". В системе MERX ордер отмечается как `FILLED` когда провайдер подтверждает, что инициировал делегирование. Провайдер возвращает успешный ответ: "Я отправил транзакцию делегирования в сеть TRON."
 
-But "submitted" is not "confirmed." The delegation is a TRON transaction that must be included in a block and processed by the network. Between submission and confirmation, there is a window -- typically 3 to 6 seconds, but occasionally longer during network congestion.
+Но "отправлена" не означает "подтверждена". Делегирование — это транзакция TRON, которая должна быть включена в блок и обработана сетью. Между отправкой и подтверждением есть окно — обычно 3-6 секунд, но иногда дольше во время перегрузки сети.
 
-During that window, the target address does not yet have the delegated energy.
+В течение этого окна целевой адрес еще не имеет делегированную энергию.
 
-### What Happened on Mainnet
+### Что произошло на мейннете
 
-The bug manifested exactly as predicted by the race condition:
-
-```
-Timeline:
-
-  T+0.0s    Order created, sent to provider
-  T+0.3s    Provider responds: delegation TX submitted
-  T+0.4s    Order status -> FILLED
-  T+0.5s    User transaction broadcast (USDT transfer)
-  T+0.6s    User TX included in block N
-  T+3.2s    Delegation TX included in block N+1
-
-  Result:
-    - User TX in block N: no delegation exists yet
-    - Energy consumed: 0 (delegation not active)
-    - TRX burned: 65,000 * 420 SUN = 27,300,000 SUN = 27.3 TRX
-    - Energy rental cost: 1,820,000 SUN = 1.82 TRX
-    - Total cost: 29.12 TRX (rental + burn)
-    - Expected cost: 1.82 TRX (rental only)
-```
-
-The user paid 29.12 TRX instead of 1.82 TRX. The energy rental was wasted because the delegation arrived one block too late.
-
-### The Numbers
-
-On TRON mainnet, each block takes approximately 3 seconds. A delegation transaction submitted by the provider goes through the same block inclusion process as any other transaction. If the user's transaction and the delegation transaction are submitted within a few seconds of each other, they may end up in different blocks -- with no guarantee of ordering.
-
-The cost difference is stark:
+Ошибка проявилась ровно так, как предсказала состояние гонки:
 
 ```
-Without delegation (TRX burn):
-  65,000 energy * 420 SUN/energy = 27,300,000 SUN = 27.3 TRX
+Временная шкала:
 
-With delegation (rental):
-  65,000 energy * 28 SUN/energy = 1,820,000 SUN = 1.82 TRX
+  T+0.0s    Ордер создан, отправлен провайдеру
+  T+0.3s    Провайдер отвечает: TX делегирования отправлена
+  T+0.4s    Статус ордера -> FILLED
+  T+0.5s    Транзакция пользователя транслируется (передача USDT)
+  T+0.6s    TX пользователя включена в блок N
+  T+3.2s    TX делегирования включена в блок N+1
 
-Money wasted per race condition occurrence:
-  27.3 + 1.82 = 29.12 TRX total cost
+  Результат:
+    - TX пользователя в блоке N: делегирование еще не существует
+    - Потребленная энергия: 0 (делегирование еще не активно)
+    - Сожжено TRX: 65,000 * 420 SUN = 27,300,000 SUN = 27.3 TRX
+    - Стоимость аренды энергии: 1,820,000 SUN = 1.82 TRX
+    - Общая стоимость: 29.12 TRX (аренда + сжигание)
+    - Ожидаемая стоимость: 1.82 TRX (только аренда)
+```
+
+Пользователь заплатил 29.12 TRX вместо 1.82 TRX. Аренда энергии была потрачена впустую, потому что делегирование прибыло на один блок позже.
+
+### Числа
+
+На мейннете TRON каждый блок занимает примерно 3 секунды. Транзакция делегирования, отправленная провайдером, проходит через тот же процесс включения в блок, что и любая другая транзакция. Если транзакция пользователя и транзакция делегирования отправлены в течение нескольких секунд друг от друга, они могут оказаться в разных блоках — без гарантии порядка.
+
+Разница в стоимости очень велика:
+
+```
+Без делегирования (сжигание TRX):
+  65,000 энергии * 420 SUN/энергия = 27,300,000 SUN = 27.3 TRX
+
+С делегированием (аренда):
+  65,000 энергии * 28 SUN/энергия = 1,820,000 SUN = 1.82 TRX
+
+Потраченные зря деньги за одно возникновение состояния гонки:
+  27.3 + 1.82 = 29.12 TRX общая стоимость
   vs.
-  1.82 TRX expected cost
+  1.82 TRX ожидаемая стоимость
 
-  Overpayment: 27.3 TRX per incident
+  Переплата: 27.3 TRX за инцидент
 ```
 
-On a bad day, this race condition could trigger on 10-20% of orders where the client executed immediately after receiving the FILLED status.
+В плохой день это состояние гонки могло бы срабатывать в 10-20% ордеров, где клиент выполнил сразу после получения статуса FILLED.
 
-## Why Testing Did Not Catch It
+## Почему тестирование это не поймало
 
-### Testnet Behavior
+### Поведение тестнета
 
-On Shasta testnet, block times are similar to mainnet, but network congestion is minimal. Delegation transactions are typically included in the very next block. The window between "submitted" and "confirmed" was consistently under 3 seconds on testnet, and our test harness had a built-in 2-second delay between steps that masked the race condition.
+На тестнете Shasta время блоков похоже на мейннет, но перегрузка сети минимальна. Транзакции делегирования обычно включаются в следующий блок. Окно между "отправкой" и "подтверждением" было постоянно менее 3 секунд на тестнете, и наш тестовый набор имел встроенную 2-секундную задержку между этапами, которая скрывала состояние гонки.
 
-### Sequential Testing
+### Последовательное тестирование
 
-Our integration tests were sequential. One test would buy energy, wait, execute a transaction, and verify. There was never concurrent load, never a race between delegation and execution, never the timing pressure that mainnet produced.
+Наши интеграционные тесты были последовательными. Один тест покупал энергию, ждал, выполнял транзакцию и проверял. Никогда не было параллельной нагрузки, никогда не было гонки между делегированием и выполнением, никогда давления на тайминг, который создавал мейннет.
 
-### The Order Status Trap
+### Ловушка статуса ордера
 
-The most insidious aspect: the order status was technically correct. The order was FILLED -- the provider had accepted and initiated the delegation. The bug was not in the status tracking. It was in the assumption that FILLED meant "energy is available on-chain."
+Самый коварный аспект: статус ордера был технически правилен. Ордер был FILLED — провайдер принял и инициировал делегирование. Ошибка была не в отслеживании статуса. Она была в предположении, что FILLED означает "энергия доступна в сети".
 
-## The Fix
+## Решение
 
-The fix has two parts: a verification step that checks the target address's on-chain resources, and a polling loop that waits until the delegation is actually confirmed.
+Решение состоит из двух частей: шага проверки, который проверяет ресурсы целевого адреса в сети, и цикла опроса, который ждет до тех пор, пока делегирование действительно не будет подтверждено.
 
-### Part 1: check_address_resources
+### Часть 1: check_address_resources
 
-TRON provides an API to check the resources (energy and bandwidth) currently available to any address:
+TRON предоставляет API для проверки ресурсов (энергия и bandwidth) в данный момент доступных для любого адреса:
 
 ```
 GET https://api.trongrid.io/wallet/getaccountresource
 ```
 
-This returns the current energy limit, energy used, bandwidth limit, and bandwidth used for an address. Critically, this reflects the on-chain state -- if a delegation has been confirmed, the energy limit will reflect it. If the delegation is still pending, the energy limit will not include it.
+Это возвращает текущий лимит энергии, использованную энергию, лимит bandwidth и использованный bandwidth для адреса. Критически важно, что это отражает состояние в сети — если делегирование было подтверждено, лимит энергии это отразит. Если делегирование все еще ожидает, лимит энергии это не будет включать.
 
-### Part 2: Poll Until Confirmed
+### Часть 2: опрашивать до подтверждения
 
-The fix replaces the single "wait for FILLED" check with a polling loop that verifies on-chain resources:
+Решение заменяет одну проверку "ждать FILLED" циклом опроса, который проверяет ресурсы в сети:
 
 ```typescript
 async function executeWithEnergy(
@@ -215,91 +215,91 @@ async function checkAddressResources(
 }
 ```
 
-### Why 2-Second Intervals
+### Почему 2-секундные интервалы
 
-The polling interval is 2 seconds. This is chosen based on TRON's 3-second block time:
+Интервал опроса составляет 2 секунды. Это выбрано на основе 3-секундного времени блока TRON:
 
-- Polling every 1 second would result in many redundant checks between blocks
-- Polling every 3 seconds would miss some blocks (clock drift, network latency)
-- Polling every 2 seconds ensures we check within every block cycle
+- Опрашивание каждую 1 секунду приводит к множеству избыточных проверок между блоками
+- Опрашивание каждые 3 секунды может привести к пропуску некоторых блоков (смещение часов, задержка сети)
+- Опрашивание каждые 2 секунды обеспечивает проверку в каждом цикле блока
 
-### Why 15 Attempts
+### Почему 15 попыток
 
-15 attempts at 2-second intervals = 30-second maximum wait time. In practice, the delegation confirms within 1-2 polls (3-6 seconds). The 30-second timeout handles extreme cases:
+15 попыток с интервалом 2 секунды = максимальное время ожидания 30 секунд. На практике делегирование подтверждается в течение 1-2 опросов (3-6 секунд).Timeout 30 секунд обрабатывает экстремальные случаи:
 
-- Network congestion delaying block inclusion
-- Provider submitting the delegation transaction late
-- Temporary RPC node lag
+- Перегрузка сети, задерживающая включение блока
+- Провайдер, отправляющий транзакцию делегирования позже
+- Временное отставание RPC узла
 
-If the delegation is not confirmed after 30 seconds, something is genuinely wrong, and it is safer to fail loudly than to proceed and burn TRX.
+Если делегирование не подтверждено после 30 секунд, что-то действительно не так, и безопаснее выйти с ошибкой, чем продолжить и сжечь TRX.
 
-## Real Mainnet Data
+## Реальные данные мейннета
 
-After deploying the fix, we measured the polling behavior over one week of production traffic:
-
-```
-Delegation confirmation timing:
-
-  Confirmed on first poll (0-2s):     12%
-  Confirmed on second poll (2-4s):    61%
-  Confirmed on third poll (4-6s):     22%
-  Confirmed on fourth poll (6-8s):    4%
-  Confirmed on fifth+ poll (8s+):     1%
-  Timeout (not confirmed in 30s):     0.04%
-
-Average time from order FILLED to on-chain confirmation: 3.1 seconds
-Median: 2.8 seconds
-P99: 8.2 seconds
-```
-
-The data confirms the race condition window: 3.1 seconds on average between the provider's "FILLED" response and on-chain confirmation. Without the polling fix, any transaction executed within that window would have burned TRX.
-
-### Cost Impact
+После развертывания решения мы измеряли поведение опроса в течение одной недели трафика в production:
 
 ```
-Before fix (30 days):
-  Orders affected by race condition:  ~180
-  Average overpayment per incident:   ~19 TRX
-  Total cost of race conditions:      ~3,420 TRX
+Время подтверждения делегирования:
 
-After fix (30 days):
-  Race condition incidents:           0
-  Timeout failures (delegation never confirmed): 2
-    Both caught by the timeout, transaction not executed
-    Orders refunded automatically
+  Подтверждено при первом опросе (0-2s):     12%
+  Подтверждено при втором опросе (2-4s):    61%
+  Подтверждено при третьем опросе (4-6s):     22%
+  Подтверждено при четвертом опросе (6-8s):    4%
+  Подтверждено при пятом+ опросе (8s+):     1%
+  Timeout (не подтверждено в 30s):     0.04%
+
+Среднее время от FILLED ордера до подтверждения в сети: 3.1 секунд
+Медиана: 2.8 секунд
+P99: 8.2 секунд
 ```
 
-The fix eliminated the race condition entirely. The two timeout failures were genuine provider-side issues where the delegation transaction was never submitted -- exactly the cases where you want to fail rather than proceed.
+Данные подтверждают окно состояния гонки: в среднем 3.1 секунды между ответом "FILLED" провайдера и подтверждением в сети. Без исправления опроса любая транзакция, выполненная в течение этого окна, сожгла бы TRX.
 
-## Lessons Learned
+### Влияние на стоимость
 
-### "Submitted" Is Not "Confirmed"
+```
+До исправления (30 дней):
+  Ордеры, затронутые состоянием гонки:  ~180
+  Средняя переплата за инцидент:   ~19 TRX
+  Общая стоимость состояний гонки:      ~3,420 TRX
 
-This is the central lesson. In any system that interacts with a blockchain, there is always a gap between submitting a transaction and that transaction being confirmed on-chain. Any logic that treats submission as confirmation will eventually fail.
+После исправления (30 дней):
+  Инциденты состояния гонки:           0
+  Сбои timeout (делегирование никогда не подтверждено): 2
+    Оба перехвачены timeout, транзакция не выполнена
+    Ордеры возмещены автоматически
+```
 
-### Check the Chain, Not the Service
+Исправление полностью устранило состояние гонки. Два сбоя timeout были подлинными проблемами на стороне провайдера, когда транзакция делегирования никогда не была отправлена — ровно те случаи, когда вы хотите выйти с ошибкой вместо того, чтобы продолжить.
 
-The provider says the delegation is done. MERX says the order is filled. But neither of these statements means the delegation exists on-chain right now. The only authoritative source is the blockchain itself. Check the chain.
+## Уроки, которые мы извлекли
 
-### Testnet Hides Timing Bugs
+### "Отправлена" это не "подтверждена"
 
-Testnets have lower load, faster inclusion, and more predictable behavior. Timing-sensitive bugs that never trigger on testnet will appear on mainnet. If your logic depends on timing between two on-chain events, test it under realistic load conditions.
+Это центральный урок. В любой системе, взаимодействующей с блокчейном, всегда есть разрыв между отправкой транзакции и подтверждением этой транзакции в сети. Любая логика, которая рассматривает отправку как подтверждение, в конечном итоге выйдет из строя.
 
-### Fail Loudly
+### Проверяйте цепь, не сервис
 
-When the polling loop times out, the fix throws an error and prevents the transaction from executing. This is the correct behavior. The alternative -- executing anyway and hoping the delegation arrived -- costs 19 TRX per failure. An error message costs nothing.
+Провайдер говорит, что делегирование сделано. MERX говорит, что ордер заполнен. Но ни одно из этих утверждений не означает, что делегирование существует в сети прямо сейчас. Единственный авторитетный источник — это сам блокчейн. Проверяйте цепь.
 
-## The MERX Implementation
+### Тестнет скрывает ошибки тайминга
 
-The `ensure_resources` tool in the MERX MCP server implements this pattern. When an AI agent calls `ensure_resources` before executing a contract call, the tool:
+Тестнеты имеют меньшую нагрузку, более быстрое включение и более предсказуемое поведение. Ошибки, чувствительные к тайингу, которые никогда не срабатывают на тестнете, будут появляться на мейннете. Если ваша логика зависит от тайминга между двумя событиями в сети, тестируйте ее в условиях реальной нагрузки.
 
-1. Checks current on-chain resources
-2. Calculates the deficit
-3. Purchases exactly the needed energy
-4. Polls until the delegation is confirmed on-chain
-5. Returns success only when resources are verified
+### Выходите с ошибкой громко
 
-The agent never has to implement polling logic itself. The race condition is handled at the platform level.
+Когда цикл опроса истекает по времени, исправление выбрасывает ошибку и предотвращает выполнение транзакции. Это правильное поведение. Альтернатива — выполнить все равно и надеяться, что делегирование пришло — стоит 19 TRX за сбой. Сообщение об ошибке ничего не стоит.
+
+## Реализация MERX
+
+Инструмент `ensure_resources` на сервере MERX MCP реализует этот паттерн. Когда AI агент вызывает `ensure_resources` перед выполнением вызова контракта, инструмент:
+
+1. Проверяет текущие ресурсы в сети
+2. Рассчитывает дефицит
+3. Покупает ровно необходимую энергию
+4. Опрашивает до подтверждения делегирования в сети
+5. Возвращает успех только когда ресурсы проверены
+
+Агенту никогда не нужно реализовывать логику опроса самому. Состояние гонки обрабатывается на уровне платформы.
 
 ```
 Tool: ensure_resources
@@ -316,15 +316,16 @@ Response: {
 }
 ```
 
-The `confirmation_time_ms` field tells the agent how long the polling took. The `status: "confirmed"` means the energy is on-chain and safe to use.
+Поле `confirmation_time_ms` говорит агенту, сколько времени занял опрос. `status: "confirmed"` означает, что энергия в сети и безопасна для использования.
 
-Platform: [https://merx.exchange](https://merx.exchange)
-Documentation: [https://merx.exchange/docs](https://merx.exchange/docs)
-MCP server: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+Платформа: [https://merx.exchange](https://merx.exchange)
+Документация: [https://merx.exchange/docs](https://merx.exchange/docs)
+MCP сервер: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой совместимый с MCP клиент — ноль установки, нет API ключа, необходимого для инструментов только для чтения:
 
 ```json
 {
@@ -336,6 +337,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Попросите вашего AI агента: "Какая самая дешевая энергия TRON прямо сейчас?" и получите живые цены от всех подключенных провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

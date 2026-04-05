@@ -1,43 +1,43 @@
-# Integracion multiplataforma: MERX en su stack existente
+# Integración Multiplataforma: MERX en Tu Stack Existente
 
-Every technology stack is different. Your backend might be Node.js, Go, Python, Ruby, or Java. Your architecture might be monolithic or microservices. Your communication patterns might be synchronous, event-driven, or a combination. The question is not whether MERX can fit into your stack -- it is which integration point gives you the most value with the least friction.
+Cada stack de tecnología es diferente. Tu backend podría ser Node.js, Go, Python, Ruby o Java. Tu arquitectura podría ser monolítica o microservicios. Tus patrones de comunicación podrían ser síncronos, dirigidos por eventos, o una combinación. La pregunta no es si MERX puede encajar en tu stack, sino qué punto de integración te proporciona el máximo valor con la menor fricción.
 
-MERX offers five integration methods: REST API, WebSocket, webhooks, language SDKs, and an MCP server for AI agents. This article explains when to use each, how they interact, and how to choose the right approach for your specific architecture.
+MERX ofrece cinco métodos de integración: REST API, WebSocket, webhooks, SDKs de lenguaje, y un servidor MCP para agentes de IA. Este artículo explica cuándo usar cada uno, cómo interactúan, y cómo elegir el enfoque correcto para tu arquitectura específica.
 
-## Integration Methods Overview
+## Descripción General de Métodos de Integración
 
-| Method | Best For | Direction | Latency | Language |
+| Método | Mejor Para | Dirección | Latencia | Lenguaje |
 |---|---|---|---|---|
-| REST API | Request-response operations | Client -> MERX | ~200ms | Any |
-| WebSocket | Real-time flujo de precioss | MERX -> Client | Real-time | Any |
-| Webhooks | Async notifications | MERX -> Client | Event-driven | Any |
-| JS SDK | Node.js / browser apps | Bidirectional | ~200ms | JavaScript/TypeScript |
-| Python SDK | Python backends, scripts | Bidirectional | ~200ms | Python |
-| MCP Server | AI agent integration | Bidirectional | ~500ms | Any (via MCP protocol) |
+| REST API | Operaciones solicitud-respuesta | Cliente -> MERX | ~200ms | Cualquiera |
+| WebSocket | Feeds de precios en tiempo real | MERX -> Cliente | Tiempo real | Cualquiera |
+| Webhooks | Notificaciones asincrónicas | MERX -> Cliente | Dirigido por eventos | Cualquiera |
+| JS SDK | Aplicaciones Node.js / navegador | Bidireccional | ~200ms | JavaScript/TypeScript |
+| Python SDK | Backends Python, scripts | Bidireccional | ~200ms | Python |
+| Servidor MCP | Integración de agentes de IA | Bidireccional | ~500ms | Cualquiera (vía protocolo MCP) |
 
-## REST API: The Universal Integration
+## REST API: La Integración Universal
 
-The REST API works from any programming language with HTTP support. It is the lowest-common-denominator integration -- if your language can make HTTP requests, it can talk to MERX.
+La REST API funciona desde cualquier lenguaje de programación con soporte HTTP. Es la integración del mínimo común denominador: si tu lenguaje puede hacer solicitudes HTTP, puede comunicarse con MERX.
 
-### When to Use REST
+### Cuándo Usar REST
 
-- Your backend is in a language without an SDK (Go, Java, Ruby, Rust, PHP)
-- You need occasional energy purchases, not continuous interaction
-- Your architecture prefers explicit HTTP calls over persistent connections
-- You are prototyping and want the simplest possible integration
+- Tu backend está en un lenguaje sin SDK (Go, Java, Ruby, Rust, PHP)
+- Necesitas compras ocasionales de energy, no interacción continua
+- Tu arquitectura prefiere llamadas HTTP explícitas sobre conexiones persistentes
+- Estás prototipando y quieres la integración más simple posible
 
-### Implementation
+### Implementación
 
-The API follows standard REST conventions with JSON payloads:
+La API sigue convenciones REST estándar con payloads JSON:
 
 ```bash
-# Check prices
+# Verificar precios
 curl -X POST https://merx.exchange/api/v1/prices \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"energy_amount": 65000, "duration": "1h"}'
 
-# Place an order
+# Colocar una orden
 curl -X POST https://merx.exchange/api/v1/orders \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
@@ -48,12 +48,12 @@ curl -X POST https://merx.exchange/api/v1/orders \
     "target_address": "TYourAddress..."
   }'
 
-# Check order status
+# Verificar el estado de la orden
 curl https://merx.exchange/api/v1/orders/ORDER_ID \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
-### Go Example
+### Ejemplo en Go
 
 ```go
 package main
@@ -107,9 +107,9 @@ func getBestPrice(amount int, duration string) (*PriceResponse, error) {
 }
 ```
 
-### Error Handling
+### Manejo de Errores
 
-All API errors follow a consistent format:
+Todos los errores de API siguen un formato consistente:
 
 ```json
 {
@@ -124,20 +124,20 @@ All API errors follow a consistent format:
 }
 ```
 
-This consistency means your manejo de errores logic works the same regardless of which endpoint you call or which provider is involved behind the scenes.
+Esta consistencia significa que tu lógica de manejo de errores funciona igual sin importar qué endpoint llames o qué proveedor esté involucrado detrás de escenas.
 
-## WebSocket: Real-Time Price Feeds
+## WebSocket: Feeds de Precios en Tiempo Real
 
-WebSocket connections provide tiempo real actualizacion de precioss without polling. Prices stream to your application as they change across all seven providers.
+Las conexiones WebSocket proporcionan actualizaciones de precios en tiempo real sin polling. Los precios se transmiten a tu aplicación a medida que cambian en los siete proveedores.
 
-### When to Use WebSocket
+### Cuándo Usar WebSocket
 
-- You need live price displays (dashboards, trading interfaces)
-- Your application makes purchasing decisions based on price movements
-- You want to trigger actions when prices cross thresholds
-- You are building tiempo real monitoring tools
+- Necesitas pantallas de precios en vivo (dashboards, interfaces de trading)
+- Tu aplicación toma decisiones de compra basadas en movimientos de precios
+- Quieres desencadenar acciones cuando los precios cruzan umbrales
+- Estás construyendo herramientas de monitoreo en tiempo real
 
-### Implementation
+### Implementación
 
 ```typescript
 import WebSocket from 'ws';
@@ -148,7 +148,7 @@ const ws = new WebSocket(
 );
 
 ws.on('open', () => {
-  // Subscribe to price updates for specific parameters
+  // Suscribirse a actualizaciones de precios para parámetros específicos
   ws.send(JSON.stringify({
     type: 'subscribe',
     channel: 'prices',
@@ -178,18 +178,18 @@ ws.on('message', (data) => {
 });
 ```
 
-### Combining WebSocket with REST
+### Combinando WebSocket con REST
 
-A common pattern: use WebSocket for monitor de preciosing and REST for order placement:
+Un patrón común: usar WebSocket para monitoreo de precios y REST para colocación de órdenes:
 
 ```typescript
-// WebSocket monitors prices
+// WebSocket monitorea precios
 ws.on('message', async (data) => {
   const event = JSON.parse(data.toString());
 
   if (event.type === 'price_update' &&
       event.price_sun <= targetPrice) {
-    // REST API places the order
+    // REST API coloca la orden
     const response = await fetch(
       'https://merx.exchange/api/v1/orders',
       {
@@ -209,18 +209,18 @@ ws.on('message', async (data) => {
 });
 ```
 
-## Webhooks: Async Event Notifications
+## Webhooks: Notificaciones de Eventos Asincrónicas
 
-Webhooks push notifications to your server when events occur. Unlike WebSocket (which requires a persistent connection), webhooks work with any server that can receive HTTP POST requests.
+Los webhooks envían notificaciones a tu servidor cuando ocurren eventos. A diferencia de WebSocket (que requiere una conexión persistente), los webhooks funcionan con cualquier servidor que pueda recibir solicitudes HTTP POST.
 
-### When to Use Webhooks
+### Cuándo Usar Webhooks
 
-- Your architecture is event-driven (message queues, serverless functions)
-- You cannot maintain persistent WebSocket connections
-- You need reliable delivery with retries
-- You want to decouple adquisicion de energia from transaction execution
+- Tu arquitectura es dirigida por eventos (colas de mensajes, funciones serverless)
+- No puedes mantener conexiones WebSocket persistentes
+- Necesitas entrega confiable con reintentos
+- Quieres desacoplar la adquisición de energy de la ejecución de transacciones
 
-### Implementation
+### Implementación
 
 ```typescript
 import express from 'express';
@@ -249,14 +249,14 @@ app.post('/webhooks/merx', (req, res) => {
       break;
   }
 
-  // Always respond 200 to acknowledge receipt
+  // Siempre responder 200 para reconocer la recepción
   res.status(200).json({ received: true });
 });
 
 async function handleOrderFilled(
   data: OrderFilledEvent
 ): Promise<void> {
-  // Energy is available -- proceed with the transaction
+  // La energy está disponible -- proceder con la transacción
   const pendingTx = await db.getPendingTransaction(
     data.order_id
   );
@@ -266,13 +266,13 @@ async function handleOrderFilled(
 }
 ```
 
-### Webhook Reliability
+### Confiabilidad de Webhooks
 
-MERX retries failed webhook deliveries with exponential backoff. Your endpoint should:
+MERX reintenta las entregas de webhooks fallidas con backoff exponencial. Tu endpoint debe:
 
-1. Respond with 200 status quickly (within 5 seconds)
-2. Process the event asynchronously if processing takes time
-3. Handle duplicate deliveries idempotently (use the event ID for deduplication)
+1. Responder con estado 200 rápidamente (dentro de 5 segundos)
+2. Procesar el evento de forma asincrónica si el procesamiento toma tiempo
+3. Manejar entregas duplicadas de forma idempotente (usa el ID del evento para deduplicación)
 
 ```typescript
 const processedEvents = new Set<string>();
@@ -280,7 +280,7 @@ const processedEvents = new Set<string>();
 app.post('/webhooks/merx', async (req, res) => {
   const event = req.body;
 
-  // Idempotency check
+  // Verificación de idempotencia
   if (processedEvents.has(event.id)) {
     res.status(200).json({ received: true });
     return;
@@ -288,26 +288,26 @@ app.post('/webhooks/merx', async (req, res) => {
 
   processedEvents.add(event.id);
 
-  // Acknowledge immediately
+  // Reconocer inmediatamente
   res.status(200).json({ received: true });
 
-  // Process asynchronously
+  // Procesar de forma asincrónica
   processEvent(event).catch(console.error);
 });
 ```
 
-## JavaScript SDK
+## SDK de JavaScript
 
-The JavaScript/TypeScript SDK wraps the REST API and WebSocket connections with typed interfaces and convenience methods.
+El SDK de JavaScript/TypeScript envuelve la REST API y las conexiones WebSocket con interfaces tipadas y métodos de conveniencia.
 
-### When to Use the JS SDK
+### Cuándo Usar el SDK de JS
 
-- Your backend is Node.js or your frontend is browser-based
-- You want TypeScript types and IDE autocompletion
-- You prefer method calls over raw HTTP requests
-- You need both REST and WebSocket in one package
+- Tu backend es Node.js o tu frontend es basado en navegador
+- Quieres tipos de TypeScript y autocompletado en el IDE
+- Prefieres llamadas de método sobre solicitudes HTTP sin procesar
+- Necesitas tanto REST como WebSocket en un solo paquete
 
-### Implementation
+### Implementación
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -316,20 +316,20 @@ const merx = new MerxClient({
   apiKey: process.env.MERX_API_KEY!
 });
 
-// Prices
+// Precios
 const prices = await merx.getPrices({
   energy_amount: 65000,
   duration: '1h'
 });
 
-// Orders
+// Órdenes
 const order = await merx.createOrder({
   energy_amount: 65000,
   duration: '1h',
   target_address: 'TAddress...'
 });
 
-// Standing orders
+// Órdenes permanentes
 const standing = await merx.createStandingOrder({
   energy_amount: 65000,
   max_price_sun: 25,
@@ -337,7 +337,7 @@ const standing = await merx.createStandingOrder({
   repeat: true
 });
 
-// Energy estimation
+// Estimación de energy
 const estimate = await merx.estimateEnergy({
   contract_address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
   function_selector: 'transfer(address,uint256)',
@@ -345,59 +345,59 @@ const estimate = await merx.estimateEnergy({
   owner_address: sender
 });
 
-// WebSocket (built into the SDK)
+// WebSocket (incluido en el SDK)
 const ws = merx.connectWebSocket();
 ws.on('price_update', (data) => {
   console.log(`${data.provider}: ${data.price_sun} SUN`);
 });
 ```
 
-The SDK handles authentication, request serialization, error parsing, and type validation automatically.
+El SDK maneja autenticación, serialización de solicitudes, análisis de errores y validación de tipos automáticamente.
 
-## Python SDK
+## SDK de Python
 
-The Python SDK provides the same functionality for Python backends, data analysis pipelines, and automation scripts.
+El SDK de Python proporciona la misma funcionalidad para backends Python, pipelines de análisis de datos y scripts de automatización.
 
-### When to Use the Python SDK
+### Cuándo Usar el SDK de Python
 
-- Your backend is Python (Django, Flask, FastAPI)
-- You are building data analysis or reporting tools
-- Your DevOps scripts are in Python
-- You are integrating with Python-based bot de tradings
+- Tu backend es Python (Django, Flask, FastAPI)
+- Estás construyendo herramientas de análisis o reporte de datos
+- Tus scripts de DevOps están en Python
+- Estás integrando con bots de trading basados en Python
 
-### Implementation
+### Implementación
 
 ```python
 from merx import MerxClient
 
 merx = MerxClient(api_key="your-api-key")
 
-# Get prices
+# Obtener precios
 prices = merx.get_prices(
     energy_amount=65000,
     duration="1h"
 )
-print(f"Best: {prices.best.price_sun} SUN "
-      f"via {prices.best.provider}")
+print(f"Mejor: {prices.best.price_sun} SUN "
+      f"vía {prices.best.provider}")
 
-# Place order
+# Colocar orden
 order = merx.create_order(
     energy_amount=65000,
     duration="1h",
     target_address="TAddress..."
 )
 
-# Estimate energy for a contract call
+# Estimar energy para una llamada de contrato
 estimate = merx.estimate_energy(
     contract_address="TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
     function_selector="transfer(address,uint256)",
     parameter=[recipient, amount],
     owner_address=sender
 )
-print(f"Energy needed: {estimate.energy_required}")
+print(f"Energy necesaria: {estimate.energy_required}")
 ```
 
-### Data Analysis Example
+### Ejemplo de Análisis de Datos
 
 ```python
 import pandas as pd
@@ -405,7 +405,7 @@ from merx import MerxClient
 
 merx = MerxClient(api_key="your-api-key")
 
-# Pull price history for analysis
+# Extraer historial de precios para análisis
 history = merx.get_price_history(
     energy_amount=65000,
     duration="1h",
@@ -413,36 +413,36 @@ history = merx.get_price_history(
 )
 
 df = pd.DataFrame(history.prices)
-print(f"Average price: {df['price_sun'].mean():.1f} SUN")
-print(f"Min price: {df['price_sun'].min()} SUN")
-print(f"Max price: {df['price_sun'].max()} SUN")
-print(f"Std dev: {df['price_sun'].std():.1f} SUN")
+print(f"Precio promedio: {df['price_sun'].mean():.1f} SUN")
+print(f"Precio mínimo: {df['price_sun'].min()} SUN")
+print(f"Precio máximo: {df['price_sun'].max()} SUN")
+print(f"Desv. est: {df['price_sun'].std():.1f} SUN")
 ```
 
-## Servidor MCP: AI Agent Integration
+## Servidor MCP: Integración con Agentes de IA
 
-The MERX MCP (Model Context Protocol) server allows AI agents to interact with the TRON mercado de energia directly. This is the newest integration point and enables a fundamentally different interaction model.
+El servidor MCP de MERX (Protocolo de Contexto de Modelo) permite que los agentes de IA interactúen directamente con el mercado de energy de TRON. Este es el punto de integración más nuevo y habilita un modelo de interacción fundamentalmente diferente.
 
-### When to Use MCP
+### Cuándo Usar MCP
 
-- You are building AI agents that manage TRON operations
-- You want conversational energy management
-- You are using Claude, ChatGPT, or other LLMs with tool-use capabilities
-- You want to prototype energy strategies quickly through natural language
+- Estás construyendo agentes de IA que gestionen operaciones de TRON
+- Quieres gestión conversacional de energy
+- Estás usando Claude, ChatGPT u otros LLMs con capacidades de uso de herramientas
+- Quieres prototipar estrategias de energy rápidamente a través del lenguaje natural
 
-### How It Works
+### Cómo Funciona
 
-The MCP server at [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) exposes MERX capabilities as tools that AI agents can call:
+El servidor MCP en [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) expone las capacidades de MERX como herramientas que los agentes de IA pueden llamar:
 
-- `get_prices` -- Check current precios de energia
-- `create_order` -- Purchase energy
-- `analyze_prices` -- Get price statistics
-- `estimate_energy` -- Simulate transaction energy needs
-- `check_resources` -- Check wallet energy balance
+- `get_prices` -- Verificar precios actuales de energy
+- `create_order` -- Comprar energy
+- `analyze_prices` -- Obtener estadísticas de precios
+- `estimate_energy` -- Simular necesidades de energy de transacciones
+- `check_resources` -- Verificar saldo de energy de la billetera
 
-An AI agent can use these tools to answer questions like "What is the cheapest energia disponible right now?" or execute commands like "Buy 65,000 energy for my wallet at el mejor precio."
+Un agente de IA puede usar estas herramientas para responder preguntas como "¿Cuál es la energy más barata disponible ahora?" o ejecutar comandos como "Compra 65,000 de energy para mi billetera al mejor precio."
 
-### Integration
+### Integración
 
 ```json
 {
@@ -458,54 +458,54 @@ An AI agent can use these tools to answer questions like "What is the cheapest e
 }
 ```
 
-## Choosing the Right Integration
+## Elegir la Integración Correcta
 
-### Decision Matrix
+### Matriz de Decisión
 
-| Your Situation | Recommended Integration |
+| Tu Situación | Integración Recomendada |
 |---|---|
-| Quick prototype, any language | REST API |
-| Node.js backend | JS SDK |
-| Python backend | Python SDK |
-| Real-time price display | WebSocket |
-| Event-driven architecture | Webhooks |
+| Prototipo rápido, cualquier lenguaje | REST API |
+| Backend Node.js | SDK de JS |
+| Backend Python | SDK de Python |
+| Pantalla de precios en tiempo real | WebSocket |
+| Arquitectura dirigida por eventos | Webhooks |
 | Serverless (Lambda, Cloud Functions) | REST API + Webhooks |
-| AI agent building | MCP Server |
-| Go / Java / Ruby backend | REST API |
-| Full-featured application | JS/Python SDK + Webhooks |
+| Construcción de agentes de IA | Servidor MCP |
+| Backend Go / Java / Ruby | REST API |
+| Aplicación completa | SDK de JS/Python + Webhooks |
 
-### Combining Integration Points
+### Combinando Puntos de Integración
 
-Most production systems use multiple integration methods:
+La mayoría de los sistemas de producción usan múltiples métodos de integración:
 
-- **SDK + Webhooks**: Use the SDK for outbound requests (prices, orders) and webhooks for inbound notifications (order filled, price alerts)
-- **WebSocket + REST**: Use WebSocket for monitoring and REST for actions
-- **REST + Webhooks**: The language-agnostic full-featured stack
-- **MCP + SDK**: AI agent for strategy, SDK for execution
+- **SDK + Webhooks**: Usar el SDK para solicitudes salientes (precios, órdenes) y webhooks para notificaciones entrantes (orden completada, alertas de precios)
+- **WebSocket + REST**: Usar WebSocket para monitoreo y REST para acciones
+- **REST + Webhooks**: El stack completo agnóstico de lenguaje
+- **MCP + SDK**: Agente de IA para estrategia, SDK para ejecución
 
-## Migration Path
+## Ruta de Migración
 
-If you are currently using a single provider's API, migrating to MERX is straightforward:
+Si actualmente estás usando la API de un único proveedor, migrar a MERX es sencillo:
 
-1. **Add the MERX SDK** to your project
-2. **Replace price checks** with `merx.getPrices()` -- same data, more providers
-3. **Replace order placement** with `merx.createOrder()` -- same flow, mejor precio routing
-4. **Add webhooks** for order notifications (if not already event-driven)
-5. **Remove old provider code** once MERX integration is verified
+1. **Agregar el SDK de MERX** a tu proyecto
+2. **Reemplazar verificaciones de precios** con `merx.getPrices()` -- mismos datos, más proveedores
+3. **Reemplazar colocación de órdenes** con `merx.createOrder()` -- mismo flujo, enrutamiento del mejor precio
+4. **Agregar webhooks** para notificaciones de órdenes (si no es ya dirigido por eventos)
+5. **Eliminar código del proveedor antiguo** una vez que la integración de MERX se verifique
 
-The migration can be done incrementally. Run both systems in parallel during testing, comparing prices and order results before fully switching.
+La migración puede hacerse de forma incremental. Ejecutar ambos sistemas en paralelo durante las pruebas, comparando precios y resultados de órdenes antes de cambiar completamente.
 
-## Conclusion
+## Conclusión
 
-MERX is designed to fit into any technology stack through the integration method that matches your architecture. REST for universality, WebSocket for tiempo real, webhooks for events, SDKs for developer experience, and MCP for AI agents.
+MERX está diseñado para encajar en cualquier stack de tecnología a través del método de integración que coincida con tu arquitectura. REST por universalidad, WebSocket por tiempo real, webhooks para eventos, SDKs por experiencia del desarrollador, y MCP para agentes de IA.
 
-The choice is not exclusive -- combine integration points to match your needs. Start with the simplest option that solves your immediate problem, and expand as your requirements grow.
+La elección no es exclusiva: combina puntos de integración para que coincidan con tus necesidades. Comienza con la opción más simple que resuelva tu problema inmediato, y expande a medida que tus requisitos crecen.
 
-API documentation at [https://merx.exchange/docs](https://merx.exchange/docs). MCP server at [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp). Platform at [https://merx.exchange](https://merx.exchange).
+Documentación de API en [https://merx.exchange/docs](https://merx.exchange/docs). Servidor MCP en [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp). Plataforma en [https://merx.exchange](https://merx.exchange).
 
-## Try It Now with AI
+## Pruébalo Ahora con IA
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+Agrega MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin necesidad de clave API para herramientas de solo lectura:
 
 ```json
 {
@@ -517,6 +517,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energy de TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,61 +1,61 @@
-# Аутентификация MERX API: ключи, разрешения и лимиты запросов
+# Аутентификация MERX API: ключи, разрешения и лимиты на запросы
 
-Every API integration starts with authentication. Get it right, and your automated energy trading runs smoothly around the clock. Get it wrong, and you are dealing with leaked credentials, unexplained 403 errors, or rate limit bans that halt your production systems at the worst possible moment.
+Каждая интеграция API начинается с аутентификации. Если настроить её правильно, автоматическая торговля энергией будет работать без перебоев круглосуточно. Если ошибиться, придется иметь дело с утёчками учётных данных, непонятными ошибками 403 или блокировками из-за превышения лимитов, которые остановят ваши production-системы в самый неудачный момент.
 
-MERX provides two authentication methods, each designed for a different use case. This article covers both in detail - how they work, when to use each, how to manage permissions granularly, and what rate limits apply across the API surface.
+MERX предоставляет два метода аутентификации, каждый разработан для конкретного случая использования. Эта статья подробно рассматривает оба — как они работают, когда использовать каждый, как управлять разрешениями гранулярно и какие лимиты на запросы применяются ко всему API.
 
 ## Два метода аутентификации
 
-MERX supports two ways to authenticate API requests: API keys and JWT tokens. They serve different purposes and are not interchangeable.
+MERX поддерживает два способа аутентификации API-запросов: API-ключи и JWT-токены. Они служат разным целям и не являются взаимозаменяемы.
 
-### API Key Authentication
+### Аутентификация с API-ключом
 
-API keys are long-lived credentials designed for server-to-server communication. You create them through the API or admin panel, assign specific permissions, and include them in every request via the `X-API-Key` header.
+API-ключи — это долгоживущие учётные данные, разработанные для связи между серверами. Вы создаёте их через API или панель администратора, назначаете конкретные разрешения и включаете их в каждый запрос через заголовок `X-API-Key`.
 
 ```bash
 curl https://merx.exchange/api/v1/prices \
   -H "X-API-Key: merx_live_k7x9m2p4..."
 ```
 
-API keys are the right choice when:
+API-ключи — правильный выбор, когда:
 
-- Your backend service calls MERX on behalf of your users.
-- You run scheduled jobs that create orders or check balances.
-- You want fine-grained permission control (an order-creation key that cannot withdraw funds).
-- You need credentials that work without an interactive login flow.
+- Ваш backend-сервис обращается к MERX от имени ваших пользователей.
+- Вы запускаете запланированные задания, которые создают заказы или проверяют балансы.
+- Вы хотите контролировать разрешения гранулярно (ключ для создания заказов, который не может выводить средства).
+- Вам нужны учётные данные, которые работают без интерактивного входа.
 
-API keys never expire on their own. They remain valid until you explicitly revoke them. This makes them convenient for long-running services but demands careful management.
+API-ключи не имеют срока действия по умолчанию. Они остаются действительными, пока вы не отозвёте их явно. Это удобно для долгоживущих сервисов, но требует тщательного управления.
 
-### JWT Token Authentication
+### Аутентификация с JWT-токеном
 
-JWT tokens are short-lived credentials issued after a login. You authenticate with your email and password (or via OAuth), receive a JWT, and include it in requests via the `Authorization` header with a `Bearer` prefix.
+JWT-токены — это краткосрочные учётные данные, выданные после входа. Вы аутентифицируетесь с помощью электронной почты и пароля (или через OAuth), получаете JWT и включаете его в запросы через заголовок `Authorization` с префиксом `Bearer`.
 
 ```bash
 curl https://merx.exchange/api/v1/balance \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
 ```
 
-JWTs are the right choice when:
+JWT-токены — правильный выбор, когда:
 
-- A human user interacts with a frontend that calls the API.
-- You want time-limited access that expires automatically.
-- You are building a web or mobile application with a login flow.
+- Человек взаимодействует с фронтенд-приложением, которое обращается к API.
+- Вы хотите ограничить время доступа, который автоматически истекает.
+- Вы создаёте веб- или мобильное приложение с процессом входа.
 
-JWT tokens issued by MERX expire after 24 hours. After expiration, the client must re-authenticate to get a new token. Refresh tokens extend sessions without requiring the user to log in again.
+JWT-токены, выданные MERX, истекают через 24 часа. После истечения клиент должен повторно пройти аутентификацию, чтобы получить новый токен. Refresh-токены продлевают сеансы без необходимости повторного входа пользователя.
 
-### Which One to Use
+### Какой использовать
 
-For programmatic integrations - payment bots, automated trading, backend services - use API keys. They are simpler to manage, support granular permissions, and do not require a login flow.
+Для программных интеграций — ботов для платежей, автоматической торговли, backend-сервисов — используйте API-ключи. Они проще в управлении, поддерживают гранулярные разрешения и не требуют процесса входа.
 
-For user-facing applications where a human logs in, use JWT tokens. They provide session-based access with automatic expiration, reducing the risk of credential leakage from client-side code.
+Для приложений, ориентированных на пользователя, где человек входит в систему, используйте JWT-токены. Они обеспечивают доступ на основе сеансов с автоматическим истечением, снижая риск утечки учётных данных из клиентского кода.
 
-You can use both in the same system. A common pattern: JWT authentication for your admin panel (human operators log in to manage settings), API key authentication for your backend services (automated order creation, balance monitoring).
+Вы можете использовать оба в одной системе. Распространённый паттерн: аутентификация JWT для вашей панели администратора (операторы входят для управления настройками), аутентификация API-ключом для ваших backend-сервисов (автоматическое создание заказов, мониторинг баланса).
 
 ## Создание и управление API-ключами
 
-### Creating a Key
+### Создание ключа
 
-Create API keys via the API itself or through the MERX web dashboard. The API endpoint is `POST /api/v1/keys`:
+Создавайте API-ключи через сам API или через веб-панель MERX. Эндпоинт API — это `POST /api/v1/keys`:
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/keys \
@@ -67,7 +67,7 @@ curl -X POST https://merx.exchange/api/v1/keys \
   }'
 ```
 
-The response includes the full API key. This is the only time the complete key is returned. Store it immediately in your secrets manager.
+Ответ включает полный API-ключ. Это единственный раз, когда возвращается полный ключ. Сохраните его немедленно в менеджер секретов.
 
 ```json
 {
@@ -79,9 +79,9 @@ The response includes the full API key. This is the only time the complete key i
 }
 ```
 
-Note: the key creation endpoint requires JWT authentication. You must log in first to create API keys. This is a deliberate security decision - API keys cannot create other API keys.
+Примечание: эндпоинт создания ключа требует аутентификацию JWT. Вы должны сначала войти, чтобы создать API-ключи. Это намеренное решение в целях безопасности — API-ключи не могут создавать другие API-ключи.
 
-### Using the JavaScript SDK
+### Использование JavaScript SDK
 
 ```javascript
 import { MerxClient } from 'merx-sdk';
@@ -91,12 +91,12 @@ const merx = new MerxClient({
   baseUrl: 'https://merx.exchange/api/v1',
 });
 
-// The SDK automatically includes the X-API-Key header
+// SDK автоматически включает заголовок X-API-Key
 const prices = await merx.prices.list();
 const balance = await merx.account.getBalance();
 ```
 
-### Using the Python SDK
+### Использование Python SDK
 
 ```python
 from merx_sdk import MerxClient
@@ -110,48 +110,48 @@ prices = client.get_prices()
 balance = client.get_balance()
 ```
 
-### Listing and Revoking Keys
+### Список и отзыв ключей
 
-List all active keys for your account:
+Просмотрите все активные ключи вашего аккаунта:
 
 ```bash
 curl https://merx.exchange/api/v1/keys \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
 ```
 
-Revoke a key immediately:
+Отозвите ключ немедленно:
 
 ```bash
 curl -X DELETE https://merx.exchange/api/v1/keys/key_8f3k2m9x \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
 ```
 
-Revocation is instant. Any request using the revoked key returns 401 immediately. There is no grace period.
+Отзыв происходит мгновенно. Любой запрос с использованием отозванного ключа немедленно возвращает 401. Периода отсрочки нет.
 
 ## Типы разрешений
 
-MERX API keys support granular permissions. When creating a key, you specify exactly which operations it can perform. A key without a required permission receives a 403 Forbidden response.
+API-ключи MERX поддерживают гранулярные разрешения. При создании ключа вы указываете, какие операции он может выполнять. Ключ без требуемого разрешения получает ответ 403 Forbidden.
 
-### Available Permissions
+### Доступные разрешения
 
-| Permission | Description | Typical Use Case |
-|-----------|-------------|-----------------|
-| `view_balance` | Read account balance and transaction history | Monitoring dashboards, alerting |
-| `view_orders` | Read order status and order history | Order tracking, reporting |
-| `create_orders` | Create new energy and bandwidth orders | Automated trading bots |
-| `broadcast` | Submit signed transactions for broadcast | Custom transaction workflows |
+| Разрешение | Описание | Типичный случай использования |
+|-----------|---------|------|
+| `view_balance` | Прочитать баланс счёта и историю транзакций | Панели мониторинга, оповещения |
+| `view_orders` | Прочитать статус заказа и историю заказов | Отслеживание заказов, отчётность |
+| `create_orders` | Создать новые заказы энергии и bandwidth | Боты автоматической торговли |
+| `broadcast` | Отправить подписанные транзакции на трансляцию | Пользовательские рабочие процессы транзакций |
 
-### Permission Design Principles
+### Принципы разработки разрешений
 
-**Least privilege.** Give each key only the permissions it needs. A monitoring dashboard does not need `create_orders`. A price display widget does not need `view_balance`.
+**Наименьшие привилегии.** Дайте каждому ключу только те разрешения, которые ему нужны. Панель мониторинга не нуждается в `create_orders`. Виджет отображения цен не нуждается в `view_balance`.
 
-**Separate keys for separate concerns.** Use one key for your order bot (`create_orders`, `view_orders`, `view_balance`) and a different key for your monitoring system (`view_balance`, `view_orders`). If the monitoring key leaks, the attacker cannot create orders.
+**Отдельные ключи для отдельных задач.** Используйте один ключ для вашего бота заказов (`create_orders`, `view_orders`, `view_balance`) и другой ключ для вашей системы мониторинга (`view_balance`, `view_orders`). Если ключ мониторинга утечёт, злоумышленник не сможет создавать заказы.
 
-**No withdrawal permission on API keys.** Withdrawals require JWT authentication. This is intentional. An API key, even with full permissions, cannot withdraw funds from your account. This adds a layer of protection for the highest-risk operation.
+**Никакого разрешения на вывод средств на API-ключах.** Выводы требуют аутентификацию JWT. Это намеренно. API-ключ, даже с полными разрешениями, не может вывести средства с вашего счёта. Это добавляет слой защиты для операции наивысшего риска.
 
-### Example: Minimal Key for a Price Widget
+### Пример: минимальный ключ для виджета цен
 
-A public-facing price widget only needs to fetch prices. It does not need authentication at all since the prices endpoint is public, but if you want to track usage:
+Общедоступный виджет цен требует только получение цен. Ему вообще не нужна аутентификация, так как эндпоинт цен открыт, но если вы хотите отслеживать использование:
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/keys \
@@ -163,9 +163,9 @@ curl -X POST https://merx.exchange/api/v1/keys \
   }'
 ```
 
-A key with an empty permissions array can access public endpoints (prices, provider list) while allowing you to track request volume and apply rate limits per key.
+Ключ с пустым массивом разрешений может получить доступ к открытым эндпоинтам (цены, список провайдеров), позволяя вам отслеживать объём запросов и применять лимиты на запросы к каждому ключу.
 
-### Example: Full Trading Bot Key
+### Пример: полный ключ для бота торговли
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/keys \
@@ -177,24 +177,24 @@ curl -X POST https://merx.exchange/api/v1/keys \
   }'
 ```
 
-## Rate Limits
+## Лимиты на запросы
 
-MERX applies rate limits per endpoint category, not per key. All rate limits are measured in requests per minute from the same authenticated identity (API key or JWT session).
+MERX применяет лимиты на запросы для каждой категории эндпоинтов, не на каждый ключ. Все лимиты измеряются в количестве запросов в минуту от одного аутентифицированного источника (API-ключ или JWT-сеанс).
 
-### Rate Limit Table
+### Таблица лимитов на запросы
 
-| Endpoint Category | Rate Limit | Examples |
-|------------------|-----------|---------|
-| Price data | 300/min | `GET /prices`, `GET /prices/history` |
-| Order creation | 10/min | `POST /orders` |
-| Order queries | 60/min | `GET /orders`, `GET /orders/:id` |
-| Withdrawals | 5/min | `POST /withdraw` |
-| Account data | 60/min | `GET /balance`, `GET /keys` |
-| Key management | 10/min | `POST /keys`, `DELETE /keys/:id` |
+| Категория эндпоинта | Лимит | Примеры |
+|-----------|---------|---------|
+| Данные цен | 300/мин | `GET /prices`, `GET /prices/history` |
+| Создание заказов | 10/мин | `POST /orders` |
+| Запросы к заказам | 60/мин | `GET /orders`, `GET /orders/:id` |
+| Выводы | 5/мин | `POST /withdraw` |
+| Данные аккаунта | 60/мин | `GET /balance`, `GET /keys` |
+| Управление ключами | 10/мин | `POST /keys`, `DELETE /keys/:id` |
 
-### Rate Limit Headers
+### Заголовки лимитов на запросы
 
-Every response includes rate limit information in HTTP headers:
+Каждый ответ включает информацию о лимитах на запросы в HTTP-заголовках:
 
 ```
 X-RateLimit-Limit: 300
@@ -202,13 +202,13 @@ X-RateLimit-Remaining: 287
 X-RateLimit-Reset: 1711785660
 ```
 
-- `X-RateLimit-Limit` - maximum requests allowed in the current window.
-- `X-RateLimit-Remaining` - requests remaining before the limit is reached.
-- `X-RateLimit-Reset` - Unix timestamp when the window resets.
+- `X-RateLimit-Limit` — максимум запросов, разрешённых в текущем окне.
+- `X-RateLimit-Remaining` — количество запросов, оставшихся перед достижением лимита.
+- `X-RateLimit-Reset` — Unix-временная метка, когда окно сбросится.
 
-### When You Hit the Limit
+### Когда вы превысите лимит
 
-Exceeding the rate limit returns HTTP 429 Too Many Requests with a `Retry-After` header indicating how many seconds to wait:
+Превышение лимита на запросы возвращает HTTP 429 Too Many Requests с заголовком `Retry-After`, указывающим количество секунд ожидания:
 
 ```json
 {
@@ -224,19 +224,19 @@ Exceeding the rate limit returns HTTP 429 Too Many Requests with a `Retry-After`
 }
 ```
 
-### Handling Rate Limits in Code
+### Обработка лимитов в коде
 
-The SDKs handle rate limits automatically with configurable retry behavior:
+SDK автоматически обрабатывают лимиты на запросы с настраиваемым поведением повторных попыток:
 
 ```javascript
 const merx = new MerxClient({
   apiKey: process.env.MERX_API_KEY,
   maxRetries: 3,
-  retryOnRateLimit: true, // Automatically wait and retry on 429
+  retryOnRateLimit: true, // Автоматически ждать и повторять при 429
 });
 ```
 
-For raw HTTP clients, implement backoff based on the `Retry-After` header:
+Для raw HTTP-клиентов реализуйте backoff на основе заголовка `Retry-After`:
 
 ```python
 import requests
@@ -263,46 +263,46 @@ def merx_request(method, path, **kwargs):
 
 ## Лучшие практики безопасности
 
-### Store Keys in Environment Variables
+### Сохраняйте ключи в переменных окружения
 
-Never hardcode API keys in source code. Use environment variables or a secrets manager:
+Никогда не кодируйте API-ключи в исходный код. Используйте переменные окружения или менеджер секретов:
 
 ```bash
-# .env file (never commit this)
+# .env файл (никогда не коммитьте это)
 MERX_API_KEY=merx_live_k7x9m2p4q8r1s5t3u7v2w6x0y4z...
 ```
 
 ```javascript
-// Load from environment
+// Загрузите из окружения
 const merx = new MerxClient({
   apiKey: process.env.MERX_API_KEY,
 });
 ```
 
-### Rotate Keys Periodically
+### Ротируйте ключи периодически
 
-Create a new key, update your services to use it, then revoke the old key. MERX supports multiple active keys simultaneously, so you can rotate without downtime:
+Создайте новый ключ, обновите ваши сервисы для его использования, затем отозвите старый ключ. MERX поддерживает несколько одновременно активных ключей, поэтому вы можете ротировать без простоя:
 
-1. Create a new key with the same permissions.
-2. Deploy the new key to your services.
-3. Verify the new key works in production.
-4. Revoke the old key.
+1. Создайте новый ключ с теми же разрешениями.
+2. Развёртывайте новый ключ на ваши сервисы.
+3. Проверьте, что новый ключ работает в production.
+4. Отозвите старый ключ.
 
-### Monitor Key Usage
+### Мониторьте использование ключей
 
-Review your API key list periodically. Revoke keys that are no longer in use. Each key has a `last_used_at` timestamp - if a key has not been used in months, it is a candidate for revocation.
+Периодически просматривайте список API-ключей вашего аккаунта. Отзывайте ключи, которые больше не используются. Каждый ключ имеет временную метку `last_used_at` — если ключ не использовался месяцами, это кандидат на отзыв.
 
-### Never Expose Keys in Client-Side Code
+### Никогда не раскрывайте ключи в клиентском коде
 
-API keys should never appear in JavaScript running in a browser, mobile app bundles, or any code that end users can inspect. If you need to call MERX from a frontend, proxy the requests through your backend, which holds the API key server-side.
+API-ключи никогда не должны появляться в JavaScript, выполняющемся в браузере, в пакетах мобильных приложений или в любом коде, который пользователи могут проверить. Если вам нужно обращаться к MERX с фронтенда, перенаправляйте запросы через ваш backend, который хранит API-ключ на стороне сервера.
 
 ```
 Browser -> Your Backend (holds API key) -> MERX API
 ```
 
-### Use Separate Keys for Separate Environments
+### Используйте отдельные ключи для отдельных окружений
 
-Maintain distinct keys for development, staging, and production. If a development key leaks, it cannot affect production. MERX does not currently have environment-scoped keys, but naming conventions help:
+Поддерживайте различные ключи для разработки, staging и production. Если ключ разработки утечёт, это не может повлиять на production. MERX в настоящее время не имеет ключей, ограниченных окружением, но соглашения об именовании помогают:
 
 ```
 dev-price-monitor
@@ -311,32 +311,33 @@ prod-order-bot
 prod-balance-alerter
 ```
 
-### Audit on Suspicion
+### Проверьте подозрения
 
-If you suspect a key has been compromised, revoke it immediately and create a replacement. Check your recent order and withdrawal history for unauthorized activity. MERX logs all API key usage with IP addresses, which can help identify the source of unauthorized access.
+Если вы подозреваете, что ключ был скомпрометирован, отозвите его немедленно и создайте замену. Проверьте вашу недавнюю историю заказов и выводов на наличие несанкционированной активности. MERX регистрирует всё использование API-ключей с IP-адресами, что может помочь определить источник несанкционированного доступа.
 
-## Собираем все вместе
+## Собираем всё вместе
 
-A complete authentication setup for a production system typically looks like this:
+Полная конфигурация аутентификации для production-системы обычно выглядит так:
 
-1. Log in via the web dashboard to get a JWT session.
-2. Create separate API keys for each service: order bot, monitoring, reporting.
-3. Assign minimal permissions to each key.
-4. Store keys in your secrets manager or environment variables.
-5. Implement rate limit handling with automatic retry.
-6. Set up key rotation on a regular schedule (quarterly is reasonable).
-7. Monitor key usage and revoke unused keys.
+1. Войдите через веб-панель, чтобы получить JWT-сеанс.
+2. Создайте отдельные API-ключи для каждого сервиса: бот заказов, мониторинг, отчётность.
+3. Назначьте минимальные разрешения каждому ключу.
+4. Сохраните ключи в вашем менеджере секретов или переменных окружения.
+5. Реализуйте обработку лимитов на запросы с автоматическим повтором.
+6. Установите ротацию ключей по регулярному расписанию (ежеквартально — разумно).
+7. Мониторьте использование ключей и отзывайте неиспользуемые ключи.
 
-Authentication is the foundation of every MERX integration. Spending an hour getting it right saves days of debugging and security incidents down the line.
+Аутентификация — основа каждой интеграции MERX. Час времени, потраченный на правильную настройку, сэкономит дни отладки и предотвратит инциденты безопасности.
 
-- Платформа и панель управления: [merx.exchange](https://merx.exchange)
-- Полная документация API: [merx.exchange/docs](https://merx.exchange/docs)
+- Платформа и панель: [merx.exchange](https://merx.exchange)
+- Полная справка API: [merx.exchange/docs](https://merx.exchange/docs)
 - JavaScript SDK: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 - Python SDK: [github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — без установки, без API-ключа, требуемого для инструментов только для чтения:
 
 ```json
 {
@@ -348,6 +349,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите вашего AI-агента: "Какова самая дешёвая TRON energy прямо сейчас?" и получите актуальные цены от всех подключённых провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

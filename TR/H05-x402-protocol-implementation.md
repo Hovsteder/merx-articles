@@ -1,28 +1,28 @@
-# x402 Protokol Uygulamasi: Fatura, Ode, Dogrula
+# x402 Protokolü Uygulaması: Fatura, Ödeme, Doğrulama
 
-HTTP status code 402 -- "Payment Required" -- was defined in the original HTTP/1.1 specification in 1997. The spec marked it as "reserved for future use." Twenty-nine years later, the future has arrived.
+HTTP durum kodu 402 -- "Ödeme Gerekli" -- orijinal HTTP/1.1 spesifikasyonunda 1997'de tanımlandı. Spesifikasyon bunu "gelecekteki kullanım için ayrılmış" olarak işaretledi. Yirmi dokuz yıl sonra, gelecek geldi.
 
-The x402 protocol turns that reserved status code into a real payment mechanism. It enables pay-per-use commerce where payment is verified on-chain rather than through accounts, API keys, or credit cards. Any entity with a blockchain wallet -- human, bot, or autonomous agent -- can pay for a service in a single transaction without creating an account or establishing any prior relationship with the service provider.
+x402 protokolü bu ayrılmış durum kodunu gerçek bir ödeme mekanizmasına dönüştürür. Ödemenin hesaplar, API anahtarları veya kredi kartları yerine blok zincir üzerinde doğrulandığı kullanım başına ödeme ticaretini mümkün kılar. Bir blok zincir cüzdanına sahip herhangi bir varlık -- insan, bot veya otonom ajan -- hesap oluşturmadan veya hizmet sağlayıcısıyla önceden herhangi bir ilişki kurmadan tek bir işlemde bir hizmet için ödeme yapabilir.
 
-MERX implements x402 for TRON energy purchases. This article is a full technical guide to the implementation: invoice creation, payment with memo, TronGrid verification (including the hex vs base58 address matching problem), the x402 system user, balance crediting, and order execution. We cover every step, every edge case, and every security consideration.
+MERX, x402'yi TRON energy satın alışları için uygular. Bu makale uygulamaya ilişkin tam bir teknik rehberdir: fatura oluşturma, memo ile ödeme, TronGrid doğrulaması (hex ve base58 adres eşleştirme sorununu da içeriyor), x402 sistem kullanıcısı, bakiye kredisi ve sipariş yürütümü. Her adımı, her sınır durumunu ve her güvenlik düşünmesini ele alıyoruz.
 
-## The x402 Flow Overview
+## x402 Akış Genel Bakış
 
-The protocol has five steps:
+Protokolün beş adımı vardır:
 
 ```
-1. INVOICE   - Buyer requests a quote, server returns payment instructions
-2. PAY       - Buyer sends TRX with a memo containing the invoice ID
-3. VERIFY    - Server detects the on-chain payment and validates it
-4. CREDIT    - Server credits the x402 system account and creates ledger entries
-5. EXECUTE   - Server executes the energy order and delegates to the buyer
+1. INVOICE   - Alıcı bir teklif talep eder, sunucu ödeme talimatlarını döndürür
+2. PAY       - Alıcı fatura kimliği içeren bir memo ile TRX gönderir
+3. VERIFY    - Sunucu blok zincir ödemeyi tespit eder ve doğrular
+4. CREDIT    - Sunucu x402 sistem hesabını krediye çeker ve defter girişleri oluşturur
+5. EXECUTE   - Sunucu energy siparişini yürütür ve alıcıya devreder
 ```
 
-Each step is designed to be trustless. The buyer never sends funds to an unverified address. The server never executes an order without confirmed payment. The memo field ties the payment to a specific invoice, preventing cross-payment attacks.
+Her adım güvensiz (trustless) olacak şekilde tasarlanmıştır. Alıcı hiçbir zaman doğrulanmamış bir adrese fon göndermez. Sunucu hiçbir zaman onaylanmış ödeme olmadan sipariş yürütmez. Memo alanı ödemeyi belirli bir faturaya bağlayarak çapraz ödeme saldırılarını önler.
 
-## Step 1: Invoice Creation
+## Adım 1: Fatura Oluşturma
 
-The buyer calls the `create_paid_order` endpoint with the desired energy parameters:
+Alıcı istenen energy parametreleri ile `create_paid_order` uç noktasını çağırır:
 
 ```
 POST /api/v1/orders/paid
@@ -35,7 +35,7 @@ Content-Type: application/json
 }
 ```
 
-The server calculates the cost based on current best prices across all providers and returns an invoice:
+Sunucu, mevcut tüm sağlayıcılar arasındaki en iyi fiyatlara dayalı maliyeti hesaplar ve bir fatura döndürür:
 
 ```json
 {
@@ -53,15 +53,15 @@ The server calculates the cost based on current best prices across all providers
 }
 ```
 
-### Invoice Design Decisions
+### Fatura Tasarım Kararları
 
-**5-minute expiration.** The invoice expires 5 minutes after creation. This window is long enough for the buyer to review, sign, and broadcast the payment. It is short enough to prevent stale-price exploitation -- if energy prices change significantly, the buyer should request a new invoice at the current price.
+**5 dakikalık son kullanma tarihi.** Fatura oluşturmadan 5 dakika sonra sona erer. Bu pencere, alıcının ödemeyi incelemesi, imzalaması ve yayınlaması için yeterince uzundur. Eski fiyat istismarını önlemek için yeterince kısadır -- energy fiyatları önemli ölçüde değişirse, alıcı geçerli fiyattan yeni bir fatura talep etmelidir.
 
-**Exact amount required.** The payment must match the invoice amount exactly. Not more, not less. This prevents ambiguity in matching payments to invoices. If a buyer sends 2 TRX for a 1.43 TRX invoice, the payment is rejected (the excess would create accounting complexity with no upside).
+**Tam tutar gerekli.** Ödeme fatura tutarıyla tam olarak eşleşmelidir. Ne fazla, ne az. Bu, ödemeleri faturalara eşleştirmede belirsizliği engeller. Bir alıcı 1,43 TRX faturası için 2 TRX gönderirse, ödeme reddedilir (fazlalık muhasebe karmaşıklığı yaratır ve herhangi bir artı yönü yoktur).
 
-**Unique memo.** The memo field contains a unique identifier that ties the payment to this specific invoice. This is the critical security mechanism -- more on this below.
+**Benzersiz memo.** Memo alanı, ödemeyi bu belirli faturaya bağlayan benzersiz bir kimlik içerir. Bu kritik güvenlik mekanizmasıdır -- aşağıda daha fazlası.
 
-### Server-Side Invoice Storage
+### Sunucu Tarafı Fatura Depolaması
 
 ```sql
 INSERT INTO x402_invoices (
@@ -87,60 +87,60 @@ INSERT INTO x402_invoices (
 );
 ```
 
-The invoice is stored with status PENDING. It will transition to PAID when verified, or EXPIRED when the TTL passes without payment.
+Fatura PENDING durumu ile depolanır. Doğrulandığında PAID'ye veya TTL ödeme olmadan geçtiğinde EXPIRED'ye geçecektir.
 
-## Step 2: Payment with Memo
+## Adım 2: Memo ile Ödeme
 
-The buyer constructs and signs a TRX transfer transaction. The critical implementation detail is the memo field.
+Alıcı bir TRX transfer işlemi oluşturur ve imzalar. Kritik uygulama ayrıntısı memo alanıdır.
 
 ```javascript
 const tronWeb = new TronWeb({
   fullHost: 'https://api.trongrid.io'
 });
 
-// Build the base transaction
+// Temel işlemi oluştur
 const tx = await tronWeb.transactionBuilder.sendTrx(
   invoice.pay_to,       // TMerxTreasuryAddress
   invoice.amount_sun,   // 1430000
   buyerAddress           // TBuyerAddress
 );
 
-// Add the memo
+// Memo ekle
 const txWithMemo = await tronWeb.transactionBuilder.addUpdateData(
   tx,
   invoice.memo,         // "merx_xpay_a7f3c2d1"
   'utf8'
 );
 
-// Sign locally
+// Yerel olarak imzala
 const signedTx = await tronWeb.trx.sign(txWithMemo, privateKey);
 
-// Broadcast
+// Yayınla
 const result = await tronWeb.trx.sendRawTransaction(signedTx);
 console.log('TX hash:', result.txid);
 ```
 
-### Why Memo, Not Amount
+### Neden Memo, Tutar Değil
 
-An earlier design considered using unique amounts (e.g., 1,430,017 SUN instead of 1,430,000 SUN) to identify payments. This approach is fragile:
+Önceki bir tasarım, ödemeleri tanımlamak için benzersiz tutarlar kullanmayı düşünmüştü (örneğin, 1.430.000 SUN yerine 1.430.017 SUN). Bu yaklaşım kırılgandır:
 
-- Amount collisions are possible (two invoices might have the same price)
-- It requires the buyer to pay a non-round amount
-- It does not work when multiple invoices have identical parameters
+- Tutar çarpışmaları mümkündür (iki faturanın aynı fiyatı olabilir)
+- Alıcının yuvarlak olmayan bir tutar ödemesini gerektirir
+- Birden fazla faturanın özdeş parametreleri olduğunda çalışmaz
 
-The memo field provides an unambiguous identifier with no collision risk.
+Memo alanı, çarpışma riski olmayan net bir kimlik sağlar.
 
-### Private Key Safety
+### Özel Anahtar Güvenliği
 
-The buyer's private key never leaves their device. The transaction is constructed, signed, and broadcast entirely on the buyer's machine. MERX never sees, requests, or has access to the buyer's private key. This is a fundamental security property of the x402 protocol.
+Alıcının özel anahtarı hiçbir zaman cihazlarını terk etmez. İşlem tamamen alıcının makinesi üzerinde oluşturulur, imzalanır ve yayınlanır. MERX asla alıcının özel anahtarını görmez, talep etmez veya erişimi yoktur. Bu, x402 protokolünün temel bir güvenlik özelliğidir.
 
-## Step 3: TronGrid Verification
+## Adım 3: TronGrid Doğrulaması
 
-After the payment is broadcast, MERX must verify it on-chain. This is where the implementation gets interesting -- and where a significant technical challenge emerges.
+Ödeme yayınlandıktan sonra, MERX bunu blok zincir üzerinde doğrulamalıdır. Uygulama burada ilginç hale gelir -- ve önemli bir teknik zorluk ortaya çıkar.
 
-### The Monitoring Loop
+### İzleme Döngüsü
 
-The MERX deposit monitor continuously watches the treasury address for incoming transactions:
+MERX mevduat monitörü, gelen işlemleri sürekli olarak hazine adresini izler:
 
 ```typescript
 async function monitorTreasuryForX402Payments(): Promise<void> {
@@ -157,56 +157,56 @@ async function monitorTreasuryForX402Payments(): Promise<void> {
       await processIncomingTransaction(tx);
     }
 
-    await sleep(3000); // Check every 3 seconds (one block)
+    await sleep(3000); // 3 saniye de bir kontrol et (bir blok)
   }
 }
 ```
 
-### The Hex vs Base58 Address Problem
+### Hex ve Base58 Adres Sorunu
 
-Here is the technical challenge that consumed more debugging time than any other part of the x402 implementation.
+İşte x402 uygulamasının diğer herhangi bir bölümünden daha fazla hata ayıklama zamanı tüketen teknik zorluk.
 
-TRON addresses exist in two formats:
+TRON adresleri iki biçimde vardır:
 
-- **Base58**: `TJRabPrwbZy45sbavfcjinPJC18kjpRTv8` (human-readable, starts with T)
-- **Hex**: `415a523b449890854c8fc460ab602df9f31fe4293f` (41-prefixed hex, used internally)
+- **Base58**: `TJRabPrwbZy45sbavfcjinPJC18kjpRTv8` (insan tarafından okunabilir, T ile başlar)
+- **Hex**: `415a523b449890854c8fc460ab602df9f31fe4293f` (41 ön eki hex, dahili olarak kullanılır)
 
-When you query TronGrid for transaction details, the response uses hex addresses. When your invoice stores the buyer's address and the treasury address, they are in base58. If you compare them directly, they will never match.
+TronGrid'de işlem ayrıntıları sorguladığınızda, yanıt hex adresler kullanır. Faturanız alıcı adresini ve hazine adresini depoladığında, bunlar base58'dedir. Bunları doğrudan karşılaştırırsanız, hiçbir zaman eşleşmeyeceklerdir.
 
 ```typescript
-// Transaction from TronGrid API
+// TronGrid API'dan gelen işlem
 const txData = {
   owner_address: '415a523b449890854c8fc460ab602df9f31fe4293f',  // hex
   to_address: '41e552f6487585c2b58bc2c9bb4492bc1f17132cd0',    // hex
   amount: 1430000
 };
 
-// Invoice from database
+// Veritabanından fatura
 const invoice = {
   pay_to: 'TJRabPrwbZy45sbavfcjinPJC18kjpRTv8',  // base58
   target_address: 'TBuyerAddressBase58...',         // base58
   amount_sun: 1430000
 };
 
-// Direct comparison FAILS
+// Doğrudan karşılaştırma BAŞARISIZ OLUR
 txData.to_address === invoice.pay_to  // false (hex vs base58)
 ```
 
-### The Fix: Convert Before Comparing
+### Çözüm: Karşılaştırmadan Önce Dönüştür
 
-Every address comparison must convert both sides to the same format:
+Her adres karşılaştırması her iki tarafı aynı biçime dönüştürmelidir:
 
 ```typescript
 function normalizeAddress(address: string): string {
   if (address.startsWith('41') && address.length === 42) {
-    // Hex format -- convert to base58
+    // Hex biçimi -- base58'e dönüştür
     return tronWeb.address.fromHex(address);
   }
   if (address.startsWith('T') && address.length === 34) {
-    // Already base58
+    // Zaten base58
     return address;
   }
-  throw new Error(`Invalid TRON address format: ${address}`);
+  throw new Error(`Geçersiz TRON adres biçimi: ${address}`);
 }
 
 function addressesMatch(a: string, b: string): boolean {
@@ -214,60 +214,60 @@ function addressesMatch(a: string, b: string): boolean {
 }
 ```
 
-This normalization function is used in every address comparison throughout the x402 verification pipeline. Missing a single comparison point would create a vulnerability.
+Bu normalizasyon işlevi x402 doğrulama ardışık düzenindeki her adres karşılaştırmasında kullanılır. Tek bir karşılaştırma noktasını kaçırmak bir güvenlik açığı yaratır.
 
-### Full Verification Logic
+### Tam Doğrulama Mantığı
 
 ```typescript
 async function verifyX402Payment(tx: TronTransaction): Promise<void> {
-  // 1. Extract memo from transaction data
+  // 1. İşlem verilerinden memo çıkar
   const memo = extractMemo(tx);
   if (!memo || !memo.startsWith('merx_xpay_')) {
-    return; // Not an x402 payment, skip
+    return; // x402 ödeme değil, atla
   }
 
-  // 2. Find matching invoice
+  // 2. Eşleşen faturayı bul
   const invoice = await findInvoiceByMemo(memo);
   if (!invoice) {
-    console.warn(`No invoice found for memo: ${memo}`);
+    console.warn(`Memo için fatura bulunamadı: ${memo}`);
     return;
   }
 
-  // 3. Check invoice status
+  // 3. Fatura durumunu kontrol et
   if (invoice.status !== 'PENDING') {
-    console.warn(`Invoice ${invoice.order_id} already ${invoice.status}`);
-    return; // Prevents double-claiming
+    console.warn(`Fatura ${invoice.order_id} zaten ${invoice.status}`);
+    return; // Çift talep etmeyi önle
   }
 
-  // 4. Check expiration
+  // 4. Son kullanma tarihini kontrol et
   if (new Date() > new Date(invoice.expires_at)) {
     await markInvoiceExpired(invoice.order_id);
-    console.warn(`Invoice ${invoice.order_id} expired`);
+    console.warn(`Fatura ${invoice.order_id} sona erdi`);
     return;
   }
 
-  // 5. Verify amount (exact match required)
+  // 5. Tutarı doğrula (tam eşleşme gerekli)
   if (tx.amount !== invoice.amount_sun) {
     console.warn(
-      `Amount mismatch: TX=${tx.amount}, invoice=${invoice.amount_sun}`
+      `Tutar uyuşmazlığı: TX=${tx.amount}, fatura=${invoice.amount_sun}`
     );
     return;
   }
 
-  // 6. Verify recipient (hex vs base58 safe comparison)
+  // 6. Alıcıyı doğrula (hex vs base58 güvenli karşılaştırması)
   if (!addressesMatch(tx.to_address, invoice.pay_to)) {
-    console.warn('Recipient address mismatch');
+    console.warn('Alıcı adresi uyuşmazlığı');
     return;
   }
 
-  // All checks passed -- payment is valid
+  // Tüm kontroller geçildi -- ödeme geçerli
   await processValidPayment(invoice, tx);
 }
 ```
 
-### Memo Extraction
+### Memo Çıkarımı
 
-The memo is stored in the transaction's `raw_data.data` field as a hex-encoded string:
+Memo, işlemin `raw_data.data` alanında hex kodlanmış bir dize olarak depolanır:
 
 ```typescript
 function extractMemo(tx: TronTransaction): string | null {
@@ -275,7 +275,7 @@ function extractMemo(tx: TronTransaction): string | null {
     const hexData = tx.raw_data?.data;
     if (!hexData) return null;
 
-    // Decode hex to UTF-8
+    // Hex'i UTF-8'e çöz
     const memo = Buffer.from(hexData, 'hex').toString('utf8');
     return memo;
   } catch {
@@ -284,11 +284,11 @@ function extractMemo(tx: TronTransaction): string | null {
 }
 ```
 
-## Step 4: The x402 System User
+## Adım 4: x402 Sistem Kullanıcısı
 
-When an x402 payment is verified, MERX needs to credit the payment and execute the order. But x402 payments are account-less -- the buyer does not have a MERX account. How do you create ledger entries without an account?
+Bir x402 ödeme doğrulandığında, MERX ödemeyi krediye çekmeli ve siparişi yürütmelidir. Ancak x402 ödemeleri hesapsızdır -- alıcının MERX hesabı yoktur. Hesap olmadan defter girişleri nasıl oluşturursunuz?
 
-The solution is the x402 system user. This is a special internal account that represents all x402 transactions:
+Çözüm x402 sistem kullanıcısıdır. Bu, tüm x402 işlemlerini temsil eden özel bir dahili hesaptır:
 
 ```sql
 INSERT INTO accounts (id, email, type)
@@ -299,55 +299,55 @@ VALUES (
 );
 ```
 
-### Balance Crediting
+### Bakiye Kredisi
 
-When an x402 payment is verified, the system:
+Bir x402 ödeme doğrulandığında, sistem:
 
-1. Credits the x402 system account (balance increases)
-2. Debits the treasury account (TRX received)
-3. Immediately debits the x402 system account (order payment)
-4. Credits the provider settlement account (payment to provider)
+1. x402 sistem hesabını krediye çeker (bakiye artar)
+2. Hazine hesabını borçlandırır (alınan TRX)
+3. x402 sistem hesabını hemen borçlandırır (sipariş ödemesi)
+4. Sağlayıcı uzlaştırma hesabını krediye çeker (sağlayıcı ödemesi)
 
 ```sql
 BEGIN;
 
--- Credit x402 system account (payment received)
+-- x402 sistem hesabını krediye çek (ödeme alındı)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($x402_system_id, 'X402_PAYMENT', 1430000, 'CREDIT', $order_id);
 
--- Debit treasury (TRX received on-chain)
+-- Hazineyi borçlandır (blok zincir üzerinde alınan TRX)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($treasury_id, 'X402_PAYMENT', 1430000, 'DEBIT', $order_id);
 
--- Debit x402 system account (order payment)
+-- x402 sistem hesabını borçlandır (sipariş ödemesi)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($x402_system_id, 'ORDER_PAYMENT', 1430000, 'DEBIT', $order_id);
 
--- Credit provider settlement (MERX owes provider)
+-- Sağlayıcı uzlaştırmasını krediye çek (MERX sağlayıcıya borçlu)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($provider_settlement_id, 'ORDER_PAYMENT', 1430000, 'CREDIT', $order_id);
 
 COMMIT;
 ```
 
-The x402 system account balance should always be zero or near-zero: every credit (payment received) is immediately offset by a debit (order executed). If the balance grows, it means payments are being received but orders are not executing -- an alert condition.
+x402 sistem hesabı bakiyesi her zaman sıfır veya sıfıra yakın olmalıdır: her kredi (alınan ödeme) hemen bir borç tarafından dengelenir (yürütülen sipariş). Bakiye büyürse, bunun anlamı ödemelerin alındığı ancak siparişlerin yürütülmediğidir -- bir uyarı koşuludur.
 
-## Step 5: Order Execution
+## Adım 5: Sipariş Yürütümü
 
-After the payment is credited, the order is executed through the standard MERX order pipeline:
+Ödeme krediye çekildikten sonra, sipariş standart MERX sipariş ardışık düzeni aracılığıyla yürütülür:
 
 ```typescript
 async function processValidPayment(
   invoice: X402Invoice,
   tx: TronTransaction
 ): Promise<void> {
-  // Mark invoice as PAID
+  // Faturayı PAID olarak işaretle
   await updateInvoiceStatus(invoice.order_id, 'PAID', tx.txid);
 
-  // Create ledger entries (as shown above)
+  // Defter girişleri oluştur (yukarıda gösterildiği gibi)
   await createX402LedgerEntries(invoice, tx);
 
-  // Execute the energy order
+  // Energy siparişini yürüt
   const order = await executeOrder({
     energy_amount: invoice.energy_amount,
     duration_hours: invoice.duration_hours,
@@ -356,79 +356,79 @@ async function processValidPayment(
     reference_tx: tx.txid
   });
 
-  // Update invoice with order result
+  // Faturayı sipariş sonucu ile güncelle
   await updateInvoiceWithOrder(invoice.order_id, order);
 }
 ```
 
-The order execution follows the same path as any other MERX order: best-price routing, provider selection, delegation, and on-chain verification (including the polling fix for race conditions described in our previous article).
+Sipariş yürütümü, herhangi bir MERX siparişiyle aynı yolu izler: en iyi fiyat yönlendirmesi, sağlayıcı seçimi, devir ve blok zincir doğrulaması (önceki makalemizde açıklanan yarış durumu düzeltmesi dahil).
 
-## Security: Memo Verification Prevents Cross-Payment
+## Güvenlik: Memo Doğrulaması Çapraz Ödemeyi Engeller
 
-The memo field is the linchpin of x402 security. Without it, a critical attack vector exists:
+Memo alanı x402 güvenliğinin mafsallı noktasıdır. Onsuz, kritik bir saldırı vektörü vardır:
 
-### The Cross-Payment Attack
+### Çapraz Ödeme Saldırısı
 
-Imagine x402 without memos. Two users request invoices simultaneously:
-
-```
-Alice requests 65,000 energy for TAliceAddress. Invoice: 1.43 TRX to TMerxTreasury.
-Bob requests 65,000 energy for TBobAddress. Invoice: 1.43 TRX to TMerxTreasury.
-```
-
-Both invoices have the same amount and the same pay_to address. If Bob pays for his invoice, how does MERX know whether to delegate energy to TAliceAddress or TBobAddress? Without a memo, the payment is ambiguous.
-
-Worse: Bob could pay once and claim both invoices. Or Alice could claim Bob's payment for her own invoice.
-
-### How Memos Prevent This
+Memosu olmayan x402'yi düşünün. İki kullanıcı eşzamanlı olarak fatura talep eder:
 
 ```
-Alice's invoice: memo = "merx_xpay_alice123"
-Bob's invoice:   memo = "merx_xpay_bob456"
-
-Alice's payment TX: 1.43 TRX to TMerxTreasury, memo = "merx_xpay_alice123"
-Bob's payment TX:   1.43 TRX to TMerxTreasury, memo = "merx_xpay_bob456"
-
-Verification:
-  Alice's TX memo matches Alice's invoice -> delegate to TAliceAddress
-  Bob's TX memo matches Bob's invoice -> delegate to TBobAddress
+Alice, TAliceAddress için 65.000 energy talep eder. Fatura: 1,43 TRX TMerxTreasury'ye.
+Bob, TBobAddress için 65.000 energy talep eder. Fatura: 1,43 TRX TMerxTreasury'ye.
 ```
 
-Each payment is unambiguously linked to its invoice. There is no way to cross-claim.
+Her iki fatura da aynı tutara ve aynı pay_to adresine sahiptir. Bob faturasını öderse, MERX energy'nin TAliceAddress'e mi yoksa TBobAddress'e mi devredileceğini nereden bilecek? Memo olmadan, ödeme belirsizdir.
 
-### Additional Security Checks
+Daha kötüsü: Bob bir kez ödeme yapabilir ve her iki faturayı da talep edebilir. Ya da Alice, Bob'un ödemesini kendi faturası için talep edebilir.
 
-Beyond memo matching, the verification pipeline includes:
+### Memoların Bunu Nasıl Engellediği
 
-**Double-payment prevention.** Once an invoice is marked PAID, subsequent payments with the same memo are rejected. The payer would need to contact support for a refund (or the system would return the funds automatically if the amount exceeds the invoice).
+```
+Alice'in faturası: memo = "merx_xpay_alice123"
+Bob'un faturası:   memo = "merx_xpay_bob456"
 
-**Amount exactness.** The payment must match the invoice amount precisely. This prevents partial payments (which would require complex partial-fill logic) and overpayments (which would require refund logic).
+Alice'in ödeme TX: 1,43 TRX TMerxTreasury'ye, memo = "merx_xpay_alice123"
+Bob'un ödeme TX:   1,43 TRX TMerxTreasury'ye, memo = "merx_xpay_bob456"
 
-**Expiration enforcement.** Payments received after the invoice expires are not processed. This prevents stale-price exploitation where a buyer requests an invoice during a low-price period, waits for prices to rise, and then pays the old invoice.
+Doğrulama:
+  Alice'in TX memo, Alice'in faturası ile eşleşir -> TAliceAddress'e devreder
+  Bob'un TX memo, Bob'un faturası ile eşleşir -> TBobAddress'e devreder
+```
 
-**Address verification.** The payment must go to the correct treasury address. If a user somehow pays a different address (copy-paste error, phishing), the payment will not be detected by the monitor.
+Her ödeme, belirli faturasına net bir şekilde bağlanır. Çapraz talep etmenin hiçbir yolu yoktur.
 
-## Hata Yonetimi
+### Ek Güvenlik Kontrolleri
 
-### Payment Without Invoice
+Memo eşleştirmesinin ötesinde, doğrulama ardışık düzeni şunları içerir:
 
-If a TRX transfer arrives at the treasury address with a memo that does not match any invoice (typo, expired invoice, test transaction), the payment is logged but not processed. The funds remain in the treasury. In a production system, this would trigger a support alert for manual review and potential refund.
+**Çift ödeme önlemesi.** Bir fatura PAID olarak işaretlendikten sonra, aynı memo ile yapılan sonraki ödemeler reddedilir. Ödeyici destek ile iletişime geçerek geri ödeme talep etmelidir (veya tutar faturayı aşarsa sistem otomatik olarak fonları iade edebilir).
 
-### Provider Failure After Payment
+**Tutar kesinliği.** Ödeme fatura tutarı ile tam olarak eşleşmelidir. Bu, kısmi ödemeleri (karmaşık kısmi doldurma mantığı gerektiren) ve fazla ödemeleri (geri ödeme mantığı gerektiren) engeller.
 
-If the energy provider fails to delegate after a verified payment:
+**Son kullanma tarihi uygulanması.** Fatura süresi dolduktan sonra alınan ödemeler işlenmez. Bu, bir alıcı düşük fiyat döneminde bir fatura talep eden, fiyatlar yükselene kadar bekleyen ve eski faturayı ödeyen eski fiyat istismarını engeller.
+
+**Adres doğrulaması.** Ödeme doğru hazine adresine gitmelidir. Bir kullanıcı bir şekilde farklı bir adrese ödeme yaparsa (yazım hatası, kimlik avı), ödeme monitor tarafından tespit edilmez.
+
+## Hata İşleme
+
+### Fatura Olmadan Ödeme
+
+Hazine adresine, varolan hiçbir faturayla eşleşmeyen bir memo ile bir TRX transferi gelirse (yazım hatası, süresi dolmuş fatura, test işlemi), ödeme günlüğe kaydedilir ancak işlenmez. Fonlar hazinede kalır. Bir üretim sisteminde, bu manuel inceleme ve olası geri ödeme için bir destek uyarısını tetikler.
+
+### Ödeme Sonrası Sağlayıcı Arızası
+
+Doğrulanmış ödeme sonrasında energy sağlayıcısı devredemezse:
 
 ```typescript
 try {
   const order = await executeOrder(invoice);
 } catch (error) {
-  // Order failed -- refund the x402 system account
+  // Sipariş başarısız -- x402 sistem hesabını geri öde
   await createRefundLedgerEntries(invoice);
 
-  // Mark invoice as REFUND_REQUIRED
+  // Faturayı REFUND_REQUIRED olarak işaretle
   await updateInvoiceStatus(invoice.order_id, 'REFUND_REQUIRED');
 
-  // Alert ops team for manual TRX refund to the payer's address
+  // Ops ekibini manuel TRX geri ödemesi için ödeyenin adresine uyar
   await alertOps({
     type: 'X402_REFUND_REQUIRED',
     invoice: invoice.order_id,
@@ -438,32 +438,33 @@ try {
 }
 ```
 
-The refund creates new ledger entries (never modifies existing ones) and flags the invoice for manual refund processing.
+Geri ödeme yeni defter girişleri oluşturur (hiçbir zaman mevcut olanları değiştirmez) ve faturayı manuel geri ödeme işlemi için işaretler.
 
-### Network Congestion
+### Ağ Yoğunluğu
 
-During high network congestion, the gap between payment broadcast and payment confirmation can extend beyond the 5-minute invoice window. The system handles this by checking the transaction timestamp (when it was broadcast) rather than the confirmation timestamp (when it was included in a block). If the transaction was broadcast before the invoice expired, it is accepted even if confirmation comes after expiration.
+Yüksek ağ yoğunluğu sırasında, ödeme yayını ile ödeme onayı arasındaki boşluk 5 dakikalık fatura penceresini aşabilir. Sistem bunu, onay zaman damgası (bir bloka dahil edildiği zaman) yerine işlem zaman damgası (yayınlandığında) kontrol ederek işler. İşlem fatura süresi dolmadan önce yayınlanmışsa, onay süresi dolduktan sonra gelirse bile kabul edilir.
 
-## Ozet
+## Özet
 
-The x402 implementation in MERX demonstrates that trustless, account-free payments are practical today. The key design decisions:
+MERX'te x402 uygulaması, güvensiz, hesapsız ödemelerin bugün pratik olduğunu gösterir. Temel tasarım kararları:
 
-1. **Invoice with unique memo** -- unambiguous payment-to-order linking
-2. **Exact amount matching** -- eliminates partial/over-payment complexity
-3. **5-minute expiration** -- prevents stale-price exploitation
-4. **Hex-to-base58 normalization** -- solves the TronGrid address format problem
-5. **x402 system user** -- enables double-entry accounting without buyer accounts
-6. **Immutable ledger entries** -- full audit trail for every x402 transaction
+1. **Benzersiz memo ile fatura** -- net ödeme-sipariş bağlantısı
+2. **Tam tutar eşleştirmesi** -- kısmi/fazla ödeme karmaşıklığını ortadan kaldırır
+3. **5 dakikalık son kullanma tarihi** -- eski fiyat istismarını engeller
+4. **Hex-to-base58 normalizasyonu** -- TronGrid adres biçimi sorununu çözer
+5. **x402 sistem kullanıcısı** -- alıcı hesapları olmadan çift giriş muhasebesini mümkün kılar
+6. **Değişmez defter girişleri** -- her x402 işlemi için tam denetim izi
 
-The protocol turns HTTP 402 from a 29-year-old placeholder into a working payment mechanism. For AI agents that cannot create accounts or manage API keys, x402 makes TRON energy accessible through a single on-chain transaction.
+Protokol HTTP 402'yi 29 yıllık bir yer tutucudan çalışan bir ödeme mekanizmasına dönüştürür. Hesap oluşturamayan veya API anahtarlarını yönetemeyen yapay zeka ajanları için x402, tek bir blok zincir işlemi aracılığıyla TRON energy'yi erişilebilir kılar.
 
 Platform: [https://merx.exchange](https://merx.exchange)
-Documentation: [https://merx.exchange/docs](https://merx.exchange/docs)
+Dokümantasyon: [https://merx.exchange/docs](https://merx.exchange/docs)
 MCP sunucusu: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şu Anda Yapay Zeka ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır yükleme, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -475,6 +476,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Yapay zeka ajanınıza sorun: "Şu anda en ucuz TRON energy nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP dokümantasyonu: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

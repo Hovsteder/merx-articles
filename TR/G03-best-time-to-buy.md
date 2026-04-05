@@ -1,83 +1,83 @@
-# TRON Energy Satin Almak Icin En Iyi Zaman: Veriye Dayali Analiz
+# TRON Enerjisi Almak İçin En İyi Zaman: Veri Destekli Analiz
 
-Every energy buyer on TRON faces the same question: should I buy now, or will the price be better in an hour? The answer depends on data -- historical price patterns, current market conditions, and your specific tolerance for timing risk.
+TRON'da enerji satın alan her kişi aynı soruyla karşı karşıya gelir: şimdi mı almalıyım, yoksa fiyat bir saat sonra daha iyi mi olur? Cevap veriye bağlıdır -- geçmiş fiyat kalıpları, mevcut pazar koşulları ve zamanlama riski karşısındaki toleransınız.
 
-This article uses MERX's price analysis tools to examine when energy prices tend to be lowest, how to use percentile-based purchasing strategies, and how standing orders can automate optimal timing.
+Bu makale, MERX'in fiyat analiz araçlarını kullanarak enerji fiyatlarının en düşük olma eğiliminde olduğu zamanları, yüzdelik dilim tabanlı satın alma stratejilerini ve otomatik optimal zamanlamayı sağlayan kalıcı siparişleri incelemektedir.
 
-## The Timing Question
+## Zamanlama Sorusu
 
-TRON energy is not a commodity with a single market price. At any moment, seven providers offer different rates. Prices shift throughout the day based on demand, provider behavior, and network conditions. The "best time to buy" is the moment when the lowest available rate across all providers reaches its daily minimum.
+TRON enerjisi tek bir pazar fiyatına sahip bir emtia değildir. Herhangi bir anda, yedi sağlayıcı farklı oranlar sunmaktadır. Fiyatlar, talep, sağlayıcı davranışı ve ağ koşullarına bağlı olarak gün içinde değişmektedir. "Satın almak için en iyi zaman", tüm sağlayıcılar arasında mevcut olan en düşük oranın günlük minimum seviyesine ulaştığı andır.
 
-The problem is that you cannot know in advance exactly when that minimum will occur. You can, however, analyze historical patterns to identify periods when low prices are more likely.
+Sorun, bu minimumun tam olarak ne zaman gerçekleşeceğini önceden bilememenizdir. Ancak, düşük fiyatların daha olası olduğu dönemleri belirlemek için geçmiş kalıpları analiz edebilirsiniz.
 
-## Analyzing Price History with MERX
+## MERX ile Fiyat Geçmişini Analiz Etme
 
-MERX tracks price data across all providers over time. The `analyze_prices` tool provides statistical summaries that reveal pricing patterns:
+MERX, zaman içinde tüm sağlayıcılar arasında fiyat verilerini izlemektedir. `analyze_prices` aracı, fiyatlandırma kalıplarını ortaya koyan istatistiksel özetler sağlamaktadır:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// 30-day price analysis for a standard order
+// Standart bir sipariş için 30 günlük fiyat analizi
 const analysis = await merx.analyzePrices({
   energy_amount: 65000,
   duration: '1h',
   period: '30d'
 });
 
-console.log('30-Day Price Statistics:');
-console.log(`  Mean:            ${analysis.mean_sun} SUN`);
-console.log(`  Median:          ${analysis.median_sun} SUN`);
-console.log(`  Min observed:    ${analysis.min_sun} SUN`);
-console.log(`  Max observed:    ${analysis.max_sun} SUN`);
-console.log(`  Std deviation:   ${analysis.stddev_sun} SUN`);
-console.log(`  5th percentile:  ${analysis.p5_sun} SUN`);
-console.log(`  25th percentile: ${analysis.p25_sun} SUN`);
-console.log(`  75th percentile: ${analysis.p75_sun} SUN`);
-console.log(`  95th percentile: ${analysis.p95_sun} SUN`);
+console.log('30 Günlük Fiyat İstatistikleri:');
+console.log(`  Ortalama:        ${analysis.mean_sun} SUN`);
+console.log(`  Medyan:          ${analysis.median_sun} SUN`);
+console.log(`  Min gözlemlenen: ${analysis.min_sun} SUN`);
+console.log(`  Max gözlemlenen: ${analysis.max_sun} SUN`);
+console.log(`  Std sapma:       ${analysis.stddev_sun} SUN`);
+console.log(`  5. yüzdelik:     ${analysis.p5_sun} SUN`);
+console.log(`  25. yüzdelik:    ${analysis.p25_sun} SUN`);
+console.log(`  75. yüzdelik:    ${analysis.p75_sun} SUN`);
+console.log(`  95. yüzdelik:    ${analysis.p95_sun} SUN`);
 ```
 
-These statistics tell a story. The spread between the 5th and 95th percentile shows how much prices vary. The standard deviation quantifies volatility. The gap between mean and median indicates whether extreme prices skew the average.
+Bu istatistikler bir hikaye anlatmaktadır. 5. ve 95. yüzdelik arasındaki fark, fiyatların ne kadar değiştiğini göstermektedir. Standart sapma, oynaklığı ölçmektedir. Ortalama ile medyan arasındaki boşluk, aşırı fiyatların ortalamayı çarpıtıp çarpıtmadığını göstermektedir.
 
-## Percentile-Based Purchasing Strategy
+## Yüzdelik Dilim Tabanlı Satın Alma Stratejisi
 
-The most effective approach to energy timing is not trying to hit the absolute minimum but targeting a percentile that balances cost savings against fill reliability.
+Enerji zamanlamasında en etkili yaklaşım, mutlak minimum değere ulaşmaya çalışmak değil, maliyet tasarrufu ile doldurma güvenilirliğinin dengesini sağlayan bir yüzdelik dilimi hedeflemektir.
 
-### How Percentiles Work
+### Yüzdelik Dilimler Nasıl Çalışır?
 
-If the 25th percentile price for your order profile is 24 SUN, that means 25% of observed prices over the analysis period were at or below 24 SUN. Setting a standing order at 24 SUN means:
+Sipariş profiliniz için 25. yüzdelik fiyat 24 SUN ise, bu, analiz döneminde gözlemlenen fiyatların %25'inin 24 SUN veya altında olduğu anlamına gelmektedir. 24 SUN'da kalıcı bir sipariş ayarlamak, şu anlama gelmektedir:
 
-- Your order fills 25% of the time (roughly 6 hours per day on average)
-- When it fills, you are paying less than 75% of observed market prices
-- You capture naturally occurring price dips without manual monitoring
+- Siparişiniz zamanın %25'inde doldurulur (günde ortalama yaklaşık 6 saat)
+- Dolduğunda, gözlemlenen pazar fiyatlarının %75'inden daha az ödeme yaparsınız
+- Manuel izleme olmadan doğal olarak oluşan fiyat düşüşlerini yakalarısınız
 
-### Strategy Table
+### Strateji Tablosu
 
-| Target Percentile | Fill Frequency | Savings vs Median | Risk Level |
+| Hedef Yüzdelik | Doldurma Sıklığı | Medyan Karşısında Tasarruf | Risk Seviyesi |
 |---|---|---|---|
-| 5th percentile | ~1-2 hours/day | Maximum | High (may not fill for hours) |
-| 10th percentile | ~2-3 hours/day | Very high | Moderate-high |
-| 25th percentile | ~6 hours/day | High | Moderate |
-| 50th percentile (median) | ~12 hours/day | Moderate | Low |
-| 75th percentile | ~18 hours/day | Low | Very low |
+| 5. yüzdelik | ~1-2 saat/gün | Maksimum | Yüksek (saatler doldurulmayabilir) |
+| 10. yüzdelik | ~2-3 saat/gün | Çok yüksek | Orta-yüksek |
+| 25. yüzdelik | ~6 saat/gün | Yüksek | Orta |
+| 50. yüzdelik (medyan) | ~12 saat/gün | Orta | Düşük |
+| 75. yüzdelik | ~18 saat/gün | Düşük | Çok düşük |
 
-### Choosing Your Percentile
+### Yüzdelik Dilim Seçimi
 
-**Time-flexible operations** (batch processing, non-urgent distributions): Target the 10th-25th percentile. You can wait hours for the price to hit your target.
+**Zamana esnek operasyonlar** (toplu işlem, acil olmayan dağıtımlar): 10-25. yüzdelik hedefleyin. Fiyatın hedefinize ulaşması için saatler bekleyebilirsiniz.
 
-**Semi-urgent operations** (standard business processing): Target the 25th-50th percentile. Orders fill within a few hours during normal market conditions.
+**Yarı acil operasyonlar** (standart iş işlemleri): 25-50. yüzdelik hedefleyin. Siparişler normal pazar koşullarında birkaç saat içinde doldurulur.
 
-**Time-critical operations** (real-time payments, user-facing transactions): Target the 50th-75th percentile or buy at market rate. Do not risk delays.
+**Zamana kritik operasyonlar** (gerçek zamanlı ödemeler, kullanıcıya dönük işlemler): 50-75. yüzdelik hedefleyin veya pazar oranında satın alın. Gecikmeler riskine girmeyin.
 
-## Implementing the Strategy
+## Strateji Uygulama
 
-### Standing Orders
+### Kalıcı Siparişler
 
-Standing orders are the mechanism for implementing percentile-based purchasing:
+Kalıcı siparişler, yüzdelik dilim tabanlı satın almayı uygulamak için mekanizmadır:
 
 ```typescript
-// Based on analysis showing 25th percentile at 24 SUN
+// Analiz 25. yüzdeliki 24 SUN'da gösteriyor
 const standing = await merx.createStandingOrder({
   energy_amount: 65000,
   max_price_sun: 24,
@@ -86,86 +86,86 @@ const standing = await merx.createStandingOrder({
   target_address: 'TYourAddress...'
 });
 
-console.log(`Standing order created: ${standing.id}`);
-console.log(`Will fill when price drops to 24 SUN or below`);
+console.log(`Kalıcı sipariş oluşturuldu: ${standing.id}`);
+console.log(`Fiyat 24 SUN veya altına düştüğünde doldurulacak`);
 ```
 
-The standing order monitors prices across all seven providers continuously. When any provider offers 24 SUN or below for your specified amount and duration, the order executes automatically.
+Kalıcı sipariş, tüm yedi sağlayıcı arasındaki fiyatları sürekli olarak izlemektedir. Herhangi bir sağlayıcı belirtilen miktar ve süre için 24 SUN veya daha düşük bir fiyat sunduğunda, sipariş otomatik olarak yürütülür.
 
-### Tiered Standing Orders
+### Katmanlı Kalıcı Siparişler
 
-For more sophisticated strategies, create multiple standing orders at different price levels:
+Daha karmaşık stratejiler için, farklı fiyat seviyelerinde birden fazla kalıcı sipariş oluşturun:
 
 ```typescript
-// Tier 1: Aggressive - fill if price drops very low
+// Katman 1: Agresif - fiyat çok düşük düşerse doldur
 const tier1 = await merx.createStandingOrder({
   energy_amount: 200000,
-  max_price_sun: 22,       // Very aggressive
+  max_price_sun: 22,       // Çok agresif
   duration: '1h',
   repeat: true,
   target_address: operationsWallet
 });
 
-// Tier 2: Moderate - fill at below-average prices
+// Katman 2: Orta - ortalama altında fiyatlarda doldur
 const tier2 = await merx.createStandingOrder({
   energy_amount: 100000,
-  max_price_sun: 25,       // Moderate
+  max_price_sun: 25,       // Orta
   duration: '1h',
   repeat: true,
   target_address: operationsWallet
 });
 
-// Tier 3: Conservative - fill reliably
+// Katman 3: Muhafazakar - güvenilir şekilde doldur
 const tier3 = await merx.createStandingOrder({
   energy_amount: 65000,
-  max_price_sun: 30,       // Conservative
+  max_price_sun: 30,       // Muhafazakar
   duration: '1h',
   repeat: true,
   target_address: operationsWallet
 });
 ```
 
-This structure buys more energy when prices are very low, moderate amounts at average prices, and minimum requirements at higher prices. The result is a blended average cost that is consistently below market rate.
+Bu yapı, fiyatlar çok düşük olduğunda daha fazla enerji satın alır, ortalama fiyatlarda orta miktarlar satın alır ve daha yüksek fiyatlarda asgari gereklilikleri satın alır. Sonuç, tutarlı bir şekilde pazar oranının altında olan birleşik ortalama maliyettir.
 
-## Daily Timing Patterns
+## Günlük Zamanlama Kalıpları
 
-While specific price levels vary, daily patterns provide general guidance on when to buy:
+Belirli fiyat seviyeleri değişse de, günlük kalıplar satın alma zamanı hakkında genel rehberlik sağlamaktadır:
 
-### Lower-Price Windows
+### Daha Düşük Fiyat Pencereleri
 
-Based on typical TRON network activity patterns, prices tend to be softer during:
+Tipik TRON ağı aktivite kalıplarına dayanarak, fiyatlar şu dönemlerde daha zayıf olma eğilimindedir:
 
-- **Late evening to early morning UTC+8** (approximately 22:00-06:00 UTC+8, or 14:00-22:00 UTC): Asian business hours end, reducing demand
-- **Weekends**: Lower overall transaction volume means less energy demand
-- **Holiday periods**: Both Western and Asian holiday periods see reduced activity
+- **UTC+8 akşam geç saatleri ile erken sabah** (yaklaşık 22:00-06:00 UTC+8 veya 14:00-22:00 UTC): Asya iş saatleri sona eriyor, talep azalıyor
+- **Hafta sonları**: Daha düşük genel işlem hacmi, daha az enerji talebinin anlamına gelmektedir
+- **Tatil dönemleri**: Hem Batı hem de Asya tatil dönemleri azalan aktiviteyi görmektedir
 
-### Higher-Price Windows
+### Daha Yüksek Fiyat Pencereleri
 
-Prices tend to be firmer during:
+Fiyatlar şu dönemlerde daha güçlü olma eğilimindedir:
 
-- **Asian business hours** (approximately 09:00-18:00 UTC+8): Peak TRON network activity
-- **Major market events**: Crypto market crashes or rallies drive transaction volume
-- **Token launch events**: Mass minting or distribution events create demand spikes
+- **Asya iş saatleri** (yaklaşık 09:00-18:00 UTC+8): Yoğun TRON ağ aktivitesi
+- **Büyük pazar olayları**: Kripto pazar çöküşleri veya toparlanmalar, işlem hacmini artırıyor
+- **Token lansman olayları**: Toplu basım veya dağıtım olayları, talep artışı yaratıyor
 
-### Important Caveat
+### Önemli Uyarı
 
-These patterns are statistical tendencies, not guarantees. On any given day, the lowest price might occur during "peak hours" due to a provider running a promotion, or prices might be elevated during "off-peak" due to a large buyer clearing provider supply.
+Bu kalıplar garantiler değil, istatistiksel eğilimlerdir. Herhangi bir günde, en düşük fiyat, bir sağlayıcının promosyon çalıştırdığı "yoğun saatler" sırasında oluşabilir veya fiyatlar büyük bir alıcının sağlayıcı arzını temizlediği nedeniyle "yoğun olmayan saatlerde" yüksek olabilir.
 
-This is exactly why standing orders are more effective than manual timing: they monitor prices 24/7 and capture opportunities regardless of when they occur.
+Bu, kalıcı siparişlerin manuel zamanlamadan neden daha etkili olduğunun tam sebebidir: 7/24 fiyatları izlerler ve bunlar ne zaman gerçekleşirse fırsatları yakalarlar.
 
-## Historical Data Patterns
+## Geçmiş Veri Kalıpları
 
-Pull historical price data to build more detailed models:
+Daha ayrıntılı modeller oluşturmak için geçmiş fiyat verilerini çekin:
 
 ```typescript
-// Get granular price history
+// Granüler fiyat geçmişini alın
 const history = await merx.getPriceHistory({
   energy_amount: 65000,
   duration: '1h',
   period: '30d'
 });
 
-// Analyze by hour of day
+// Saate göre analiz
 const hourlyPrices: Record<number, number[]> = {};
 
 for (const point of history.prices) {
@@ -174,22 +174,22 @@ for (const point of history.prices) {
   hourlyPrices[hour].push(point.best_price_sun);
 }
 
-// Find lowest-average hours
+// En düşük ortalama saatleri bulun
 for (const [hour, prices] of Object.entries(hourlyPrices)) {
   const avg = prices.reduce((a, b) => a + b) / prices.length;
-  console.log(`UTC ${hour}:00 - Average: ${avg.toFixed(1)} SUN`);
+  console.log(`UTC ${hour}:00 - Ortalama: ${avg.toFixed(1)} SUN`);
 }
 ```
 
-This analysis reveals which hours consistently offer better pricing for your specific order profile.
+Bu analiz, sipariş profiliniz için tutarlı olarak daha iyi fiyatlandırma sunan saatleri ortaya koymaktadır.
 
-## The Cost of Waiting
+## Beklemenin Maliyeti
 
-An important consideration in timing strategy is the cost of waiting too long. If your standing order target is too aggressive (5th percentile or lower), you might wait days for a fill while your operations need energy now.
+Zamanlama stratejisinde önemli bir husus, çok uzun beklemenin maliyetidir. Kalıcı siparişiniz hedefi çok agresif ise (5. yüzdelik veya daha düşük), operasyonlarınız şimdi enerjiye ihtiyaç duyarken günler boyunca bir doldurma için bekleyebilirsiniz.
 
-### Buffer Strategy
+### Tampon Stratejisi
 
-Maintain an energy buffer so your standing orders have time to fill without disrupting operations:
+Kalıcı siparişlerinizin operasyonları kesintiye uğratmadan doldurmak için zaman yapması için bir enerji tamponu koruyun:
 
 ```typescript
 class TimingStrategy {
@@ -205,19 +205,19 @@ class TimingStrategy {
     const available = resources.energy.available;
 
     if (available < this.emergencyThreshold) {
-      // Below emergency threshold: buy at market rate
+      // Acil durum eşiğinin altında: pazar oranında satın al
       await this.buyAtMarket();
     } else if (available < this.bufferEnergy) {
-      // Below buffer: standing order at moderate price
+      // Tampon altında: orta fiyatta kalıcı sipariş
       await this.createModerateOrder();
     } else {
-      // Buffer is full: standing order at aggressive price
+      // Tampon dolu: agresif fiyatta kalıcı sipariş
       await this.createAggressiveOrder();
     }
   }
 
   private async buyAtMarket(): Promise<void> {
-    // Get current best price and buy immediately
+    // Geçerli en iyi fiyatı al ve hemen satın al
     await this.merx.createOrder({
       energy_amount: this.bufferEnergy,
       duration: '1h',
@@ -228,7 +228,7 @@ class TimingStrategy {
   private async createModerateOrder(): Promise<void> {
     await this.merx.createStandingOrder({
       energy_amount: this.bufferEnergy,
-      max_price_sun: 28,  // 50th percentile
+      max_price_sun: 28,  // 50. yüzdelik
       duration: '1h',
       target_address: this.wallet
     });
@@ -237,7 +237,7 @@ class TimingStrategy {
   private async createAggressiveOrder(): Promise<void> {
     await this.merx.createStandingOrder({
       energy_amount: this.bufferEnergy * 2,
-      max_price_sun: 23,  // 10th percentile
+      max_price_sun: 23,  // 10. yüzdelik
       duration: '1h',
       target_address: this.wallet
     });
@@ -245,11 +245,11 @@ class TimingStrategy {
 }
 ```
 
-This adaptive strategy buys aggressively when the buffer is full (waiting for good prices costs nothing) and buys at market rate when the buffer is depleted (operations take priority over price optimization).
+Bu uyarlanabilir strateji, tampon dolu olduğunda agresif satın alır (iyi fiyatları beklemek hiçbir maliyete mal olmaz) ve tampon bittiğinde pazar oranında satın alır (operasyonlar fiyat optimizasyonundan önce gelir).
 
-## Measuring Your Results
+## Sonuçları Ölçme
 
-Track your average purchase price over time to verify your timing strategy works:
+Zamanlama stratejinizin işe yaradığını doğrulamak için zaman içinde ortalama satın alma fiyatınızı izleyin:
 
 ```typescript
 interface PurchaseRecord {
@@ -282,37 +282,38 @@ function analyzeResults(
     (sum, p) => sum + p.priceSun, 0
   ) / marketOrders.length;
 
-  console.log(`Overall average: ${avgPrice.toFixed(1)} SUN`);
-  console.log(`Standing order avg: ${standingAvg.toFixed(1)} SUN`);
-  console.log(`Market order avg: ${marketAvg.toFixed(1)} SUN`);
+  console.log(`Genel ortalama: ${avgPrice.toFixed(1)} SUN`);
+  console.log(`Kalıcı sipariş ort: ${standingAvg.toFixed(1)} SUN`);
+  console.log(`Pazar siparişi ort: ${marketAvg.toFixed(1)} SUN`);
   console.log(
-    `Standing order savings: ` +
+    `Kalıcı sipariş tasarrufu: ` +
     `${((1 - standingAvg / marketAvg) * 100).toFixed(1)}%`
   );
 }
 ```
 
-A well-tuned timing strategy should show standing order average prices 10-20% below market order prices.
+İyi ayarlanmış bir zamanlama stratejisi, kalıcı sipariş ortalama fiyatlarının pazar siparişi fiyatlarının %10-20 altında olduğunu göstermelidir.
 
-## Sonuc
+## Sonuç
 
-The best time to buy TRON energy is not a specific hour or day -- it is the moment when prices reach your target level, captured automatically by a standing order.
+TRON enerjisi satın almak için en iyi zaman, belirli bir saat veya gün değil -- fiyatların kalıcı bir sipariş tarafından otomatik olarak yakalanan hedef seviyesine ulaştığı andır.
 
-The data-driven approach is straightforward:
+Veri destekli yaklaşım basittir:
 
-1. Analyze historical prices to understand the distribution for your order profile
-2. Set a target at the 25th percentile (adjust based on your urgency)
-3. Create standing orders at your target price
-4. Maintain a buffer so operations continue while waiting for optimal prices
-5. Track results and adjust targets based on fill rates and average costs
+1. Sipariş profiliniz için dağılımı anlamak için geçmiş fiyatları analiz edin
+2. 25. yüzdeliki hedefleyin (aciliyete göre ayarlayın)
+3. Hedef fiyatında kalıcı siparişler oluşturun
+4. Operasyonlar optimal fiyatları beklerken devam etmesi için bir tampon koruyun
+5. Sonuçları izleyin ve doldurma oranları ve ortalama maliyetlere göre hedefleri ayarlayın
 
-MERX provides the tools -- price analysis, standing orders, and multi-provider aggregation -- to implement this strategy without building custom infrastructure. The system monitors seven providers continuously, captures price dips automatically, and ensures you consistently buy below the market average.
+MERX, bu stratejiyi özel altyapı oluşturmadan uygulamak için araçları sağlamaktadır -- fiyat analizi, kalıcı siparişler ve çok sağlayıcılı toplama. Sistem yedi sağlayıcıyı sürekli olarak izler, fiyat düşüşlerini otomatik olarak yakalar ve tutarlı bir şekilde pazar ortalamasının altında satın almaları sağlar.
 
-Start analyzing prices at [https://merx.exchange](https://merx.exchange) or explore the analytics API at [https://merx.exchange/docs](https://merx.exchange/docs).
+[https://merx.exchange](https://merx.exchange) adresinde fiyatları analiz etmeye başlayın veya [https://merx.exchange/docs](https://merx.exchange/docs) adresinde analitik API'yi keşfedin.
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Yapay Zeka ile Hemen Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- kurulum yok, salt okunur araçlar için API anahtarına gerek yok:
 
 ```json
 {
@@ -324,6 +325,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Yapay zeka ajanınıza sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgesi: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

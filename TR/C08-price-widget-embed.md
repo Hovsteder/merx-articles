@@ -1,61 +1,61 @@
-# MERX Fiyat Widget'i: Herhangi Bir Web Sitesine Canli TRON Energy Fiyatlarini Gomin
+# MERX Fiyat Widget'ı: Canlı TRON Enerji Fiyatlarını Herhangi Bir Web Sitesine Gömün
 
-TRON energy prices change constantly. Providers adjust rates based on demand, network conditions, and available capacity. If your website serves TRON users - whether it is a wallet, a dApp, a blockchain explorer, or a resource guide - showing live energy prices adds immediate, practical value for your visitors.
+TRON enerji fiyatları sürekli değişir. Sağlayıcılar talep, ağ koşulları ve mevcut kapasite temelinde oranları ayarlar. Web siteniz TRON kullanıcılarına hizmet veriyorsa - ister bir cüzdan, ister bir dApp, ister bir blockchain explorer, ister bir kaynak rehberi olsun - canlı enerji fiyatlarını göstermek, ziyaretçileriniz için anında pratik bir değer katar.
 
-MERX provides an embeddable price widget that displays real-time energy prices from all major providers, sorted by cost. It requires two lines of HTML, auto-refreshes every 60 seconds, and inherits a professional dark theme that fits most blockchain-related websites without modification.
+MERX, tüm ana sağlayıcılardan gerçek zamanlı enerji fiyatlarını maliyet sırasına göre gösteren gömülebilir bir fiyat widget'ı sağlar. İki satırlık HTML gerektirir, her 60 saniyede otomatik olarak yenilenir ve çoğu blockchain ile ilgili web sitesine herhangi bir değişiklik olmadan uygun profesyonel koyu tema kullanır.
 
-This article covers how to embed the widget, how it works under the hood, and how to customize it for your use case.
+Bu makale widget'ı nasıl gömeceğini, arkasında nasıl çalıştığını ve kullanım örneğinize nasıl özelleştireceğini kapsar.
 
-## Two Lines of HTML
+## İki Satırlık HTML
 
-The simplest possible integration. Add these two lines anywhere in your HTML:
+En basit entegrasyon. Bu iki satırı HTML'nizin herhangi bir yerine ekleyin:
 
 ```html
 <div id="merx-prices"></div>
 <script src="https://merx.exchange/widget/prices.js"></script>
 ```
 
-That is it. The script initializes automatically, fetches current prices from the MERX public API, and renders a styled table inside the `div`. No API key required. No build step. No framework dependency.
+Hepsi bu. Script otomatik olarak başlatılır, MERX genel API'sinden mevcut fiyatları alır ve `div` içinde stillenmiş bir tablo işler. API anahtarı gerekli değil. Derleme adımı yok. Çerçeve bağımlılığı yok.
 
-The widget works in any HTML page - static sites, WordPress, Webflow, Squarespace (via custom code blocks), or any framework that renders to the browser. It loads asynchronously and does not block page rendering.
+Widget herhangi bir HTML sayfasında çalışır - statik siteler, WordPress, Webflow, Squarespace (özel kod blokları aracılığıyla) veya tarayıcıya işlenen herhangi bir çerçeve. Asynchronously yüklenir ve sayfa işlemesini engellemez.
 
-## What the Widget Displays
+## Widget'ın Gösterdikleri
 
-The widget renders a compact table showing all active TRON energy providers with their current pricing. Each row includes:
+Widget, tüm etkin TRON enerji sağlayıcılarını mevcut fiyatlandırmayla gösteren kompakt bir tablo işler. Her satır şunları içerir:
 
-- **Provider name** - the energy provider (Sohu, CatFee, NETTs, TronSave, Feee, iTRX, PowerSun).
-- **Price per unit** - current energy price in SUN. This is the cost per unit of energy for a standard delegation.
-- **Min/Max order** - the minimum and maximum energy amount the provider currently accepts.
-- **Duration** - available rental durations (1 hour, 3 hours, 1 day, etc.).
-- **Status** - whether the provider is currently online and accepting orders.
+- **Sağlayıcı adı** - enerji sağlayıcısı (Sohu, CatFee, NETTs, TronSave, Feee, iTRX, PowerSun).
+- **Birim başına fiyat** - SUN cinsinden mevcut enerji fiyatı. Bu, standart delegasyon için birim enerji maliyetidir.
+- **Min/Max sipariş** - sağlayıcının halihazırda kabul ettiği minimum ve maksimum enerji miktarı.
+- **Süre** - mevcut kira süreleri (1 saat, 3 saat, 1 gün, vb.).
+- **Durum** - sağlayıcının halihazırda çevrimiçi olup olmadığı ve siparişleri kabul edip etmediği.
 
-Providers are sorted by price, cheapest first. The sorting updates with each refresh, so if a provider drops their price, they move up automatically.
+Sağlayıcılar fiyata göre sıralanır, en ucuz ilk sırada. Sıralama her yenilemede güncellenir, yani bir sağlayıcı fiyatını düşürürse otomatik olarak yukarı taşınır.
 
-### Default Appearance
+### Varsayılan Görünüm
 
-The widget uses a dark theme by default:
+Widget varsayılan olarak koyu temayı kullanır:
 
-- Background: `#0a0a0a` (near-black)
-- Text: `#e0e0e0` (light gray)
-- Table borders: `#1a1a1a` (subtle dark borders)
-- Accent color: `#00d4aa` (MERX green, used for the cheapest price highlight)
-- Font: IBM Plex Mono (loaded from Google Fonts if not already available)
+- Arka plan: `#0a0a0a` (neredeyse siyah)
+- Metin: `#e0e0e0` (açık gri)
+- Tablo sınırları: `#1a1a1a` (incelikli koyu sınırlar)
+- Aksent rengi: `#00d4aa` (MERX yeşili, en ucuz fiyat vurgulama için kullanılır)
+- Yazı tipi: IBM Plex Mono (zaten mevcut değilse Google Fonts'tan yüklenir)
 
-The visual style is deliberately minimal. No rounded corners, no gradients, no shadows. It fits the aesthetic of most cryptocurrency and blockchain interfaces.
+Görsel stil kasıtlı olarak minimaldir. Yuvarlak köşe yok, gradyan yok, gölge yok. Çoğu kripto ve blockchain arayüzünün estetiğine uyar.
 
-## How It Works Under the Hood
+## Arkasında Nasıl Çalışır
 
-Understanding the widget's internals helps with customization and troubleshooting.
+Widget'ın işlevini anlamak özelleştirme ve sorun gidermeye yardımcı olur.
 
-### Data Source
+### Veri Kaynağı
 
-The widget fetches data from the MERX public prices endpoint:
+Widget, MERX genel fiyatları endpoint'inden veri alır:
 
 ```
 GET https://merx.exchange/api/v1/prices
 ```
 
-This endpoint is public - no authentication required, no API key needed. It returns current prices from all connected providers:
+Bu endpoint herkese açıktır - kimlik doğrulama gerekli değil, API anahtarı gerekmez. Bağlantılı tüm sağlayıcılardan mevcut fiyatları döndürür:
 
 ```json
 {
@@ -83,31 +83,31 @@ This endpoint is public - no authentication required, no API key needed. It retu
 }
 ```
 
-### Refresh Cycle
+### Yenileme Döngüsü
 
-The widget polls the prices endpoint every 60 seconds. Each refresh is silent - no loading spinner, no flash of empty content. The table updates in place. If a fetch fails (network issue, server timeout), the widget retains the last successful data and tries again on the next cycle.
+Widget, fiyatları endpoint'ini her 60 saniyede bir yoklar. Her yenileme sessizdir - yükleme çarkı yok, boş içeriğin yanıp sönmesi yok. Tablo yerinde güncellenir. Bir getirme başarısız olursa (ağ sorunu, sunucu zaman aşımı), widget son başarılı verileri tutar ve sonraki döngüde tekrar dener.
 
-A small timestamp in the widget footer shows when data was last updated, so users can tell at a glance if prices are current.
+Widget altbilgisinde küçük bir zaman damgası, verilerin ne zaman son güncellendiğini gösterir, böylece kullanıcılar fiyatların güncel olup olmadığını bir bakışta anlayabilir.
 
-### Script Loading
+### Script Yüklemesi
 
-The `prices.js` script is served from the MERX CDN with aggressive caching (1 hour) and gzip compression. Typical load time is under 50ms on broadband connections. The script is approximately 8 KB minified and gzipped.
+`prices.js` script'i MERX CDN'sinden agresif önbelleğe alma (1 saat) ve gzip sıkıştırması ile sunulur. Tipik yükleme süresi geniş bant bağlantılarında 50ms altındadır. Script, minifiye ve gzip sıkıştırılmış halde yaklaşık 8 KB'dir.
 
-On load, the script:
+Yükleme sırasında script:
 
-1. Finds the `#merx-prices` element (or a custom target if configured).
-2. Injects scoped CSS styles (prefixed to avoid conflicts with your page styles).
-3. Makes the first API call.
-4. Renders the table.
-5. Sets up the 60-second refresh interval.
+1. `#merx-prices` elementini (veya yapılandırılmışsa özel bir hedefi) bulur.
+2. Kapsamlı CSS stillerini enjekte eder (sayfa stillerinizle çatışmalarını önlemek için ön ek eklenmiştir).
+3. İlk API çağrısını yapar.
+4. Tabloyu işler.
+5. 60 saniyelik yenileme aralığını ayarlar.
 
-All styles are scoped under `.merx-widget` to prevent CSS conflicts with your existing styles.
+Tüm stiller sayfa stillerinizle CSS çatışmalarını önlemek için `.merx-widget` altında kapsamlandırılır.
 
-## Customization Options
+## Özelleştirme Seçenekleri
 
-The widget accepts configuration via data attributes on the container `div` or through a JavaScript configuration object.
+Widget, kapsayıcı `div` üzerinde veri öznitelikleri veya JavaScript yapılandırma nesnesi aracılığıyla yapılandırmayı kabul eder.
 
-### Data Attribute Configuration
+### Veri Özniteliği Yapılandırması
 
 ```html
 <div
@@ -121,22 +121,22 @@ The widget accepts configuration via data attributes on the container `div` or t
 <script src="https://merx.exchange/widget/prices.js"></script>
 ```
 
-Available data attributes:
+Mevcut veri öznitelikleri:
 
-| Attribute | Default | Description |
+| Öznitelik | Varsayılan | Açıklama |
 |----------|---------|-------------|
-| `data-refresh` | `60` | Refresh interval in seconds (minimum 15) |
-| `data-providers` | all | Comma-separated list of providers to show |
-| `data-duration` | all | Filter to specific duration (1, 3, 24 hours) |
-| `data-theme` | `dark` | `dark` or `light` |
-| `data-max-rows` | all | Maximum number of providers to display |
-| `data-show-header` | `true` | Show or hide the "MERX Energy Prices" header |
-| `data-show-footer` | `true` | Show or hide the timestamp footer |
-| `data-compact` | `false` | Compact mode - fewer columns, smaller text |
+| `data-refresh` | `60` | Yenileme aralığı (saniye cinsinden, minimum 15) |
+| `data-providers` | tümü | Gösterilecek sağlayıcıların virgülle ayrılmış listesi |
+| `data-duration` | tümü | Belirli süreye filtrele (1, 3, 24 saat) |
+| `data-theme` | `dark` | `dark` veya `light` |
+| `data-max-rows` | tümü | Gösterilecek maksimum sağlayıcı sayısı |
+| `data-show-header` | `true` | "MERX Enerji Fiyatları" başlığını göster veya gizle |
+| `data-show-footer` | `true` | Zaman damgası altbilgisini göster veya gizle |
+| `data-compact` | `false` | Kompakt mod - daha az sütun, daha küçük metin |
 
-### JavaScript Configuration
+### JavaScript Yapılandırması
 
-For more control, initialize the widget programmatically:
+Daha fazla kontrol için widget'ı programatik olarak başlatın:
 
 ```html
 <div id="energy-prices"></div>
@@ -153,74 +153,74 @@ For more control, initialize the widget programmatically:
     showFooter: true,
     compact: false,
     onUpdate: function (prices) {
-      console.log('Prices updated:', prices.length, 'providers');
+      console.log('Fiyatlar güncellendi:', prices.length, 'sağlayıcı');
     },
     onError: function (error) {
-      console.error('Widget error:', error.message);
+      console.error('Widget hatası:', error.message);
     },
   });
 </script>
 ```
 
-The `onUpdate` and `onError` callbacks let you react to widget events in your own code. The `onUpdate` callback receives the parsed price array on every successful refresh.
+`onUpdate` ve `onError` geri çağrıları widget olaylarına kendi kodunuzda tepki vermenize izin verir. `onUpdate` geri çağrısı, her başarılı yenilemede ayrıştırılan fiyat dizisini alır.
 
-### Light Theme
+### Açık Tema
 
-For websites with a light background:
+Açık arka plana sahip web siteler için:
 
 ```html
 <div id="merx-prices" data-theme="light"></div>
 <script src="https://merx.exchange/widget/prices.js"></script>
 ```
 
-Light theme colors:
+Açık tema renkleri:
 
-- Background: `#ffffff`
-- Text: `#1a1a1a`
-- Table borders: `#e0e0e0`
-- Accent: `#00a88a` (darker green for light backgrounds)
+- Arka plan: `#ffffff`
+- Metin: `#1a1a1a`
+- Tablo sınırları: `#e0e0e0`
+- Aksent: `#00a88a` (açık arka planlar için daha koyu yeşil)
 
-### Custom Styling
+### Özel Stil Oluşturma
 
-The widget's CSS classes are stable and documented. Override them in your own stylesheet:
+Widget'ın CSS sınıfları stabildir ve belgelenir. Kendi stil sayfanızda bunları geçersiz kılın:
 
 ```css
-/* Make the widget full-width */
+/* Widget'ı tam genişliğe yapt */
 .merx-widget {
   width: 100%;
   max-width: none;
 }
 
-/* Custom font */
+/* Özel yazı tipi */
 .merx-widget table {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
 }
 
-/* Custom accent color */
+/* Özel aksent rengi */
 .merx-widget .merx-best-price {
   color: #ff6b00;
 }
 
-/* Hide specific columns */
+/* Belirli sütunları gizle */
 .merx-widget .merx-col-duration {
   display: none;
 }
 ```
 
-The widget's default `max-width` is 640px. Setting it to `100%` lets it fill its container.
+Widget'ın varsayılan `max-width` değeri 640px'dir. Bunu `100%` olarak ayarlamak, kapsayıcısını doldurmaya izin verir.
 
-## Full HTML Page Example
+## Tam HTML Sayfası Örneği
 
-Here is a complete, self-contained HTML page with the widget embedded. Copy it, open it in a browser, and you have a live TRON energy price tracker:
+Widget gömülü tam, bağımsız bir HTML sayfası. Kopyalayın, tarayıcıda açın ve canlı TRON enerji fiyat takip edicisine sahip olursunuz:
 
 ```html
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TRON Energy Prices - Live</title>
+  <title>TRON Enerji Fiyatları - Canlı</title>
   <style>
     body {
       background: #0a0a0a;
@@ -254,8 +254,8 @@ Here is a complete, self-contained HTML page with the widget embedded. Copy it, 
 </head>
 <body>
   <div class="container">
-    <h1>TRON Energy Prices</h1>
-    <p>Live prices from all major providers. Updates every 60 seconds.</p>
+    <h1>TRON Enerji Fiyatları</h1>
+    <p>Tüm ana sağlayıcılardan canlı fiyatlar. Her 60 saniyede güncellenir.</p>
 
     <div id="merx-prices" data-refresh="60" data-compact="false"></div>
     <script src="https://merx.exchange/widget/prices.js"></script>
@@ -264,11 +264,11 @@ Here is a complete, self-contained HTML page with the widget embedded. Copy it, 
 </html>
 ```
 
-## Building Your Own Widget with the Public API
+## Genel API ile Kendi Widget'ınızı Oluşturma
 
-If the pre-built widget does not fit your needs, you can build your own using the public prices endpoint directly. This gives you complete control over the UI.
+Önceden oluşturulmuş widget'ı ihtiyaçlarınıza uymazsa, genel fiyatları endpoint'ini doğrudan kullanarak kendi widget'ınızı oluşturabilirsiniz. Bu, UI'ın tamamen kontrolünü size verir.
 
-### Vanilla JavaScript Example
+### Vanilla JavaScript Örneği
 
 ```javascript
 async function fetchMerxPrices() {
@@ -289,7 +289,7 @@ function renderPriceTable(prices) {
       <td>${p.provider}</td>
       <td>${p.energy_price_sun} SUN</td>
       <td>${(p.min_energy / 1000).toFixed(0)}K</td>
-      <td>${p.available ? 'Online' : 'Offline'}</td>
+      <td>${p.available ? 'Çevrimiçi' : 'Çevrimdışı'}</td>
     </tr>`
     )
     .join('');
@@ -297,23 +297,23 @@ function renderPriceTable(prices) {
   table.innerHTML = `
     <thead>
       <tr>
-        <th>Provider</th>
-        <th>Price</th>
-        <th>Min Order</th>
-        <th>Status</th>
+        <th>Sağlayıcı</th>
+        <th>Fiyat</th>
+        <th>Min Sipariş</th>
+        <th>Durum</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
   `;
 }
 
-// Initial load and auto-refresh
+// İlk yükleme ve otomatik yenileme
 async function refreshPrices() {
   try {
     const prices = await fetchMerxPrices();
     renderPriceTable(prices);
   } catch (err) {
-    console.error('Failed to fetch prices:', err);
+    console.error('Fiyatlar alınamadı:', err);
   }
 }
 
@@ -321,7 +321,7 @@ refreshPrices();
 setInterval(refreshPrices, 60000);
 ```
 
-### React Component Example
+### React Bileşeni Örneği
 
 ```jsx
 import { useState, useEffect } from 'react';
@@ -341,7 +341,7 @@ function MerxPrices({ refreshInterval = 60000 }) {
         setPrices(sorted);
         setLastUpdated(new Date());
       } catch (err) {
-        console.error('Price fetch failed:', err);
+        console.error('Fiyat getirme başarısız:', err);
       }
     }
 
@@ -355,8 +355,8 @@ function MerxPrices({ refreshInterval = 60000 }) {
       <table>
         <thead>
           <tr>
-            <th>Provider</th>
-            <th>Price (SUN)</th>
+            <th>Sağlayıcı</th>
+            <th>Fiyat (SUN)</th>
             <th>Min</th>
             <th>Max</th>
           </tr>
@@ -373,7 +373,7 @@ function MerxPrices({ refreshInterval = 60000 }) {
         </tbody>
       </table>
       {lastUpdated && (
-        <small>Updated: {lastUpdated.toLocaleTimeString()}</small>
+        <small>Güncellendi: {lastUpdated.toLocaleTimeString()}</small>
       )}
     </div>
   );
@@ -382,14 +382,14 @@ function MerxPrices({ refreshInterval = 60000 }) {
 export default MerxPrices;
 ```
 
-## Rate Limits for the Public Endpoint
+## Genel Endpoint için Hız Sınırları
 
-The `GET /api/v1/prices` endpoint is public and does not require authentication, but it is rate-limited to 300 requests per minute per IP address. For a widget refreshing every 60 seconds, you are well within this limit.
+`GET /api/v1/prices` endpoint'i herkese açıktır ve kimlik doğrulama gerektirmez, ancak IP adresi başına dakikada 300 istek ile hız sınırlandırılmıştır. Her 60 saniyede yenilenen bir widget için bu limitin iyi içinde yer alırsınız.
 
-If you build a custom solution that polls more aggressively - for example, a backend that aggregates prices every 5 seconds - consider caching the results and serving them to your frontend from your own server. This keeps your MERX API usage low and improves response times for your users.
+Daha agresif şekilde polling yapan özel bir çözüm oluşturursanız - örneğin her 5 saniyede fiyatları toplayan bir backend - sonuçları önbelleğe almayı ve kendi sunucunuzdan frontend'inize sunmayı düşünün. Bu, MERX API kullanımınızı düşük tutar ve kullanıcılarınız için yanıt sürelerini iyileştirir.
 
 ```javascript
-// Server-side caching example (Node.js/Express)
+// Sunucu tarafı önbelleğe alma örneği (Node.js/Express)
 let cachedPrices = null;
 let cacheTimestamp = 0;
 
@@ -406,44 +406,45 @@ app.get('/api/energy-prices', async (req, res) => {
 });
 ```
 
-This caches MERX responses for 15 seconds on your server, allowing your frontend to poll as frequently as it wants without increasing load on the MERX API.
+Bu, MERX yanıtlarını sunucunuzda 15 saniye boyunca önbelleğe alır, frontend'inizi istediği sıklıkta MERX API'sinde yükleme artırmadan polling yapmasına izin verir.
 
-## SEO Considerations
+## SEO Hususları
 
-The widget renders client-side via JavaScript, which means search engines that do not execute JavaScript will not index the price data. If SEO is important for your price page, consider server-side rendering the initial price data and then hydrating with the widget for live updates.
+Widget, JavaScript aracılığıyla istemci tarafında işlenir, bu da JavaScript yürütmeyen arama motorlarının fiyat verilerini indekslemeyeceği anlamına gelir. SEO'nuz fiyat sayfanız için önemliyse, ilk fiyat verilerini sunucu tarafında işlemyi ve sonra canlı güncellemeler için widget'ı hydrate etmeyi düşünün.
 
-Alternatively, structure the page with static content about TRON energy pricing and use the widget as a supplementary live element. The surrounding text provides SEO value while the widget provides real-time utility.
+Alternatif olarak, sayfayı TRON enerji fiyatlandırması hakkında statik içerikle yapılandırın ve widget'ı ek bir canlı öğe olarak kullanın. Çevreleyen metin SEO değeri sağlarken widget pratik canlı faydası sağlar.
 
-## Sikca Sorulan Sorular
+## Sıkça Sorulan Sorular
 
-**Does the widget slow down my page?**
-No. The script is approximately 8 KB gzipped and loads asynchronously. It does not block rendering. The initial API call adds one network request, but prices typically respond within 100ms.
+**Widget sayfamı yavaşlatır mı?**
+Hayır. Script gziplenmiş halde yaklaşık 8 KB'dir ve asynchronously yüklenir. İşlemeyi engellemez. İlk API çağrısı bir ağ isteği ekler, ancak fiyatlar tipik olarak 100ms içinde yanıt verir.
 
-**Can I show only specific providers?**
-Yes. Use `data-providers="sohu,catfee"` to filter the display to specific providers.
+**Sadece belirli sağlayıcıları gösterebilir miyim?**
+Evet. Ekranı belirli sağlayıcılara filtrelemek için `data-providers="sohu,catfee"` kullanın.
 
-**What happens if the MERX API is down?**
-The widget displays the last successfully fetched data. If it has never successfully loaded (first page load while the API is down), it shows a message indicating prices are temporarily unavailable.
+**MERX API'si kapanırsa ne olur?**
+Widget son başarıyla getirilen verileri görüntüler. İlk yükleme sırasında hiçbir zaman başarıyla yüklenmediyse (API kapıyken ilk sayfa yüklemesi), fiyatların geçici olarak kullanılamadığını gösteren bir mesaj gösterir.
 
-**Is the widget mobile-responsive?**
-Yes. In compact mode (`data-compact="true"`), it works well on screens as narrow as 320px. The default mode requires approximately 500px minimum width.
+**Widget mobil responsive'dir mi?**
+Evet. Kompakt modda (`data-compact="true"`), 320px kadar dar ekranlarda iyi çalışır. Varsayılan mod yaklaşık 500px minimum genişlik gerektirir.
 
-**Can I use the widget commercially?**
-Yes. The widget and the underlying public prices API are free to use. Attribution is appreciated but not required.
+**Widget'ı ticari olarak kullanabilir miyim?**
+Evet. Widget ve altta yatan genel fiyatları API'si ücretsiz olarak kullanılabilir. Atıf takdir edilir ancak gerekli değil.
 
-## Sonuc
+## Sonuç
 
-Adding live TRON energy prices to your website takes two lines of HTML and zero backend work. The MERX price widget handles data fetching, sorting, styling, and auto-refresh out of the box. For custom implementations, the public prices API is available without authentication.
+Web sitenize canlı TRON enerji fiyatları eklemek iki satırlık HTML alır ve sıfır backend çalışması. MERX fiyat widget'ı veri getirmeyi, sıralamayı, stillendirmeyi ve otomatik yenilemeyi şıklı bir şekilde işler. Özel uygulamalar için genel fiyatları API'si kimlik doğrulama olmadan mevcuttur.
 
-Whether you run a TRON wallet, a blockchain blog, or an energy management tool, showing real-time provider prices gives your users actionable information they cannot easily find elsewhere.
+İster bir TRON cüzdanı, ister bir blockchain blogu, ister bir enerji yönetim aracı yönetiyor olun, gerçek zamanlı sağlayıcı fiyatlarını göstermek, kullanıcılarınıza başka yerlerde kolayca bulamayacakları harekete geçilebilir bilgiler verir.
 
-- MERX platform: [merx.exchange](https://merx.exchange)
-- API dokumantasyonu: [merx.exchange/docs](https://merx.exchange/docs)
-- Full source examples: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
+- MERX platformu: [merx.exchange](https://merx.exchange)
+- API belgeleri: [merx.exchange/docs](https://merx.exchange/docs)
+- Tam kaynak örnekleri: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- yükleme yok, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -455,6 +456,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI aracınıza şunu sorun: "Şu anda en ucuz TRON enerji nedir?" ve bağlantılı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

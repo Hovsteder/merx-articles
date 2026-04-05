@@ -1,38 +1,38 @@
-# Uretim Icin Streamable HTTP MCP Sunucusu Olusturma
+# Üretim İçin Akışlı HTTP MCP Sunucusu Oluşturma
 
-The Model Context Protocol originally supported two transports: stdio (for local processes) and SSE (for hosted servers). In 2025, the protocol added a third transport -- Streamable HTTP -- that combines the simplicity of HTTP with the real-time capabilities of server-sent events and proper session management.
+Model Context Protocol aslen iki taşıyıcıyı destekliyordu: stdio (yerel süreçler için) ve SSE (barındırılan sunucular için). 2025'te protokol üçüncü bir taşıyıcı ekledi -- Akışlı HTTP -- ki bu HTTP'nin basitliğini sunucu tarafından gönderilen olayların ve uygun oturum yönetiminin gerçek zamanlı yetenekleriyle birleştiriyor.
 
-This article is a technical guide to building a production-ready Streamable HTTP MCP server. We cover Express.js setup, SSE streaming, session management with the Mcp-Session-Id header, OAuth discovery via well-known endpoints, connection lifecycle, and deployment with Docker. The examples are drawn from the MERX MCP server implementation, which serves as a working reference.
+Bu makale, üretim ortamına hazır bir Akışlı HTTP MCP sunucusu oluşturmak için teknik bir kılavuzdur. Express.js kurulumunu, SSE akışını, Mcp-Session-Id başlığıyla oturum yönetimini, OAuth keşfini iyi bilinen uç noktalar aracılığıyla, bağlantı yaşam döngüsünü ve Docker ile dağıtımı ele alıyoruz. Örnekler, çalışan bir referans olarak hizmet eden MERX MCP sunucusu uygulamasından alınmıştır.
 
-## Why Streamable HTTP
+## Neden Akışlı HTTP
 
-The stdio transport works well for local development but does not scale to hosted deployments. A hosted MCP server needs to serve multiple clients simultaneously, maintain state across requests, and handle disconnections gracefully.
+Stdio taşıyıcısı yerel geliştirme için iyi çalışır ancak barındırılan dağıtımlara ölçeklenmez. Barındırılan bir MCP sunucusu aynı anda birden fazla istemciyi sunabilmeli, istekler arasında durumu korumalı ve bağlantı kopmasını zarafetle işlemelidir.
 
-The original SSE transport addressed hosting but had limitations: it used a single long-lived connection for all communication, making it difficult to implement proper request-response patterns. Error handling was awkward. Session state was implicit rather than explicit.
+Orijinal SSE taşıyıcısı barındırmayı ele aldı ancak sınırlamaları vardı: tüm iletişim için tek bir uzun süreli bağlantı kullanıyordu, bu da uygun istek-yanıt desenlerini uygulamayı zorlaştırdı. Hata işleme garip idi. Oturum durumu örtülü değil açık olmalıydı.
 
-Streamable HTTP solves these problems:
+Akışlı HTTP bu sorunları çözer:
 
-- **Standard HTTP endpoints** for request-response operations (tool calls, resource reads)
-- **SSE channels** for server-initiated events (notifications, progress updates)
-- **Explicit session management** via the Mcp-Session-Id header
-- **OAuth integration** for authentication and authorization
-- **Stateless request handling** with optional stateful sessions
+- **Standart HTTP uç noktaları** istek-yanıt işlemleri için (araç çağrıları, kaynak okuması)
+- **SSE kanalları** sunucu tarafından başlatılan olaylar için (bildirimler, ilerleme güncellemeleri)
+- **Açık oturum yönetimi** Mcp-Session-Id başlığı aracılığıyla
+- **OAuth entegrasyonu** kimlik doğrulama ve yetkilendirme için
+- **Durumsuz istek işleme** isteğe bağlı durum sahibi oturumlarla
 
-The result is an MCP transport that behaves like a well-designed REST API with an optional real-time channel.
+Sonuç, isteğe bağlı gerçek zamanlı kanalı olan iyi tasarlanmış bir REST API gibi davranan bir MCP taşıyıcısıdır.
 
-## Server Architecture
+## Sunucu Mimarisi
 
-A Streamable HTTP MCP server exposes three endpoint types:
+Akışlı HTTP MCP sunucusu üç uç nokta türünü ortaya koymaktadır:
 
 ```
-POST   /mcp         - Main RPC endpoint (tool calls, resource reads)
-GET    /mcp         - SSE event stream (server-to-client notifications)
-DELETE /mcp         - Session termination
+POST   /mcp         - Ana RPC uç noktası (araç çağrıları, kaynak okuması)
+GET    /mcp         - SSE olay akışı (sunucudan istemciye bildirimler)
+DELETE /mcp         - Oturum sonlandırma
 ```
 
-All three use the same path. The HTTP method determines the operation type. This is a deliberate design choice in the MCP specification -- it simplifies configuration and routing.
+Üçünün tümü aynı yolu kullanır. HTTP yöntemi işlem türünü belirler. Bu MCP belirtiminde kasıtlı bir tasarım seçimidir -- yapılandırma ve yönlendirmeyi basitleştirir.
 
-### Express.js Setup
+### Express.js Kurulumu
 
 ```typescript
 import express from 'express';
@@ -41,7 +41,7 @@ import { randomUUID } from 'crypto';
 const app = express();
 app.use(express.json());
 
-// Session store
+// Oturum deposu
 const sessions = new Map<string, SessionState>();
 
 interface SessionState {
@@ -53,7 +53,7 @@ interface SessionState {
   context: Record<string, unknown>;
 }
 
-// Main MCP endpoint
+// Ana MCP uç noktası
 app.post('/mcp', handleMcpPost);
 app.get('/mcp', handleMcpSse);
 app.delete('/mcp', handleMcpDelete);
@@ -63,13 +63,13 @@ app.listen(3100, () => {
 });
 ```
 
-## Session Management
+## Oturum Yönetimi
 
-Sessions are the core state management mechanism. Every client interaction is associated with a session, identified by the `Mcp-Session-Id` header.
+Oturumlar temel durumu yönetme mekanizmasıdır. Her istemci etkileşimi, `Mcp-Session-Id` başlığı tarafından tanımlanan bir oturumla ilişkilidir.
 
-### Session Creation
+### Oturum Oluşturma
 
-When a client sends its first request without a session ID, the server creates a new session:
+İstemci oturum kimliği olmadan ilk isteğini gönderdiğinde sunucu yeni bir oturum oluşturur:
 
 ```typescript
 async function handleMcpPost(
@@ -80,7 +80,7 @@ async function handleMcpPost(
   let session: SessionState;
 
   if (!sessionId || !sessions.has(sessionId)) {
-    // New session
+    // Yeni oturum
     sessionId = randomUUID();
     session = {
       id: sessionId,
@@ -96,51 +96,51 @@ async function handleMcpPost(
     session.lastActivity = Date.now();
   }
 
-  // Include session ID in response
+  // Yanıta oturum kimliğini dahil et
   res.setHeader('Mcp-Session-Id', sessionId);
 
-  // Process the MCP request
+  // MCP isteğini işle
   const result = await processRequest(req.body, session);
   res.json(result);
 }
 ```
 
-### The Mcp-Session-Id Header
+### Mcp-Session-Id Başlığı
 
-The `Mcp-Session-Id` header serves multiple purposes:
+`Mcp-Session-Id` başlığı birden fazla amaca hizmet eder:
 
-1. **Client identification**: The server knows which client is making each request
-2. **State continuity**: Tool results, context, and preferences persist across requests
-3. **SSE association**: The server knows which SSE channel to push notifications to
-4. **Security**: Requests with invalid session IDs are rejected
+1. **İstemci kimliği**: Sunucu her isteği hangi istemcinin yaptığını bilir
+2. **Durum sürekliliği**: Araç sonuçları, bağlam ve tercihler istekler arasında kalıcıdır
+3. **SSE ilişkisi**: Sunucu hangi SSE kanalına bildirimler gönderecekse onu bilir
+4. **Güvenlik**: Geçersiz oturum kimliğine sahip istekler reddedilir
 
-The header is returned in every response. The client must include it in all subsequent requests:
+Başlık her yanıtta döndürülür. İstemci tüm sonraki isteklere bunu dahil etmelidir:
 
 ```
-Request:
+İstek:
   POST /mcp HTTP/1.1
   Content-Type: application/json
   Mcp-Session-Id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
 
-Response:
+Yanıt:
   HTTP/1.1 200 OK
   Content-Type: application/json
   Mcp-Session-Id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
-### Session Expiration
+### Oturum Süresi Dolma
 
-Sessions should expire after a period of inactivity. Without expiration, the server accumulates dead sessions indefinitely:
+Oturumlar bir işlem yapılmama süresinden sonra sona ermelidir. Süresi dolma olmadan sunucu ölü oturumları sonsuza kadar biriktir:
 
 ```typescript
-const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const SESSION_TTL_MS = 30 * 60 * 1000; // 30 dakika
 
-// Run every 5 minutes
+// Her 5 dakikada bir çalıştır
 setInterval(() => {
   const now = Date.now();
   for (const [id, session] of sessions) {
     if (now - session.lastActivity > SESSION_TTL_MS) {
-      // Close SSE connection if open
+      // Açıksa SSE bağlantısını kapat
       if (session.sseResponse) {
         session.sseResponse.end();
       }
@@ -150,9 +150,9 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 ```
 
-## SSE Event Stream
+## SSE Olay Akışı
 
-The GET endpoint establishes a server-sent events channel. The client opens this connection to receive real-time notifications from the server.
+GET uç noktası sunucu tarafından gönderilen olaylar kanalı kurar. İstemci sunucudan gerçek zamanlı bildirimler almak için bu bağlantıyı açar.
 
 ```typescript
 async function handleMcpSse(
@@ -169,7 +169,7 @@ async function handleMcpSse(
     return;
   }
 
-  // Set SSE headers
+  // SSE başlıklarını ayarla
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
@@ -177,18 +177,18 @@ async function handleMcpSse(
     'Mcp-Session-Id': sessionId
   });
 
-  // Store the response object for sending events later
+  // Yanıt nesnesini daha sonra olayları göndermek için sakla
   session.sseResponse = res;
 
-  // Send initial keepalive
+  // İlk keepalive gönder
   res.write('event: ping\ndata: {}\n\n');
 
-  // Keepalive every 30 seconds
+  // Her 30 saniyede keepalive
   const keepalive = setInterval(() => {
     res.write('event: ping\ndata: {}\n\n');
   }, 30000);
 
-  // Handle client disconnect
+  // İstemci bağlantı kesilmesini işle
   req.on('close', () => {
     clearInterval(keepalive);
     session.sseResponse = null;
@@ -196,9 +196,9 @@ async function handleMcpSse(
 }
 ```
 
-### Sending Notifications
+### Bildirim Gönderme
 
-When the server needs to push data to the client -- for example, a price update or an order status change -- it writes to the stored SSE response:
+Sunucunun istemciye veri göndermesi gerektiğinde -- örneğin fiyat güncellemesi veya sipariş durumu değişikliği -- saklanan SSE yanıtına yazar:
 
 ```typescript
 function sendNotification(
@@ -213,7 +213,7 @@ function sendNotification(
   }
 }
 
-// Example: notify client of a price change
+// Örnek: istemciyi fiyat değişikliği hakkında bilgilendirme
 sendNotification(session, 'price_update', {
   provider: 'feee',
   price_sun: 28,
@@ -221,9 +221,9 @@ sendNotification(session, 'price_update', {
 });
 ```
 
-### SSE Reconnection
+### SSE Yeniden Bağlantı
 
-Clients will lose SSE connections due to network issues, server restarts, or load balancer timeouts. The EventSource API handles reconnection automatically, but you should design your server to handle re-establishment gracefully:
+İstemciler ağ sorunları, sunucu yeniden başlatmaları veya yük dengeleyici zaman aşımları nedeniyle SSE bağlantılarını kaybedecektir. EventSource API'si yeniden bağlantıyı otomatik olarak işler, ancak sunucunuzu yeniden kurulumla zarafetle başa çıkmak için tasarlamalısınız:
 
 ```typescript
 app.get('/mcp', async (req, res) => {
@@ -231,7 +231,7 @@ app.get('/mcp', async (req, res) => {
   const session = sessions.get(sessionId);
 
   if (!session) {
-    // Session expired during disconnect -- client must re-initialize
+    // Bağlantı süresi içinde oturum süresi doldu -- istemci yeniden başlatmalı
     res.status(404).json({
       error: {
         code: 'SESSION_EXPIRED',
@@ -241,22 +241,22 @@ app.get('/mcp', async (req, res) => {
     return;
   }
 
-  // Reconnection: close old SSE if still open
+  // Yeniden bağlantı: hala açıksa eski SSE'yi kapat
   if (session.sseResponse) {
     session.sseResponse.end();
   }
 
-  // Establish new SSE connection for existing session
-  // ... (same SSE setup as above)
+  // Mevcut oturum için yeni SSE bağlantısı kurunuz
+  // ... (yukarıdakiyle aynı SSE kurulumu)
 });
 ```
 
-## OAuth Well-Known Endpoints
+## OAuth İyi Bilinen Uç Noktaları
 
-For production deployments, MCP servers should support OAuth 2.0 for authentication. The MCP specification defines well-known endpoints for OAuth discovery:
+Üretim dağıtımları için MCP sunucuları kimlik doğrulama için OAuth 2.0'ı desteklemelidir. MCP belirtimi OAuth keşfi için iyi bilinen uç noktaları tanımlar:
 
 ```typescript
-// OAuth authorization server metadata
+// OAuth yetkilendirme sunucusu meta verileri
 app.get('/.well-known/oauth-authorization-server', (req, res) => {
   res.json({
     issuer: 'https://mcp.merx.exchange',
@@ -270,7 +270,7 @@ app.get('/.well-known/oauth-authorization-server', (req, res) => {
   });
 });
 
-// MCP server metadata (optional but recommended)
+// MCP sunucusu meta verileri (isteğe bağlı ama önerilen)
 app.get('/.well-known/mcp-configuration', (req, res) => {
   res.json({
     mcp_endpoint: 'https://mcp.merx.exchange/mcp',
@@ -287,9 +287,9 @@ app.get('/.well-known/mcp-configuration', (req, res) => {
 });
 ```
 
-### API Key Authentication (Simpler Alternative)
+### API Anahtarı Kimlik Doğrulaması (Daha Basit Alternatif)
 
-For many production use cases, OAuth is more complexity than needed. A simpler approach is API key authentication via a custom header:
+Birçok üretim kullanım durumu için OAuth gerekli olduğundan daha karmaşıktır. Daha basit bir yaklaşım, özel bir başlık aracılığıyla API anahtarı kimlik doğrulamasıdır:
 
 ```typescript
 function authenticateRequest(
@@ -317,40 +317,40 @@ function authenticateRequest(
 }
 ```
 
-The MERX MCP server supports both: OAuth for automated agent registration and API key authentication for direct integration.
+MERX MCP sunucusu her ikisini de destekler: otomatik ajan kaydı için OAuth ve doğrudan entegrasyon için API anahtarı kimlik doğrulaması.
 
-## Connection Lifecycle
+## Bağlantı Yaşam Döngüsü
 
-The full lifecycle of a Streamable HTTP MCP connection:
+Akışlı HTTP MCP bağlantısının tam yaşam döngüsü:
 
 ```
-1. Client sends POST /mcp with { method: "initialize" }
-   Server creates session, returns Mcp-Session-Id
-   Response includes server capabilities (tools, prompts, resources)
+1. İstemci POST /mcp gönderir { method: "initialize" } ile
+   Sunucu oturum oluşturur, Mcp-Session-Id döndürür
+   Yanıt sunucu yeteneklerini içerir (araçlar, istemler, kaynaklar)
 
-2. Client sends GET /mcp with Mcp-Session-Id header
-   Server opens SSE channel for this session
-   Keepalive pings sent every 30 seconds
+2. İstemci GET /mcp gönderir Mcp-Session-Id başlığı ile
+   Sunucu bu oturum için SSE kanalını açar
+   Keepalive pingsleri her 30 saniyede gönderilir
 
-3. Client sends POST /mcp with { method: "tools/list" }
-   Server returns available tools for this session
+3. İstemci POST /mcp gönderir { method: "tools/list" } ile
+   Sunucu bu oturum için kullanılabilir araçları döndürür
 
-4. Client sends POST /mcp with { method: "tools/call", params: {...} }
-   Server executes tool, returns result
-   If long-running, progress sent via SSE channel
+4. İstemci POST /mcp gönderir { method: "tools/call", params: {...} } ile
+   Sunucu aracı yürütür, sonucu döndürür
+   Uzun süreli işlemlerse ilerleme SSE kanalı aracılığıyla gönderilir
 
-5. Client sends POST /mcp with { method: "resources/read", params: {...} }
-   Server returns requested resource data
+5. İstemci POST /mcp gönderir { method: "resources/read", params: {...} } ile
+   Sunucu istenen kaynak verilerini döndürür
 
-6. (Repeat steps 4-5 for ongoing interaction)
+6. (Devam eden etkileşim için 4-5. adımları tekrarla)
 
-7. Client sends DELETE /mcp with Mcp-Session-Id header
-   Server cleans up session state and closes SSE
+7. İstemci DELETE /mcp gönderir Mcp-Session-Id başlığı ile
+   Sunucu oturum durumunu temizler ve SSE'yi kapatır
 ```
 
-### The Initialize Handshake
+### Initialize El Sıkışması
 
-The first request must be an `initialize` call. This establishes protocol version compatibility and exchanges capabilities:
+İlk istek `initialize` çağrısı olmalıdır. Bu protokol sürümü uyumluluğunu kurar ve yetenekleri değiş tokuş eder:
 
 ```typescript
 async function handleInitialize(
@@ -374,9 +374,9 @@ async function handleInitialize(
 }
 ```
 
-## Request Processing
+## İstek İşleme
 
-The POST endpoint handles JSON-RPC 2.0 formatted requests:
+POST uç noktası JSON-RPC 2.0 biçimlendirilmiş istekleri işler:
 
 ```typescript
 async function processRequest(
@@ -423,9 +423,9 @@ async function processRequest(
 }
 ```
 
-## Session Termination
+## Oturum Sonlandırma
 
-When a client disconnects, clean up the session:
+İstemci bağlantısını kestiğinde oturumu temizle:
 
 ```typescript
 async function handleMcpDelete(
@@ -442,7 +442,7 @@ async function handleMcpDelete(
     return;
   }
 
-  // Close SSE if open
+  // Açıksa SSE'yi kapat
   if (session.sseResponse) {
     session.sseResponse.end();
   }
@@ -452,9 +452,9 @@ async function handleMcpDelete(
 }
 ```
 
-## Deployment with Docker
+## Docker ile Dağıtım
 
-For production deployment, containerize the MCP sunucusu:
+Üretim dağıtımı için MCP sunucusunu containerleştir:
 
 ```dockerfile
 FROM node:20-alpine
@@ -475,7 +475,7 @@ USER node
 CMD ["node", "dist/server.js"]
 ```
 
-### Docker Compose Integration
+### Docker Compose Entegrasyonu
 
 ```yaml
 services:
@@ -498,9 +498,9 @@ services:
           memory: 256M
 ```
 
-### Load Balancer Considerations
+### Yük Dengeleyici Hususları
 
-If you deploy behind a reverse proxy or load balancer (nginx, Caddy, AWS ALB), configure it for SSE:
+Tersine proxy veya yük dengeleyici arkasında dağıtırsanız (nginx, Caddy, AWS ALB), SSE için yapılandırın:
 
 ```nginx
 location /mcp {
@@ -511,22 +511,22 @@ location /mcp {
     proxy_buffering off;
     proxy_cache off;
 
-    # SSE connections can be long-lived
+    # SSE bağlantıları uzun süreli olabilir
     proxy_read_timeout 3600s;
     proxy_send_timeout 3600s;
 }
 ```
 
-Key settings:
-- `proxy_buffering off` -- required for SSE to stream properly
-- `proxy_read_timeout` -- prevent the proxy from killing idle SSE connections
-- `Connection ''` -- prevent the proxy from adding `Connection: close`
+Anahtar ayarlar:
+- `proxy_buffering off` -- SSE'nin düzgün akış yapması için gerekli
+- `proxy_read_timeout` -- proxy'nin boşta kalan SSE bağlantılarını öldürmesini önle
+- `Connection ''` -- proxy'nin `Connection: close` eklemesini önle
 
-### Session Affinity
+### Oturum Afinitesi
 
-If you run multiple MCP server instances behind a load balancer, you need session affinity (sticky sessions). The `Mcp-Session-Id` header should route all requests from the same session to the same server instance.
+Yük dengeleyicinin arkasında birden fazla MCP sunucusu örneğini çalıştırırsanız, oturum afinitesine (yapışkan oturumlar) ihtiyacınız vardır. `Mcp-Session-Id` başlığı, aynı oturumdaki tüm istekleri aynı sunucu örneğine yönlendirmelidir.
 
-Alternatively, store session state in Redis instead of in-memory:
+Alternatif olarak, oturum durumunu bellek içi yerine Redis'te sakla:
 
 ```typescript
 import Redis from 'ioredis';
@@ -541,17 +541,17 @@ async function getSession(id: string): Promise<SessionState | null> {
 async function saveSession(session: SessionState): Promise<void> {
   await redis.setex(
     `mcp:session:${session.id}`,
-    1800, // 30 min TTL
+    1800, // 30 dk TTL
     JSON.stringify(session)
   );
 }
 ```
 
-Redis-backed sessions enable horizontal scaling without sticky sessions.
+Redis tarafından desteklenen oturumlar, yapışkan oturumlar olmadan yatay ölçeklendirmeyi etkinleştirir.
 
-## Health and Monitoring
+## Sağlık ve İzleme
 
-Production MCP servers need health checks and monitoring:
+Üretim MCP sunucuları sağlık kontrolleri ve izleme gerektirir:
 
 ```typescript
 app.get('/health', (req, res) => {
@@ -564,33 +564,34 @@ app.get('/health', (req, res) => {
 });
 ```
 
-Monitor:
-- Active session count
-- Request latency per method type
-- SSE connection count
-- Tool call success/failure rates
-- Memory usage (watch for session leaks)
+Izle:
+- Etkin oturum sayısı
+- Yöntem türü başına istek latansı
+- SSE bağlantı sayısı
+- Araç çağrısı başarı/başarısızlık oranları
+- Bellek kullanımı (oturum sızıntılarını izle)
 
-## Ozet
+## Özet
 
-Building a Streamable HTTP MCP server for production requires attention to session management, SSE lifecycle, authentication, and deployment infrastructure. The key components:
+Üretim için Akışlı HTTP MCP sunucusu oluşturmak, oturum yönetimi, SSE yaşam döngüsü, kimlik doğrulama ve dağıtım altyapısına dikkat gerektirir. Anahtar bileşenler:
 
-1. **POST /mcp** for request-response tool calls
-2. **GET /mcp** for SSE event streaming
-3. **DELETE /mcp** for session cleanup
-4. **Mcp-Session-Id** for state continuity
-5. **OAuth well-known endpoints** for discovery
-6. **Docker deployment** with proper proxy configuration
-7. **Redis session store** for horizontal scaling
+1. **POST /mcp** istek-yanıt araç çağrıları için
+2. **GET /mcp** SSE olay akışı için
+3. **DELETE /mcp** oturum temizliği için
+4. **Mcp-Session-Id** durum sürekliliği için
+5. **OAuth iyi bilinen uç noktaları** keşif için
+6. **Docker dağıtımı** uygun proxy yapılandırmasıyla
+7. **Redis oturum deposu** yatay ölçeklendirme için
 
-The MERX MCP server implements all of these patterns in production, serving AI agents that need to interact with the TRON blockchain. The full source is available at [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).
+MERX MCP sunucusu, TRON blokzinciriyle etkileşime ihtiyaç duyan yapay zeka ajanlarına hizmet eden üretim ortamında tüm bu desenleri uygular. Tam kaynak [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) adresinde mevcuttur.
 
-Documentation: [https://merx.exchange/docs](https://merx.exchange/docs)
+Dokümantasyon: [https://merx.exchange/docs](https://merx.exchange/docs)
 Platform: [https://merx.exchange](https://merx.exchange)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi Yapay Zeka ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır kurulum, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -602,6 +603,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Yapay zeka ajanınıza şunu sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP dokümantasyonu: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

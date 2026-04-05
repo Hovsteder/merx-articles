@@ -1,16 +1,16 @@
-# Compre energia en TRON con 5 lineas de codigo: SDK de JavaScript de MERX
+# Compra energía TRON con 5 líneas de código: MERX JavaScript SDK
 
-The MERX JavaScript SDK lets you buy TRON energy programmatically in five lines of code - install the package, initialize the client, check prices, create an order, and verify the delegation. This article covers the complete SDK from installation through production deployment, including TypeScript types, manejo de errores, and every method available across the four modules: prices, orders, balance, and webhooks.
+El SDK de JavaScript de MERX te permite comprar energía TRON de forma programática en cinco líneas de código: instala el paquete, inicializa el cliente, verifica los precios, crea una orden y verifica la delegación. Este artículo cubre el SDK completo desde la instalación hasta el despliegue en producción, incluyendo tipos TypeScript, manejo de errores y todos los métodos disponibles en los cuatro módulos: precios, órdenes, saldo y webhooks.
 
-## The Problem with Direct Provider APIs
+## El problema con las APIs de proveedores directos
 
-Every TRON proveedor de energia has its own API. Integrating with one is straightforward. Integrating with all seven or eight providers to guarantee el mejor precio is an engineering project. You need to handle different authentication schemes, response formats, codigo de errors, limite de velocidads, and respaldo logic.
+Cada proveedor de energía TRON tiene su propia API. Integrarse con uno es sencillo. Integrarse con los siete u ocho proveedores para garantizar el mejor precio es un proyecto de ingeniería. Necesitas manejar esquemas de autenticación diferentes, formatos de respuesta, códigos de error, límites de velocidad y lógica de conmutación por error.
 
-The MERX SDK abstracts all of that into a single client with a consistent interface. Behind the scenes, the MERX platform polls all providers every 30 seconds, maintains a tiempo real price index, and routes your orders to the cheapest available source with respaldo automatico.
+El SDK de MERX abstrae todo esto en un cliente único con una interfaz consistente. Detrás de las escenas, la plataforma de MERX consulta todos los proveedores cada 30 segundos, mantiene un índice de precios en tiempo real y enruta tus órdenes a la fuente más barata disponible con conmutación por error automática.
 
-## Installation
+## Instalación
 
-The SDK requires Node.js 18 or later. It uses native `fetch` with zero runtime dependencies.
+El SDK requiere Node.js 18 o posterior. Utiliza `fetch` nativo sin dependencias de tiempo de ejecución.
 
 ```bash
 npm install merx-sdk
@@ -24,11 +24,11 @@ yarn add merx-sdk
 pnpm add merx-sdk
 ```
 
-The package ships as ESM with full TypeScript declarations and source maps.
+El paquete se distribuye como ESM con declaraciones TypeScript completas y mapas de origen.
 
-## Five Lines to Buy Energy
+## Cinco líneas para comprar energía
 
-Aqui esta the complete flow in its minimal form:
+Aquí está el flujo completo en su forma mínima:
 
 ```typescript
 import { MerxClient } from 'merx-sdk'
@@ -44,36 +44,36 @@ const order = await merx.orders.create({
 console.log(`Order ${order.id}: ${order.status}`)
 ```
 
-Line by line:
+Línea por línea:
 
-1. Import the client class.
-2. Initialize with your clave de API. The key starts with `sk_live_` and is created in the MERX dashboard at [merx.exchange](https://merx.exchange).
-3. Fetch current prices from all connected providers. This is optional but useful for displaying the market state before ordering.
-4. Create a market order for 65,000 unidad de energias delegated to your target address for one hour. The platform automatically selects el proveedor mas barato.
-5. Log the order ID and status. The order begins in `PENDING` status and transitions to `FILLED` once the en cadena delegation is confirmed.
+1. Importa la clase del cliente.
+2. Inicializa con tu clave API. La clave comienza con `sk_live_` y se crea en el panel de MERX en [merx.exchange](https://merx.exchange).
+3. Obtén los precios actuales de todos los proveedores conectados. Esto es opcional pero útil para mostrar el estado del mercado antes de realizar la orden.
+4. Crea una orden de mercado para 65.000 unidades de energía delegadas a tu dirección objetivo durante una hora. La plataforma selecciona automáticamente el proveedor más barato.
+5. Registra el ID de la orden y el estado. La orden comienza en estado `PENDING` y transiciona a `FILLED` una vez que la delegación en cadena se confirma.
 
-That is the entire integration. No provider selection, no respaldo logic, no comparacion de precios code.
+Esta es toda la integración. Sin selección de proveedor, sin lógica de conmutación por error, sin código de comparación de precios.
 
-## Client Configuration
+## Configuración del cliente
 
 ```typescript
 import { MerxClient } from 'merx-sdk'
 
 const merx = new MerxClient({
-  apiKey: 'sk_live_your_key_here',   // Required
-  baseUrl: 'https://merx.exchange',  // Optional, defaults to production
+  apiKey: 'sk_live_your_key_here',   // Requerido
+  baseUrl: 'https://merx.exchange',  // Opcional, por defecto a producción
 })
 ```
 
-The `apiKey` is the only required option. The `baseUrl` can be overridden for testing against a staging environment.
+El `apiKey` es la única opción requerida. El `baseUrl` puede anularse para realizar pruebas en un entorno de prueba.
 
-## The Prices Module
+## El módulo de precios
 
-The `merx.prices` module provides five methods for querying tiempo real market data.
+El módulo `merx.prices` proporciona cinco métodos para consultar datos de mercado en tiempo real.
 
 ### prices.list()
 
-Returns current pricing from all active providers.
+Devuelve los precios actuales de todos los proveedores activos.
 
 ```typescript
 const prices = await merx.prices.list()
@@ -86,32 +86,32 @@ for (const p of prices) {
 }
 ```
 
-Each `ProviderPrice` object includes:
-- `provider` - provider identifier (e.g., "sohu", "catfee", "tronsave")
-- `is_market` - whether this provider supports market orders with flexible durations
-- `energy_prices` - array of `{ duration_sec, price_sun }` tiers
-- `bandwidth_prices` - same structure for bandwidth
-- `available_energy` - current capacity in unidad de energias
-- `available_bandwidth` - current capacity in bandwidth units
-- `fetched_at` - Unix timestamp of the last successful poll
+Cada objeto `ProviderPrice` incluye:
+- `provider` - identificador del proveedor (ej: "sohu", "catfee", "tronsave")
+- `is_market` - si este proveedor admite órdenes de mercado con duraciones flexibles
+- `energy_prices` - array de niveles `{ duration_sec, price_sun }`
+- `bandwidth_prices` - la misma estructura para bandwidth
+- `available_energy` - capacidad actual en unidades de energía
+- `available_bandwidth` - capacidad actual en unidades de bandwidth
+- `fetched_at` - marca de tiempo Unix de la última consulta exitosa
 
 ### prices.best(resource, amount?)
 
-Returns the single cheapest price point for a given resource type.
+Devuelve el punto de precio único más barato para un tipo de recurso determinado.
 
 ```typescript
 const best = await merx.prices.best('ENERGY')
 console.log(`Cheapest: ${best.price_sun} SUN from ${best.provider}`)
 
-// With minimum amount filter
+// Con filtro de cantidad mínima
 const bestLarge = await merx.prices.best('ENERGY', 500000)
 ```
 
-The optional `amount` parameter filters out providers that do not have enough capacity to fulfill your order.
+El parámetro opcional `amount` filtra los proveedores que no tienen suficiente capacidad para cumplir tu orden.
 
 ### prices.history(params?)
 
-Returns historical price data for analysis and charting.
+Devuelve datos de precios históricos para análisis y gráficos.
 
 ```typescript
 const history = await merx.prices.history({
@@ -125,11 +125,11 @@ for (const entry of history) {
 }
 ```
 
-Available periods: `'1h'`, `'6h'`, `'24h'`, `'7d'`, `'30d'`. All filter parameters are optional.
+Períodos disponibles: `'1h'`, `'6h'`, `'24h'`, `'7d'`, `'30d'`. Todos los parámetros de filtro son opcionales.
 
 ### prices.stats()
 
-Returns aggregate statistics across the entire market.
+Devuelve estadísticas agregadas en todo el mercado.
 
 ```typescript
 const stats = await merx.prices.stats()
@@ -141,7 +141,7 @@ console.log(`Cheapest-provider changes (24h): ${stats.cheapest_changes_24h}`)
 
 ### prices.preview(params)
 
-Previews what an order would cost before placing it. Returns the best matching provider and fallback options.
+Obtiene una vista previa del costo de una orden antes de realizarla. Devuelve el proveedor con mejor coincidencia y opciones de respaldo.
 
 ```typescript
 const preview = await merx.prices.preview({
@@ -165,13 +165,13 @@ if (preview.no_providers) {
 }
 ```
 
-The `max_price_sun` parameter filters out providers that exceed your price ceiling.
+El parámetro `max_price_sun` filtra los proveedores que superan tu límite de precio.
 
-## The Orders Module
+## El módulo de órdenes
 
 ### orders.create(params)
 
-Creates an energy or bandwidth order.
+Crea una orden de energía o bandwidth.
 
 ```typescript
 const order = await merx.orders.create({
@@ -179,26 +179,26 @@ const order = await merx.orders.create({
   amount: 65000,
   target_address: 'TYourTargetAddress',
   duration_sec: 3600,
-  order_type: 'MARKET',          // Optional, defaults to 'MARKET'
-  max_price_sun: 30,             // Optional, required for LIMIT orders
-  idempotency_key: 'unique-id',  // Optional, prevents duplicate orders
+  order_type: 'MARKET',          // Opcional, por defecto 'MARKET'
+  max_price_sun: 30,             // Opcional, requerido para órdenes LIMIT
+  idempotency_key: 'unique-id',  // Opcional, previene órdenes duplicadas
 })
 
 console.log(`Order ${order.id} created`)
 console.log(`Status: ${order.status}`)
 ```
 
-Order types:
-- `MARKET` - execute immediately at the best available price
-- `LIMIT` - execute only if price is at or below `max_price_sun`
-- `PERIODIC` - recurring order
-- `BROADCAST` - broadcast a pre-signed delegation transaction
+Tipos de orden:
+- `MARKET` - ejecutar inmediatamente al mejor precio disponible
+- `LIMIT` - ejecutar solo si el precio está en o por debajo de `max_price_sun`
+- `PERIODIC` - orden recurrente
+- `BROADCAST` - transmitir una transacción de delegación prefirmada
 
-The `idempotency_key` is critical for production systems. If a network error occurs and you retry the request with the same key, the API returns the original order instead of creating a duplicate.
+El `idempotency_key` es crítico para sistemas en producción. Si ocurre un error de red y reintentas la solicitud con la misma clave, la API devuelve la orden original en lugar de crear una duplicada.
 
 ### orders.list(limit?, offset?, status?)
 
-Lists orders with pagination.
+Lista órdenes con paginación.
 
 ```typescript
 const { orders, total } = await merx.orders.list(10, 0, 'FILLED')
@@ -211,7 +211,7 @@ for (const o of orders) {
 
 ### orders.get(id)
 
-Returns a single order with fill details.
+Devuelve una única orden con detalles de cumplimiento.
 
 ```typescript
 const order = await merx.orders.get('ord_abc123')
@@ -228,13 +228,13 @@ for (const fill of order.fills) {
 }
 ```
 
-The `fills` array shows exactly how the order was fulfilled. Each fill includes the provider name, the amount allocated, the price per unit, the cost, the en cadena transaction ID, and whether the delegation has been verified en cadena.
+El array `fills` muestra exactamente cómo se cumplió la orden. Cada cumplimiento incluye el nombre del proveedor, la cantidad asignada, el precio por unidad, el costo, el ID de la transacción en cadena y si la delegación ha sido verificada en cadena.
 
-## The Balance Module
+## El módulo de saldo
 
 ### balance.get()
 
-Returns current account balances.
+Devuelve los saldos actuales de la cuenta.
 
 ```typescript
 const balance = await merx.balance.get()
@@ -243,11 +243,11 @@ console.log(`USDT: ${balance.usdt}`)
 console.log(`Locked: ${balance.trx_locked}`)
 ```
 
-The `trx_locked` field shows TRX that is currently reserved for pending orders.
+El campo `trx_locked` muestra TRX que está actualmente reservado para órdenes pendientes.
 
 ### balance.depositInfo()
 
-Returns the deposit address and memo for funding your MERX account.
+Devuelve la dirección de depósito y memo para financiar tu cuenta de MERX.
 
 ```typescript
 const info = await merx.balance.depositInfo()
@@ -256,11 +256,11 @@ console.log(`Include memo: ${info.memo}`)
 console.log(`Minimum deposit: ${info.min_amount_trx} TRX`)
 ```
 
-The memo is required for automated deposit crediting. Deposits without the correct memo require manual processing.
+El memo es requerido para el acreditamiento automatizado de depósitos. Los depósitos sin el memo correcto requieren procesamiento manual.
 
 ### balance.withdraw(params)
 
-Withdraws TRX or USDT to an external TRON address.
+Retira TRX o USDT a una dirección TRON externa.
 
 ```typescript
 const withdrawal = await merx.balance.withdraw({
@@ -273,7 +273,7 @@ const withdrawal = await merx.balance.withdraw({
 console.log(`Withdrawal ${withdrawal.id}: ${withdrawal.status}`)
 ```
 
-### balance.history(period?) and balance.summary()
+### balance.history(period?) y balance.summary()
 
 ```typescript
 const history = await merx.balance.history('7D')
@@ -285,11 +285,11 @@ console.log(`Total energy: ${summary.total_energy}`)
 console.log(`Average price: ${summary.avg_price_sun} SUN`)
 ```
 
-## The Webhooks Module
+## El módulo de webhooks
 
 ### webhooks.create(params)
 
-Creates a webhook subscription. The `secret` is returned only at creation time.
+Crea una suscripción de webhook. El `secret` se devuelve solo en el momento de la creación.
 
 ```typescript
 const webhook = await merx.webhooks.create({
@@ -301,7 +301,7 @@ console.log(`Webhook ID: ${webhook.id}`)
 console.log(`Secret: ${webhook.secret}`)
 ```
 
-### webhooks.list() and webhooks.delete(id)
+### webhooks.list() y webhooks.delete(id)
 
 ```typescript
 const webhooks = await merx.webhooks.list()
@@ -310,9 +310,9 @@ console.log(`${webhooks.filter(w => w.is_active).length} active webhooks`)
 await merx.webhooks.delete('wh_abc123')
 ```
 
-## Error Handling
+## Manejo de errores
 
-All API errors are thrown as `MerxError` instances with a machine-readable `code` and a human-readable `message`.
+Todos los errores de API se lanzan como instancias de `MerxError` con un `code` legible por máquina y un `message` legible por humanos.
 
 ```typescript
 import { MerxClient, MerxError } from 'merx-sdk'
@@ -334,22 +334,22 @@ try {
 }
 ```
 
-Common codigo de errors:
+Códigos de error comunes:
 
-| Code                   | Meaning                                          |
+| Código                 | Significado                                      |
 |------------------------|--------------------------------------------------|
-| `UNAUTHORIZED`         | Invalid or missing clave de API                       |
-| `INSUFFICIENT_FUNDS`   | Account balance too low                          |
-| `INVALID_ADDRESS`      | Target address is not a valid TRON address        |
-| `ORDER_NOT_FOUND`      | Order ID does not exist                          |
-| `INVALID_AMOUNT`       | Amount below minimum or exceeds limits           |
-| `DUPLICATE_REQUEST`    | Idempotency key already used                     |
-| `RATE_LIMITED`         | Too many requests                                |
-| `PROVIDER_UNAVAILABLE` | No providers available                           |
+| `UNAUTHORIZED`         | Clave API inválida o faltante                   |
+| `INSUFFICIENT_FUNDS`   | Saldo de cuenta muy bajo                        |
+| `INVALID_ADDRESS`      | La dirección objetivo no es una dirección TRON válida |
+| `ORDER_NOT_FOUND`      | El ID de orden no existe                        |
+| `INVALID_AMOUNT`       | Cantidad por debajo del mínimo o excede límites |
+| `DUPLICATE_REQUEST`    | Clave de idempotencia ya utilizada             |
+| `RATE_LIMITED`         | Demasiadas solicitudes                          |
+| `PROVIDER_UNAVAILABLE` | Ningún proveedor disponible                     |
 
-## TypeScript Types
+## Tipos TypeScript
 
-All types are exported from the package and can be used for type annotations throughout your application:
+Todos los tipos se exportan desde el paquete y se pueden usar para anotaciones de tipo en toda tu aplicación:
 
 ```typescript
 import type {
@@ -373,11 +373,11 @@ import type {
 } from 'merx-sdk'
 ```
 
-The SDK is strict-mode compatible and produces no `any` types. Every response is fully typed.
+El SDK es compatible con modo estricto y no produce tipos `any`. Cada respuesta está completamente tipada.
 
-## Production Example: Automated USDT Transfer Flow
+## Ejemplo en producción: flujo de transferencia automatizada de USDT
 
-Aqui esta a complete production pattern that checks prices, creates an order, and polls for completion:
+Aquí hay un patrón completo de producción que verifica precios, crea una orden y consulta su finalización:
 
 ```typescript
 import { MerxClient, MerxError } from 'merx-sdk'
@@ -432,30 +432,31 @@ async function ensureEnergyAndTransfer(targetAddress: string) {
 }
 ```
 
-In production, replace the polling loop with a webhook listener. Create a webhook subscription for the `order.filled` event, and your server will be notified the moment the delegation is confirmed en cadena.
+En producción, reemplaza el bucle de consulta con un escuchador de webhook. Crea una suscripción de webhook para el evento `order.filled` y tu servidor será notificado en el momento en que la delegación se confirme en cadena.
 
-## Requirements and Compatibility
+## Requisitos y compatibilidad
 
-- Node.js 18+ (uses native `fetch`)
-- Zero runtime dependencies
-- ESM only (ships as ES modules)
-- Full TypeScript 5.4+ support
-- Works with Bun and Deno (any runtime that supports `fetch`)
+- Node.js 18+ (utiliza `fetch` nativo)
+- Cero dependencias de tiempo de ejecución
+- Solo ESM (se distribuye como módulos ES)
+- Soporte completo de TypeScript 5.4+
+- Funciona con Bun y Deno (cualquier tiempo de ejecución que admita `fetch`)
 
-## Resources
+## Recursos
 
-The SDK is codigo abierto and available on GitHub. Contributions and bug reports are welcome.
+El SDK es de código abierto y está disponible en GitHub. Las contribuciones y reportes de errores son bienvenidos.
 
 - Plataforma: [merx.exchange](https://merx.exchange)
-- Documentacion: [merx.exchange/docs](https://merx.exchange/docs)
+- Documentación: [merx.exchange/docs](https://merx.exchange/docs)
 - GitHub: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 - npm: [npmjs.com/package/merx-sdk](https://www.npmjs.com/package/merx-sdk)
 - SDK de Python: [pypi.org/project/merx-sdk](https://pypi.org/project/merx-sdk/)
 - Servidor MCP para agentes de IA: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo ahora con IA
+
+Añade MERX a Claude Desktop o a cualquier cliente compatible con MCP -- sin instalación, sin necesidad de clave API para herramientas de solo lectura:
 
 ```json
 {
@@ -467,6 +468,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

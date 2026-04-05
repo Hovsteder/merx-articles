@@ -1,112 +1,112 @@
-# TRON Energy Fiyatlari Nasil Degisir: Fiyat Dinamikleri Analizi
+# TRON Enerji Fiyatları Nasıl Değişiyor: Fiyat Dinamiğinin Analizi
 
-Energy prices on TRON are not fixed. They move throughout the day, week, and month in response to supply, demand, and competitive dynamics. If you buy energy regularly -- whether for a payment processor, trading bot, or manual operations -- understanding these price dynamics helps you buy at better rates and avoid overpaying.
+TRON üzerindeki enerji fiyatları sabit değildir. Gün, hafta ve ay içinde arz, talep ve rekabet dinamikleri doğrultusunda değişim gösterirler. İster düzenli enerji satın alıyor olun -- ödeme işlemcisi, ticaret botu veya manuel işlemler için -- bu fiyat dinamiğini anlamak daha iyi fiyatlarla satın almaya ve aşırı ödeme yapmaktan kaçınmaya yardımcı olur.
 
-This article breaks down the forces that drive TRON energy prices, explains the differences between P2P and fixed-price models, and shows how to use price analysis tools to make better purchasing decisions.
+Bu makale TRON enerji fiyatlarını yönlendiren güçleri açıklar, P2P ve sabit fiyat modelleri arasındaki farklılıkları anlatır ve daha iyi satın alma kararları almak için fiyat analiz araçlarının nasıl kullanılacağını gösterir.
 
-## What Determines Energy Price
+## Enerji Fiyatını Ne Belirler
 
-Energy price is ultimately a function of three things: the cost of producing energy, the demand for it, and competitive pressure among providers.
+Enerji fiyatı temelde üç şeyin bir fonksiyonudur: enerji üretim maliyeti, ona yönelik talep ve sağlayıcılar arasındaki rekabet baskısı.
 
-### Production Cost
+### Üretim Maliyeti
 
-Energy on TRON is produced by staking TRX. When a user freezes (stakes) TRX, the network allocates energy to that address proportional to their stake relative to the total network stake.
+TRON üzerindeki enerji, TRX staking yapılarak üretilir. Bir kullanıcı TRX'i dondurmaya (stake etmeye) başladığında, ağ bu adrese toplam ağ stake'ine kıyasla stake'lerinin oranına göre enerji tahsis eder.
 
-The cost of producing energy is therefore the opportunity cost of staking TRX. That staked TRX could be earning yield elsewhere, used for trading, or deployed in DeFi protocols. The energy provider's floor price must cover this opportunity cost plus operational overhead.
+Enerji üretim maliyeti bu nedenle TRX staking'in fırsat maliyetidir. Bu stake edilmiş TRX başka yerlerde getiri sağlayabilir, ticaret için kullanılabilir veya DeFi protokollerine dağıtılabilir. Enerji sağlayıcısının taban fiyatı bu fırsat maliyetine artı operasyonel ek maliyetleri karşılamalıdır.
 
-Factors that affect production cost:
+Üretim maliyetini etkileyen faktörler:
 
-- **TRX price.** When TRX price rises, the dollar-denominated opportunity cost of staking increases, putting upward pressure on energy prices.
-- **Alternative yields.** If DeFi protocols on TRON offer attractive staking yields, the opportunity cost of allocating TRX to energy production rises.
-- **Network staking ratio.** As more TRX is staked network-wide, each unit of staked TRX produces less energy (the pool is shared among more stakers). This increases the TRX required to produce a given amount of energy, raising costs.
-- **TRON governance parameters.** The network periodically adjusts parameters that affect energy pricing, such as the total energy pool size or the energy-to-TRX burn rate.
+- **TRX fiyatı.** TRX fiyatı yükseldiğinde, staking'in dolar cinsinden fırsat maliyeti artar ve enerji fiyatlarına yükseltici baskı oluşturur.
+- **Alternatif getiriler.** TRON üzerindeki DeFi protokolleri cazip staking getirileri sunuyorsa, TRX'i enerji üretimine tahsis etmenin fırsat maliyeti artar.
+- **Ağ staking oranı.** Ağ genelinde daha fazla TRX stake edildiğinde, stake edilmiş her TRX birimi daha az enerji üretir (havuz daha fazla stake eden arasında paylaşılır). Bu, belirli miktarda enerji üretmek için gereken TRX'i artırır ve maliyetleri yükseltir.
+- **TRON yönetim parametreleri.** Ağ, toplam enerji havuzu boyutu veya enerji-TRX yakma oranı gibi enerji fiyatlandırmasını etkileyen parametreleri periyodik olarak ayarlar.
 
-### Demand
+### Talep
 
-Energy demand is driven by TRON transaction volume, which varies based on:
+Enerji talebini aşağıdakilere dayalı olarak değişen TRON işlem hacmi yönlendirir:
 
-- **USDT transfer volume.** The dominant source of energy demand. When USDT activity spikes (market volatility, end-of-month settlements, exchange movements), energy demand rises.
-- **DeFi activity.** DEX trading volume, lending protocol interactions, and yield farming operations all consume energy.
-- **Token events.** New token launches, airdrops, and NFT mints create burst demand.
-- **Time of day.** Activity follows global timezone patterns, with peak demand during Asian and European business hours.
+- **USDT transfer hacmi.** Enerji talebinin baskın kaynağı. USDT aktivitesi arttığında (pazar oynaklığı, ay sonu takas, borsa hareketleri) enerji talebı artar.
+- **DeFi aktivitesi.** DEX ticaret hacmi, borç verme protokolü etkileşimleri ve getiri farming işlemleri tümü enerji tüketir.
+- **Token etkinlikleri.** Yeni token lanşmanları, airdroplар ve NFT mintlemeleri anlık talep oluşturur.
+- **Günün saati.** Aktivite küresel saat dilimi desenlerini takip eder; Asya ve Avrupa iş saatleri sırasında talep zirveye ulaşır.
 
-### Competitive Pressure
+### Rekabet Baskısı
 
-With seven providers in the market, pricing is not set in isolation. Each provider responds to competitors' rates. When one provider lowers prices to attract volume, others must decide whether to match, undercut, or maintain their rates and accept lower market share.
+Piyasada yedi sağlayıcı bulunduğu için fiyatlandırma izole biçimde belirlenmez. Her sağlayıcı rakiplerin oranlarına yanıt verir. Bir sağlayıcı hacmi çekmek için fiyatları düşürdüğünde, diğerleri fiyatlara ayak uydurmayı, bunların altını çizmeyi veya oranlarını koruyup daha düşük pazar payını kabul etmeyi seçmelidir.
 
-This competition benefits buyers, particularly those using aggregators that route to the cheapest available provider. The competitive dynamics ensure that no provider can maintain significantly above-market rates for long.
+Bu rekabet alıcılara fayda sağlar; özellikle de en ucuz mevcut sağlayıcıya yönlendiren agregatorları kullananlar için. Rekabet dinamiği hiçbir sağlayıcının uzun süre önemli ölçüde pazar üstü oranları korumasını önler.
 
-## P2P vs Fixed-Price Dynamics
+## P2P ve Sabit Fiyat Dinamikleri
 
-The two primary pricing models in the TRON energy market respond differently to market conditions.
+TRON enerji piyasasındaki iki birincil fiyatlandırma modeli pazar koşullarına farklı şekilde yanıt verir.
 
-### P2P Marketplace Pricing (TronSave model)
+### P2P Pazarı Fiyatlandırması (TronSave modeli)
 
-In a P2P marketplace, individual sellers set their own prices. This creates a dynamic order book where:
+P2P pazarında, bireysel satıcılar kendi fiyatlarını belirler. Bu dinamik bir emir defteri oluşturur:
 
-- **Prices adjust in real time** as sellers respond to demand
-- **Spread exists** between the cheapest and most expensive listings
-- **Supply depth varies** -- the cheapest prices may only be available for small amounts
-- **Seller behavior drives volatility** -- individual sellers may adjust prices based on their personal liquidity needs, not just market conditions
+- **Fiyatlar gerçek zamanlı olarak ayarlanır** satıcılar talebe yanıt verirken
+- **Spread var** en ucuz ve en pahalı listeler arasında
+- **Arz derinliği değişir** -- en ucuz fiyatlar yalnızca küçük miktarlar için mevcut olabilir
+- **Satıcı davranışı oynaklığı yönlendirir** -- bireysel satıcılar kişisel likidite ihtiyaçlarına göre, yalnızca pazar koşullarına göre değil fiyatları ayarlayabilir
 
-P2P pricing tends to be more volatile but can offer the lowest rates during low-demand periods when sellers compete aggressively for limited buyer interest.
+P2P fiyatlandırması daha oynaktır ancak düşük talep dönemlerinde satıcılar sınırlı alıcı ilgisine karşı agresif bir şekilde rekabet ettiğinde en düşük oranları sunabilir.
 
-### Fixed-Price Provider Pricing (PowerSun model)
+### Sabit Fiyat Sağlayıcı Fiyatlandırması (PowerSun modeli)
 
-Fixed-price providers set rates that remain stable for hours or days. Price changes are deliberate decisions, not automatic market responses.
+Sabit fiyat sağlayıcıları saatler veya günler boyunca stabil kalan oranlar belirler. Fiyat değişiklikleri otomatik pazar yanıtları değil, kasıtlı kararlar olmuştur.
 
-- **Rates change infrequently** -- typically once per day or less
-- **Prices are predictable** for budgeting purposes
-- **May lag behind market movements** -- prices might not reflect current supply/demand
-- **Stability premium** -- fixed prices are generally slightly above the market average to compensate for the predictability they offer
+- **Oranlar nadiren değişir** -- tipik olarak günde bir veya daha az
+- **Fiyatlar bütçeleme amacıyla öngörülebilir** olmuştur
+- **Pazar hareketlerine gecikmeli olabilir** -- fiyatlar mevcut arz/talep koşullarını yansıtmayabilir
+- **İstikrar primi** -- sabit fiyatlar sundukları öngörülebilirliği telafi etmek için genellikle pazar ortalamasından biraz daha yüksektir
 
-Fixed-price providers are more expensive on average but provide certainty. For operations that need predictable costs, this premium is acceptable.
+Sabit fiyat sağlayıcılar ortalamada daha pahalıdır ancak kesinlik sağlar. İşlemler için öngörülebilir maliyetlere ihtiyaç duyulan durumlar için bu premium kabul edilebilir.
 
-## Price Patterns
+## Fiyat Desenleri
 
-### Intraday Patterns
+### Gün İçi Desenleri
 
-Energy prices follow a daily cycle driven by transaction activity in different time zones:
+Enerji fiyatları farklı zaman dilimlerindeki işlem aktivitesi tarafından yönlendirilen günlük bir döngü izler:
 
-**UTC 00:00 - 06:00 (Asia morning/afternoon):** Moderate to high demand. This is peak TRON activity time as Asian markets (where TRON usage is concentrated) are active.
+**UTC 00:00 - 06:00 (Asya sabahı/öğleden sonrası):** Orta ile yüksek talep. Bu, Asya pazarlarının (TRON kullanımının yoğunlaştığı) aktif olduğu TRON aktivitesinin zirve saatidir.
 
-**UTC 06:00 - 12:00 (Asia evening, Europe morning):** Transition period. Asian activity winds down, European activity picks up. Prices often soften during this window.
+**UTC 06:00 - 12:00 (Asya akşamı, Avrupa sabahı):** Geçiş dönemi. Asya aktivitesi azalırken Avrupa aktivitesi yükselir. Fiyatlar bu pencere sırasında genellikle yumuşar.
 
-**UTC 12:00 - 18:00 (Europe afternoon, Americas morning):** Moderate demand. TRON activity is present but typically lower than Asian peak hours.
+**UTC 12:00 - 18:00 (Avrupa öğleden sonrası, Amerika sabahı):** Orta talep. TRON aktivitesi mevcut ancak tipik olarak Asya zirve saatlerinden daha düşüktür.
 
-**UTC 18:00 - 00:00 (Americas afternoon/evening):** Generally the lowest-demand period. Energy prices often reach their daily minimum during this window.
+**UTC 18:00 - 00:00 (Amerika öğleden sonrası/akşamı):** Genel olarak en düşük talep dönemi. Enerji fiyatları genellikle bu pencere sırasında günlük minimumlarına ulaşır.
 
-These patterns are tendencies, not rules. Market-moving events (exchange listings, DeFi exploits, regulatory news) can override timezone-based patterns.
+Bu desenleri eğilimler olmuştur, kurallar değil. Pazar hareketli olaylar (borsa listelemesi, DeFi açıkları, düzenleyici haberler) saat dilimi tabanlı desenleri geçersiz kılabilir.
 
-### Weekly Patterns
+### Haftalık Desenleri
 
-Weekends typically see lower TRON transaction volume than weekdays, leading to softer energy prices. Monday mornings in Asian time zones often see price increases as weekly business activity resumes.
+Haftasonu tipik olarak hafta içi günlerden daha düşük TRON işlem hacmi görerek enerji fiyatlarının yumuşamasına yol açar. Asya saat dilimindeki Pazartesi sabahları genellikle haftalık iş aktivitesi yeniden başladığında fiyat artışlarını göreceğini belirtir.
 
-### Event-Driven Spikes
+### Olaya Dayalı Fiyat Artışları
 
-Certain events cause sharp, temporary price increases:
+Belirli olaylar keskin, geçici fiyat artışlarına neden olur:
 
-- **Large token airdrops:** Thousands of transfers in a short window
-- **Market crashes/rallies:** Increased trading volume across DEXs
-- **New DeFi protocol launches:** Users rushing to interact with new contracts
-- **Network upgrades:** Uncertainty around upgrades can affect staking behavior
+- **Büyük token airdropleri:** Kısa bir pencerede binlerce transfer
+- **Pazar çöküşü/ralli:** DEX'ler arasında artan ticaret hacmi
+- **Yeni DeFi protokolü lanşmanları:** Kullanıcılar yeni sözleşmelerle etkileşime girmek için acele ediyor
+- **Ağ yükseltmeleri:** Yükseltmeler etrafındaki belirsizlik staking davranışını etkileyebilir
 
-## How MERX Tracks Price Dynamics
+## MERX Fiyat Dinamiğini Nasıl İzler
 
-MERX monitors prices across all seven providers continuously, providing tools to analyze and act on price movements:
+MERX tüm yedi sağlayıcı arasında fiyatları sürekli izleyerek fiyat hareketlerini analiz etmek ve harekete geçmek için araçlar sağlar:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// Get current prices across all providers
+// Tüm sağlayıcılar arasında mevcut fiyatları al
 const prices = await merx.getPrices({
   energy_amount: 65000,
   duration: '1h'
 });
 
-// See the spread
+// Spread'i gör
 const lowest = prices.providers[0].price_sun;
 const highest =
   prices.providers[prices.providers.length - 1].price_sun;
@@ -114,31 +114,31 @@ console.log(`Market spread: ${lowest} - ${highest} SUN`);
 console.log(`Best: ${prices.best.price_sun} SUN via ${prices.best.provider}`);
 ```
 
-### Price History Analysis
+### Fiyat Geçmişi Analizi
 
 ```typescript
-// Analyze historical price patterns
+// Tarihi fiyat desenlerini analiz et
 const analysis = await merx.analyzePrices({
   energy_amount: 65000,
   duration: '1h',
   period: '7d'
 });
 
-console.log(`7-day average: ${analysis.mean_sun} SUN`);
-console.log(`Median: ${analysis.median_sun} SUN`);
-console.log(`10th percentile: ${analysis.p10_sun} SUN`);
-console.log(`90th percentile: ${analysis.p90_sun} SUN`);
-console.log(`Standard deviation: ${analysis.stddev_sun} SUN`);
+console.log(`7 günlük ortalama: ${analysis.mean_sun} SUN`);
+console.log(`Medyan: ${analysis.median_sun} SUN`);
+console.log(`10. yüzdelik: ${analysis.p10_sun} SUN`);
+console.log(`90. yüzdelik: ${analysis.p90_sun} SUN`);
+console.log(`Standart sapma: ${analysis.stddev_sun} SUN`);
 ```
 
-This data reveals the typical range and volatility for your specific order profile. The percentile data is particularly useful for setting standing order targets.
+Bu veri, sizin özel emir profili için tipik aralığı ve oynaklığı ortaya koymaktadır. Yüzdelik veri özellikle standing order hedefleri belirlemek için yararlıdır.
 
-### Standing Orders: Acting on Price Dynamics
+### Standing Orderlar: Fiyat Dinamiğine Harekete Geçme
 
-Understanding price patterns enables smarter purchasing through standing orders:
+Fiyat desenleri anlamı standing orderlar aracılığıyla daha akıllı satın alma imkanı sağlar:
 
 ```typescript
-// Based on analysis showing 25th percentile at 24 SUN
+// 25. yüzdeliğin 24 SUN'da olduğunu gösteren analize dayalı
 const standing = await merx.createStandingOrder({
   energy_amount: 65000,
   max_price_sun: 24,
@@ -147,87 +147,88 @@ const standing = await merx.createStandingOrder({
   target_address: 'TYourAddress...'
 });
 
-// This order will fill approximately 75% of the time,
-// always at or below 24 SUN
+// Bu emir zamanın yaklaşık %75'inde doldurulacak,
+// her zaman 24 SUN'da veya daha düşükte
 ```
 
-The standing order captures price dips automatically. When prices temporarily drop below your threshold -- whether due to timezone-based demand patterns, provider competition, or temporary supply increases -- your order executes without manual intervention.
+Standing order fiyat düşüşlerini otomatik olarak yakalar. Fiyatlar geçici olarak eşiğinizin altına düştüğünde -- ister saat dilimi tabanlı talep desenleri, ister sağlayıcı rekabeti, ister geçici arz artışları olsun -- emriniz manuel müdahale olmaksızın yürütülür.
 
-## Supply-Side Dynamics
+## Arz Tarafı Dinamikleri
 
-Understanding what drives the supply side helps predict price movements:
+Arz tarafını yönlendiren unsurları anlamak fiyat hareketlerini tahmin etmeye yardımcı olur:
 
-### Staking Incentives
+### Staking Teşvikleri
 
-When TRX staking rewards are high relative to other yield opportunities, more TRX gets staked, increasing the total energy supply. This puts downward pressure on prices.
+TRX staking ödülleri diğer getiri fırsatlarına göre yüksek olduğunda, daha fazla TRX stake edilir, toplam enerji arzı artar. Bu fiyatlara aşağı yönlü baskı uygulamaktadır.
 
-Conversely, when DeFi yields on TRON attract TRX away from simple staking, the energy supply contracts and prices rise.
+Tersi olarak, TRON üzerindeki DeFi getirileri TRX'i basit staking'den çektiğinde, enerji arzı daralmakta ve fiyatlar yükselmektedir.
 
-### Provider Capital Allocation
+### Sağlayıcı Sermaye Tahsisi
 
-Energy providers decide how much TRX to allocate to energy production versus other uses. This allocation shifts based on:
+Enerji sağlayıcıları TRX'i enerji üretimine karşı diğer kullanımlar arasında ne kadarını tahsis edeceklerine karar verirler. Bu tahsis şu faktörlere bağlı olarak değişmektedir:
 
-- Profitability of energy sales at current rates
-- Demand projections
-- Alternative investment opportunities
-- Competitive positioning
+- Mevcut oranlarda enerji satışının karlılığı
+- Talep projeksiyonları
+- Alternatif yatırım fırsatları
+- Rekabetçi konumlandırma
 
-When multiple providers simultaneously increase their staked TRX (expecting demand growth), a supply glut can temporarily depress prices. When providers reduce staking (perhaps due to better yields elsewhere), supply contracts and prices rise.
+Birden fazla sağlayıcı aynı anda stake edilmiş TRX'lerini artırttığında (talep büyümesi beklemektedir), arz fazlalığı geçici olarak fiyatları baskılayabilir. Sağlayıcılar staking'i azalttığında (belki daha iyi getirilerden ötürü), arz daralır ve fiyatlar yükselir.
 
-### Network-Level Changes
+### Ağ Düzeyindeki Değişimler
 
-TRON's governance can adjust network parameters that affect the energy market:
+TRON'un yönetimi enerji piyasasını etkileyen ağ parametrelerini ayarlayabilir:
 
-- **Total energy pool size:** Increasing the pool means each staked TRX produces more energy, reducing provider costs and enabling lower prices.
-- **Energy-to-fee ratio:** Changes in how much TRX is burned per unit of energy consumed affect the floor price for energy rental.
-- **Staking rules:** Changes to freezing periods, minimum stakes, or staking rewards affect provider economics.
+- **Toplam enerji havuzu boyutu:** Havuzu artırmak, stake edilmiş her TRX'in daha fazla enerji üretmesi anlamına gelir; bu sağlayıcı maliyetlerini azaltır ve daha düşük fiyatları sağlar.
+- **Enerji-ücret oranı:** Tüketilen enerji birim başına ne kadar TRX yakılacağındaki değişimler enerji kiralama için taban fiyatını etkiler.
+- **Staking kuralları:** Dondurma dönemleri, minimum stake'ler veya staking ödüllerindeki değişimler sağlayıcı ekonomisini etkiler.
 
-## Price Prediction Limitations
+## Fiyat Tahmini Sınırlamaları
 
-While patterns exist, predicting exact energy prices is unreliable for the same reasons commodity price prediction is unreliable. Too many variables interact:
+Desenler bulunsa da, tam enerji fiyatlarını tahmin etmek emtia fiyat tahmini kadar güvenilmezdir. Çok fazla değişken etkileşime girmektedir:
 
-- Network transaction volume depends on crypto market conditions, which are inherently unpredictable
-- Provider pricing decisions are private and competitive
-- Demand spikes from token launches and DeFi events are difficult to anticipate
-- Governance changes are infrequent but impactful
+- Ağ işlem hacmi kripto pazar koşullarına bağlıdır; bu doğası gereği öngörülemezdir
+- Sağlayıcı fiyatlandırma kararları özel ve rekabetçidir
+- Token lanşmanları ve DeFi olaylarından talep artışları önceden tahmin etmesi zordur
+- Yönetim değişiklikleri seyrek ancak etkilidir
 
-The practical approach is not to predict prices but to set target prices and let standing orders execute when the market reaches your target. This approach is robust to prediction errors because it does not require timing the market -- it requires only that prices occasionally reach your target level, which historical data can confirm.
+Pratik yaklaşım fiyatları tahmin etmek değildir; hedef fiyatlar belirlemek ve piyasa hedef seviyenize ulaştığında standing orderların yürütülmesine izin vermektir. Bu yaklaşım tahmin hatalarına karşı gürbüzdür; çünkü pazarı zamanlamayı gerektirmez -- yalnızca fiyatların zaman zaman hedef seviyenize ulaşmasını gerektirir; bunu tarihi veri doğrulayabilir.
 
-## Practical Recommendations
+## Pratik Öneriler
 
-### For Regular Buyers
+### Düzenli Alıcılar İçin
 
-1. **Analyze your price history** using MERX's analytics to understand typical ranges for your order profile
-2. **Set standing orders** at your target price (25th percentile is a good starting point)
-3. **Monitor utilization** -- if standing orders fill too rarely, raise the target price slightly
-4. **Avoid peak hours** for non-urgent purchases
+1. **MERX'in analitikleri kullanarak fiyat geçmişinizi analiz edin** to understand typical ranges for your order profile
+2. **Standing orderları hedef fiyatında ayarlayın** (25. yüzdelik iyi bir başlangıç noktasıdır)
+3. **Kullanımı izleyin** -- standing orderlar çok nadiren dolduruluyorsa, hedef fiyatı biraz yükseltin
+4. **Acil olmayan satın almalar için zirve saatlerinden kaçının**
 
-### For High-Volume Operators
+### Yüksek Hacimli Operatörler İçin
 
-1. **Build price-aware automation** that tracks costs per unit over time
-2. **Use duration optimization** to match energy purchases to your operational windows
-3. **Maintain a buffer** so standing orders can wait for optimal prices without disrupting operations
-4. **Track provider distribution** to understand which providers consistently win your order flow
+1. **Fiyata duyarlı otomasyon oluşturun** zaman içinde birim başına maliyetleri izlemek
+2. **Süre optimizasyonunu kullanın** enerji satın almalarını operasyonel pencerelerinizle eşleştirmek için
+3. **Bir tampon tutun** standing orderların operasyonları kesintiye uğratmadan optimal fiyatları bekleme süresi için
+4. **Sağlayıcı dağılımını izleyin** hangi sağlayıcıların tutarlı bir şekilde emir akışınızı kazandığını anlamak için
 
-### For Budget-Constrained Operations
+### Bütçe Kısıtlı Operasyonlar İçin
 
-1. **Use fixed-price providers** (via MERX) for predictable budgeting
-2. **Set conservative standing orders** that fill reliably, prioritizing certainty over optimization
-3. **Estimate monthly costs** using median prices from historical data, not best-case prices
+1. **Sabit fiyat sağlayıcıları kullanın** (MERX aracılığıyla) öngörülebilir bütçeleme için
+2. **Muhafazakar standing orderları ayarlayın** güvenilir doldurulma; iyileştirmeden ziyade kesinliğe öncelik verilmesi
+3. **Aylık maliyetleri tahmin edin** en iyi durum fiyatları değil, tarihi verilerdeki medyan fiyatları kullanarak
 
-## Sonuc
+## Sonuç
 
-TRON energy prices are dynamic, driven by production costs, transaction demand, and competitive pressure among seven providers. Prices follow daily and weekly patterns, respond to network events, and vary by order size and duration.
+TRON enerji fiyatları dinamiktir; üretim maliyetleri, işlem talebini ve yedi sağlayıcı arasındaki rekabet baskısı tarafından yönlendirilir. Fiyatlar günlük ve haftalık desenleri takip eder, ağ olaylarına yanıt verir ve emir boyutu ve süresine göre değişir.
 
-Understanding these dynamics does not require becoming a market analyst. The practical application is simple: use price analysis tools to understand typical ranges, set standing orders at your target price, and let the system handle the timing. MERX's aggregation ensures you always access the best available rate, and standing orders capture price dips that manual purchasing cannot.
+Bu dinamikleri anlamak pazar analisti olmayı gerektirmez. Pratik uygulama basittir: tipik aralıkları anlamak için fiyat analiz araçları kullanın, hedef fiyatında standing orderları ayarlayın ve sistemi zamanlamayı halletmesine izin verin. MERX'in agregasyonu her zaman mevcut en iyi orana erişmenizi sağlar ve standing orderlar manuel satın alma işleminin yapamayacağı fiyat düşüşlerini yakalar.
 
-The energy market rewards patience and automation. Operators who buy at market rate whenever they need energy pay more than those who set targets and wait for the market to come to them.
+Enerji piyasası sabır ve otomasyon ödüllendirir. İhtiyaç duydukları takdirde piyasa oranında enerji satın alanlar, hedefler belirleyip piyasanın kendilerine gelmesini bekleyenlerin ödediklerinden daha fazla öderler.
 
-Analyze current market conditions at [https://merx.exchange](https://merx.exchange) or explore the price analytics API at [https://merx.exchange/docs](https://merx.exchange/docs).
+[https://merx.exchange](https://merx.exchange) sayfasında mevcut pazar koşullarını analiz edin veya [https://merx.exchange/docs](https://merx.exchange/docs) sayfasında fiyat analitikleri API'sini keşfedin.
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- yükleme yok, salt okunur araçlar için API anahtarı gerekli değildir:
 
 ```json
 {
@@ -239,6 +240,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI acentanıza sorun: "Şu anda en ucuz TRON enerji nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,100 +1,100 @@
-# MERX ve Manuel Saglayici Izleme Karsilastirmasi: Zaman ve Maliyet Analizi
+# MERX vs Manuel Sağlayıcı İzlemesi: Zaman ve Maliyet Analizi
 
-If you buy TRON energy regularly, you have probably developed a routine. Open TronSave, check prices. Open PowerSun, check prices. Open Feee. Open Catfee. Compare numbers in your head or a spreadsheet. Pick the cheapest. Place the order. Repeat.
+TRON energy düzenli olarak satın alıyorsanız, muhtemelen bir rutininiz vardır. TronSave'i açın, fiyatları kontrol edin. PowerSun'ı açın, fiyatları kontrol edin. Feee'yi açın. Catfee'yi açın. Sayıları kafanızda veya bir elektronik tabloda karşılaştırın. En ucuzunu seçin. Siparişi verin. Tekrarlayın.
 
-This process works. It is also a spectacular waste of time.
+Bu süreç işe yarar. Aynı zamanda zamanın açıkça israf edilmesidir.
 
-This article quantifies exactly how much time and money manual provider monitoring costs compared to using an aggregation service like MERX. The numbers are not theoretical -- they are based on the actual workflow of comparing seven providers and the real-world implications of doing so manually.
+Bu makale, manuel sağlayıcı izlemesinin MERX gibi bir agregasyon hizmeti kullanmaya kıyasla tam olarak ne kadar zaman ve para harcadığını nicelleştirir. Sayılar teorik değildir -- yedi sağlayıcı karşılaştırmasının gerçek iş akışı ve bunu manuel olarak yapmanın gerçek dünya sonuçlarına dayanmaktadır.
 
-## The Manual Monitoring Workflow
+## Manuel İzleme İş Akışı
 
-Let us walk through what manual provider comparison actually involves when done properly.
+Manuel sağlayıcı karşılaştırması uygun şekilde yapıldığında gerçekte neyi içerdiğini gözden geçirelim.
 
-### Step 1: Check Each Provider
+### Adım 1: Her Sağlayıcıyı Kontrol Edin
 
-The TRON energy market currently has seven significant providers: TronSave, PowerSun, Feee, Catfee, Netts, iTRX, and Sohu. Each has its own website or API, its own interface, and its own way of displaying prices.
+TRON energy pazarında şu anda yedi önemli sağlayıcı vardır: TronSave, PowerSun, Feee, Catfee, Netts, iTRX ve Sohu. Her birinin kendi web sitesi veya API'si, kendi arayüzü ve fiyatları göstermenin kendi yöntemi vardır.
 
-To compare them manually, you need to:
+Manuel olarak karşılaştırmak için şunları yapmanız gerekir:
 
-1. Open each provider's interface (7 browser tabs or API calls)
-2. Enter your desired energy amount on each
-3. Select your desired duration on each
-4. Note the quoted price from each
-5. Account for differences in pricing models (per-unit vs flat rate, SUN vs TRX)
-6. Compare the results
+1. Her sağlayıcının arayüzünü açın (7 tarayıcı sekmesi veya API çağrısı)
+2. Her birinde istediğiniz energy miktarını girin
+3. Her birinde istediğiniz süreyi seçin
+4. Her birinden alıntı yapılan fiyatı not edin
+5. Fiyatlandırma modelindeki farklılıkları hesaba katın (birim başına vs sabit ücret, SUN vs TRX)
+6. Sonuçları karşılaştırın
 
-**Estimated time per comparison: 8-15 minutes.** This assumes you know all seven providers, have accounts on each, and know how to navigate their interfaces efficiently. For a newcomer, add another 30 minutes for initial setup per provider.
+**Karşılaştırma başına tahmini zaman: 8-15 dakika.** Bu, yedi sağlayıcıyı bildiğiniz, her birinde hesaplarınız olduğu ve arayüzlerinde verimli bir şekilde gezinmeyi bildiğinizi varsayar. Yeni başlayan biri için sağlayıcı başına ilk kurulum için 30 dakika daha ekleyin.
 
-### Step 2: Account for Availability
+### Adım 2: Kullanılabilirliği Hesaba Katın
 
-Price is not the only variable. A provider might quote a great rate but not have sufficient supply to fill your order. Some providers show available supply; others do not. You might place an order at the cheapest provider only to find it cannot be fully filled.
+Fiyat tek değişken değildir. Bir sağlayıcı harika bir oran sunabilir ancak siparişinizi yerine getirmek için yeterli arzı olmayabilir. Bazı sağlayıcılar mevcut arzı gösterir; diğerleri göstermez. En ucuz sağlayıcıya bir sipariş verebilir ve siparişin tam olarak yerine getirilmediğini fark edebilirsiniz.
 
-**Additional time for availability verification: 2-5 minutes.**
+**Kullanılabilirlik doğrulaması için ek zaman: 2-5 dakika.**
 
-### Step 3: Place the Order
+### Adım 3: Siparişi Yerleştirin
 
-Once you have identified the best option, you need to place the order on that specific provider's platform. Different providers have different order flows, payment methods, and confirmation processes.
+En iyi seçeneği belirledikten sonra, o belirli sağlayıcının platformunda siparişi yerleştirmeniz gerekir. Farklı sağlayıcıların farklı sipariş akışları, ödeme yöntemleri ve onay süreçleri vardır.
 
-**Order placement time: 2-5 minutes.**
+**Sipariş yerleştirme süresi: 2-5 dakika.**
 
-### Total Time Per Order
+### Sipariş Başına Toplam Zaman
 
-For a single, well-executed manual comparison:
+Tek, iyi yapılandırılmış bir manuel karşılaştırma için:
 
-| Step | Time |
+| Adım | Zaman |
 |---|---|
-| Check 7 providers | 8-15 min |
-| Verify availability | 2-5 min |
-| Place order | 2-5 min |
-| **Total** | **12-25 min** |
+| 7 sağlayıcıyı kontrol edin | 8-15 dak |
+| Kullanılabilirliği doğrulayın | 2-5 dak |
+| Sipariş yerleştirin | 2-5 dak |
+| **Toplam** | **12-25 dak** |
 
-Let us use the conservative middle estimate: 15 minutes per order.
+Muhafazakar orta tahmini kullanalım: sipariş başına 15 dakika.
 
-## The Cost of Time
+## Zamanın Maliyeti
 
-### For Individual Users
+### Bireysel Kullanıcılar İçin
 
-If you buy energy once a day, that is 15 minutes daily on provider comparison. Over a month, that is 7.5 hours. Over a year, it is 91 hours -- more than two full work weeks spent opening tabs and comparing prices.
+Günde bir kez energy satın alırsanız, bu sağlayıcı karşılaştırmasında günde 15 dakikadır. Bir ay içinde 7,5 saattir. Bir yılda 91 saattir -- sekmeler açmak ve fiyatları karşılaştırmakla geçen tam iki çalışma haftası.
 
-If your time is worth $50/hour (a conservative rate for anyone building on blockchain), that is $4,550 per year in time cost alone.
+Zamanınızın saati 50 dolar değerindeyse (blockchain'de yapı inşa eden herkes için muhafazakar bir oran), bu yalnızca zaman maliyeti açısından yılda 4.550 dolar.
 
-### For Development Teams
+### Geliştirme Ekipleri İçin
 
-For teams running automated systems that need energy for each transaction, the manual approach does not even function. You cannot have a developer manually comparing prices every time your payment processor needs to send a USDT transfer.
+Her işlem için energy gerektiren otomatik sistemler çalıştıran ekipler için manuel yaklaşım işlevsel değildir. Ödeme işlemcinizin USDT transferi göndermesi gerektiğinde bir geliştirici manuel olarak fiyatları karşılaştıramaz.
 
-Teams that try to semi-automate this end up building internal tools: scripts that scrape provider websites, spreadsheets that track historical prices, cron jobs that check rates periodically. These internal tools require maintenance, break when providers change their interfaces, and represent ongoing engineering overhead.
+Bunu yarı otomatikleştirmeye çalışan ekipler, dahili araçlar oluşturur: sağlayıcı web sitelerini kazıyan komut dosyaları, geçmiş fiyatları izleyen elektronik tablolar, düzenli olarak oranları kontrol eden cron işleri. Bu dahili araçlar bakım gerektirir, sağlayıcılar arayüzlerini değiştirdiğinde bozulur ve devam eden mühendislik yükünü temsil eder.
 
-**Estimated cost of building and maintaining an internal price comparison system: 40-80 hours of developer time initially, plus 2-4 hours per month for maintenance.** At $100/hour for developer time, that is $4,000-$8,000 upfront plus $200-$400 monthly.
+**Bir dahili fiyat karşılaştırma sistemi oluşturma ve sürdürme tahmini maliyeti: başlangıçta 40-80 saat geliştirici zamanı, artı ayda 2-4 saat bakım.** Geliştirici zamanı için saati 100 dolardan, bu başlangıçta 4.000-8.000 dolar artı aylık 200-400 dolar.
 
-### For Businesses at Scale
+### İşletmeler Ölçekte
 
-Businesses processing hundreds or thousands of TRON transactions daily face an impossible manual task. At 100 transactions per day, manual comparison would require 25 hours daily -- more than a full-time employee doing nothing but checking energy prices.
+Günde yüzlerce veya binlerce TRON işlemini işleyen işletmeler imkansız bir manuel görevle karşı karşıyadır. Günde 100 işlemde, manuel karşılaştırma günde 25 saat gerektirecektir -- energy fiyatlarını kontrol etmekten başka bir şey yapmayan tam zamanlı bir çalışandan daha fazla.
 
-Even with batching (buying energy for multiple transactions at once), the comparison workflow does not scale.
+Batching ile bile (birden fazla işlem için aynı anda energy satın almak), karşılaştırma iş akışı ölçeklenmiyor.
 
-## The Price Window Problem
+## Fiyat Penceresi Sorunu
 
-Time cost is quantifiable but not the largest issue. The bigger problem is missed price windows.
+Zaman maliyeti nicelleştirilebilir ancak en büyük sorun değildir. Daha büyük sorun kaçırılan fiyat pencereleridir.
 
-Energy prices on TRON fluctuate throughout the day. Providers adjust rates based on supply, demand, and competitive positioning. A price that was available when you started your 15-minute comparison might not exist when you finish.
+TRON'daki enerji fiyatları gün boyunca dalgalanmaktadır. Sağlayıcılar, arz, talep ve rekabetçi konumlandırmaya göre oranları ayarlarlar. Sağlayıcıları karşılaştırmaya başladığınızda mevcut olan bir fiyat, bitirdiğinizde varolmayabilir.
 
-### How Price Windows Work
+### Fiyat Pencereleri Nasıl Çalışır?
 
-Suppose you start comparing providers at 10:00 AM. Provider A quotes 26 SUN. By the time you finish checking all seven providers and return to place your order with Provider A, it is 10:12 AM. Their rate has shifted to 29 SUN because another buyer took the available supply at 26 SUN.
+Diyelim ki 10:00 AM'de sağlayıcıları karşılaştırmaya başlıyorsunuz. Sağlayıcı A 26 SUN fiyatlandırmaktadır. Yedi sağlayıcının tümünü kontrol etmeyi ve Sağlayıcı A ile siparişi yerleştirmek için geri dönmeyi bitirdiğinizde, 10:12 AM'dir. Başka bir alıcı 26 SUN'da mevcut arzı aldığı için oranları 29 SUN'a değişmiştir.
 
-You missed the window.
+Pencereyi kaçırdınız.
 
-This happens more frequently than most users realize. The best prices are often available for minutes, not hours. Manual comparison is structurally unable to capture short-lived price opportunities.
+Bu, çoğu kullanıcının fark ettiğinden daha sık meydana gelir. En iyi fiyatlar genellikle saatler değil, dakikalar boyunca mevcut olur. Manuel karşılaştırma yapısal olarak kısa ömürlü fiyat fırsatlarını yakalayamaz.
 
-### Quantifying Missed Windows
+### Kaçırılan Pencereleri Nicelleştirme
 
-Based on typical price volatility in the TRON energy market, prices can swing 10-20% within a single hour during active periods. If you are consistently 10-15 minutes behind the best available price, you are statistically paying 3-8% more than the instantaneous best price.
+TRON energy pazarındaki tipik fiyat oynaklığına göre, aktif dönemlerde fiyatlar tek saat içinde %10-20 oranında dalgalanabilir. Tutarlı olarak en iyi mevcut fiyatın 10-15 dakika gerisindeyseniz, istatistiksel olarak anlık en iyi fiyattan %3-8 daha fazla ödüyorsunuz.
 
-On energy purchases totaling 1,000,000 SUN per month, a 5% premium from missed windows costs 50,000 SUN -- roughly $2-4 depending on TRX price.
+Ayda toplam 1.000.000 SUN'a ulaşan enerji satın alımlarında, kaçırılan pencerelerden gelen %5 prim 50.000 SUN'a mal olur -- TRX fiyatına bağlı olarak kabaca 2-4 dolar.
 
-## The MERX Alternative
+## MERX Alternatifi
 
-MERX eliminates the manual comparison workflow entirely. A single API call queries all seven providers simultaneously and returns the best available price:
+MERX, manuel karşılaştırma iş akışını tamamen ortadan kaldırır. Tek bir API çağrısı, yedi sağlayıcıyı eşzamanlı olarak sorgular ve en iyi mevcut fiyatı döndürür:
 
 ```bash
 curl https://merx.exchange/api/v1/prices \
@@ -102,11 +102,11 @@ curl https://merx.exchange/api/v1/prices \
   -d '{"energy_amount": 65000, "duration": "1h"}'
 ```
 
-**Time per comparison: under 500 milliseconds.** Not 15 minutes. Half a second.
+**Karşılaştırma başına zaman: 500 milisaniyeden az.** 15 dakika değil. Yarım saniye.
 
-The response includes prices from all active providers, sorted by rate, with the best option identified. No tabs to open, no interfaces to navigate, no manual comparison needed.
+Yanıt, tüm aktif sağlayıcılardan fiyatları içerir, orana göre sıralanmış, en iyi seçenek belirlenmiştir. Açılacak sekme yok, gezinilecek arayüz yok, manuel karşılaştırma gerekli değil.
 
-### Placing an Order
+### Sipariş Yerleştirme
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -119,15 +119,15 @@ const order = await merx.createOrder({
   target_address: 'TYourAddress...'
 });
 
-// Order placed at the best available price
-// Total time from price check to order: < 1 second
+// Siparişi en iyi mevcut fiyatla yerleştirin
+// Fiyat kontrolünden siparişe toplam zaman: < 1 saniye
 ```
 
-The entire workflow -- price comparison across seven providers, best price selection, and order placement -- takes less than one second programmatically.
+Tüm iş akışı -- yedi sağlayıcı arasında fiyat karşılaştırması, en iyi fiyat seçimi ve sipariş yerleştirme -- programlı olarak bir saniyeden az sürer.
 
-## Standing Orders: Eliminating Active Monitoring Entirely
+## Ayakta Duran Siparişler: Aktif İzlemeyi Tamamen Ortadan Kaldırma
 
-MERX standing orders go further than just speeding up the comparison process. They eliminate the need for you to be present at all.
+MERX ayakta duran siparişleri sadece karşılaştırma sürecini hızlandırmaktan ötesine götürür. Sizin orada olmanız gereken ihtiyacı ortadan kaldırırlar.
 
 ```typescript
 const standing = await merx.createStandingOrder({
@@ -139,78 +139,78 @@ const standing = await merx.createStandingOrder({
 });
 ```
 
-This creates a persistent order that monitors prices across all seven providers continuously. When any provider's rate drops to or below 25 SUN for your specified amount and duration, the order executes automatically.
+Bu, tüm yedi sağlayıcı arasında fiyatları sürekli olarak izleyen kalıcı bir sipariş oluşturur. Herhangi bir sağlayıcının belirtilen miktar ve süre için oranı 25 SUN'a veya altına düştüğünde, sipariş otomatik olarak yürütülür.
 
-### Why Standing Orders Change the Economics
+### Ayakta Duran Siparişler Ekonomiye Neden Hükmü Değiştirir
 
-With manual monitoring, you can check prices a few times per day at best. Each check takes 15 minutes and captures a single snapshot of the market.
+Manuel izleme ile, günde en fazla birkaç kez fiyatları kontrol edebilirsiniz. Her kontrol 15 dakika sürer ve pazarın tek bir anlık görüntüsünü yakalar.
 
-A standing order monitors the market continuously -- every price update from every provider. It captures price dips that last minutes or even seconds, opportunities that no human monitoring process could catch.
+Ayakta duran bir sipariş pazarı sürekli olarak izler -- her sağlayıcıdan her fiyat güncellemesi. Hiçbir insan izleme süreci tarafından yakalanabilecek olan dakika veya hatta saniye boyunca süren fiyat düşüşlerini yakalar.
 
-For organizations with flexible timing on their energy purchases, standing orders consistently achieve lower average prices than manual buying. The system never sleeps, never gets distracted, and never misses a window.
+Energy satın almalarında esnek zamanlamaya sahip kuruluşlar için, ayakta duran siparişler tutarlı olarak manuel satın almadan daha düşük ortalama fiyatlar elde eder. Sistem hiç uyumaz, asla dikkati dağılmaz ve hiç pencere kaçırmaz.
 
-## Time and Cost Comparison
+## Zaman ve Maliyet Karşılaştırması
 
-| Metric | Manual Monitoring | MERX |
+| Metrik | Manuel İzleme | MERX |
 |---|---|---|
-| Time per comparison | 12-25 minutes | < 1 second |
-| Orders per day (1 order) | 15 min/day | Seconds/day |
-| Monthly time cost (1/day) | 7.5 hours | Negligible |
-| Annual time cost (1/day) | 91 hours | Negligible |
-| Price window capture | Often missed | Real-time |
-| Off-hours monitoring | Not feasible | Continuous |
-| Provider outage handling | Manual switchover | Automatic |
-| Scaling to 100 orders/day | Impossible manually | Same API call |
+| Karşılaştırma başına zaman | 12-25 dakika | < 1 saniye |
+| Günde siparişler (1 sipariş) | 15 dak/gün | Saniye/gün |
+| Aylık zaman maliyeti (1/gün) | 7,5 saat | Önemsiz |
+| Yıllık zaman maliyeti (1/gün) | 91 saat | Önemsiz |
+| Fiyat penceresi yakalama | Genellikle kaçırılır | Gerçek zamanlı |
+| Çalışma saatleri dışı izleme | Uygun değil | Sürekli |
+| Sağlayıcı kesintisi işleme | Manuel geçiş | Otomatik |
+| 100 siparişe/gün ölçekleme | Manuel olarak imkansız | Aynı API çağrısı |
 
-### Dollar Comparison (1 order/day, $50/hr time value)
+### Dolar Karşılaştırması (günde 1 sipariş, saati 50 dolar zaman değeri)
 
-| Cost Component | Manual | MERX |
+| Maliyet Bileşeni | Manuel | MERX |
 |---|---|---|
-| Time cost per year | $4,550 | ~$0 |
-| Missed price windows (est.) | $500-2,000/yr | $0 |
-| Internal tooling (if built) | $4,000-8,000 + $200-400/mo | $0 |
-| MERX service cost | $0 | Included in spread |
-| **Net annual cost** | **$5,050 - $14,550** | **Spread on orders** |
+| Yıllık zaman maliyeti | 4.550 dolar | ~0 dolar |
+| Kaçırılan fiyat pencereleri (tahmini) | 500-2.000 dolar/yıl | 0 dolar |
+| Dahili tooling (oluşturulursa) | 4.000-8.000 dolar + 200-400 dolar/ay | 0 dolar |
+| MERX hizmet maliyeti | 0 dolar | Spread'e dahil |
+| **Net yıllık maliyet** | **5.050 - 14.550 dolar** | **Siparişlerdeki Spread** |
 
-The MERX cost model is built into the price spread -- the difference between provider cost and the rate charged to you. For most users, this spread is significantly less than the time and opportunity cost of manual monitoring.
+MERX maliyet modeli fiyat spread'ine yerleştirilmiştir -- sağlayıcı maliyeti ile size talep edilen oran arasındaki fark. Çoğu kullanıcı için bu spread, manuel izlemenin zaman ve fırsat maliyetinden önemli ölçüde daha düşüktür.
 
-## The Automation Multiplier
+## Otomasyon Çarpanı
 
-The real value of aggregation becomes clear at scale. Manual monitoring is a linear cost -- more orders mean proportionally more time. MERX's cost is per-order, and the API call time remains constant regardless of volume.
+Agregasyonun gerçek değeri ölçekte açık hale gelir. Manuel izleme doğrusal bir maliyettir -- daha fazla sipariş orantılı olarak daha fazla zaman anlamına gelir. MERX'in maliyeti sipariş başına olup, API çağrı süresi hacme bakılmaksızın sabit kalır.
 
-A payment processor handling 500 USDT transfers per day cannot manually compare energy prices for each transaction. The only options are:
+Günde 500 USDT transferini işleyen bir ödeme işlemcisi her işlem için energy fiyatlarını manuel olarak karşılaştıramaz. Tek seçenekler:
 
-1. Pick one provider and accept whatever they charge (overpaying on average)
-2. Build an internal comparison system (high upfront and maintenance cost)
-3. Use an aggregator (immediate best-price access with zero operational overhead)
+1. Bir sağlayıcıyı seçin ve ne talep ettiklerini kabul edin (ortalama olarak fazla ödeme)
+2. Bir dahili karşılaştırma sistemi oluşturun (yüksek başlangıç ve bakım maliyeti)
+3. Bir agregatör kullanın (sıfır operasyonel ek yük ile anlık en iyi fiyata erişim)
 
-Option 3 is the only one that scales without proportional cost increase.
+Seçenek 3, orantılı maliyet artışı olmadan ölçeklenebilen tek seçenektir.
 
-## Beyond Price Comparison
+## Fiyat Karşılaştırması Ötesi
 
-Manual monitoring only addresses the price question. MERX also handles:
+Manuel izleme yalnızca fiyat sorusunu ele alır. MERX ayrıca şunları işler:
 
-- **Exact energy estimation** using transaction simulation, so you never over-purchase or under-purchase
-- **Automatic failover** if a provider is down, with no manual intervention needed
-- **WebSocket price feeds** for applications that need real-time market data
-- **Webhooks** for asynchronous order status notifications
-- **Auto-energy** configuration for wallets that should always have energy available
+- **Tam energy tahmini** işlem simülasyonu kullanarak, böylece hiçbir zaman fazla satın almaz veya yetersiz satın almaz
+- **Otomatik failover** sağlayıcı kapalıysa, hiçbir manuel müdahale gerekmeden
+- **WebSocket fiyat beslemeleri** gerçek zamanlı pazar verileri gerektiren uygulamalar için
+- **Webhooks** asenkron sipariş durumu bildirimleri için
+- **Auto-energy** konfigürasyonu her zaman energy'ye sahip olması gereken cüzdanlar için
 
-Each of these capabilities would require additional manual processes or custom development if handled outside an aggregator.
+Bu yeteneklerin her biri, bir agregatör dışında işlenirse ek manuel süreçler veya özel geliştirme gerektirecektir.
 
-## Sonuc
+## Sonuç
 
-Manual provider monitoring is a remnant of the early TRON energy market when there were two or three providers and checking them took minutes. With seven active providers and a dynamic pricing environment, the manual approach costs more in time and missed opportunities than any aggregation fee.
+Manuel sağlayıcı izlemesi, iki veya üç sağlayıcı olduğunda ve kontrol etmek birkaç dakika aldığında erken TRON energy pazarının kalıntısıdır. Yedi aktif sağlayıcı ve dinamik fiyatlandırma ortamı ile manuel yaklaşım, herhangi bir agregasyon ücretinden daha fazla zaman ve kaçırılan fırsatlar maliyetine sahiptir.
 
-The math is straightforward. If you value your time at any meaningful rate, the hours spent on manual comparison exceed the cost of using an aggregator within the first month. Add the opportunity cost of missed price windows, and the case becomes even clearer.
+Matematik açıktır. Zamanınızı anlamlı bir oranda değerlendirirseniz, manuel karşılaştırmada harcanan saatler ilk ay içinde bir agregatör kullanmanın maliyetini aşar. Kaçırılan fiyat pencerelerinin fırsat maliyetini ekleyin ve durum daha da açık hale gelir.
 
-MERX replaces a 15-minute manual workflow with a sub-second API call, captures price opportunities that manual monitoring cannot, and scales from one order per day to thousands without additional effort.
+MERX, 15 dakikalık bir manuel iş akışını yarım saniyenin altında bir API çağrısı ile değiştirir, manuel izlemenin yakalayamadığı fiyat fırsatlarını yakalar ve günde bir siparişten binlercesine ek çaba olmadan ölçeklenebilir.
 
-Try the platform at [https://merx.exchange](https://merx.exchange) or explore the documentation at [https://merx.exchange/docs](https://merx.exchange/docs).
+Platformu [https://merx.exchange](https://merx.exchange) adresinde deneyin veya belgeleri [https://merx.exchange/docs](https://merx.exchange/docs) adresinde keşfedin.
 
-## Try It Now with AI
+## Şimdi Yapay Zeka ile Deneyin
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- yükleme sıfır, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -222,6 +222,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Yapay zeka aracınıza sorun: "Şu an en ucuz TRON energy nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatları alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

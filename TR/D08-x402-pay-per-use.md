@@ -1,22 +1,22 @@
-# x402 Kullandikca Ode: Hesap Olusturmadan TRON Energy Satin Alin
+# x402 Ödeme Kullanımı: Hesap Olmadan TRON Energy Satın Alın
 
-## The Registration Problem
+## Kayıt Problemi
 
-Every blockchain service follows the same pattern: create an account, verify your email, generate an API key, fund an internal balance, then start using the service. For a human user, this is a minor inconvenience. For an autonomous AI agent, it is a hard stop.
+Her blockchain hizmeti aynı deseni izler: hesap oluştur, e-postanı doğrula, API anahtarı oluştur, iç bakiyeyi finanse et, sonra hizmeti kullanmaya başla. İnsan kullanıcı için bu küçük bir rahatsızlıktır. Otonom bir yapay zeka ajanı için ise bu tam bir engeldir.
 
-Agents do not have email addresses. They do not want internal balances managed by third parties. They do not want to trust a platform with custody of their funds. What agents want is simple: pay for a service, receive the service, move on. No relationship. No state. No trust.
+Ajanların e-posta adresleri yoktur. Üçüncü taraflar tarafından yönetilen iç bakiyeleri istemezler. Bir platformaya fonlarının saklama görevini vermek istemezler. Ajanların istedikleri basittir: bir hizmet için öde, hizmeti al, devam et. İlişki yok. Durum yok. Güven yok.
 
-The x402 protocol makes this possible. Inspired by the HTTP 402 "Payment Required" status code (defined in 1997 but never widely implemented), x402 enables pay-per-use commerce where payment is verified on-chain rather than through accounts and API keys.
+x402 protokolü bunu mümkün kılar. 1997'de tanımlanan ancak hiçbir zaman yaygın olarak uygulanmayan HTTP 402 "Ödeme Gerekli" durum kodundan ilham alan x402, ödemenin hesaplar ve API anahtarları yerine blokzincir üzerinde doğrulandığı kullanım başına ödeme ticaretini sağlar.
 
-MERX implements x402 for energy purchases. Any entity with a TRON wallet - human, agent, or smart contract - can buy energy in a single transaction without creating an account, without depositing funds, and without any prior relationship with the MERX platform.
+MERX, enerji satın alımları için x402'yi uygular. TRON cüzdanına sahip herhangi bir varlık (insan, ajan veya akıllı sözleşme), hesap oluşturmadan, fon yatırmadan ve MERX platformu ile herhangi bir önceki ilişki olmadan tek bir işlemde enerji satın alabilir.
 
-## How It Works
+## Nasıl Çalışır?
 
-The x402 flow has five steps. Each step is verifiable on-chain, and at no point does the buyer need to trust MERX with custody of their funds.
+x402 akışının beş adımı vardır. Her adım blokzincir üzerinde doğrulanabilir ve alıcı hiçbir noktada MERX'e fonlarının saklama görevini vermek zorunda değildir.
 
-### Step 1: Request an Invoice
+### Adım 1: Fatura İste
 
-The buyer calls `create_paid_order` with the desired energy parameters:
+Alıcı, istenen enerji parametreleriyle `create_paid_order` çağrısı yapar:
 
 ```
 Tool: create_paid_order
@@ -42,11 +42,11 @@ Response:
 }
 ```
 
-The invoice is a quote, not a commitment. No funds have moved. The buyer can inspect the price, compare it to alternatives, and decide whether to proceed. The invoice expires after 5 minutes - if not paid within that window, the quoted price is no longer guaranteed.
+Fatura bir teklif olup, bir taahhüt değildir. Hiçbir fon hareket etmemiştir. Alıcı fiyatı inceleyebilir, alternatifleriyle karşılaştırabilir ve devam edip etmemesine karar verebilir. Fatura 5 dakika sonra sona erer - bu süre içinde ödenmezse, alıntı fiyat artık garantili değildir.
 
-### Step 2: Sign the Payment Locally
+### Adım 2: Ödemeyi Yerel Olarak İmzala
 
-The buyer constructs a TRX transfer transaction from their wallet to the MERX treasury address. The critical detail is the memo field, which must contain the exact string from the invoice.
+Alıcı, cüzdanından MERX hazine adresine bir TRX transfer işlemi oluşturur. Kritik detay, faturadan alınan tam dizeyi içermesi gereken memo alanıdır.
 
 ```javascript
 const tx = await tronWeb.transactionBuilder.sendTrx(
@@ -55,132 +55,132 @@ const tx = await tronWeb.transactionBuilder.sendTrx(
   buyerAddress
 );
 
-// Add memo to transaction data
+// İşlem verilerine memo ekle
 const txWithMemo = await tronWeb.transactionBuilder.addUpdateData(
   tx,
   invoice.memo,          // "merx_xpay_abc123"
   'utf8'
 );
 
-// Sign locally - private key never leaves the buyer's machine
+// Yerel olarak imzala - özel anahtar asla alıcının makinesinden ayrılmaz
 const signedTx = await tronWeb.trx.sign(txWithMemo);
 ```
 
-The payment is signed with the buyer's private key on the buyer's machine. The private key is never shared with MERX, never transmitted over the network, and never stored anywhere outside the buyer's control.
+Ödeme alıcının özel anahtarıyla alıcının makinesinde imzalanır. Özel anahtar hiçbir zaman MERX ile paylaşılmaz, ağ üzerinden asla iletilmez ve alıcının kontrolü dışında hiçbir yerde depolanmaz.
 
-### Step 3: Broadcast the Payment
+### Adım 3: Ödemeyi Yayınla
 
-The signed transaction is broadcast to the TRON network:
+İmzalı işlem TRON ağına yayınlanır:
 
 ```javascript
 const result = await tronWeb.trx.sendRawTransaction(signedTx);
 const txHash = result.txid;
 ```
 
-At this point, the payment is on-chain. It is visible to anyone who queries the TRON blockchain. The TRX has moved from the buyer's address to the MERX treasury address, and the memo field contains the invoice identifier.
+Bu noktada, ödeme blokzincir üzerindedir. TRON blokzincirini sorgulayan herkese görünürdür. TRX, alıcının adresinden MERX hazine adresine taşınmış ve memo alanı fatura tanımlayıcısını içerir.
 
-### Step 4: MERX Verifies On-Chain
+### Adım 4: MERX Blokzincir Üzerinde Doğrula
 
-MERX monitors its treasury address for incoming transactions. When a transaction arrives, MERX:
+MERX, hazine adresini gelen işlemler için izler. İşlem geldiğinde, MERX:
 
-1. Reads the memo field
-2. Matches it against outstanding invoices
-3. Verifies the amount matches the invoice (exact amount required)
-4. Verifies the invoice has not expired
-5. Verifies the invoice has not already been paid (prevents double-claiming)
+1. Memo alanını okur
+2. Onu olağanüstü faturaların karşısında eşleştirir
+3. Miktarın fatura ile eşleştiğini doğrular (tam miktar gerekli)
+4. Faturanın sona ermediğini doğrular
+5. Faturanın daha önce ödenmediğini doğrular (çift talep etmeyi önler)
 
 ```
-Verification:
+Doğrulama:
   TX hash: 7f3a2b...
   From: TBuyerAddress...
   To: TMerxTreasuryAddress...
-  Amount: 1,430,000 SUN (1.43 TRX) - MATCHES
-  Memo: "merx_xpay_abc123" - MATCHES invoice
-  Invoice status: UNPAID - OK
-  Invoice expiry: 2026-03-30T12:05:00Z - NOT EXPIRED
+  Amount: 1,430,000 SUN (1.43 TRX) - UYUŞUYOR
+  Memo: "merx_xpay_abc123" - UYUŞUYOR
+  Invoice status: ÖDENMEMIŞ - TAMAM
+  Invoice expiry: 2026-03-30T12:05:00Z - SÜRESI BİTMEMİŞ
 
-  Result: VERIFIED
+  Result: DOĞRULAND
 ```
 
-### Step 5: Energy Delegation
+### Adım 5: Enerji Delegasyonu
 
-With payment verified, MERX places the energy order through its provider network:
+Ödeme doğrulandıktan sonra, MERX enerji siparişini sağlayıcı ağı üzerinden yerleştirir:
 
 ```
-Order placed:
+Sipariş yerleştirildi:
   Energy: 65,000
   Duration: 1 hour
   Target: TBuyerAddress...
-  Provider: sohu (best price at time of order)
+  Provider: sohu (sipariş zamanında en iyi fiyat)
 
-Delegation confirmed after 4.1 seconds
+4.1 saniye sonra delegasyon onaylandı
 Energy available at TBuyerAddress: 65,000
 ```
 
-The buyer now has 65,000 energy delegated to their address for 1 hour. They can use it for USDT transfers, DEX swaps, or any other smart contract interaction.
+Alıcı artık adreslerine 1 saatliğine 65.000 enerji delegasyonuna sahiptir. Bunu USDT transferleri, DEX takasları veya başka herhangi bir akıllı sözleşme etkileşimi için kullanabilir.
 
-## The Complete Agent Flow
+## Tam Ajan Akışı
 
-Here is how an AI agent executes the entire x402 flow through the MERX MCP sunucusu:
+Yapay zeka ajanının MERX MCP sunucusu aracılığıyla tüm x402 akışını nasıl yürüttüğü aşağıda verilmiştir:
 
 ```
-Agent: "I need to send 100 USDT to TRecipient. I don't have a MERX account."
+Agent: "MERX hesabım yok, 100 USDT göndermem gerekiyor TRecipient adresine."
 
-Step 1: Agent calls create_paid_order
-  -> Receives invoice: 1.43 TRX, memo "merx_xpay_abc123"
+Step 1: Agent create_paid_order çağrısı yapar
+  -> Alır: 1.43 TRX fatura, memo "merx_xpay_abc123"
 
-Step 2: Agent calls transfer_trx
-  -> Sends 1.43 TRX to TMerxTreasury with memo "merx_xpay_abc123"
+Step 2: Agent transfer_trx çağrısı yapar
+  -> TMerxTreasury adresine "merx_xpay_abc123" memo ile 1.43 TRX gönderir
   -> TX hash: 7f3a2b...
 
-Step 3: Agent waits for verification (automatic)
-  -> MERX detects payment, verifies on-chain
-  -> Energy delegated to agent's address
+Step 3: Agent doğrulamayı bekler (otomatik)
+  -> MERX ödemeyi algılar, blokzincir üzerinde doğrular
+  -> Enerji ajan adresine delegasyona yerleştirilir
 
-Step 4: Agent calls transfer_trc20
-  -> Sends 100 USDT to TRecipient
-  -> Uses delegated energy instead of burning TRX
-  -> Cost: 1.43 TRX instead of ~27 TRX
+Step 4: Agent transfer_trc20 çağrısı yapar
+  -> TRecipient'e 100 USDT gönderir
+  -> TRX yanmak yerine delegasyona alınmış enerji kullanır
+  -> Cost: 1.43 TRX yerine ~27 TRX
 
-Total interaction with MERX: 2 tool calls
-Account created: No
-API key used: No
-Funds deposited: No
-Trust required: Minimal (payment verified on-chain)
+MERX ile toplam etkileşim: 2 araç çağrısı
+Hesap oluşturuldu: Hayır
+API anahtarı kullanıldı: Hayır
+Fon yatırıldı: Hayır
+Gerekli güven: Minimal (ödeme blokzincir üzerinde doğrulandı)
 ```
 
-## Security: Why the Memo Matters
+## Güvenlik: Memo Neden Önemlidir
 
-The memo field is the linchpin of x402 security. Without it, any TRX transfer to the MERX treasury could be claimed as payment for any invoice. This creates two attack vectors:
+Memo alanı x402 güvenliğinin anahtarıdır. Onsuz, MERX hazinesine yapılan herhangi bir TRX transferi herhangi bir fatura için ödeme olarak talep edilebilir. Bu iki saldırı vektörü yaratır:
 
-### Cross-Payment Attack
+### Çapraz Ödeme Saldırısı
 
-Without memo verification, an attacker could:
-1. Request an invoice for 65,000 energy (1.43 TRX)
-2. Wait for someone else to send 1.43 TRX to the MERX treasury for an unrelated reason
-3. Claim that unrelated payment as their invoice payment
-4. Receive free energy
+Memo doğrulaması olmadan, saldırgan şu işlemleri yapabilir:
+1. 65.000 enerji faturası talep et (1.43 TRX)
+2. Birisinin ilgisiz bir nedenle MERX hazinesine 1.43 TRX göndermesini bekle
+3. O ilgisiz ödemeyi kendi fatura ödemesi olarak talep et
+4. Bedava enerji al
 
-The memo prevents this. Every invoice has a unique memo string. A payment is only matched to an invoice if the memo field contains the exact string. Random TRX transfers to the treasury address - which happen on any active address - are ignored because they lack a valid memo.
+Memo bunu önler. Her faturanın benzersiz bir memo dizesi vardır. Ödeme, yalnızca memo alanı tam dizeyi içeriyorsa bir fatura ile eşleştirilir. Hazine adresine yapılan rastgele TRX transferleri (herhangi bir aktif adrese gerçekleşir) geçerli bir memo eksik oldukları için yoksayılır.
 
-### Replay Attack
+### Replay Saldırısı
 
-Without expiration and single-use enforcement, an attacker could:
-1. Pay an invoice legitimately
-2. Reference the same payment transaction hash for a second invoice
-3. Receive energy twice for one payment
+Geçerlilik süresi ve tek kullanımlı zorlama olmadan, saldırgan şu işlemleri yapabilir:
+1. Faturayı meşru şekilde öde
+2. Aynı ödeme işlem hash'ını ikinci bir fatura için referans göster
+3. Bir ödeme için iki kez enerji al
 
-MERX prevents this with two mechanisms:
-- Each invoice is marked as PAID after the first successful verification. A second payment claiming the same memo is rejected.
-- Each payment transaction can only be matched to one invoice. The transaction hash is recorded and cannot be reused.
+MERX bunu iki mekanizmayla önler:
+- Her fatura ilk başarılı doğrulamadan sonra ÖDENMEMIŞ olarak işaretlenir. Aynı memo talep eden ikinci bir ödeme reddedilir.
+- Her ödeme işlemi yalnızca bir fatura ile eşleştirilir. İşlem hash'ı kaydedilir ve yeniden kullanılamaz.
 
-### Amount Verification
+### Miktar Doğrulaması
 
-The payment amount must exactly match the invoice amount. Sending 1.42 TRX instead of 1.43 TRX results in a failed verification. This prevents attacks where an attacker sends a minimal amount (e.g., 0.000001 TRX) with a valid memo to claim an invoice at a fraction of the price.
+Ödeme miktarı fatura miktarıyla tam olarak eşleşmelidir. 1.42 TRX yerine 1.43 TRX göndermek doğrulamanın başarısız olmasıyla sonuçlanır. Bu, saldırganın minimum bir miktar (örn. 0.000001 TRX) gönderdiği ve faturayı fiyatının bir kısmında talep etmeye çalıştığı saldırıları önler.
 
-## Real Mainnet Transaction
+## Gerçek Mainnet İşlemi
 
-Here is a verified x402 transaction from TRON mainnet:
+TRON mainnet'ten doğrulanmış bir x402 işlemi aşağıda verilmiştir:
 
 ```
 Invoice:
@@ -212,51 +212,51 @@ Energy Delegation:
   Expires at: 2026-03-28T15:22:23Z
 ```
 
-From invoice request to energy delegation: 23 seconds. No account. No API key. No prior relationship.
+Fatura talebinden enerji delegasyonuna: 23 saniye. Hesap yok. API anahtarı yok. Önceden ilişki yok.
 
-## When to Use x402 vs Account-Based Access
+## x402 ve Hesap Tabanlı Erişim Ne Zaman Kullanılır
 
-x402 is ideal for:
+x402 ideal şu durumlar için:
 
-- **AI agents** that operate autonomously and should not depend on managed accounts
-- **One-time purchases** where the overhead of account creation exceeds the value of the transaction
-- **Privacy-conscious users** who do not want to create accounts or provide identifying information
-- **Testing and evaluation** where developers want to try the service before committing to an account
-- **Cross-platform agents** that interact with many services and should not maintain separate accounts for each
+- **Yapay zeka ajanları** otonom olarak çalışan ve yönetilen hesaplara bağlı olmayan ajanlar
+- **Bir kez satın almalar** hesap oluşturmanın overhead'ı işlem değerini aştığı durumlar
+- **Gizlilik bilinçli kullanıcılar** hesap oluşturmak veya tanımlayıcı bilgi sağlamak istemeyen kullanıcılar
+- **Test ve değerlendirme** geliştiricilerin hesaba taahhüt etmeden önce hizmeti denemek istedikleri durumlar
+- **Çapraz platform ajanları** birçok hizmetle etkileşime giren ve her biri için ayrı hesapları korulamayan ajanlar
 
-Account-based access is better for:
+Hesap tabanlı erişim şu durumlar için daha iyidir:
 
-- **High-volume operations** where the per-transaction overhead of x402 (invoice creation + payment broadcast + verification) matters
-- **Standing orders and monitors** which require persistent server-side state linked to an account
-- **Balance-based billing** where prepaid credit is more efficient than per-transaction payments
-- **Team operations** where multiple users share an account with role-based access
+- **Yüksek hacimli işlemler** x402'nin işlem başına overhead'inin (fatura oluşturma + ödeme yayınlama + doğrulama) önemli olduğu durumlar
+- **Duran emirler ve izleyiciler** hesapla bağlantılı kalıcı sunucu taraflı durum gerektiren durumlar
+- **Bakiye tabanlı faturalandırma** önceden ödenmiş kredinin işlem başına ödemelerden daha verimli olduğu durumlar
+- **Takım işlemleri** birden fazla kullanıcının rol tabanlı erişimle hesabı paylaştığı durumlar
 
-Many users start with x402 for evaluation and migrate to account-based access as their usage grows. The two models are complementary, not competing.
+Birçok kullanıcı değerlendirme için x402 ile başlar ve kullanımları arttıkça hesap tabanlı erişime geçer. İki model rakip değil, tamamlayıcıdır.
 
-## x402 and the Future of Agent Commerce
+## x402 ve Ajan Ticaretinin Geleceği
 
-The x402 protocol represents a broader shift in how services are consumed. Traditional SaaS billing - monthly subscriptions, tiered pricing, usage limits - assumes a human customer who creates an account, evaluates pricing tiers, and makes a purchasing decision. This model breaks down when the customer is an AI agent that needs to make purchasing decisions autonomously, in real-time, for specific tasks.
+x402 protokolü, hizmetlerin nasıl tüketildiğinin daha geniş bir değişimini temsil eder. Geleneksel SaaS faturalandırması - aylık abonelikler, katmanlı fiyatlandırma, kullanım sınırları - hesap oluşturan, fiyatlandırma katmanlarını değerlendiren ve satın alma kararı alan insan müşterisi varsayar. Müşteri gerçek zamanlı olarak, belirli görevler için otonom olarak satın alma kararları almması gereken bir yapay zeka ajanı olduğunda bu model bozulur.
 
-x402 aligns with the agent economy:
+x402, ajan ekonomisi ile hizalanır:
 
-- **No registration** - Agents do not have identities in the traditional sense. x402 requires only a wallet address.
-- **Per-use pricing** - Agents should pay for what they use, when they use it, in amounts proportional to the task at hand.
-- **On-chain verification** - Trust is established through cryptographic proof, not through account credentials or business relationships.
-- **Composability** - An agent can use x402 to pay for energy from MERX, then use that energy to interact with any TRON smart contract. The payment and the service are decoupled.
+- **Kayıt yok** - Ajanların geleneksel anlamda kimlikleri yoktur. x402, yalnızca bir cüzdan adresi gerektirir.
+- **Kullanım başına fiyatlandırma** - Ajanlar, ne zaman kullanırsanız kullanın, elde ettiğiniz şeyin fiyatını, görev elle orantılı miktarlarda ödemesi gerekir.
+- **Blokzincir üzerinde doğrulama** - Güven, hesap kimlik bilgileri veya ticari ilişkiler yoluyla değil, kriptografik kanıt aracılığıyla kurulur.
+- **Bileşkenlik** - Ajan, x402'yi kullanarak MERX'ten enerji için ödeme yapabilir, ardından bu enerjiyi herhangi bir TRON akıllı sözleşmesiyle etkileşime girmek için kullanabilir. Ödeme ve hizmet ayrıştırılmıştır.
 
-MERX is the first energy exchange to implement x402. As the protocol matures, we expect other blockchain services to adopt similar pay-per-use models optimized for agent consumption.
+MERX, x402'yi uygulayan ilk enerji değişimidir. Protokol olgunlaştıkça, diğer blockchain hizmetlerinin ajan tüketimine optimize edilmiş benzer kullanım başına ödeme modellerini benimsemeleri beklenir.
 
-## Implementation Details for Developers
+## Geliştiriciler için Uygulama Detayları
 
-### Building an x402 Client
+### x402 İstemcisi Oluşturma
 
-If you are building an application that uses MERX x402 without the MCP server, here is the minimal implementation:
+MCP sunucusu olmadan MERX x402'yi kullanan bir uygulama oluşturuyorsanız, minimal uygulama aşağıdadır:
 
 ```javascript
 const TronWeb = require('tronweb');
 
 async function buyEnergyX402(tronWeb, energyAmount, durationHours, targetAddress) {
-  // Step 1: Get invoice
+  // Step 1: Fatura al
   const invoiceRes = await fetch('https://merx.exchange/api/v1/x402/invoice', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -268,7 +268,7 @@ async function buyEnergyX402(tronWeb, energyAmount, durationHours, targetAddress
   });
   const invoice = await invoiceRes.json();
 
-  // Step 2: Build payment transaction
+  // Step 2: Ödeme işlemi oluştur
   const tx = await tronWeb.transactionBuilder.sendTrx(
     invoice.pay_to,
     invoice.amount_sun,
@@ -279,11 +279,11 @@ async function buyEnergyX402(tronWeb, energyAmount, durationHours, targetAddress
     tx, invoice.memo, 'utf8'
   );
 
-  // Step 3: Sign and broadcast
+  // Step 3: İmzala ve yayınla
   const signedTx = await tronWeb.trx.sign(txWithMemo);
   const result = await tronWeb.trx.sendRawTransaction(signedTx);
 
-  // Step 4: Poll for order completion
+  // Step 4: Sipariş tamamlanması için yokla
   let order;
   for (let i = 0; i < 20; i++) {
     await new Promise(r => setTimeout(r, 3000));
@@ -298,40 +298,41 @@ async function buyEnergyX402(tronWeb, energyAmount, durationHours, targetAddress
 }
 ```
 
-### Hata Yonetimi
+### Hata Yönetimi
 
-Common failure modes and their resolutions:
+Yaygın hata modları ve çözümleri:
 
-| Error | Cause | Resolution |
+| Hata | Neden | Çözüm |
 |---|---|---|
-| `INVOICE_EXPIRED` | Payment not sent within 5 minutes | Request a new invoice |
-| `AMOUNT_MISMATCH` | Payment amount differs from invoice | Send exact amount; request new invoice if price changed |
-| `MEMO_NOT_FOUND` | Payment missing memo field | Resend with correct memo; funds from failed attempt are not auto-refunded |
-| `ALREADY_PAID` | Invoice was already fulfilled | Check order status; this is not an error if you are polling |
-| `PROVIDER_UNAVAILABLE` | No provider can fill the order | Retry after a few minutes; the invoice payment will be credited to a MERX balance for manual withdrawal |
+| `INVOICE_EXPIRED` | Ödeme 5 dakika içinde gönderilmedi | Yeni fatura talep et |
+| `AMOUNT_MISMATCH` | Ödeme miktarı faturadan farklı | Tam miktarı gönder; fiyat değiştiyse yeni fatura talep et |
+| `MEMO_NOT_FOUND` | Ödeme memo alanından yoksun | Doğru memo ile tekrar gönder; başarısız deneme fonları otomatik olarak geri alınmaz |
+| `ALREADY_PAID` | Fatura zaten yerine getirildi | Sipariş durumunu kontrol et; bu yoklama yapıyorsanız bir hata değildir |
+| `PROVIDER_UNAVAILABLE` | Sağlayıcı siparişi dolduramadı | Birkaç dakika sonra yeniden dene; fatura ödemesi manuel çekme için MERX bakiyesine itibar edilir |
 
-### Refund Policy
+### İade Politikası
 
-If MERX cannot fulfill the order after payment is verified (e.g., all providers are temporarily unavailable), the payment amount is credited to a claimable balance associated with the payer's TRON address. The payer can claim this balance through a separate endpoint without creating an account - the claim is verified by signing a message with the same private key that sent the original payment.
+MERX ödeme doğrulandıktan sonra siparişi yerine getiremezse (örneğin, tüm sağlayıcılar geçici olarak kullanılamaz), ödeme miktarı ödeyenin TRON adresiyle ilişkili talep edilebilir bir bakiye olarak kredilenir. Ödeyici, hesap oluşturmadan ayrı bir uç nokta aracılığıyla bu bakiyeyi talep edebilir - talep, orijinal ödemeyi gönderen aynı özel anahtar ile bir mesajı imzalayarak doğrulanır.
 
-## Sonuc
+## Sonuç
 
-The HTTP 402 status code was defined nearly 30 years ago with the vision of native internet payments. That vision was ahead of its time. Blockchains finally provide the infrastructure to make it real.
+HTTP 402 durum kodu, yerel internet ödemeleri vizyonuyla neredeyse 30 yıl önce tanımlanmıştır. Bu vizyon zamanından ilerideydi. Blokzincirler nihayet bunu gerçek kılmak için altyapıyı sağlıyor.
 
-MERX x402 turns energy purchasing into a single atomic flow: request, pay, receive. No accounts. No API keys. No trust assumptions beyond what the blockchain provides.
+MERX x402, enerji satın almayı tek bir atomik akışa dönüştürür: talep, öde, al. Hesap yok. API anahtarı yok. Blokzincirin sağladığı şeyin ötesinde güven varsayımı yok.
 
-For AI agents, this is the natural purchasing model. For developers, it is the simplest integration path. For the ecosystem, it is a proof of concept for how blockchain services will be consumed in the agent economy.
+Yapay zeka ajanları için bu doğal satın alma modelidir. Geliştiriciler için en basit entegrasyondur. Ekosistem için bu, ajan ekonomisinde blockchain hizmetlerinin nasıl tüketileceğinin bir kanıtıdır.
 
 ---
 
-**Baglantilar:**
-- MERX Platformu: [https://merx.exchange](https://merx.exchange)
-- MCP Sunucusu (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
-- MCP Sunucusu (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
+**Bağlantılar:**
+- MERX Platform: [https://merx.exchange](https://merx.exchange)
+- MCP Server (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+- MCP Server (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi Yapay Zeka ile Deneyin
+
+MERX'i Claude Desktop veya herhangi bir MCP uyumlu istemciye ekleyin - sıfır yükleme, salt okunur araçlar için API anahtarı gerekli değildir:
 
 ```json
 {
@@ -343,6 +344,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Yapay zeka ajanınıza sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

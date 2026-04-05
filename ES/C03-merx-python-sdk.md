@@ -1,42 +1,42 @@
-# SDK de Python de MERX: cero dependencias, potencia completa
+# SDK Python de MERX: Cero Dependencias, Potencia Total
 
-The MERX Python SDK provides a complete interface to the MERX TRON energy exchange using only the Python standard library - no requests, no httpx, no aiohttp. This article covers the four SDK modules (prices, orders, balance, webhooks), every method with working examples, the dataclass type system, manejo de errores, and a comparison with the JavaScript SDK for teams that use both languages.
+El SDK Python de MERX proporciona una interfaz completa al intercambio de energía TRON de MERX utilizando solo la biblioteca estándar de Python - sin requests, sin httpx, sin aiohttp. Este artículo cubre los cuatro módulos del SDK (precios, órdenes, saldo, webhooks), todos los métodos con ejemplos funcionales, el sistema de tipos dataclass, manejo de errores y una comparación con el SDK de JavaScript para equipos que usan ambos lenguajes.
 
-## Why Zero Dependencies
+## Por Qué Cero Dependencias
 
-Most Python HTTP clients pull in a dependency tree. The `requests` library alone brings in `urllib3`, `certifi`, `charset-normalizer`, and `idna`. For a lightweight SDK that makes a handful of API calls, that overhead is unnecessary.
+La mayoría de los clientes HTTP de Python traen consigo un árbol de dependencias. La librería `requests` por sí sola trae `urllib3`, `certifi`, `charset-normalizer` e `idna`. Para un SDK ligero que realiza unos pocos llamados a API, ese sobrecargo es innecesario.
 
-The MERX Python SDK uses only `urllib.request` from the standard library. Esto significa:
+El SDK Python de MERX utiliza solo `urllib.request` de la biblioteca estándar. Esto significa:
 
-- No dependency conflicts in your virtual environment
-- No supply chain attack surface from third-party packages
-- Works on any Python 3.10+ installation without `pip install` overhead
-- Deployable to restricted environments where installing packages is difficult
+- Sin conflictos de dependencias en tu entorno virtual
+- Sin superficie de ataque de la cadena de suministro de paquetes de terceros
+- Funciona en cualquier instalación de Python 3.10+ sin sobrecargo de `pip install`
+- Deployable en entornos restringidos donde instalar paquetes es difícil
 
-The tradeoff is the absence of async support. The SDK uses synchronous HTTP calls. If you need async, the REST API is simple enough to call directly with `aiohttp` or `httpx` using the patterns shown in this article.
+El compromiso es la ausencia de soporte asincrónico. El SDK utiliza llamadas HTTP sincrónicas. Si necesitas async, la API REST es lo suficientemente simple para llamar directamente con `aiohttp` o `httpx` usando los patrones mostrados en este artículo.
 
-## Installation
+## Instalación
 
 ```bash
 pip install merx-sdk
 ```
 
-That is it. No dependencies will be installed alongside it.
+Eso es todo. No se instalarán dependencias junto a él.
 
-## Quick Start
+## Inicio Rápido
 
 ```python
 from merx import MerxClient
 
 client = MerxClient(api_key="sk_live_your_key_here")
 
-# Check current prices
+# Verificar precios actuales
 prices = client.prices.list()
 for p in prices:
     if p.energy_prices:
         print(f"{p.provider}: {p.energy_prices[0].price_sun} SUN/energy")
 
-# Buy energy
+# Comprar energía
 order = client.orders.create(
     resource_type="ENERGY",
     amount=65000,
@@ -46,20 +46,20 @@ order = client.orders.create(
 print(f"Order {order.id}: {order.status}")
 ```
 
-The client is initialized with your clave de API from the MERX dashboard at [merx.exchange](https://merx.exchange). The optional `base_url` parameter defaults to `https://merx.exchange`.
+El cliente se inicializa con tu clave API del panel de MERX en [merx.exchange](https://merx.exchange). El parámetro opcional `base_url` tiene como valor predeterminado `https://merx.exchange`.
 
 ```python
 client = MerxClient(
     api_key="sk_live_your_key_here",
-    base_url="https://merx.exchange",  # Optional
+    base_url="https://merx.exchange",  # Opcional
 )
 ```
 
-## The Type System
+## El Sistema de Tipos
 
-Every API response is parsed into a Python dataclass. No raw dictionaries, no untyped data. Your IDE gets full autocompletion and your type checker catches errors before runtime.
+Todas las respuestas de API se analizan en un dataclass de Python. Sin diccionarios sin procesar, sin datos sin tipo. Tu IDE obtiene autocompletado completo y tu verificador de tipos detecta errores antes del tiempo de ejecución.
 
-The SDK exports 16 dataclass types:
+El SDK exporta 16 tipos de dataclass:
 
 ```python
 from merx import (
@@ -82,7 +82,7 @@ from merx import (
 )
 ```
 
-### Key Type Definitions
+### Definiciones de Tipos Clave
 
 ```python
 @dataclass
@@ -103,7 +103,7 @@ class ProviderPrice:
 @dataclass
 class Order:
     id: str
-    resource_type: str       # "ENERGY" or "BANDWIDTH"
+    resource_type: str       # "ENERGY" o "BANDWIDTH"
     order_type: str          # "MARKET", "LIMIT", "PERIODIC", "BROADCAST"
     status: str              # "PENDING", "EXECUTING", "FILLED", "FAILED", "CANCELLED"
     amount: int
@@ -128,15 +128,15 @@ class Fill:
     tronscan_url: Optional[str] = None
 ```
 
-All dataclasses use standard Python type hints. Fields with defaults are optional API response fields that may not be present in every response.
+Todos los dataclasses utilizan indicaciones de tipo de Python estándar. Los campos con valores predeterminados son campos de respuesta API opcionales que pueden no estar presentes en cada respuesta.
 
-## Module 1: Prices
+## Módulo 1: Precios
 
-The prices module provides five methods for querying tiempo real and historical price data. All price endpoints are public and do not require authentication, but the SDK always sends the clave de API header for consistency.
+El módulo de precios proporciona cinco métodos para consultar datos de precios en tiempo real e históricos. Todos los puntos finales de precios son públicos y no requieren autenticación, pero el SDK siempre envía el encabezado de clave API para mantener coherencia.
 
 ### prices.list()
 
-Returns current pricing from all active providers.
+Devuelve precios actuales de todos los proveedores activos.
 
 ```python
 prices = client.prices.list()
@@ -149,25 +149,25 @@ for p in prices:
         print(f"  {hours}h: {tier.price_sun} SUN/unit")
 ```
 
-Returns `list[ProviderPrice]`. Each entry includes the provider name, whether it supports market orders with flexible durations, price tiers for energy and bandwidth, and current available capacity.
+Devuelve `list[ProviderPrice]`. Cada entrada incluye el nombre del proveedor, si admite órdenes de mercado con duraciones flexibles, niveles de precios para energía y bandwidth, y capacidad disponible actual.
 
 ### prices.best(resource, amount=None)
 
-Returns the cheapest available price for a resource type.
+Devuelve el precio disponible más barato para un tipo de recurso.
 
 ```python
 best = client.prices.best("ENERGY")
 print(f"Cheapest: {best.price_sun} SUN from {best.provider}")
 
-# Only providers with at least 200,000 available
+# Solo proveedores con al menos 200,000 disponibles
 best_large = client.prices.best("ENERGY", amount=200000)
 ```
 
-Returns `PriceHistoryEntry`. The `amount` parameter filters out providers that lack sufficient capacity.
+Devuelve `PriceHistoryEntry`. El parámetro `amount` filtra proveedores que carecen de capacidad suficiente.
 
 ### prices.history(provider=None, resource=None, period="24h")
 
-Returns historical price snapshots for charting and analysis.
+Devuelve instantáneas de precios históricos para gráficos y análisis.
 
 ```python
 history = client.prices.history(
@@ -180,11 +180,11 @@ for entry in history:
     print(f"{entry.polled_at}: {entry.price_sun} SUN ({entry.available:,} available)")
 ```
 
-Returns `list[PriceHistoryEntry]`. Available periods: `"1h"`, `"6h"`, `"24h"`, `"7d"`, `"30d"`.
+Devuelve `list[PriceHistoryEntry]`. Períodos disponibles: `"1h"`, `"6h"`, `"24h"`, `"7d"`, `"30d"`.
 
 ### prices.stats()
 
-Returns aggregate market statistics.
+Devuelve estadísticas agregadas del mercado.
 
 ```python
 stats = client.prices.stats()
@@ -194,18 +194,18 @@ print(f"Providers online: {stats.total_providers}")
 print(f"Cheapest-provider changes (24h): {stats.cheapest_changes_24h}")
 ```
 
-Returns `PriceStats`.
+Devuelve `PriceStats`.
 
 ### prices.preview(resource, amount, duration, max_price_sun=None)
 
-Previews what an order would cost before placing it.
+Obtiene una vista previa de lo que costaría una orden antes de colocarla.
 
 ```python
 preview = client.prices.preview(
     resource="ENERGY",
     amount=100000,
-    duration=86400,       # 24 hours
-    max_price_sun=35,     # Optional ceiling
+    duration=86400,       # 24 horas
+    max_price_sun=35,     # Techo opcional
 )
 
 if preview.best:
@@ -220,13 +220,13 @@ if preview.no_providers:
     print("No providers available for these parameters")
 ```
 
-Returns `OrderPreview` with a `best` match (or `None`), a list of `fallbacks`, and a `no_providers` boolean.
+Devuelve `OrderPreview` con una coincidencia `best` (o `None`), una lista de `fallbacks`, y un booleano `no_providers`.
 
-## Module 2: Orders
+## Módulo 2: Órdenes
 
 ### orders.create(...)
 
-Creates an energy or bandwidth order.
+Crea una orden de energía o bandwidth.
 
 ```python
 order = client.orders.create(
@@ -234,21 +234,21 @@ order = client.orders.create(
     amount=65000,
     target_address="TYourTargetAddress",
     duration_sec=3600,
-    order_type="MARKET",           # Default
-    max_price_sun=None,            # Required for LIMIT orders
-    idempotency_key="unique-id",   # Prevents duplicate orders
+    order_type="MARKET",           # Predeterminado
+    max_price_sun=None,            # Requerido para órdenes LIMIT
+    idempotency_key="unique-id",   # Previene órdenes duplicadas
 )
 
 print(f"Order {order.id}: {order.status}")
 ```
 
-Returns `Order`. Note that unlike the JavaScript SDK where parameters are passed as a dictionary, the Python SDK uses explicit keyword arguments for clarity.
+Devuelve `Order`. Nota que a diferencia del SDK de JavaScript donde los parámetros se pasan como un diccionario, el SDK de Python utiliza argumentos de palabra clave explícitos para mayor claridad.
 
-The `idempotency_key` parameter is critical for production systems. If a network error causes a retry, the API returns the original order instead of creating a duplicate.
+El parámetro `idempotency_key` es crítico para sistemas en producción. Si un error de red causa un reintento, la API devuelve la orden original en lugar de crear una duplicada.
 
 ### orders.list(limit=30, offset=0, status=None)
 
-Lists orders with pagination.
+Lista órdenes con paginación.
 
 ```python
 orders, total = client.orders.list(limit=10, offset=0, status="FILLED")
@@ -259,11 +259,11 @@ for o in orders:
     print(f"  {o.id}: {o.amount:,} {o.resource_type}, {cost_trx:.3f} TRX")
 ```
 
-Returns `tuple[list[Order], int]` - the list of orders and the total count for pagination.
+Devuelve `tuple[list[Order], int]` - la lista de órdenes y el recuento total para paginación.
 
 ### orders.get(order_id)
 
-Returns a single order with its fill breakdown.
+Devuelve una sola orden con su desglose de rellenos.
 
 ```python
 order = client.orders.get("ord_abc123")
@@ -278,13 +278,13 @@ for fill in order.fills:
         print(f"  TX: {fill.tronscan_url}")
 ```
 
-Returns `OrderWithFills`, which extends `Order` with a `fills` list of `Fill` objects.
+Devuelve `OrderWithFills`, que extiende `Order` con una lista `fills` de objetos `Fill`.
 
-## Module 3: Balance
+## Módulo 3: Saldo
 
 ### balance.get()
 
-Returns current account balances.
+Devuelve los saldos actuales de la cuenta.
 
 ```python
 bal = client.balance.get()
@@ -293,11 +293,11 @@ print(f"USDT: {bal.usdt}")
 print(f"Locked: {bal.trx_locked}")
 ```
 
-Returns `Balance`. The `trx_locked` field shows TRX reserved for pending orders.
+Devuelve `Balance`. El campo `trx_locked` muestra TRX reservado para órdenes pendientes.
 
 ### balance.deposit_info()
 
-Returns the deposit address and memo for funding your account.
+Devuelve la dirección de depósito y el memo para financiar tu cuenta.
 
 ```python
 info = client.balance.deposit_info()
@@ -306,11 +306,11 @@ print(f"Memo: {info.memo}")
 print(f"Minimum: {info.min_amount_trx} TRX / {info.min_amount_usdt} USDT")
 ```
 
-Returns `DepositInfo`. Always include the memo in your deposit transaction for automatic crediting.
+Devuelve `DepositInfo`. Siempre incluye el memo en tu transacción de depósito para acreditación automática.
 
 ### balance.withdraw(address, amount, currency="TRX", idempotency_key=None)
 
-Withdraws funds to an external TRON address.
+Retira fondos a una dirección TRON externa.
 
 ```python
 withdrawal = client.balance.withdraw(
@@ -322,9 +322,9 @@ withdrawal = client.balance.withdraw(
 print(f"Withdrawal {withdrawal.id}: {withdrawal.status}")
 ```
 
-Returns `Withdrawal`.
+Devuelve `Withdrawal`.
 
-### balance.history(period="30D") and balance.summary()
+### balance.history(period="30D") y balance.summary()
 
 ```python
 history = client.balance.history("7D")
@@ -337,11 +337,11 @@ print(f"Average price: {summary.avg_price_sun} SUN")
 print(f"Total spent: {summary.total_spent_sun / 1_000_000:.3f} TRX")
 ```
 
-## Module 4: Webhooks
+## Módulo 4: Webhooks
 
 ### webhooks.create(url, events)
 
-Creates a webhook subscription.
+Crea una suscripción a webhook.
 
 ```python
 webhook = client.webhooks.create(
@@ -349,14 +349,14 @@ webhook = client.webhooks.create(
     events=["order.filled", "order.failed", "deposit.received"],
 )
 print(f"Webhook ID: {webhook.id}")
-print(f"Secret: {webhook.secret}")  # Shown only once
+print(f"Secret: {webhook.secret}")  # Se muestra solo una vez
 ```
 
-Returns `Webhook`. The `secret` field is only included in the creation response and is used for HMAC-SHA256 signature verification.
+Devuelve `Webhook`. El campo `secret` solo se incluye en la respuesta de creación y se usa para verificación de firma HMAC-SHA256.
 
-Available event types: `order.filled`, `order.failed`, `deposit.received`, `withdrawal.completed`.
+Tipos de eventos disponibles: `order.filled`, `order.failed`, `deposit.received`, `withdrawal.completed`.
 
-### webhooks.list() and webhooks.delete(webhook_id)
+### webhooks.list() y webhooks.delete(webhook_id)
 
 ```python
 webhooks = client.webhooks.list()
@@ -364,12 +364,12 @@ active = [w for w in webhooks if w.is_active]
 print(f"{len(active)} active webhooks")
 
 deleted = client.webhooks.delete("wh_abc123")
-print(f"Deleted: {deleted}")  # True or False
+print(f"Deleted: {deleted}")  # True o False
 ```
 
-## Error Handling
+## Manejo de Errores
 
-All API errors raise `MerxError` with a `code` attribute and a human-readable message.
+Todos los errores de API lanzan `MerxError` con un atributo `code` y un mensaje legible por humanos.
 
 ```python
 from merx import MerxClient, MerxError
@@ -388,40 +388,40 @@ except MerxError as e:
     # Output: Error [INVALID_ADDRESS]: Target address is not a valid TRON address
 ```
 
-The `MerxError` class extends `Exception`, so it integrates naturally with Python exception handling. The `code` attribute provides machine-readable classification:
+La clase `MerxError` extiende `Exception`, así que se integra naturalmente con el manejo de excepciones de Python. El atributo `code` proporciona clasificación legible por máquina:
 
-| Code                   | Meaning                                          |
-|------------------------|--------------------------------------------------|
-| `UNAUTHORIZED`         | Invalid or missing clave de API                       |
-| `INSUFFICIENT_FUNDS`   | Account balance too low                          |
-| `INVALID_ADDRESS`      | Not a valid TRON address                         |
-| `ORDER_NOT_FOUND`      | Order ID does not exist                          |
-| `DUPLICATE_REQUEST`    | Idempotency key already used                     |
-| `RATE_LIMITED`         | Too many requests, back off                      |
-| `PROVIDER_UNAVAILABLE` | No providers can fulfill the request             |
-| `VALIDATION_ERROR`     | Request body or parameters failed validation     |
+| Código                 | Significado                                  |
+|------------------------|----------------------------------------------|
+| `UNAUTHORIZED`         | Clave API inválida o faltante                |
+| `INSUFFICIENT_FUNDS`   | Saldo de cuenta insuficiente                 |
+| `INVALID_ADDRESS`      | No es una dirección TRON válida              |
+| `ORDER_NOT_FOUND`      | El ID de orden no existe                     |
+| `DUPLICATE_REQUEST`    | Clave de idempotencia ya utilizada           |
+| `RATE_LIMITED`         | Demasiadas solicitudes, retroceder           |
+| `PROVIDER_UNAVAILABLE` | Ningún proveedor puede cumplir la solicitud  |
+| `VALIDATION_ERROR`     | Cuerpo de solicitud o parámetros no válidos  |
 
-## Comparison with the JavaScript SDK
+## Comparación con el SDK de JavaScript
 
-Both SDKs cover the same four modules with the same methods. The key differences are in language idioms:
+Ambos SDKs cubren los mismos cuatro módulos con los mismos métodos. Las diferencias clave están en los idiomas de programación:
 
-| Aspect              | Python SDK                       | JavaScript SDK                     |
+| Aspecto             | SDK Python                       | SDK JavaScript                     |
 |---------------------|----------------------------------|------------------------------------|
-| HTTP client         | `urllib.request` (stdlib)        | Native `fetch`                     |
-| Dependencies        | Zero                             | Zero                               |
-| Async support       | No (synchronous only)            | Yes (all methods return Promises)  |
-| Types               | Dataclasses                      | TypeScript interfaces              |
-| Order creation      | Keyword arguments                | Object parameter                   |
-| Orders list return  | `tuple[list, int]`               | `{ orders: [], total: number }`    |
-| Webhook delete      | Returns `bool`                   | Returns `{ deleted: boolean }`     |
-| Min runtime         | Python 3.10+                     | Node.js 18+                        |
-| Module system       | Standard imports                 | ESM only                           |
+| Cliente HTTP        | `urllib.request` (stdlib)        | Native `fetch`                     |
+| Dependencias        | Cero                             | Cero                               |
+| Soporte async       | No (solo sincrónico)             | Sí (todos los métodos devuelven Promises)  |
+| Tipos               | Dataclasses                      | Interfaces TypeScript              |
+| Creación de orden   | Argumentos de palabra clave      | Parámetro objeto                   |
+| Retorno de lista de órdenes | `tuple[list, int]`        | `{ orders: [], total: number }`    |
+| Eliminación de webhook | Devuelve `bool`              | Devuelve `{ deleted: boolean }`    |
+| Tiempo de ejecución mínimo | Python 3.10+               | Node.js 18+                        |
+| Sistema de módulos  | Importaciones estándar           | Solo ESM                           |
 
-The two SDKs are designed to feel natural in their respective languages while maintaining functional parity. A team using both Python and JavaScript can expect identical behavior from each.
+Los dos SDKs están diseñados para sentirse naturales en sus respectivos lenguajes mientras mantienen paridad funcional. Un equipo que usa Python y JavaScript puede esperar un comportamiento idéntico en cada uno.
 
-## Production Pattern: Price-Aware Order Placement
+## Patrón de Producción: Colocación de Órdenes Consciente de Precios
 
-Aqui esta a complete production flow that checks current prices, validates the cost, and creates an order with idempotency:
+Aquí hay un flujo de producción completo que verifica precios actuales, valida el costo y crea una orden con idempotencia:
 
 ```python
 import uuid
@@ -430,9 +430,9 @@ from merx import MerxClient, MerxError
 client = MerxClient(api_key="sk_live_your_key_here")
 
 def buy_energy(target: str, amount: int = 65000, max_cost_trx: float = 5.0):
-    """Buy energy with cost validation and idempotency."""
+    """Compra energía con validación de costo e idempotencia."""
 
-    # Preview the cost first
+    # Obtener vista previa del costo primero
     preview = client.prices.preview(
         resource="ENERGY",
         amount=amount,
@@ -448,7 +448,7 @@ def buy_energy(target: str, amount: int = 65000, max_cost_trx: float = 5.0):
             f"Cost {cost:.3f} TRX exceeds limit {max_cost_trx:.3f} TRX"
         )
 
-    # Place the order
+    # Colocar la orden
     order = client.orders.create(
         resource_type="ENERGY",
         amount=amount,
@@ -470,16 +470,16 @@ except RuntimeError as e:
     print(f"Business logic error: {e}")
 ```
 
-## Installation Verification
+## Verificación de Instalación
 
-After installing, verify the SDK is working:
+Después de instalar, verifica que el SDK esté funcionando:
 
 ```python
 from merx import MerxClient, __version__
 
 print(f"merx-sdk version: {__version__}")
 
-# Public endpoint, no auth required
+# Punto final público, no requiere autenticación
 client = MerxClient(api_key="test")
 try:
     prices = client.prices.list()
@@ -491,19 +491,19 @@ except Exception as e:
     print(f"Connection error: {e}")
 ```
 
-The `prices.list()` endpoint is public, so even a placeholder clave de API will work for testing connectivity.
+El punto final `prices.list()` es público, por lo que incluso una clave API de marcador de posición funcionará para probar conectividad.
 
-## Resources
+## Recursos
 
 - Plataforma: [merx.exchange](https://merx.exchange)
-- Documentacion: [merx.exchange/docs](https://merx.exchange/docs)
+- Documentación: [merx.exchange/docs](https://merx.exchange/docs)
 - PyPI: [pypi.org/project/merx-sdk](https://pypi.org/project/merx-sdk/)
-- SDK de JavaScript: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) | [npm](https://www.npmjs.com/package/merx-sdk)
-- Servidor MCP para agentes de IA: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) | [npm](https://www.npmjs.com/package/merx-mcp)
+- SDK JavaScript: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) | [npm](https://www.npmjs.com/package/merx-sdk)
+- Servidor MCP para agentes IA: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) | [npm](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
+## Pruébalo Ahora con IA
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+Añade MERX a Claude Desktop o a cualquier cliente compatible con MCP -- sin instalación, sin necesidad de clave API para herramientas de solo lectura:
 
 ```json
 {
@@ -515,6 +515,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente IA: "¿Cuál es la energía TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

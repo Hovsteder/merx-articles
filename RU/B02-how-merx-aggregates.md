@@ -1,80 +1,80 @@
-# Как MERX агрегирует всех провайдеров energy в один API
+# Как MERX объединяет всех поставщиков energy в один API
 
-The TRON energy market in 2026 has a fragmentation problem. At least seven major providers offer energy delegation services, each with their own API, pricing model, and availability patterns. If you want the best price, you need to integrate with all of them, monitor their prices continuously, handle their individual quirks, and build failover logic for when one goes down.
+Рынок TRON energy в 2026 году страдает от фрагментации. По крайней мере семь крупных поставщиков предлагают услуги делегирования energy, каждый со своим API, моделью ценообразования и характеристиками доступности. Если вы хотите лучшую цену, вам нужно интегрироваться со всеми ними, постоянно контролировать их цены, разбираться с их особенностями и строить логику отказоустойчивости на случай выхода одного из них из строя.
 
-Or you can make one API call to MERX.
+Или вы можете сделать один вызов API к MERX.
 
-This article explains how MERX aggregates all major energy providers into a single API - the architecture behind price monitoring, best-price routing, automatic failover, and the operational simplification that comes from replacing seven integrations with one.
-
----
-
-## The Provider Landscape
-
-The TRON energy market includes multiple providers, each operating independently. As of early 2026, the major providers include:
-
-- **TronSave** - one of the earliest energy rental services
-- **Feee** - competitive pricing with API access
-- **itrx** - focus on bulk energy orders
-- **CatFee** - mid-market positioning
-- **Netts** - newer entrant with aggressive pricing
-- **SoHu** - provider with Chinese market focus
-- **PowerSun** - direct staking and delegation
-
-Each provider has their own:
-
-- API format and authentication method
-- Pricing structure (some charge per energy unit, others per TRX)
-- Minimum and maximum order sizes
-- Available durations (1h, 1d, 3d, 7d, etc.)
-- Supported payment methods
-- Status pages and uptime characteristics
-
-### The Integration Tax
-
-Integrating with a single provider is straightforward. Integrating with all of them to get best pricing is a significant engineering undertaking:
-
-```
-Per provider:
-  - API client implementation:    2-3 days
-  - Price normalization:          1 day
-  - Error handling:               1 day
-  - Testing:                      1-2 days
-  - Ongoing maintenance:          2-4 hours/month
-
-7 providers x 5-7 days = 35-49 days of initial integration
-7 providers x 3 hours/month = 21 hours/month ongoing maintenance
-```
-
-This is the integration tax that MERX eliminates. Instead of maintaining seven provider integrations, you maintain one MERX integration. MERX handles the rest.
+В этой статье объясняется, как MERX объединяет всех основных поставщиков energy в единый API — архитектура мониторинга цен, маршрутизации по лучшей цене, автоматического отказоустойчивости и упрощения операций, которое приходит при замене семи интеграций на одну.
 
 ---
 
-## The MERX Architecture
+## Ландшафт поставщиков
 
-MERX sits between your application and the provider ecosystem. The architecture has three core components:
+Рынок TRON energy включает несколько поставщиков, каждый работающих независимо. По состоянию на начало 2026 года основные поставщики включают:
 
-### 1. Price Monitor
+- **TronSave** - один из первых сервисов аренды energy
+- **Feee** - конкурентоспособные цены с доступом к API
+- **itrx** - ориентация на оптовые заказы energy
+- **CatFee** - позиционирование на среднем рынке
+- **Netts** - новичок с агрессивной ценовой политикой
+- **SoHu** - поставщик с ориентацией на китайский рынок
+- **PowerSun** - прямой стейкинг и делегирование
 
-The price monitor is a dedicated service that continuously polls every integrated provider for current pricing. Every 30 seconds, it queries each provider's API, normalizes the response into a standard format, and publishes the result to a Redis pub/sub channel.
+Каждый поставщик имеет свой:
+
+- Формат API и метод аутентификации
+- Структура ценообразования (некоторые берут плату за единицу energy, другие за TRX)
+- Минимальный и максимальный размеры заказа
+- Доступные длительности (1h, 1d, 3d, 7d и т.д.)
+- Поддерживаемые методы оплаты
+- Страницы статуса и характеристики времени безотказной работы
+
+### Налог на интеграцию
+
+Интеграция с одним поставщиком проста. Интеграция со всеми ними для получения лучших цен — это значительное инженерное предприятие:
 
 ```
-Every 30 seconds:
-  For each provider:
-    1. Query provider API for current prices
-    2. Normalize to standard format (SUN per energy unit)
-    3. Validate response (reject outliers, stale data)
-    4. Publish to Redis: channel "prices:{provider}"
-    5. Store in price history (PostgreSQL)
+На поставщика:
+  - Реализация API-клиента:      2-3 дня
+  - Нормализация цен:             1 день
+  - Обработка ошибок:             1 день
+  - Тестирование:                 1-2 дня
+  - Текущее обслуживание:         2-4 часа/месяц
+
+7 поставщиков × 5-7 дней = 35-49 дней первоначальной интеграции
+7 поставщиков × 3 часа/месяц = 21 час/месяц текущего обслуживания
 ```
 
-The 30-second interval is deliberately chosen. Faster polling would stress provider APIs and add minimal value (prices rarely change second-to-second). Slower polling would risk serving stale prices.
+Это налог на интеграцию, который устраняет MERX. Вместо обслуживания семи интеграций с поставщиками, вы обслуживаете одну интеграцию с MERX. MERX обрабатывает остальное.
 
-### 2. Redis Price Cache
+---
 
-Redis serves as the real-time price cache. Every price update from the price monitor is stored in Redis with a TTL (time-to-live) of 60 seconds - twice the polling interval. If a provider's price data is older than 60 seconds, it is automatically expired and excluded from routing decisions.
+## Архитектура MERX
+
+MERX находится между вашим приложением и экосистемой поставщиков. Архитектура имеет три основных компонента:
+
+### 1. Монитор цен
+
+Монитор цен — это выделенный сервис, который постоянно опрашивает каждого интегрированного поставщика о текущих ценах. Каждые 30 секунд он запрашивает API каждого поставщика, нормализует ответ в стандартный формат и публикует результат в канал Redis pub/sub.
 
 ```
-Redis key structure:
+Каждые 30 секунд:
+  Для каждого поставщика:
+    1. Запросить API поставщика на текущие цены
+    2. Нормализовать в стандартный формат (SUN за единицу energy)
+    3. Проверить ответ (отклонить выбросы, устаревшие данные)
+    4. Опубликовать в Redis: канал "prices:{provider}"
+    5. Сохранить в историю цен (PostgreSQL)
+```
+
+Интервал в 30 секунд выбран намеренно. Более частый опрос перегружал бы API поставщиков и добавлял минимальную ценность (цены редко меняются в секундах). Более редкий опрос привел бы к риску использования устаревших цен.
+
+### 2. Redis кэш цен
+
+Redis служит кэшем цен в реальном времени. Каждое обновление цены от монитора цен сохраняется в Redis с TTL (временем жизни) 60 секунд — в два раза больше интервала опроса. Если данные о цене поставщика старше 60 секунд, они автоматически истекают и исключаются из решений маршрутизации.
+
+```
+Структура ключей Redis:
   prices:tronsave     -> { energy: 88, bandwidth: 2, updated: 1711756800 }
   prices:feee         -> { energy: 92, bandwidth: 3, updated: 1711756800 }
   prices:itrx         -> { energy: 85, bandwidth: 2, updated: 1711756800 }
@@ -84,228 +84,228 @@ Redis key structure:
   prices:best         -> { provider: "itrx", energy: 85, updated: 1711756800 }
 ```
 
-The `prices:best` key is recomputed on every price update, giving the API instant access to the current best price without scanning all providers.
+Ключ `prices:best` пересчитывается при каждом обновлении цены, предоставляя API мгновенный доступ к текущей лучшей цене без сканирования всех поставщиков.
 
-### 3. Order Executor
+### 3. Исполнитель заказов
 
-When you place an order through the MERX API, the order executor receives it and determines the optimal routing:
+Когда вы размещаете заказ через API MERX, исполнитель заказов получает его и определяет оптимальную маршрутизацию:
 
 ```
-Order received: 65,000 energy for TBuyerAddress
+Получен заказ: 65 000 energy для TBuyerAddress
 
-1. Read prices:best from Redis -> itrx at 85 SUN/unit
-2. Check itrx availability for 65,000 energy -> available
-3. Submit order to itrx
-4. Monitor for on-chain delegation confirmation
-5. Verify energy arrived at TBuyerAddress
-6. Notify buyer (webhook + WebSocket)
+1. Прочитать prices:best из Redis -> itrx по 85 SUN/единицу
+2. Проверить доступность itrx для 65 000 energy -> доступно
+3. Отправить заказ в itrx
+4. Мониторить подтверждение делегирования в цепи
+5. Проверить, что energy прибыл на TBuyerAddress
+6. Уведомить покупателя (webhook + WebSocket)
 ```
 
-If the cheapest provider cannot fill the order (insufficient stock, API error, timeout), the executor automatically falls through to the next cheapest provider.
+Если самый дешевый поставщик не может выполнить заказ (недостаточно запасов, ошибка API, таймаут), исполнитель автоматически переходит к следующему самому дешевому поставщику.
 
 ---
 
-## Price Normalization
+## Нормализация цен
 
-Different providers quote prices in different formats. Some quote in SUN per energy unit. Some quote total TRX for a given energy amount. Some include bandwidth in the price; others charge separately.
+Разные поставщики предлагают цены в разных форматах. Некоторые указывают в SUN за единицу energy. Некоторые указывают общую TRX за заданное количество energy. Некоторые включают bandwidth в цену; другие берут плату отдельно.
 
-MERX normalizes everything to a single format:
+MERX нормализует все в единый формат:
 
 ```typescript
 interface NormalizedPrice {
   provider: string;
-  energyPricePerUnit: number;    // SUN per energy unit
-  bandwidthPricePerUnit: number; // SUN per bandwidth unit
-  minOrder: number;              // Minimum energy units
-  maxOrder: number;              // Maximum energy units
-  availableEnergy: number;       // Currently available
-  durations: string[];           // Supported durations
+  energyPricePerUnit: number;    // SUN за единицу energy
+  bandwidthPricePerUnit: number; // SUN за единицу bandwidth
+  minOrder: number;              // Минимум единиц energy
+  maxOrder: number;              // Максимум единиц energy
+  availableEnergy: number;       // Текущая доступность
+  durations: string[];           // Поддерживаемые длительности
   lastUpdated: number;           // Unix timestamp
 }
 ```
 
-This normalization is critical. Without it, comparing prices across providers would require the consumer to understand each provider's pricing model. With it, price comparison is a simple numerical sort.
+Эта нормализация критически важна. Без нее сравнение цен между поставщиками требовало бы от потребителя понимания модели ценообразования каждого поставщика. С ней сравнение цен — это простая числовая сортировка.
 
 ---
 
-## Best-Price Routing in Detail
+## Маршрутизация по лучшей цене в деталях
 
-The routing algorithm is not just "pick the cheapest." Several factors influence the routing decision:
+Алгоритм маршрутизации — это не просто "выбрать самый дешевый". Несколько факторов влияют на решение маршрутизации:
 
-### Factor 1: Price
+### Фактор 1: Цена
 
-The primary factor. All else being equal, the cheapest provider wins.
+Основной фактор. При прочих равных условиях самый дешевый поставщик побеждает.
 
-### Factor 2: Availability
+### Фактор 2: Доступность
 
-A provider quoting 80 SUN but with only 10,000 energy available cannot fill a 65,000 energy order. The router must check available inventory.
+Поставщик, предлагающий 80 SUN при наличии только 10 000 energy, не может выполнить заказ на 65 000 energy. Маршрутизатор должен проверить доступные запасы.
 
-### Factor 3: Reliability
+### Фактор 3: Надежность
 
-MERX tracks each provider's historical fill rate, response time, and failure rate. A provider with a 95% fill rate is penalized relative to one with a 99% fill rate, even if the 95% provider is slightly cheaper.
-
-```
-Effective price = quoted_price / fill_rate
-
-Provider A: 85 SUN, 99% fill rate -> 85.86 effective
-Provider B: 82 SUN, 94% fill rate -> 87.23 effective
-Winner: Provider A despite higher quoted price
-```
-
-### Factor 4: Duration Support
-
-Not all providers support all durations. If you need a 1-hour delegation, providers that only offer daily minimums are excluded.
-
-### Order Splitting
-
-For large orders that exceed any single provider's capacity, the router splits the order across multiple providers:
+MERX отслеживает историческую коэффициент заполнения, время ответа и уровень отказов каждого поставщика. Поставщик с коэффициентом заполнения 95% штрафуется относительно коэффициента 99%, даже если первый немного дешевле.
 
 ```
-Order: 500,000 energy
+Эффективная цена = предложенная_цена / коэффициент_заполнения
 
-Provider A: 200,000 available at 85 SUN -> fill 200,000
-Provider B: 180,000 available at 87 SUN -> fill 180,000
-Provider C: 300,000 available at 92 SUN -> fill 120,000
-
-Total filled: 500,000 energy
-Blended rate: 87.28 SUN/unit
+Поставщик A: 85 SUN, 99% коэффициент заполнения -> 85.86 эффективно
+Поставщик B: 82 SUN, 94% коэффициент заполнения -> 87.23 эффективно
+Победитель: Поставщик A несмотря на более высокую предложенную цену
 ```
 
-The buyer sees a single order with a blended rate. The complexity of multi-provider execution is entirely hidden.
+### Фактор 4: Поддержка длительности
+
+Не все поставщики поддерживают все длительности. Если вам нужна делегация на 1 час, поставщики, которые предлагают только дневные минимумы, исключаются.
+
+### Разделение заказа
+
+Для больших заказов, превышающих емкость любого одного поставщика, маршрутизатор разделяет заказ между несколькими поставщиками:
+
+```
+Заказ: 500 000 energy
+
+Поставщик A: 200 000 доступно по 85 SUN -> заполнить 200 000
+Поставщик B: 180 000 доступно по 87 SUN -> заполнить 180 000
+Поставщик C: 300 000 доступно по 92 SUN -> заполнить 120 000
+
+Всего заполнено: 500 000 energy
+Смешанный курс: 87.28 SUN/единицу
+```
+
+Покупатель видит единый заказ со смешанным курсом. Сложность многопоставщицкого исполнения полностью скрыта.
 
 ---
 
-## Automatic Failover
+## Автоматический отказоустойчивость
 
-Failover is where aggregation truly earns its value. When you integrate directly with a provider and they go down, your application stops functioning. With MERX, provider failures are handled transparently.
+Отказоустойчивость — это то место, где агрегация действительно проявляет себя. Когда вы интегрируетесь напрямую с поставщиком и он выходит из строя, ваше приложение перестает функционировать. С MERX сбои поставщиков обрабатываются прозрачно.
 
-### Цепочка отказоустойчивости
-
-```
-Primary provider fails
-  |
-  v
-Mark provider as unhealthy (exclude from routing for 5 minutes)
-  |
-  v
-Retry with next-cheapest provider
-  |
-  v
-If second provider fails, try third
-  |
-  v
-If all providers fail, return error to buyer with retry guidance
-```
-
-### Отслеживание состояния
-
-The price monitor maintains a health score for each provider:
+### Цепь отказоустойчивости
 
 ```
-Health score components:
-  - Last successful price fetch: must be within 60s
-  - API response time: penalize > 2 seconds
-  - Recent order fill rate: penalize < 95%
-  - Recent error rate: penalize > 5%
+Основной поставщик выходит из строя
+  |
+  v
+Отметить поставщика как неработоспособного (исключить из маршрутизации на 5 минут)
+  |
+  v
+Повторить со следующим самым дешевым поставщиком
+  |
+  v
+Если второй поставщик выходит из строя, попробовать третий
+  |
+  v
+Если все поставщики выходят из строя, вернуть ошибку покупателю с рекомендацией повтора
 ```
 
-Unhealthy providers are excluded from routing until they recover. Recovery is detected automatically when the price monitor successfully fetches prices from them again.
+### Отслеживание здоровья
 
-### Нулевой простой для покупателей
+Монитор цен ведет оценку здоровья для каждого поставщика:
 
-From the buyer's perspective, provider failures are invisible. Their API call succeeds as long as at least one provider is operational. In practice, having seven or more providers means that total market outage is essentially impossible - the odds of all providers being down simultaneously are negligible.
+```
+Компоненты оценки здоровья:
+  - Последний успешный опрос цены: должен быть в пределах 60с
+  - Время ответа API: штраф > 2 секунд
+  - Последний коэффициент заполнения заказа: штраф < 95%
+  - Последний уровень ошибок: штраф > 5%
+```
+
+Неработоспособные поставщики исключаются из маршрутизации, пока они не восстановятся. Восстановление обнаруживается автоматически, когда монитор цен успешно получает цены от них снова.
+
+### Безперебойность для покупателей
+
+С точки зрения покупателя сбои поставщиков невидимы. Их вызов API успешен до тех пор, пока работает хотя бы один поставщик. На практике наличие семи и более поставщиков означает, что полный отказ рынка практически невозможен — вероятность одновременного выхода из строя всех поставщиков пренебрежимо мала.
 
 ---
 
-## One API Replaces Many
+## Один API заменяет много
 
-Here is what your integration looks like with MERX versus direct provider integration:
+Вот как выглядит ваша интеграция с MERX в сравнении с прямой интеграцией с поставщиками:
 
-### Without MERX
+### Без MERX
 
 ```typescript
-// Pseudo-code: direct multi-provider integration
+// Псевдокод: прямая интеграция с несколькими поставщиками
 
-// Initialize 7 provider clients
+// Инициализировать 7 клиентов поставщиков
 const tronsave = new TronSaveClient(apiKey1);
 const feee = new FeeeClient(apiKey2);
 const itrx = new ItrxClient(apiKey3);
-// ... 4 more
+// ... еще 4
 
-// Fetch prices from all providers
+// Получить цены от всех поставщиков
 const prices = await Promise.allSettled([
   tronsave.getPrice(65000),
   feee.getPrice(65000),
   itrx.getPrice(65000),
-  // ... 4 more
+  // ... еще 4
 ]);
 
-// Normalize different response formats
+// Нормализовать разные форматы ответов
 const normalized = prices
   .filter(p => p.status === 'fulfilled')
-  .map(p => normalizePrice(p.value)); // complex per-provider logic
+  .map(p => normalizePrice(p.value)); // сложная логика для каждого поставщика
 
-// Sort by price, check availability, handle errors...
+// Сортировать по цене, проверять доступность, обрабатывать ошибки...
 const best = normalized.sort((a, b) => a.price - b.price)[0];
 
-// Place order with best provider
+// Разместить заказ у лучшего поставщика
 try {
   const order = await getClient(best.provider).createOrder({
     energy: 65000,
     target: buyerAddress,
-    // Provider-specific parameters...
+    // Специфичные для поставщика параметры...
   });
 } catch (e) {
-  // Failover to next provider...
-  // More provider-specific error handling...
+  // Отказоустойчивость к следующему поставщику...
+  // Больше специфичной для поставщика обработки ошибок...
 }
 ```
 
-### With MERX
+### С MERX
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-merx-key' });
 
-// Get best price across all providers
+// Получить лучшую цену у всех поставщиков
 const prices = await client.getPrices({ energy: 65000 });
-console.log(`Best: ${prices.bestPrice.provider} at ${prices.bestPrice.perUnit} SUN`);
+console.log(`Лучшая: ${prices.bestPrice.provider} по ${prices.bestPrice.perUnit} SUN`);
 
-// Place order - automatically routed to best provider
+// Разместить заказ - автоматически маршрутизируется к лучшему поставщику
 const order = await client.createOrder({
   energy: 65000,
   targetAddress: buyerAddress,
   duration: '1h'
 });
 
-// Done. Failover, retries, verification handled automatically.
+// Готово. Отказоустойчивость, повторы, проверка обрабатываются автоматически.
 ```
 
-Seven integrations become one. Hundreds of lines of routing and failover code become four lines. Ongoing maintenance of provider API changes drops to zero.
+Семь интеграций становятся одной. Сотни строк кода маршрутизации и отказоустойчивости становятся четырьмя строками. Текущее обслуживание изменений API поставщиков сводится к нулю.
 
 ---
 
-## Real-Time Price Feed
+## Канал цен в реальном времени
 
-For applications that want to display live prices or make real-time routing decisions, MERX provides a WebSocket price feed:
+Для приложений, которые хотят отображать цены в реальном времени или принимать решения маршрутизации в реальном времени, MERX предоставляет канал цен WebSocket:
 
 ```typescript
 const client = new MerxClient({ apiKey: 'your-key' });
 
 client.onPriceUpdate((update) => {
-  console.log(`${update.provider}: ${update.energyPrice} SUN/unit`);
-  console.log(`Best price: ${update.bestPrice} SUN/unit`);
+  console.log(`${update.provider}: ${update.energyPrice} SUN/единицу`);
+  console.log(`Лучшая цена: ${update.bestPrice} SUN/единицу`);
 });
 ```
 
-The WebSocket feed publishes every price update from the price monitor - roughly every 30 seconds per provider. This enables applications to show live pricing without polling.
+Канал WebSocket публикует каждое обновление цены от монитора цен — примерно каждые 30 секунд на поставщика. Это позволяет приложениям показывать живые цены без опроса.
 
 ---
 
-## Provider Transparency
+## Прозрачность поставщика
 
-MERX does not hide which provider filled your order. Every order response includes the provider name, the price paid, and the on-chain delegation transaction hash:
+MERX не скрывает, какой поставщик выполнил ваш заказ. Каждый ответ заказа включает имя поставщика, уплаченную цену и хеш транзакции делегирования в цепи:
 
 ```json
 {
@@ -320,28 +320,29 @@ MERX does not hide which provider filled your order. Every order response includ
 }
 ```
 
-You always know where your energy came from, what you paid, and can verify the delegation on-chain independently.
+Вы всегда знаете, откуда пришла ваша energy, сколько вы заплатили, и можете независимо проверить делегирование в цепи.
 
 ---
 
 ## Начало работы
 
-MERX aggregation is available through the REST API, the JavaScript SDK, the Python SDK, and the MCP server for AI agents:
+Агрегация MERX доступна через REST API, JavaScript SDK, Python SDK и MCP сервер для AI агентов:
 
-- **API documentation**: [https://merx.exchange/docs](https://merx.exchange/docs)
+- **Документация API**: [https://merx.exchange/docs](https://merx.exchange/docs)
 - **JavaScript SDK**: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 - **Python SDK**: [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
 - **MCP Server**: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-Create an account at [https://merx.exchange](https://merx.exchange), get an API key, and start routing energy orders to the best available price with a single API call.
+Создайте учетную запись на [https://merx.exchange](https://merx.exchange), получите API ключ и начните маршрутизировать заказы energy по лучшей доступной цене с единственным вызовом API.
 
 ---
 
-*This article is part of the MERX technical series. MERX is the first blockchain resource exchange, aggregating all major TRON energy providers into a single API with best-price routing and automatic failover.*
+*Эта статья является частью технической серии MERX. MERX — первая децентрализованная биржа ресурсов блокчейна, объединяющая всех основных поставщиков TRON energy в единый API с маршрутизацией по лучшей цене и автоматической отказоустойчивостью.*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — без установки, без необходимости в API ключе для инструментов только для чтения:
 
 ```json
 {
@@ -353,6 +354,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите у вашего AI агента: "Какова самая дешевая TRON energy прямо сейчас?" и получите живые цены от всех подключенных поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

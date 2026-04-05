@@ -1,48 +1,48 @@
-# MERX Fiyat Izleyicisi: Her 30 Saniyede Her Saglayiciyi Nasil Takip Ediyoruz
+# MERX Fiyat İzleyicisi: Her Sağlayıcıyı 30 Saniyede Bir Nasıl İzliyoruz
 
-The price monitor is the heartbeat of MERX. Every 30 seconds, it reaches out to every integrated energy provider, fetches their current pricing, normalizes the data, and publishes it to the rest of the system. Without it, best-price routing would be guessing. With it, every order is routed to the cheapest available provider based on data no older than 30 seconds.
+Fiyat izleyicisi MERX'in kalbidir. Her 30 saniyede bir, entegre edilen her enerji sağlayıcısına bağlanır, mevcut fiyatlandırmalarını getirir, verileri normalleştirir ve sistem genelindeki diğer servislere yayınlar. Bunu olmadan, en iyi fiyat yönlendirmesi tahmin olurdu. Bununla, her sipariş 30 saniyeden eski olmayan verilere dayalı olarak en ucuz mevcut sağlayıcıya yönlendirilir.
 
-This article is a technical deep-dive into the price monitor's architecture: how it polls providers, how the adapter pattern keeps the system extensible, how Redis pub/sub distributes price data in real time, and how price history powers analytics and decision-making.
-
----
-
-## Why 30 Seconds
-
-The polling interval is a deliberate design choice. Energy prices on TRON do not change every second - they are not like spot forex or crypto order books. Provider pricing typically shifts a few times per hour, sometimes less. A 30-second interval captures every meaningful price change while avoiding several problems:
-
-- **Provider API rate limits**: most providers allow 1-2 requests per second. At 30-second intervals, we stay well within limits even with retries.
-- **Network overhead**: polling 7+ providers creates HTTP traffic. At 30 seconds, this is trivial. At 1 second, it would be substantial.
-- **Data freshness vs noise**: sub-30-second price changes on energy markets are almost always noise, not signal. 30 seconds filters noise while capturing real movements.
-- **System resource usage**: the price monitor runs alongside other services. Aggressive polling would compete for CPU and memory without adding value.
-
-The TTL on cached prices is set to 60 seconds - twice the polling interval. If a poll fails, the previous price remains valid for one more cycle before being expired. This prevents a single failed poll from removing a provider from the order book.
+Bu makale, fiyat izleyicisinin mimarisine derinlemesine bir bakış: sağlayıcıları nasıl yokladığı, adapter deseni sistemi nasıl genişletilebilir tuttuğu, Redis pub/sub fiyat verilerini gerçek zamanlı olarak nasıl dağıttığı ve fiyat geçmişi analitik ve karar almayı nasıl güçlendirdiği.
 
 ---
 
-## The Adapter Pattern
+## Neden 30 Saniye
 
-Each energy provider has a different API. Different endpoints, different authentication methods, different response formats, different error codes. The price monitor uses the adapter pattern to isolate these differences from the core polling logic.
+Yoklama aralığı, bilinçli bir tasarım seçimidir. TRON'daki enerji fiyatları her saniye değişmez - spot forex veya kripto emir defterleri gibi değildir. Sağlayıcı fiyatlandırması tipik olarak saatte birkaç kez değişir, bazen daha az. 30 saniyelik bir aralık, çeşitli sorunları önlerken her anlamlı fiyat değişikliğini yakalar:
 
-### The Provider Interface
+- **Sağlayıcı API hız sınırlamaları**: çoğu sağlayıcı saniyede 1-2 istek sağlar. 30 saniyelik aralıklarla, yeniden denemelerle bile iyi bir şekilde sınırlar içinde kalırız.
+- **Ağ yükü**: 7+ sağlayıcıyı yoklamak HTTP trafiği oluşturur. 30 saniyede, bu ihmal edilebilir. 1 saniyede, önemli olurdu.
+- **Veri tazeliği vs gürültü**: enerji piyasalarında 30 saniyeden kısa fiyat değişiklikleri neredeyse her zaman sinyal değil, gürültüdür. 30 saniye gürültüyü filtreler, gerçek hareketleri yakalarken.
+- **Sistem kaynağı kullanımı**: fiyat izleyicisi diğer hizmetlerle birlikte çalışır. Agresif yoklama, değer katmadan CPU ve bellek için rekabet edecektir.
 
-Every provider adapter implements a common interface:
+Önbelleğe alınmış fiyatlardaki TTL 60 saniyeye ayarlanmıştır - yoklama aralığının iki katı. Bir yoklama başarısız olursa, önceki fiyat sona ermeden önce bir çevrim daha geçerli kalır. Bu, tek bir başarısız yoklamanın bir sağlayıcıyı emir defterinden çıkarmasını önler.
+
+---
+
+## Adapter Deseni
+
+Her enerji sağlayıcısının farklı bir API'si vardır. Farklı uç noktalar, farklı kimlik doğrulama yöntemleri, farklı yanıt formatları, farklı hata kodları. Fiyat izleyicisi, bu farklılıkları çekirdek yoklama mantığından izole etmek için adapter desenini kullanır.
+
+### Sağlayıcı Arayüzü
+
+Her sağlayıcı adaptörü ortak bir arayüzü uygular:
 
 ```typescript
 interface IEnergyProvider {
   name: string;
 
-  // Fetch current pricing
+  // Mevcut fiyatlandırmayı getir
   getPrices(): Promise<ProviderPriceResponse>;
 
-  // Check if provider is operational
+  // Sağlayıcının çalışır durumda olup olmadığını kontrol et
   healthCheck(): Promise<boolean>;
 
-  // Get available inventory
+  // Mevcut envanteri al
   getAvailability(): Promise<AvailabilityResponse>;
 }
 
 interface ProviderPriceResponse {
-  energyPricePerUnit: number;   // SUN per energy unit
+  energyPricePerUnit: number;   // SUN cinsinden enerji birimi başına
   bandwidthPricePerUnit: number;
   minOrder: number;
   maxOrder: number;
@@ -51,9 +51,9 @@ interface ProviderPriceResponse {
 }
 ```
 
-### A Provider Adapter
+### Bir Sağlayıcı Adaptörü
 
-Each provider gets its own adapter file. Here is a simplified example of what a provider adapter looks like:
+Her sağlayıcı kendi adaptör dosyasını alır. İşte bir sağlayıcı adaptörünün neye benzediğinin basitleştirilmiş bir örneği:
 
 ```typescript
 // providers/tronsave/index.ts
@@ -76,7 +76,7 @@ export class TronSaveProvider implements IEnergyProvider {
 
     const data = await response.json();
 
-    // Normalize provider-specific format to standard format
+    // Sağlayıcıya özgü formatı standart formata normalleştir
     return {
       energyPricePerUnit: this.normalizePrice(data.energy_price),
       bandwidthPricePerUnit: this.normalizePrice(data.bandwidth_price),
@@ -96,38 +96,38 @@ export class TronSaveProvider implements IEnergyProvider {
     }
   }
 
-  // ... provider-specific normalization methods
+  // ... sağlayıcıya özgü normalleştirme yöntemleri
 }
 ```
 
-### Adding a New Provider
+### Yeni Bir Sağlayıcı Ekleme
 
-One of the key benefits of this architecture is that adding a new provider requires exactly one new file:
+Bu mimarinin temel avantajlarından biri, yeni bir sağlayıcı eklemek için tam olarak bir yeni dosya gerekir:
 
-1. Create `providers/newprovider/index.ts` implementing `IEnergyProvider`.
-2. Register the provider in the configuration.
-3. The price monitor automatically starts polling it.
-4. The order executor automatically includes it in routing decisions.
+1. `IEnergyProvider` uygulayan `providers/newsaglaycı/index.ts` oluştur.
+2. Sağlayıcıyı yapılandırmada kaydet.
+3. Fiyat izleyicisi otomatik olarak onu yoklamaya başlar.
+4. Sipariş yürütücüsü otomatik olarak onu yönlendirme kararlarına dahil eder.
 
-No changes to the price monitor, no changes to the order executor, no changes to the API. The adapter pattern ensures that provider-specific complexity is encapsulated.
+Fiyat izleyicisinde değişiklik yok, sipariş yürütücüsünde değişiklik yok, API'de değişiklik yok. Adapter deseni, sağlayıcıya özgü karmaşıklığın encapsülasyonunu sağlar.
 
 ---
 
-## The Polling Loop
+## Yoklama Döngüsü
 
-The price monitor's core loop is straightforward but carefully designed for reliability:
+Fiyat izleyicisinin çekirdek döngüsü basit ama güvenilirlik için dikkatli tasarlanmıştır:
 
 ```typescript
 class PriceMonitor {
   private providers: IEnergyProvider[];
   private redis: RedisClient;
-  private pollInterval = 30_000; // 30 seconds
+  private pollInterval = 30_000; // 30 saniye
 
   async start() {
-    // Initial poll on startup
+    // Başlangıçta ilk yoklama
     await this.pollAll();
 
-    // Schedule recurring polls
+    // Tekrarlayan yoklamaları planla
     setInterval(() => this.pollAll(), this.pollInterval);
   }
 
@@ -136,7 +136,7 @@ class PriceMonitor {
       this.providers.map(provider => this.pollProvider(provider))
     );
 
-    // Compute best price from successful results
+    // Başarılı sonuçlardan en iyi fiyatı hesapla
     const validPrices = results
       .filter(r => r.status === 'fulfilled')
       .map(r => r.value);
@@ -153,14 +153,14 @@ class PriceMonitor {
       const prices = await provider.getPrices();
       const responseTime = Date.now() - startTime;
 
-      // Store in Redis with 60s TTL
+      // Redis'e 60s TTL ile depola
       await this.redis.setex(
         `prices:${provider.name}`,
         60,
         JSON.stringify(prices)
       );
 
-      // Publish price update event
+      // Fiyat güncelleme olayını yayınla
       await this.redis.publish(
         'price-updates',
         JSON.stringify({
@@ -170,7 +170,7 @@ class PriceMonitor {
         })
       );
 
-      // Update health metrics
+      // Sağlık ölçümlerini güncelle
       await this.updateHealthMetrics(provider.name, {
         success: true,
         responseTime,
@@ -186,65 +186,65 @@ class PriceMonitor {
         timestamp: Date.now()
       });
 
-      throw error; // Let Promise.allSettled handle it
+      throw error; // Promise.allSettled'e işletmesini ver
     }
   }
 }
 ```
 
-### Key Design Decisions
+### Anahtar Tasarım Kararları
 
-**Promise.allSettled, not Promise.all**: A single provider failure must not block updates from other providers. `allSettled` ensures every provider is polled independently.
+**Promise.allSettled, Promise.all değil**: Tek bir sağlayıcı hatası diğer sağlayıcılardan güncellemeleri engellememesi gerekir. `allSettled` her sağlayıcının bağımsız olarak yoklandığından emin olur.
 
-**60-second TTL**: If a provider fails to respond for two consecutive cycles (60 seconds), its cached price expires automatically. The order executor will not route to a provider with no cached price.
+**60 saniyelik TTL**: Bir sağlayıcı art arda iki çevrimde (60 saniye) yanıt vermezse, önbelleğe alınmış fiyatı otomatik olarak sona erer. Sipariş yürütücüsü, önbelleğe alınmış fiyatı olmayan bir sağlayıcıya yönlendirmeyecektir.
 
-**Health metrics alongside prices**: Every poll records response time and success/failure. This data feeds into the routing algorithm's reliability scoring.
-
----
-
-## Redis Pub/Sub Distribution
-
-The price monitor does not serve prices directly to API consumers. Instead, it publishes to Redis, and other services subscribe to the updates they need.
-
-### Channel Structure
-
-```
-Channel: price-updates
-  -> All price update events (consumed by API service, WebSocket broadcast)
-
-Channel: price-alerts
-  -> Significant price changes (consumed by notification service)
-
-Channel: provider-health
-  -> Health status changes (consumed by admin dashboard)
-```
-
-### Why Pub/Sub Instead of Direct Calls
-
-The price monitor and the API service are separate processes (separate Docker containers, in fact). They communicate exclusively through Redis - no direct imports, no function calls, no shared memory. This isolation means:
-
-- The price monitor can be restarted without affecting the API.
-- The API can scale horizontally (multiple instances) and all receive the same price updates.
-- A bug in the price monitor cannot crash the API service.
-- Each service can be deployed independently.
-
-### WebSocket Broadcast
-
-The API service subscribes to the `price-updates` channel and broadcasts updates to connected WebSocket clients:
-
-```
-Price Monitor -> Redis pub/sub -> API Service -> WebSocket -> Client
-
-Latency: ~5ms from provider response to client notification
-```
-
-Clients subscribing to the WebSocket feed receive price updates in near real-time, enabling live dashboards and responsive trading interfaces.
+**Fiyatlarla birlikte sağlık ölçümleri**: Her yoklama yanıt süresini ve başarı/başarısızlığını kaydeder. Bu veriler, yönlendirme algoritmasının güvenilirlik puanlamasına beslenmiştir.
 
 ---
 
-## Price History Storage
+## Redis Pub/Sub Dağıtımı
 
-Every price data point is stored in PostgreSQL for historical analysis. The schema captures the full price snapshot:
+Fiyat izleyicisi fiyatları doğrudan API tüketicilerine sunmaz. Bunun yerine Redis'e yayınlar ve diğer hizmetler ihtiyaç duyduğu güncellemelere abone olurlar.
+
+### Kanal Yapısı
+
+```
+Kanal: price-updates
+  -> Tüm fiyat güncelleme olayları (API hizmeti, WebSocket yayını tarafından tüketilir)
+
+Kanal: price-alerts
+  -> Önemli fiyat değişiklikleri (bildirim hizmeti tarafından tüketilir)
+
+Kanal: provider-health
+  -> Sağlık durumu değişiklikleri (admin paneli tarafından tüketilir)
+```
+
+### Neden Pub/Sub Yerine Doğrudan Çağrılar
+
+Fiyat izleyicisi ve API hizmeti ayrı işlemlerdir (aslında ayrı Docker konteynerlerdir). Birbirlerine yalnızca Redis aracılığıyla iletişim kurarlar - doğrudan içeri aktarma yok, işlev çağrıları yok, paylaşılan bellek yok. Bu izolasyon şu anlama gelir:
+
+- Fiyat izleyicisi API'yi etkilemeden yeniden başlatılabilir.
+- API yatay olarak ölçeklenebilir (birden fazla örnek) ve hepsi aynı fiyat güncellemelerini alır.
+- Fiyat izleyicisindeki bir hata API hizmetini çökeremez.
+- Her hizmet bağımsız olarak dağıtılabilir.
+
+### WebSocket Yayını
+
+API hizmeti `price-updates` kanalına abone olur ve güncellemeleri bağlı WebSocket istemcilerine yayınlar:
+
+```
+Fiyat İzleyicisi -> Redis pub/sub -> API Hizmeti -> WebSocket -> İstemci
+
+Gecikme: Sağlayıcı yanıtından istemci bildirimine ~5ms
+```
+
+WebSocket akışına abone olan istemciler fiyat güncellemelerini neredeyse gerçek zamanlı olarak alır ve canlı panolar ve duyarlı ticaret arayüzlerini etkinleştirir.
+
+---
+
+## Fiyat Geçmişi Depolama
+
+Her fiyat veri noktası, tarihsel analiz için PostgreSQL'de depolanır. Şema, tam fiyat anlık görüntüsünü yakalar:
 
 ```sql
 CREATE TABLE price_history (
@@ -263,24 +263,24 @@ CREATE INDEX idx_price_history_provider_time
   ON price_history(provider, recorded_at DESC);
 ```
 
-### Data Volume
+### Veri Hacmi
 
-At 30-second intervals across 7 providers:
+7 sağlayıcı genelinde 30 saniyelik aralıklarla:
 
 ```
-7 providers x 2 polls/minute x 60 minutes x 24 hours = 20,160 rows/day
-Monthly: ~604,800 rows
-Yearly: ~7,257,600 rows
+7 sağlayıcı x 2 yoklama/dakika x 60 dakika x 24 saat = 20,160 satır/gün
+Aylık: ~604,800 satır
+Yıllık: ~7,257,600 satır
 ```
 
-Each row is small (roughly 100 bytes), so annual storage is under 1 GB. PostgreSQL handles this volume trivially with appropriate indexing.
+Her satır küçüktür (kabaca 100 bayt), bu nedenle yıllık depolama 1 GB'tan az. PostgreSQL, uygun dizin oluşturmayla bu hacmi önemsizce işler.
 
-### Analytics Queries
+### Analitik Sorguları
 
-The price history enables several valuable analyses:
+Fiyat geçmişi birkaç değerli analizi sağlar:
 
 ```sql
--- Average price by provider over the last 24 hours
+-- Son 24 saatte sağlayıcı başına ortalama fiyat
 SELECT provider,
        AVG(energy_price_sun) as avg_price,
        MIN(energy_price_sun) as min_price,
@@ -290,7 +290,7 @@ WHERE recorded_at > NOW() - INTERVAL '24 hours'
 GROUP BY provider
 ORDER BY avg_price;
 
--- Price trend for a specific provider
+-- Belirli bir sağlayıcı için fiyat eğilimi
 SELECT date_trunc('hour', recorded_at) as hour,
        AVG(energy_price_sun) as avg_price
 FROM price_history
@@ -300,91 +300,92 @@ GROUP BY hour
 ORDER BY hour;
 ```
 
-These queries power the MERX price history API endpoint and the admin dashboard.
+Bu sorgular, MERX fiyat geçmişi API uç noktasını ve admin panelini besler.
 
 ---
 
-## Handling Edge Cases
+## Kenar Durumlarını İşleme
 
-### Provider Returns Invalid Data
+### Sağlayıcı Geçersiz Veriler Döndürür
 
-The price monitor validates every response before caching:
+Fiyat izleyicisi, önbelleğe almadan önce her yanıtı doğrular:
 
 ```typescript
 function validatePrice(price: ProviderPriceResponse): boolean {
-  // Price must be positive
+  // Fiyat pozitif olmalı
   if (price.energyPricePerUnit <= 0) return false;
 
-  // Price must be within reasonable bounds (10-500 SUN)
+  // Fiyat makul sınırlar içinde olmalı (10-500 SUN)
   if (price.energyPricePerUnit < 10_000_000) return false;  // < 10 SUN
   if (price.energyPricePerUnit > 500_000_000) return false;  // > 500 SUN
 
-  // Must have valid timestamp
-  if (price.timestamp > Date.now() + 60_000) return false;  // future
-  if (price.timestamp < Date.now() - 300_000) return false;  // > 5min old
+  // Geçerli zaman damgası olmalı
+  if (price.timestamp > Date.now() + 60_000) return false;  // gelecek
+  if (price.timestamp < Date.now() - 300_000) return false;  // > 5dk öncesi
 
   return true;
 }
 ```
 
-Invalid data is logged and discarded. The previous valid price remains in cache until it expires naturally.
+Geçersiz veriler günlüğe kaydedilir ve atılır. Önceki geçerli fiyat, doğal olarak sona erinceye kadar önbellekte kalır.
 
-### Provider API Changes
+### Sağlayıcı API Değişiklikleri
 
-Provider APIs change occasionally - new fields, deprecated endpoints, modified response formats. Because each provider has its own adapter, API changes are isolated to a single file. The adapter is updated, tested, and deployed without touching any other part of the system.
+Sağlayıcı API'leri zaman zaman değişir - yeni alanlar, kullanımdan kaldırılan uç noktalar, değiştirilen yanıt formatları. Her sağlayıcının kendi adaptörü olduğu için, API değişiklikleri tek bir dosyaya kapsanır. Adaptör güncellenir, test edilir ve sisteminizin başka bir bölümüne dokunmadan dağıtılır.
 
-### Network Partitions
+### Ağ Bölümlemeleri
 
-If the price monitor loses network connectivity, all provider polls fail simultaneously. The 60-second TTL ensures that cached prices expire within a minute, and the order executor stops routing to all providers. When connectivity is restored, the next poll cycle repopulates the cache automatically.
+Fiyat izleyicisi ağ bağlantısını kaybederse, tüm sağlayıcı yoklamaları aynı anda başarısız olur. 60 saniyelik TTL, önbelleğe alınmış fiyatların bir dakika içinde sona ermesini sağlar ve sipariş yürütücüsü tüm sağlayıcılara yönlendirmeyi durdurur. Bağlantı geri yüklendiğinde, sonraki yoklama döngüsü önbelleği otomatik olarak yeniden doldurur.
 
-### Clock Drift
+### Saat Sapması
 
-The price monitor runs on a single server, so clock drift between services is not a concern for relative timing. Timestamps in price history use `NOW()` from PostgreSQL, ensuring consistency. For absolute timestamps in API responses, the server runs NTP.
-
----
-
-## Monitoring the Monitor
-
-The price monitor itself is monitored through several mechanisms:
-
-- **Health endpoint**: the service exposes a `/health` endpoint that reports the last successful poll time for each provider.
-- **Alerting**: if no successful price update has been published for 5 minutes, an alert is triggered.
-- **Metrics**: poll count, success rate, average response time, and cache hit rate are tracked.
-- **Logs**: every poll result (success or failure) is logged with structured JSON for analysis.
+Fiyat izleyicisi tek bir sunucuda çalışır, bu nedenle hizmetler arasında saat sapması göreli zamanlamada bir sorun değildir. Fiyat geçmişindeki zaman damgaları PostgreSQL'den `NOW()` kullanır, tutarlılığı sağlar. API yanıtlarındaki mutlak zaman damgaları için sunucu NTP çalıştırır.
 
 ---
 
-## Performans Characteristics
+## İzleyiciyi İzlemek
+
+Fiyat izleyicisi kendisi birkaç mekanizma aracılığıyla izlenir:
+
+- **Sağlık uç noktası**: hizmet, her sağlayıcı için son başarılı yoklama zamanını bildiren bir `/health` uç noktası ortaya koymaktadır.
+- **Uyarı verme**: 5 dakika boyunca başarılı bir fiyat güncellemesi yayınlanmadıysa, bir uyarı tetiklenir.
+- **Ölçümler**: yoklama sayısı, başarı oranı, ortalama yanıt süresi ve önbellek isabet oranı izlenmiştir.
+- **Günlükler**: her yoklama sonucu (başarı veya başarısızlık) analiz için yapılandırılmış JSON ile günlüğe kaydedilir.
+
+---
+
+## Performans Özellikleri
 
 ```
-Typical poll cycle (7 providers):
-  Total time: 1-3 seconds (parallel HTTP requests)
-  Redis writes: 8 (7 provider prices + 1 best price)
-  Redis publishes: 7 (one per provider update)
-  PostgreSQL inserts: 7 (one per provider)
-  Memory usage: < 50 MB
-  CPU usage: < 2% average
+Tipik yoklama döngüsü (7 sağlayıcı):
+  Toplam süre: 1-3 saniye (paralel HTTP istekleri)
+  Redis yazmaları: 8 (7 sağlayıcı fiyatı + 1 en iyi fiyat)
+  Redis yayınları: 7 (sağlayıcı başına biri)
+  PostgreSQL eklemeleri: 7 (sağlayıcı başına biri)
+  Bellek kullanımı: < 50 MB
+  CPU kullanımı: < %2 ortalama
 ```
 
-The price monitor is intentionally lightweight. It does one thing - fetch and distribute prices - and does it efficiently. The 30-second interval means the service is idle 90% of the time, leaving resources available for the more compute-intensive order executor and API services.
+Fiyat izleyicisi kasıtlı olarak hafiftir. Bir şey yapar - sağlayıcılardan fiyat getir ve dağıt - ve bunu verimli bir şekilde yapar. 30 saniyelik aralık, hizmetin zamanının %90'ında boşta olduğu anlamına gelir ve daha işlemci yoğun sipariş yürütücüsü ve API hizmetleri için kaynakları açık bırakır.
 
 ---
 
-## Sonuc
+## Sonuç
 
-The price monitor is conceptually simple - poll providers, normalize data, publish updates. But the details matter. The adapter pattern makes adding providers trivial. Redis pub/sub decouples price collection from price consumption. 60-second TTLs automatically exclude stale data. Health metrics feed into routing decisions. And price history enables analytics that help users make better decisions.
+Fiyat izleyicisi kavramsal olarak basittir - sağlayıcıları yokla, verileri normalleştir, güncellemeleri yayınla. Ama detaylar önemlidir. Adapter deseni sağlayıcı eklemeyi önemsizleştirir. Redis pub/sub, fiyat toplamasını fiyat tüketiminden ayırır. 60 saniyelik TTL'ler otomatik olarak eski verileri hariç tutar. Sağlık ölçümleri yönlendirme kararlarına beslenmiştir. Ve fiyat geçmişi, kullanıcıların daha iyi kararlar almalarına yardımcı olan analitikleri etkinleştirir.
 
-Every price you see on MERX, every best-price recommendation, every automatic routing decision traces back to the price monitor's 30-second heartbeat. It is the foundation that makes aggregation possible.
+MERX'te gördüğünüz her fiyat, her en iyi fiyat tavsiyesi, her otomatik yönlendirme kararı fiyat izleyicisinin 30 saniyelik atışına geri döner. Toplama mümkün kılan temeli olmuştur.
 
-Explore live pricing and historical data at [https://merx.exchange](https://merx.exchange). For API access, see the documentation at [https://merx.exchange/docs](https://merx.exchange/docs).
+Canlı fiyatlandırma ve geçmiş verileri [https://merx.exchange](https://merx.exchange) adresinde keşfedin. API erişimi için, [https://merx.exchange/docs](https://merx.exchange/docs) adresinde belgelere bakın.
 
 ---
 
-*Bu makale, MERX teknik serisinin bir parcasidir. MERX, ilk blokzincir kaynak borsasidir. SDK'lar icin kaynak kodu: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js), [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python).*
+*Bu makale, MERX teknik serisinin bir parçasıdır. MERX ilk blockchain kaynak borsasıdır. SDK'lar için kaynak kodu: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js), [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python).*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin - yükleme yok, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -396,6 +397,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI aracınıza şunu sorun: "TRON enerjisinin en ucuz olanı şu anda nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatları alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

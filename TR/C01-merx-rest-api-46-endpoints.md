@@ -1,44 +1,44 @@
-# MERX REST API: TRON Energy Ticareti Icin 46 Endpoint
+# MERX REST API: 46 Uç Nokta TRON Enerji Ticareti için
 
-The MERX REST API provides 46 endpoints that cover the complete lifecycle of TRON energy and bandwidth trading - from real-time price discovery across eight providers to order execution, account management, on-chain queries, and automated standing orders. This article walks through the API architecture, authentication model, endpoint groups, rate limits, error handling, and practical code examples in curl, JavaScript, and Python.
+MERX REST API, TRON enerji ve bandwidth ticaretinin tam yaşam döngüsünü kapsayan 46 uç noktası sağlar - sekiz sağlayıcı arasında gerçek zamanlı fiyat keşfinden sipariş yürütme, hesap yönetimi, zincir üstü sorguları ve otomatik kalıcı siparişlere kadar. Bu makale API mimarisini, kimlik doğrulama modelini, uç nokta gruplarını, hız sınırlamalarını, hata yönetimini ve curl, JavaScript ve Python'da pratik kod örneklerini ele almaktadır.
 
-## Why a Unified API Matters
+## Birleştirilmiş bir API'nin Neden Önemli Olduğu
 
-The TRON energy market is fragmented across multiple providers, each with its own API format, authentication scheme, and pricing model. A developer who wants the best price on a USDT transfer has to integrate with every provider individually, handle failover logic, and monitor prices continuously.
+TRON enerji piyasası, her birinin kendi API formatı, kimlik doğrulama şeması ve fiyatlandırma modeline sahip birden fazla sağlayıcı arasında parçalanmıştır. Bir USDT transferinde en iyi fiyatı istenen bir geliştirici, her sağlayıcı ile ayrı ayrı entegrasyon yapmak, yedek mantığı işlemek ve fiyatları sürekli izlemek zorundadır.
 
-MERX consolidates all of that into a single REST API. One API key, one authentication header, one error format, one set of SDKs. The platform polls all connected providers every 30 seconds, routes orders to the cheapest available source, and verifies delegations on-chain.
+MERX tüm bunları tek bir REST API'de birleştiriyor. Bir API anahtarı, bir kimlik doğrulama başlığı, bir hata biçimi, bir SDK seti. Platform tüm bağlı sağlayıcıları her 30 saniyede bir yoklar, siparişleri en ucuz kullanılabilir kaynağa yönlendirir ve delegasyonları zincir üstünde doğrular.
 
-The API is versioned at `/api/v1/` and will maintain backward compatibility. All endpoints return JSON in a consistent envelope format.
+API, `/api/v1/` adresinde sürümlendirilmiş ve geriye dönük uyumluluğu koruyacaktır. Tüm uç noktalar tutarlı bir zarf biçiminde JSON döndürür.
 
-## Kimlik Dogrulama
+## Kimlik Doğrulama
 
-MERX uses API key authentication. Every authenticated request must include the `X-API-Key` header.
+MERX, API anahtarı kimlik doğrulaması kullanır. Her kimliği doğrulanmış istek, `X-API-Key` başlığını içermelidir.
 
-API keys are created in the MERX dashboard at [merx.exchange](https://merx.exchange) or programmatically via the `/api/v1/keys` endpoint. Each key has a permission set that controls what operations it can perform.
+API anahtarları, MERX panosunda [merx.exchange](https://merx.exchange) adresinde veya `/api/v1/keys` uç noktası aracılığıyla programlı olarak oluşturulur. Her anahtarın, hangi işlemleri gerçekleştirebileceğini kontrol eden bir izin seti vardır.
 
 ```bash
 curl -H "X-API-Key: sk_live_your_key_here" \
   https://merx.exchange/api/v1/balance
 ```
 
-Keys follow the format `sk_live_` followed by 64 hex characters. The raw key is shown exactly once at creation time. MERX stores only the bcrypt hash, so lost keys cannot be recovered - they must be revoked and replaced.
+Anahtarlar `sk_live_` formatını takip eder ve bunu 64 onaltılı karakter izler. Ham anahtar, oluşturma sırasında tam olarak bir kez gösterilir. MERX yalnızca bcrypt karmasını depolar, bu nedenle kaybolan anahtarlar kurtarılamaz - bunları iptal etmek ve değiştirmek gerekir.
 
-### Key Permissions
+### Anahtar İzinleri
 
-When creating an API key, you assign one or more permissions:
+Bir API anahtarı oluştururken, bir veya daha fazla izin atarsınız:
 
-| Permission       | Grants access to                        |
-|------------------|-----------------------------------------|
-| `create_orders`  | POST /orders, POST /ensure              |
-| `view_orders`    | GET /orders, GET /orders/:id            |
-| `view_balance`   | GET /balance, GET /history              |
-| `broadcast`      | POST /chain/broadcast                   |
+| İzin             | Erişim sağlar                    |
+|------------------|----------------------------------|
+| `create_orders`  | POST /orders, POST /ensure       |
+| `view_orders`    | GET /orders, GET /orders/:id     |
+| `view_balance`   | GET /balance, GET /history       |
+| `broadcast`      | POST /chain/broadcast            |
 
-This allows you to create read-only keys for monitoring dashboards and restricted keys for automated trading systems.
+Bu, izleme panolarında yalnızca okunabilir anahtarlar ve otomatik ticaret sistemleri için kısıtlı anahtarlar oluşturmanıza olanak sağlar.
 
-## Response Envelope
+## Yanıt Zarfı
 
-Every response follows the same structure:
+Her yanıt aynı yapıyı izler:
 
 ```json
 {
@@ -46,7 +46,7 @@ Every response follows the same structure:
 }
 ```
 
-On error:
+Hata durumunda:
 
 ```json
 {
@@ -58,123 +58,123 @@ On error:
 }
 ```
 
-Error codes are machine-readable strings. The `details` field is optional and provides context for debugging.
+Hata kodları makine tarafından okunabilir dizelerdir. `details` alanı isteğe bağlı olup hata ayıklama için bağlam sağlar.
 
-## Endpoint Groups
+## Uç Nokta Grupları
 
-The 46 endpoints are organized into nine groups. Here is the complete map.
+46 uç noktası dokuz gruba ayrılmıştır. İşte tam harita.
 
-### Prices (6 endpoints)
+### Fiyatlar (6 Uç Nokta)
 
-These endpoints are public - no API key required.
+Bu uç noktalar herkese açıktır - API anahtarı gerekmez.
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| GET    | /api/v1/prices              | Current prices from all providers        |
-| GET    | /api/v1/prices/best         | Cheapest provider for a resource type    |
-| GET    | /api/v1/prices/history      | Historical price data                    |
-| GET    | /api/v1/prices/stats        | Aggregate market statistics              |
-| GET    | /api/v1/prices/analysis     | Trend analysis and buy recommendation    |
-| GET    | /api/v1/orders/preview      | Cost preview before placing an order     |
+| Method | Yol                         | Açıklama                                 |
+|--------|-----------------------------|-----------------------------------------|
+| GET    | /api/v1/prices              | Tüm sağlayıcılardan güncel fiyatlar     |
+| GET    | /api/v1/prices/best         | Kaynak türü için en ucuz sağlayıcı      |
+| GET    | /api/v1/prices/history      | Geçmiş fiyat verileri                   |
+| GET    | /api/v1/prices/stats        | Toplam pazar istatistikleri             |
+| GET    | /api/v1/prices/analysis     | Trend analizi ve satın alma tavsiyesi   |
+| GET    | /api/v1/orders/preview      | Sipariş vermeden önce maliyet önizlemesi|
 
-### Orders (3 endpoints)
+### Siparişler (3 Uç Nokta)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| POST   | /api/v1/orders              | Create a new energy or bandwidth order   |
-| GET    | /api/v1/orders              | List orders with pagination and filters  |
-| GET    | /api/v1/orders/:id          | Get order details with fill breakdown    |
+| Method | Yol                      | Açıklama                                 |
+|--------|--------------------------|------------------------------------------|
+| POST   | /api/v1/orders           | Yeni bir enerji veya bandwidth siparişi |
+| GET    | /api/v1/orders           | Sayfalama ve filtrelerle siparişleri listele |
+| GET    | /api/v1/orders/:id       | Doldurma dökümü ile sipariş detayları   |
 
-### Account (7 endpoints)
+### Hesap (7 Uç Nokta)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| GET    | /api/v1/balance             | Current TRX and USDT balances            |
-| GET    | /api/v1/deposit/info        | Deposit address and memo                 |
-| POST   | /api/v1/deposit/prepare     | Prepare a deposit transaction            |
-| POST   | /api/v1/deposit/submit      | Submit a deposit proof                   |
-| POST   | /api/v1/withdraw            | Withdraw TRX or USDT                     |
-| GET    | /api/v1/history             | Order execution history                  |
-| GET    | /api/v1/history/summary     | Aggregate account statistics             |
+| Method | Yol                        | Açıklama                               |
+|--------|----------------------------|----------------------------------------|
+| GET    | /api/v1/balance            | Güncel TRX ve USDT bakiyeleri          |
+| GET    | /api/v1/deposit/info       | Yatırım adresi ve memo                 |
+| POST   | /api/v1/deposit/prepare    | Yatırım işlemini hazırla               |
+| POST   | /api/v1/deposit/submit     | Yatırım kanıtı gönder                  |
+| POST   | /api/v1/withdraw           | TRX veya USDT çek                      |
+| GET    | /api/v1/history            | Sipariş yürütme geçmişi                |
+| GET    | /api/v1/history/summary    | Toplam hesap istatistikleri            |
 
-### API Keys (3 endpoints)
+### API Anahtarları (3 Uç Nokta)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| GET    | /api/v1/keys                | List all API keys                        |
-| POST   | /api/v1/keys                | Create a new API key                     |
-| DELETE | /api/v1/keys/:id            | Revoke an API key                        |
+| Method | Yol              | Açıklama                   |
+|--------|------------------|----------------------------|
+| GET    | /api/v1/keys     | Tüm API anahtarlarını listele |
+| POST   | /api/v1/keys     | Yeni API anahtarı oluştur  |
+| DELETE | /api/v1/keys/:id | Bir API anahtarını iptal et |
 
-### Kimlik Dogrulama (2 endpoints)
+### Kimlik Doğrulama (2 Uç Nokta)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| POST   | /api/v1/auth/register       | Create a new account                     |
-| POST   | /api/v1/auth/login          | Authenticate and receive a JWT token     |
+| Method | Yol                   | Açıklama                          |
+|--------|----------------------|-----------------------------------|
+| POST   | /api/v1/auth/register | Yeni hesap oluştur                |
+| POST   | /api/v1/auth/login    | Kimlik doğrulaması yap ve JWT al  |
 
-### Estimation (2 endpoints)
+### Tahmin (2 Uç Nokta)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| POST   | /api/v1/estimate            | Estimate energy and cost for a transaction|
-| POST   | /api/v1/ensure              | Ensure minimum resources on an address   |
+| Method | Yol           | Açıklama                              |
+|--------|---------------|---------------------------------------|
+| POST   | /api/v1/estimate | İşlem için enerji ve maliyeti tahmin et |
+| POST   | /api/v1/ensure   | Bir adreste minimum kaynakları sağla  |
 
-### Webhooks (3 endpoints)
+### Web Kancaları (3 Uç Nokta)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| POST   | /api/v1/webhooks            | Create a webhook subscription            |
-| GET    | /api/v1/webhooks            | List webhook subscriptions               |
-| DELETE | /api/v1/webhooks/:id        | Delete a webhook                         |
+| Method | Yol              | Açıklama                       |
+|--------|------------------|--------------------------------|
+| POST   | /api/v1/webhooks | Web kancası aboneliği oluştur  |
+| GET    | /api/v1/webhooks | Web kancası aboneliklerini listele |
+| DELETE | /api/v1/webhooks/:id | Web kancasını sil           |
 
-### Standing Orders and Monitors (7 endpoints)
+### Kalıcı Siparişler ve İzleyiciler (7 Uç Nokta)
 
-| Method | Path                             | Description                           |
-|--------|----------------------------------|---------------------------------------|
-| POST   | /api/v1/standing-orders          | Create a standing order               |
-| GET    | /api/v1/standing-orders          | List standing orders                  |
-| GET    | /api/v1/standing-orders/:id      | Get standing order details            |
-| DELETE | /api/v1/standing-orders/:id      | Cancel a standing order               |
-| POST   | /api/v1/monitors                 | Create a resource monitor             |
-| GET    | /api/v1/monitors                 | List active monitors                  |
-| DELETE | /api/v1/monitors/:id             | Cancel a monitor                      |
+| Method | Yol                              | Açıklama                      |
+|--------|----------------------------------|-------------------------------|
+| POST   | /api/v1/standing-orders          | Kalıcı sipariş oluştur        |
+| GET    | /api/v1/standing-orders          | Kalıcı siparişleri listele    |
+| GET    | /api/v1/standing-orders/:id      | Kalıcı sipariş detaylarını al |
+| DELETE | /api/v1/standing-orders/:id      | Kalıcı siparişi iptal et      |
+| POST   | /api/v1/monitors                 | Kaynak izleyicisi oluştur     |
+| GET    | /api/v1/monitors                 | Aktif izleyicileri listele    |
+| DELETE | /api/v1/monitors/:id             | İzleyiciyi iptal et           |
 
-### Chain Proxy (10 endpoints)
+### Zincir Vekili (10 Uç Nokta)
 
-These endpoints proxy TRON network queries through MERX, eliminating the need for clients to call TronGrid directly.
+Bu uç noktalar TRON ağı sorgularını MERX üzerinden vekil eder ve istemcilerin TronGrid'i doğrudan aramasına gerek kalmaz.
 
-| Method | Path                             | Description                           |
-|--------|----------------------------------|---------------------------------------|
-| GET    | /api/v1/chain/account/:address   | Account info and resources            |
-| GET    | /api/v1/chain/balance/:address   | TRX balance                           |
-| GET    | /api/v1/chain/resources/:address | Energy and bandwidth breakdown        |
-| GET    | /api/v1/chain/transaction/:txid  | Transaction details                   |
-| GET    | /api/v1/chain/block/:number      | Block by number (or latest)           |
-| GET    | /api/v1/chain/parameters         | Chain parameters                      |
-| GET    | /api/v1/chain/history/:address   | Address transaction history           |
-| POST   | /api/v1/chain/read-contract      | Call a constant contract function     |
-| POST   | /api/v1/chain/broadcast          | Broadcast a signed transaction        |
-| GET    | /api/v1/address/:addr/resources  | Address resource summary              |
+| Method | Yol                              | Açıklama                      |
+|--------|----------------------------------|-------------------------------|
+| GET    | /api/v1/chain/account/:address   | Hesap bilgisi ve kaynakları   |
+| GET    | /api/v1/chain/balance/:address   | TRX bakiyesi                  |
+| GET    | /api/v1/chain/resources/:address | Energy ve bandwidth dökümü    |
+| GET    | /api/v1/chain/transaction/:txid  | İşlem detayları               |
+| GET    | /api/v1/chain/block/:number      | Blok numarası veya son blok   |
+| GET    | /api/v1/chain/parameters         | Zincir parametreleri          |
+| GET    | /api/v1/chain/history/:address   | Adres işlem geçmişi           |
+| POST   | /api/v1/chain/read-contract      | Sabit kontrat işlevini çağır  |
+| POST   | /api/v1/chain/broadcast          | İmzalı işlemi yayınla         |
+| GET    | /api/v1/address/:addr/resources  | Adres kaynakları özeti        |
 
-### x402 Pay-Per-Use (3 endpoints)
+### x402 Kullanım Başına Ödeme (3 Uç Nokta)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| POST   | /api/v1/x402/invoice        | Create a payment invoice                 |
-| GET    | /api/v1/x402/invoice/:id    | Check invoice status                     |
-| POST   | /api/v1/x402/verify         | Verify payment and execute order         |
+| Method | Yol                     | Açıklama                   |
+|--------|-------------------------|----------------------------|
+| POST   | /api/v1/x402/invoice    | Ödeme faturası oluştur     |
+| GET    | /api/v1/x402/invoice/:id | Fatura durumunu kontrol et |
+| POST   | /api/v1/x402/verify     | Ödemeyi doğrula ve yürüt   |
 
-## Key Endpoints in Detail
+## Temel Uç Noktalar Detaylı
 
 ### GET /api/v1/prices
 
-Returns current pricing from all active providers. No authentication required. This is the endpoint you call to see the full market at a glance.
+Tüm etkin sağlayıcılardan güncel fiyatlandırma döndürür. Kimlik doğrulama gerekmez. Piyasanın tamamını bir bakışta görmek için çağırdığınız uç noktadır.
 
 ```bash
 curl https://merx.exchange/api/v1/prices
 ```
 
-Response (abbreviated):
+Yanıt (kısaltılmış):
 
 ```json
 {
@@ -195,11 +195,11 @@ Response (abbreviated):
 }
 ```
 
-Each provider entry includes the price tiers (by duration), available capacity, and the timestamp of the last successful poll.
+Her sağlayıcı girdisi fiyat seviyelerini (süreye göre), kullanılabilir kapasiteyi ve son başarılı yoklama zaman damgasını içerir.
 
 ### POST /api/v1/orders
 
-Creates an energy or bandwidth order. The platform matches the order against available providers and routes to the cheapest one that can fulfill it.
+Enerji veya bandwidth siparişi oluşturur. Platform siparişi mevcut sağlayıcılara karşı eşleştirir ve bunu yerine getirebilecek en ucuz sağlayıcıya yönlendirir.
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/orders \
@@ -215,7 +215,7 @@ curl -X POST https://merx.exchange/api/v1/orders \
   }'
 ```
 
-Response:
+Yanıt:
 
 ```json
 {
@@ -227,17 +227,17 @@ Response:
 }
 ```
 
-The `Idempotency-Key` header prevents duplicate orders if the same request is retried. If the key has been seen before, the API returns the original order instead of creating a new one.
+`Idempotency-Key` başlığı, aynı istek yeniden denenirse yinelenen siparişleri önler. Anahtar daha önce görülmüşse, API yeni bir tane oluşturmak yerine orijinal siparişi döndürür.
 
-Order types:
-- `MARKET` - execute immediately at best available price
-- `LIMIT` - execute only if price is at or below `max_price_sun`
-- `PERIODIC` - recurring order on a schedule
-- `BROADCAST` - broadcast a pre-signed delegation transaction
+Sipariş türleri:
+- `MARKET` - en iyi mevcut fiyattan hemen yürüt
+- `LIMIT` - yalnızca fiyat `max_price_sun` veya daha azsa yürüt
+- `PERIODIC` - bir zamanlamaya göre yinelenen sipariş
+- `BROADCAST` - önceden imzalanmış bir delegasyon işlemini yayınla
 
 ### GET /api/v1/orders/:id
 
-Returns the order with its fill details - which providers fulfilled the order, at what price, and the on-chain transaction IDs.
+Doldurma detayları ile siparişi döndürür - hangi sağlayıcılar siparişi yerine getirdi, hangi fiyattan ve zincir üstü işlem kimlikleri.
 
 ```bash
 curl -H "X-API-Key: sk_live_your_key_here" \
@@ -272,7 +272,7 @@ curl -H "X-API-Key: sk_live_your_key_here" \
 
 ### POST /api/v1/estimate
 
-Estimates the energy and bandwidth required for a TRON operation, then compares the rental cost against the TRX burn cost.
+TRON işlemi için gereken enerji ve bandwidth'i tahmin eder, daha sonra kiralama maliyetini TRX yakma maliyeti ile karşılaştırır.
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/estimate \
@@ -303,24 +303,24 @@ curl -X POST https://merx.exchange/api/v1/estimate \
 }
 ```
 
-This endpoint is useful for showing users exactly how much they save by renting energy through MERX versus burning TRX.
+Bu uç nokta, kullanıcılara MERX aracılığıyla enerji kiralayarak TRX yakmaya karşı tam olarak ne kadar tasarruf ettiklerini göstermek için yararlıdır.
 
-## Rate Limits
+## Hız Sınırlamaları
 
-Rate limits are applied per IP address using sliding windows.
+Hız sınırlamaları, kayan pencereler kullanan IP adresi başına uygulanır.
 
-| Endpoint group      | Limit              | Window  |
-|---------------------|--------------------|---------|
-| Prices (public)     | 300 requests       | 1 min   |
-| Default (general)   | 100 requests       | 1 min   |
-| Balance             | 60 requests        | 1 min   |
-| History             | 60 requests        | 1 min   |
-| Orders              | 10 requests        | 1 min   |
-| Withdrawals         | 5 requests         | 1 min   |
-| Broadcast           | 20 requests        | 1 min   |
-| Registration        | 5 requests         | 1 hour  |
+| Uç nokta grubu    | Sınır           | Pencere |
+|-------------------|-----------------|--------|
+| Fiyatlar (herkese açık) | 300 istek | 1 dak |
+| Varsayılan (genel) | 100 istek | 1 dak |
+| Bakiye            | 60 istek        | 1 dak  |
+| Geçmiş            | 60 istek        | 1 dak  |
+| Siparişler        | 10 istek        | 1 dak  |
+| Çekilişler        | 5 istek         | 1 dak  |
+| Yayınlama         | 20 istek        | 1 dak  |
+| Kayıt             | 5 istek         | 1 saat |
 
-When a rate limit is exceeded, the API returns HTTP 429 with the standard error format:
+Hız sınırlaması aşıldığında, API HTTP 429'u standart hata biçimi ile döndürür:
 
 ```json
 {
@@ -331,26 +331,26 @@ When a rate limit is exceeded, the API returns HTTP 429 with the standard error 
 }
 ```
 
-Rate limit headers (`RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`) are included in all responses following the IETF draft standard.
+Hız sınırı başlıkları (`RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`) IETF taslak standardını takip ederek tüm yanıtlara dahil edilir.
 
-## Error Codes
+## Hata Kodları
 
-| Code                   | HTTP | Description                                        |
-|------------------------|------|----------------------------------------------------|
-| `UNAUTHORIZED`         | 401  | Invalid or missing API key                         |
-| `RATE_LIMITED`         | 429  | Too many requests                                  |
-| `VALIDATION_ERROR`    | 400  | Request body or parameters failed validation       |
-| `INVALID_ADDRESS`     | 400  | Not a valid TRON address                           |
-| `INSUFFICIENT_FUNDS`  | 400  | Account balance too low                            |
-| `BELOW_MINIMUM_ORDER` | 400  | Order amount below provider minimum                |
-| `DUPLICATE_REQUEST`   | 409  | Idempotency key already used                       |
-| `ORDER_NOT_FOUND`     | 404  | Order or resource does not exist                   |
-| `PROVIDER_UNAVAILABLE`| 404  | No provider can fulfill the request                |
-| `INTERNAL_ERROR`      | 500  | Server-side error                                  |
+| Kod                    | HTTP | Açıklama                                  |
+|------------------------|------|-------------------------------------------|
+| `UNAUTHORIZED`         | 401  | Geçersiz veya eksik API anahtarı          |
+| `RATE_LIMITED`         | 429  | Çok fazla istek                           |
+| `VALIDATION_ERROR`    | 400  | İstek gövdesi veya parametreleri doğrulama başarısız |
+| `INVALID_ADDRESS`     | 400  | Geçerli olmayan TRON adresi               |
+| `INSUFFICIENT_FUNDS`  | 400  | Hesap bakiyesi çok düşük                  |
+| `BELOW_MINIMUM_ORDER` | 400  | Sipariş miktarı sağlayıcı minimumunun altında |
+| `DUPLICATE_REQUEST`   | 409  | İdempotency anahtarı zaten kullanıldı     |
+| `ORDER_NOT_FOUND`     | 404  | Sipariş veya kaynak bulunamadı            |
+| `PROVIDER_UNAVAILABLE`| 404  | Hiçbir sağlayıcı isteği yerine getiremez  |
+| `INTERNAL_ERROR`      | 500  | Sunucu tarafı hatası                      |
 
-## Hizli Baslangic with SDKs
+## SDK'larla Hızlı Başlangıç
 
-While the REST API can be called directly with any HTTP client, MERX provides official SDKs for JavaScript and Python that handle authentication, error parsing, and type safety.
+REST API, herhangi bir HTTP istemcisi ile doğrudan çağrılabilse de, MERX kimlik doğrulama, hata ayrıştırma ve tip güvenliğini işleyen JavaScript ve Python için resmi SDK'lar sağlar.
 
 ### JavaScript / TypeScript
 
@@ -363,10 +363,10 @@ import { MerxClient } from 'merx-sdk'
 
 const merx = new MerxClient({ apiKey: 'sk_live_your_key_here' })
 
-// Get all prices
+// Tüm fiyatları al
 const prices = await merx.prices.list()
 
-// Create an order
+// Sipariş oluştur
 const order = await merx.orders.create({
   resource_type: 'ENERGY',
   amount: 65000,
@@ -374,7 +374,7 @@ const order = await merx.orders.create({
   duration_sec: 3600,
 })
 
-// Check order status
+// Sipariş durumunu kontrol et
 const details = await merx.orders.get(order.id)
 ```
 
@@ -389,10 +389,10 @@ from merx import MerxClient
 
 client = MerxClient(api_key="sk_live_your_key_here")
 
-# Get all prices
+# Tüm fiyatları al
 prices = client.prices.list()
 
-# Create an order
+# Sipariş oluştur
 order = client.orders.create(
     resource_type="ENERGY",
     amount=65000,
@@ -400,42 +400,43 @@ order = client.orders.create(
     duration_sec=3600,
 )
 
-# Check order status
+# Sipariş durumunu kontrol et
 details = client.orders.get(order.id)
 ```
 
-## WebSocket for Real-Time Data
+## Gerçek Zamanlı Veriler için WebSocket
 
-In addition to the REST API, MERX provides a WebSocket endpoint at `wss://merx.exchange/ws` for real-time price updates. Price changes are pushed to connected clients as they happen, with updates arriving every 30 seconds per provider.
+REST API'ye ek olarak, MERX `wss://merx.exchange/ws` adresinde gerçek zamanlı fiyat güncellemeleri için bir WebSocket uç noktası sağlar. Fiyat değişiklikleri gerçekleştikçe bağlı istemcilere gönderilir ve güncellemeler her sağlayıcı için 30 saniyede bir gelir.
 
-The WebSocket connection supports provider filtering - subscribe only to the providers you care about, and ignore the rest.
+WebSocket bağlantısı sağlayıcı filtrelemesini destekler - yalnızca önemsediğiniz sağlayıcılara abone olun ve geri kalanını yok sayın.
 
-## Standing Orders
+## Kalıcı Siparişler
 
-Standing orders automate energy purchases based on triggers. You can set a price threshold, a schedule, or a balance condition, and the platform executes orders automatically within your specified budget.
+Kalıcı siparişler, tetikleyicilere dayalı enerji satın almalarını otomatikleştirir. Bir fiyat eşiği, bir zamanlama veya bir bakiye koşulu belirleyebilir ve platform belirtilen bütçe dahilinde siparişleri otomatik olarak yürütür.
 
-Trigger types include `price_below`, `price_above`, `schedule`, `balance_below`, and `provider_available`. Action types include `buy_resource`, `ensure_resources`, `deposit_trx`, and `notify_only`.
+Tetikleme türleri `price_below`, `price_above`, `schedule`, `balance_below` ve `provider_available` içerir. İşlem türleri `buy_resource`, `ensure_resources`, `deposit_trx` ve `notify_only` içerir.
 
-This makes MERX suitable for fully automated infrastructure management - set your rules once, and the platform handles execution.
+Bu, MERX'i tam otomatik altyapı yönetimi için uygun hale getirir - kurallarınızı bir kez belirleyin ve platform yürütmeyi işleyin.
 
-## Sirada Ne Var
+## Sırada Ne Var
 
-The MERX API is designed for developers and businesses that need reliable, cost-effective access to TRON network resources. Whether you are building a payment processor, a DeFi application, or an exchange, the API provides the building blocks to manage energy and bandwidth programmatically.
+MERX API, TRON ağ kaynaklarına güvenilir, uygun maliyetli erişim gereken geliştiriciler ve işletmeler için tasarlanmıştır. Bir ödeme işlemcisi, bir DeFi uygulaması veya bir exchange oluşturuyor olsanız da, API enerji ve bandwidth'i programlı olarak yönetmek için yapı taşları sağlar.
 
-Tam API dokumantasyonu su adreste mevcuttur: [merx.exchange/docs](https://merx.exchange/docs). The JavaScript SDK is on [GitHub](https://github.com/Hovsteder/merx-sdk-js) and [npm](https://www.npmjs.com/package/merx-sdk). The Python SDK is on [PyPI](https://pypi.org/project/merx-sdk/).
+Tam API belgeleri [merx.exchange/docs](https://merx.exchange/docs) adresinde mevcuttur. JavaScript SDK [GitHub](https://github.com/Hovsteder/merx-sdk-js) ve [npm](https://www.npmjs.com/package/merx-sdk) üzerindedir. Python SDK [PyPI](https://pypi.org/project/merx-sdk/) üzerindedir.
 
 ---
 
-**Baglantilar:**
+**Bağlantılar:**
 - Platform: [merx.exchange](https://merx.exchange)
-- Dokumantasyon: [merx.exchange/docs](https://merx.exchange/docs)
+- Belgelendirme: [merx.exchange/docs](https://merx.exchange/docs)
 - JavaScript SDK: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) | [npm](https://www.npmjs.com/package/merx-sdk)
 - Python SDK: [pypi.org/project/merx-sdk](https://pypi.org/project/merx-sdk/)
 - MCP Sunucusu: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) | [npm](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Yapay Zeka ile Hemen Deneyin
+
+MERX'i Claude Desktop veya herhangi bir MCP uyumlu istemcisine ekleyin -- kurulum yok, yalnızca okunan araçlar için API anahtarı yok:
 
 ```json
 {
@@ -447,6 +448,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Yapay zeka ajanınıza sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

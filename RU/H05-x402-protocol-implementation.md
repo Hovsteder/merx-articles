@@ -1,28 +1,28 @@
-# Реализация протокола x402: счет, оплата, проверка
+# Реализация протокола x402: Счёт, Платёж, Верификация
 
-HTTP status code 402 -- "Payment Required" -- was defined in the original HTTP/1.1 specification in 1997. The spec marked it as "reserved for future use." Twenty-nine years later, the future has arrived.
+Код состояния HTTP 402 -- "Payment Required" -- был определён в исходной спецификации HTTP/1.1 в 1997 году. Спецификация отметила его как "зарезервировано для будущего использования". Двадцать девять лет спустя будущее наступило.
 
-The x402 protocol turns that reserved status code into a real payment mechanism. It enables pay-per-use commerce where payment is verified on-chain rather than through accounts, API keys, or credit cards. Any entity with a blockchain wallet -- human, bot, or autonomous agent -- can pay for a service in a single transaction without creating an account or establishing any prior relationship with the service provider.
+Протокол x402 превращает этот зарезервированный код состояния в реальный механизм платежей. Он обеспечивает оплату по мере использования, где платёж проверяется в блокчейне, а не через учётные записи, ключи API или кредитные карты. Любой объект с кошельком блокчейна -- человек, бот или автономный агент -- может оплатить услугу в одной транзакции без создания учётной записи или предварительного взаимодействия с поставщиком услуги.
 
-MERX implements x402 for TRON energy purchases. This article is a full technical guide to the implementation: invoice creation, payment with memo, TronGrid verification (including the hex vs base58 address matching problem), the x402 system user, balance crediting, and order execution. We cover every step, every edge case, and every security consideration.
+MERX реализует x402 для покупки энергии TRON. Эта статья — полное техническое руководство по реализации: создание счёта, платёж с меморандумом, верификация TronGrid (включая проблему сопоставления адресов hex и base58), системный пользователь x402, зачисление баланса и выполнение заказа. Мы охватываем каждый шаг, каждый граничный случай и каждое соображение безопасности.
 
-## The x402 Flow Overview
+## Общий обзор потока x402
 
-The protocol has five steps:
+Протокол состоит из пяти шагов:
 
 ```
-1. INVOICE   - Buyer requests a quote, server returns payment instructions
-2. PAY       - Buyer sends TRX with a memo containing the invoice ID
-3. VERIFY    - Server detects the on-chain payment and validates it
-4. CREDIT    - Server credits the x402 system account and creates ledger entries
-5. EXECUTE   - Server executes the energy order and delegates to the buyer
+1. INVOICE   - Покупатель запрашивает квоту, сервер возвращает инструкции платежа
+2. PAY       - Покупатель отправляет TRX с меморандумом, содержащим ID счёта
+3. VERIFY    - Сервер обнаруживает платёж в блокчейне и валидирует его
+4. CREDIT    - Сервер зачисляет счёт системы x402 и создаёт записи в реестр
+5. EXECUTE   - Сервер выполняет заказ энергии и делегирует её покупателю
 ```
 
-Each step is designed to be trustless. The buyer never sends funds to an unverified address. The server never executes an order without confirmed payment. The memo field ties the payment to a specific invoice, preventing cross-payment attacks.
+Каждый шаг разработан как trustless. Покупатель никогда не отправляет средства на непроверенный адрес. Сервер никогда не выполняет заказ без подтверждённого платежа. Поле меморандума связывает платёж с конкретным счётом, предотвращая атаки перекрёстных платежей.
 
-## Step 1: Invoice Creation
+## Шаг 1: Создание счёта
 
-The buyer calls the `create_paid_order` endpoint with the desired energy parameters:
+Покупатель вызывает endpoint `create_paid_order` с желаемыми параметрами энергии:
 
 ```
 POST /api/v1/orders/paid
@@ -35,7 +35,7 @@ Content-Type: application/json
 }
 ```
 
-The server calculates the cost based on current best prices across all providers and returns an invoice:
+Сервер рассчитывает стоимость на основе текущих лучших цен всех провайдеров и возвращает счёт:
 
 ```json
 {
@@ -53,15 +53,15 @@ The server calculates the cost based on current best prices across all providers
 }
 ```
 
-### Invoice Design Decisions
+### Решения проектирования счёта
 
-**5-minute expiration.** The invoice expires 5 minutes after creation. This window is long enough for the buyer to review, sign, and broadcast the payment. It is short enough to prevent stale-price exploitation -- if energy prices change significantly, the buyer should request a new invoice at the current price.
+**Срок действия 5 минут.** Счёт истекает через 5 минут после создания. Это окно достаточно длительно, чтобы покупатель мог просмотреть, подписать и трансляировать платёж. Оно достаточно короткое, чтобы предотвратить использование устаревших цен -- если цены на энергию существенно изменятся, покупатель должен запросить новый счёт по текущей цене.
 
-**Exact amount required.** The payment must match the invoice amount exactly. Not more, not less. This prevents ambiguity in matching payments to invoices. If a buyer sends 2 TRX for a 1.43 TRX invoice, the payment is rejected (the excess would create accounting complexity with no upside).
+**Точная требуемая сумма.** Платёж должен точно совпадать с суммой счёта. Не больше, не меньше. Это предотвращает неоднозначность при сопоставлении платежей со счётами. Если покупатель отправляет 2 TRX за счёт на 1.43 TRX, платёж отклоняется (избыток создал бы сложность учёта без выгоды).
 
-**Unique memo.** The memo field contains a unique identifier that ties the payment to this specific invoice. This is the critical security mechanism -- more on this below.
+**Уникальный меморандум.** Поле меморандума содержит уникальный идентификатор, который связывает платёж с этим конкретным счётом. Это критический механизм безопасности -- подробнее ниже.
 
-### Server-Side Invoice Storage
+### Хранилище счётов на сервере
 
 ```sql
 INSERT INTO x402_invoices (
@@ -87,60 +87,60 @@ INSERT INTO x402_invoices (
 );
 ```
 
-The invoice is stored with status PENDING. It will transition to PAID when verified, or EXPIRED when the TTL passes without payment.
+Счёт сохраняется со статусом PENDING. Он перейдёт в статус PAID при верификации или EXPIRED, когда TTL пройдёт без платежа.
 
-## Step 2: Payment with Memo
+## Шаг 2: Платёж с меморандумом
 
-The buyer constructs and signs a TRX transfer transaction. The critical implementation detail is the memo field.
+Покупатель конструирует и подписывает транзакцию передачи TRX. Критическая деталь реализации -- поле меморандума.
 
 ```javascript
 const tronWeb = new TronWeb({
   fullHost: 'https://api.trongrid.io'
 });
 
-// Build the base transaction
+// Построить базовую транзакцию
 const tx = await tronWeb.transactionBuilder.sendTrx(
   invoice.pay_to,       // TMerxTreasuryAddress
   invoice.amount_sun,   // 1430000
   buyerAddress           // TBuyerAddress
 );
 
-// Add the memo
+// Добавить меморандум
 const txWithMemo = await tronWeb.transactionBuilder.addUpdateData(
   tx,
   invoice.memo,         // "merx_xpay_a7f3c2d1"
   'utf8'
 );
 
-// Sign locally
+// Подписать локально
 const signedTx = await tronWeb.trx.sign(txWithMemo, privateKey);
 
-// Broadcast
+// Трансляировать
 const result = await tronWeb.trx.sendRawTransaction(signedTx);
 console.log('TX hash:', result.txid);
 ```
 
-### Why Memo, Not Amount
+### Почему меморандум, а не сумма
 
-An earlier design considered using unique amounts (e.g., 1,430,017 SUN instead of 1,430,000 SUN) to identify payments. This approach is fragile:
+Более ранний дизайн рассматривал использование уникальных сумм (например, 1,430,017 SUN вместо 1,430,000 SUN) для идентификации платежей. Этот подход хрупок:
 
-- Amount collisions are possible (two invoices might have the same price)
-- It requires the buyer to pay a non-round amount
-- It does not work when multiple invoices have identical parameters
+- Коллизии сумм возможны (два счёта могут иметь одинаковую цену)
+- Это требует от покупателя платить нестандартную сумму
+- Это не работает, когда несколько счётов имеют идентичные параметры
 
-The memo field provides an unambiguous identifier with no collision risk.
+Поле меморандума обеспечивает однозначный идентификатор без риска коллизий.
 
-### Private Key Safety
+### Безопасность приватного ключа
 
-The buyer's private key never leaves their device. The transaction is constructed, signed, and broadcast entirely on the buyer's machine. MERX never sees, requests, or has access to the buyer's private key. This is a fundamental security property of the x402 protocol.
+Приватный ключ покупателя никогда не покидает его устройство. Транзакция конструируется, подписывается и трансляируется полностью на машине покупателя. MERX никогда не видит, не запрашивает и не имеет доступа к приватному ключу покупателя. Это фундаментальное свойство безопасности протокола x402.
 
-## Step 3: TronGrid Verification
+## Шаг 3: Верификация TronGrid
 
-After the payment is broadcast, MERX must verify it on-chain. This is where the implementation gets interesting -- and where a significant technical challenge emerges.
+После трансляции платежа MERX должна её верифицировать в блокчейне. Здесь реализация становится интересной -- и возникает значительная техническая проблема.
 
-### The Monitoring Loop
+### Цикл мониторинга
 
-The MERX deposit monitor continuously watches the treasury address for incoming transactions:
+Монитор депозитов MERX постоянно отслеживает входящие транзакции на адресе казны:
 
 ```typescript
 async function monitorTreasuryForX402Payments(): Promise<void> {
@@ -157,53 +157,53 @@ async function monitorTreasuryForX402Payments(): Promise<void> {
       await processIncomingTransaction(tx);
     }
 
-    await sleep(3000); // Check every 3 seconds (one block)
+    await sleep(3000); // Проверять каждые 3 секунды (один блок)
   }
 }
 ```
 
-### The Hex vs Base58 Address Problem
+### Проблема сопоставления адресов hex и base58
 
-Here is the technical challenge that consumed more debugging time than any other part of the x402 implementation.
+Вот техническая проблема, которая потребовала больше времени отладки, чем любая другая часть реализации x402.
 
-TRON addresses exist in two formats:
+Адреса TRON существуют в двух форматах:
 
-- **Base58**: `TJRabPrwbZy45sbavfcjinPJC18kjpRTv8` (human-readable, starts with T)
-- **Hex**: `415a523b449890854c8fc460ab602df9f31fe4293f` (41-prefixed hex, used internally)
+- **Base58**: `TJRabPrwbZy45sbavfcjinPJC18kjpRTv8` (читаемый для человека, начинается с T)
+- **Hex**: `415a523b449890854c8fc460ab602df9f31fe4293f` (hex с префиксом 41, используется внутри)
 
-When you query TronGrid for transaction details, the response uses hex addresses. When your invoice stores the buyer's address and the treasury address, they are in base58. If you compare them directly, they will never match.
+Когда вы запрашиваете детали транзакции у TronGrid, ответ использует адреса в формате hex. Когда ваш счёт сохраняет адрес покупателя и адрес казны, они в формате base58. Если вы сравниваете их напрямую, они никогда не совпадут.
 
 ```typescript
-// Transaction from TronGrid API
+// Транзакция из API TronGrid
 const txData = {
   owner_address: '415a523b449890854c8fc460ab602df9f31fe4293f',  // hex
   to_address: '41e552f6487585c2b58bc2c9bb4492bc1f17132cd0',    // hex
   amount: 1430000
 };
 
-// Invoice from database
+// Счёт из базы данных
 const invoice = {
   pay_to: 'TJRabPrwbZy45sbavfcjinPJC18kjpRTv8',  // base58
   target_address: 'TBuyerAddressBase58...',         // base58
   amount_sun: 1430000
 };
 
-// Direct comparison FAILS
+// Прямое сравнение НЕ РАБОТАЕТ
 txData.to_address === invoice.pay_to  // false (hex vs base58)
 ```
 
-### The Fix: Convert Before Comparing
+### Исправление: Преобразование перед сравнением
 
-Every address comparison must convert both sides to the same format:
+Каждое сравнение адресов должно преобразовать обе стороны в один формат:
 
 ```typescript
 function normalizeAddress(address: string): string {
   if (address.startsWith('41') && address.length === 42) {
-    // Hex format -- convert to base58
+    // Формат hex -- преобразовать в base58
     return tronWeb.address.fromHex(address);
   }
   if (address.startsWith('T') && address.length === 34) {
-    // Already base58
+    // Уже base58
     return address;
   }
   throw new Error(`Invalid TRON address format: ${address}`);
@@ -214,39 +214,39 @@ function addressesMatch(a: string, b: string): boolean {
 }
 ```
 
-This normalization function is used in every address comparison throughout the x402 verification pipeline. Missing a single comparison point would create a vulnerability.
+Эта функция нормализации используется в каждом сравнении адресов во всём конвейере верификации x402. Пропуск даже одной точки сравнения создал бы уязвимость.
 
-### Full Verification Logic
+### Полная логика верификации
 
 ```typescript
 async function verifyX402Payment(tx: TronTransaction): Promise<void> {
-  // 1. Extract memo from transaction data
+  // 1. Извлечь меморандум из данных транзакции
   const memo = extractMemo(tx);
   if (!memo || !memo.startsWith('merx_xpay_')) {
-    return; // Not an x402 payment, skip
+    return; // Не платёж x402, пропустить
   }
 
-  // 2. Find matching invoice
+  // 2. Найти совпадающий счёт
   const invoice = await findInvoiceByMemo(memo);
   if (!invoice) {
     console.warn(`No invoice found for memo: ${memo}`);
     return;
   }
 
-  // 3. Check invoice status
+  // 3. Проверить статус счёта
   if (invoice.status !== 'PENDING') {
     console.warn(`Invoice ${invoice.order_id} already ${invoice.status}`);
-    return; // Prevents double-claiming
+    return; // Предотвращает двойное требование
   }
 
-  // 4. Check expiration
+  // 4. Проверить срок действия
   if (new Date() > new Date(invoice.expires_at)) {
     await markInvoiceExpired(invoice.order_id);
     console.warn(`Invoice ${invoice.order_id} expired`);
     return;
   }
 
-  // 5. Verify amount (exact match required)
+  // 5. Верифицировать сумму (требуется точное совпадение)
   if (tx.amount !== invoice.amount_sun) {
     console.warn(
       `Amount mismatch: TX=${tx.amount}, invoice=${invoice.amount_sun}`
@@ -254,20 +254,20 @@ async function verifyX402Payment(tx: TronTransaction): Promise<void> {
     return;
   }
 
-  // 6. Verify recipient (hex vs base58 safe comparison)
+  // 6. Верифицировать получателя (безопасное сравнение hex vs base58)
   if (!addressesMatch(tx.to_address, invoice.pay_to)) {
     console.warn('Recipient address mismatch');
     return;
   }
 
-  // All checks passed -- payment is valid
+  // Все проверки пройдены -- платёж валиден
   await processValidPayment(invoice, tx);
 }
 ```
 
-### Memo Extraction
+### Извлечение меморандума
 
-The memo is stored in the transaction's `raw_data.data` field as a hex-encoded string:
+Меморандум сохраняется в поле `raw_data.data` транзакции как hex-кодированная строка:
 
 ```typescript
 function extractMemo(tx: TronTransaction): string | null {
@@ -275,7 +275,7 @@ function extractMemo(tx: TronTransaction): string | null {
     const hexData = tx.raw_data?.data;
     if (!hexData) return null;
 
-    // Decode hex to UTF-8
+    // Декодировать hex в UTF-8
     const memo = Buffer.from(hexData, 'hex').toString('utf8');
     return memo;
   } catch {
@@ -284,11 +284,11 @@ function extractMemo(tx: TronTransaction): string | null {
 }
 ```
 
-## Step 4: The x402 System User
+## Шаг 4: Системный пользователь x402
 
-When an x402 payment is verified, MERX needs to credit the payment and execute the order. But x402 payments are account-less -- the buyer does not have a MERX account. How do you create ledger entries without an account?
+Когда платёж x402 верифицирован, MERX должна зачислить платёж и выполнить заказ. Но платежи x402 -- это платежи без учётных записей -- у покупателя нет учётной записи MERX. Как создавать записи в реестр без учётной записи?
 
-The solution is the x402 system user. This is a special internal account that represents all x402 transactions:
+Решение -- системный пользователь x402. Это специальная внутренняя учётная запись, которая представляет все транзакции x402:
 
 ```sql
 INSERT INTO accounts (id, email, type)
@@ -299,55 +299,55 @@ VALUES (
 );
 ```
 
-### Balance Crediting
+### Зачисление баланса
 
-When an x402 payment is verified, the system:
+Когда платёж x402 верифицирован, система:
 
-1. Credits the x402 system account (balance increases)
-2. Debits the treasury account (TRX received)
-3. Immediately debits the x402 system account (order payment)
-4. Credits the provider settlement account (payment to provider)
+1. Зачисляет счёт системного пользователя x402 (баланс увеличивается)
+2. Снимает со счёта казны (полученный TRX)
+3. Незамедлительно снимает со счёта системного пользователя x402 (платёж заказа)
+4. Зачисляет счёт расчёта провайдера (платёж провайдеру)
 
 ```sql
 BEGIN;
 
--- Credit x402 system account (payment received)
+-- Зачислить счёт системного пользователя x402 (платёж получен)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($x402_system_id, 'X402_PAYMENT', 1430000, 'CREDIT', $order_id);
 
--- Debit treasury (TRX received on-chain)
+-- Снять со счёта казны (TRX получен в блокчейне)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($treasury_id, 'X402_PAYMENT', 1430000, 'DEBIT', $order_id);
 
--- Debit x402 system account (order payment)
+-- Снять со счёта системного пользователя x402 (платёж заказа)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($x402_system_id, 'ORDER_PAYMENT', 1430000, 'DEBIT', $order_id);
 
--- Credit provider settlement (MERX owes provider)
+-- Зачислить счёт расчёта провайдера (MERX должна провайдеру)
 INSERT INTO ledger (account_id, entry_type, amount_sun, direction, reference_id)
 VALUES ($provider_settlement_id, 'ORDER_PAYMENT', 1430000, 'CREDIT', $order_id);
 
 COMMIT;
 ```
 
-The x402 system account balance should always be zero or near-zero: every credit (payment received) is immediately offset by a debit (order executed). If the balance grows, it means payments are being received but orders are not executing -- an alert condition.
+Баланс счёта системного пользователя x402 всегда должен быть нулевым или близким к нулю: каждое зачисление (полученный платёж) немедленно компенсируется снятием (выполненный заказ). Если баланс растёт, это означает, что платежи получаются, но заказы не выполняются -- это сигнал тревоги.
 
-## Step 5: Order Execution
+## Шаг 5: Выполнение заказа
 
-After the payment is credited, the order is executed through the standard MERX order pipeline:
+После зачисления платежа заказ выполняется через стандартный конвейер заказов MERX:
 
 ```typescript
 async function processValidPayment(
   invoice: X402Invoice,
   tx: TronTransaction
 ): Promise<void> {
-  // Mark invoice as PAID
+  // Отметить счёт как PAID
   await updateInvoiceStatus(invoice.order_id, 'PAID', tx.txid);
 
-  // Create ledger entries (as shown above)
+  // Создать записи в реестр (как показано выше)
   await createX402LedgerEntries(invoice, tx);
 
-  // Execute the energy order
+  // Выполнить заказ энергии
   const order = await executeOrder({
     energy_amount: invoice.energy_amount,
     duration_hours: invoice.duration_hours,
@@ -356,79 +356,79 @@ async function processValidPayment(
     reference_tx: tx.txid
   });
 
-  // Update invoice with order result
+  // Обновить счёт с результатом заказа
   await updateInvoiceWithOrder(invoice.order_id, order);
 }
 ```
 
-The order execution follows the same path as any other MERX order: best-price routing, provider selection, delegation, and on-chain verification (including the polling fix for race conditions described in our previous article).
+Выполнение заказа следует по тому же пути, что и любой другой заказ MERX: маршрутизация с лучшей ценой, выбор провайдера, делегирование и верификация в блокчейне (включая исправление race condition из нашей предыдущей статьи).
 
-## Security: Memo Verification Prevents Cross-Payment
+## Безопасность: Верификация меморандума предотвращает перекрёстные платежи
 
-The memo field is the linchpin of x402 security. Without it, a critical attack vector exists:
+Поле меморандума -- это стержень безопасности x402. Без него существует критический вектор атаки.
 
-### The Cross-Payment Attack
+### Атака перекрёстного платежа
 
-Imagine x402 without memos. Two users request invoices simultaneously:
-
-```
-Alice requests 65,000 energy for TAliceAddress. Invoice: 1.43 TRX to TMerxTreasury.
-Bob requests 65,000 energy for TBobAddress. Invoice: 1.43 TRX to TMerxTreasury.
-```
-
-Both invoices have the same amount and the same pay_to address. If Bob pays for his invoice, how does MERX know whether to delegate energy to TAliceAddress or TBobAddress? Without a memo, the payment is ambiguous.
-
-Worse: Bob could pay once and claim both invoices. Or Alice could claim Bob's payment for her own invoice.
-
-### How Memos Prevent This
+Представьте x402 без меморандумов. Два пользователя одновременно запрашивают счёта:
 
 ```
-Alice's invoice: memo = "merx_xpay_alice123"
-Bob's invoice:   memo = "merx_xpay_bob456"
-
-Alice's payment TX: 1.43 TRX to TMerxTreasury, memo = "merx_xpay_alice123"
-Bob's payment TX:   1.43 TRX to TMerxTreasury, memo = "merx_xpay_bob456"
-
-Verification:
-  Alice's TX memo matches Alice's invoice -> delegate to TAliceAddress
-  Bob's TX memo matches Bob's invoice -> delegate to TBobAddress
+Alice запрашивает 65,000 энергии для TAliceAddress. Счёт: 1.43 TRX на TMerxTreasury.
+Bob запрашивает 65,000 энергии для TBobAddress. Счёт: 1.43 TRX на TMerxTreasury.
 ```
 
-Each payment is unambiguously linked to its invoice. There is no way to cross-claim.
+Оба счёта имеют одинаковую сумму и один и тот же адрес pay_to. Если Bob платит за свой счёт, как MERX узнает, делегировать ли энергию на TAliceAddress или TBobAddress? Без меморандума платёж неоднозначен.
 
-### Additional Security Checks
+Ещё хуже: Bob мог бы заплатить один раз и потребовать оба счёта. Или Alice мог бы потребовать платёж Bob'а для своего собственного счёта.
 
-Beyond memo matching, the verification pipeline includes:
+### Как меморандумы это предотвращают
 
-**Double-payment prevention.** Once an invoice is marked PAID, subsequent payments with the same memo are rejected. The payer would need to contact support for a refund (or the system would return the funds automatically if the amount exceeds the invoice).
+```
+Счёт Alice: memo = "merx_xpay_alice123"
+Счёт Bob:   memo = "merx_xpay_bob456"
 
-**Amount exactness.** The payment must match the invoice amount precisely. This prevents partial payments (which would require complex partial-fill logic) and overpayments (which would require refund logic).
+Платёж Alice TX: 1.43 TRX на TMerxTreasury, memo = "merx_xpay_alice123"
+Платёж Bob TX:   1.43 TRX на TMerxTreasury, memo = "merx_xpay_bob456"
 
-**Expiration enforcement.** Payments received after the invoice expires are not processed. This prevents stale-price exploitation where a buyer requests an invoice during a low-price period, waits for prices to rise, and then pays the old invoice.
+Верификация:
+  Меморандум платежа Alice совпадает со счётом Alice -> делегировать на TAliceAddress
+  Меморандум платежа Bob совпадает со счётом Bob -> делегировать на TBobAddress
+```
 
-**Address verification.** The payment must go to the correct treasury address. If a user somehow pays a different address (copy-paste error, phishing), the payment will not be detected by the monitor.
+Каждый платёж однозначно связан со своим счётом. Нет способа потребовать перекрёстно.
+
+### Дополнительные проверки безопасности
+
+Помимо сопоставления меморандумов, конвейер верификации включает:
+
+**Предотвращение двойного платежа.** Когда счёт отмечен как PAID, последующие платежи с тем же меморандумом отклоняются. Плательщику пришлось бы обратиться в поддержку для возврата (или система автоматически вернула бы средства, если сумма превышает счёт).
+
+**Точность суммы.** Платёж должен точно совпадать с суммой счёта. Это предотвращает частичные платежи (которые требовали бы сложной логики частичного выполнения) и переплату (которая требовала бы логики возврата).
+
+**Проверка срока действия.** Платежи, полученные после истечения срока действия счёта, не обрабатываются. Это предотвращает использование устаревших цен, где покупатель запрашивает счёт в период низких цен, ждёт роста цен и затем платит за старый счёт.
+
+**Верификация адреса.** Платёж должен поступить на правильный адрес казны. Если пользователь каким-то образом платит на другой адрес (ошибка копирования-вставки, фишинг), платёж не будет обнаружен монитором.
 
 ## Обработка ошибок
 
-### Payment Without Invoice
+### Платёж без счёта
 
-If a TRX transfer arrives at the treasury address with a memo that does not match any invoice (typo, expired invoice, test transaction), the payment is logged but not processed. The funds remain in the treasury. In a production system, this would trigger a support alert for manual review and potential refund.
+Если передача TRX поступит на адрес казны с меморандумом, который не совпадает ни с одним счётом (опечатка, истёкший счёт, тестовая транзакция), платёж логируется, но не обрабатывается. Средства остаются в казне. В рабочей системе это вызвало бы сигнал тревоги поддержки для ручного рассмотрения и потенциального возврата.
 
-### Provider Failure After Payment
+### Сбой провайдера после платежа
 
-If the energy provider fails to delegate after a verified payment:
+Если провайдер энергии не удаётся делегировать после верифицированного платежа:
 
 ```typescript
 try {
   const order = await executeOrder(invoice);
 } catch (error) {
-  // Order failed -- refund the x402 system account
+  // Заказ не выполнен -- вернуть счёт системного пользователя x402
   await createRefundLedgerEntries(invoice);
 
-  // Mark invoice as REFUND_REQUIRED
+  // Отметить счёт как REFUND_REQUIRED
   await updateInvoiceStatus(invoice.order_id, 'REFUND_REQUIRED');
 
-  // Alert ops team for manual TRX refund to the payer's address
+  // Оповестить команду ops для ручного возврата TRX на адрес плательщика
   await alertOps({
     type: 'X402_REFUND_REQUIRED',
     invoice: invoice.order_id,
@@ -438,32 +438,33 @@ try {
 }
 ```
 
-The refund creates new ledger entries (never modifies existing ones) and flags the invoice for manual refund processing.
+Возврат создаёт новые записи в реестр (никогда не модифицирует существующие) и флагирует счёт для ручной обработки возврата.
 
-### Network Congestion
+### Сетевая перегруженность
 
-During high network congestion, the gap between payment broadcast and payment confirmation can extend beyond the 5-minute invoice window. The system handles this by checking the transaction timestamp (when it was broadcast) rather than the confirmation timestamp (when it was included in a block). If the transaction was broadcast before the invoice expired, it is accepted even if confirmation comes after expiration.
+Во время высокой нагрузки на сеть промежуток между трансляцией платежа и его подтверждением может выходить за границы 5-минутного окна счёта. Система обрабатывает это, проверяя временную метку транзакции (когда она была трансляирована) вместо временной метки подтверждения (когда она была включена в блок). Если транзакция была трансляирована до истечения срока действия счёта, она принимается, даже если подтверждение приходит после истечения.
 
-## Итоги
+## Резюме
 
-The x402 implementation in MERX demonstrates that trustless, account-free payments are practical today. The key design decisions:
+Реализация x402 в MERX демонстрирует, что trustless платежи без учётных записей практичны уже сегодня. Ключевые решения проектирования:
 
-1. **Invoice with unique memo** -- unambiguous payment-to-order linking
-2. **Exact amount matching** -- eliminates partial/over-payment complexity
-3. **5-minute expiration** -- prevents stale-price exploitation
-4. **Hex-to-base58 normalization** -- solves the TronGrid address format problem
-5. **x402 system user** -- enables double-entry accounting without buyer accounts
-6. **Immutable ledger entries** -- full audit trail for every x402 transaction
+1. **Счёт с уникальным меморандумом** -- однозначное связывание платёжа с заказом
+2. **Точное сопоставление сумм** -- устраняет сложность частичных и чрезмерных платежей
+3. **Срок действия 5 минут** -- предотвращает использование устаревших цен
+4. **Нормализация hex в base58** -- решает проблему формата адреса TronGrid
+5. **Системный пользователь x402** -- обеспечивает двойную бухгалтерию без учётных записей покупателей
+6. **Неизменяемые записи реестра** -- полный аудит для каждой транзакции x402
 
-The protocol turns HTTP 402 from a 29-year-old placeholder into a working payment mechanism. For AI agents that cannot create accounts or manage API keys, x402 makes TRON energy accessible through a single on-chain transaction.
+Протокол превращает HTTP 402 из 29-летнего placeholder'а в работающий механизм платежа. Для AI агентов, которые не могут создавать учётные записи или управлять ключами API, x402 делает энергию TRON доступной через одну транзакцию в блокчейне.
 
-Platform: [https://merx.exchange](https://merx.exchange)
-Documentation: [https://merx.exchange/docs](https://merx.exchange/docs)
-MCP server: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+Платформа: [https://merx.exchange](https://merx.exchange)
+Документация: [https://merx.exchange/docs](https://merx.exchange/docs)
+MCP сервер: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент -- нулевая установка, ключ API не требуется для инструментов только для чтения:
 
 ```json
 {
@@ -475,6 +476,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите у своего AI агента: "Какая сейчас самая дешёвая энергия TRON?" и получите живые цены от всех подключённых провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,206 +1,206 @@
-# Todos los servidores MCP de TRON comparados: MERX, Sun Protocol, Netts, TronLink, PowerSun
+# Cada Servidor TRON MCP Comparado: MERX, Sun Protocol, Netts, TronLink, PowerSun
 
-The Model Context Protocol is becoming the standard interface between AI agents and external services. For TRON blockchain operations, several MCP servers have emerged, each with different capabilities, architectures, and trade-offs. This article provides a factual, feature-level comparison of every known TRON MCP server as of early 2026.
+El Protocolo de Contexto de Modelo se está convirtiendo en la interfaz estándar entre agentes de IA y servicios externos. Para operaciones de blockchain TRON, han surgido varios servidores MCP, cada uno con diferentes capacidades, arquitecturas e intercambios. Este artículo proporciona una comparación factual a nivel de características de todos los servidores TRON MCP conocidos a principios de 2026.
 
-The goal is not to declare a winner. It is to give you enough information to choose the right server for your specific caso de uso.
+El objetivo no es declarar un ganador. Es proporcionarte suficiente información para elegir el servidor correcto para tu caso de uso específico.
 
-## The Servers
+## Los Servidores
 
-### MERX MCP Server
+### Servidor MERX MCP
 
-**Repository**: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+**Repositorio**: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-MERX is an energy aggregator that routes orders across seven providers (TronSave, Feee, itrx, CatFee, Netts, SoHu, PowerSun). Its MCP server exposes the full MERX API plus direct TRON blockchain operations. It supports both hosted SSE and local stdio deployment.
+MERX es un agregador de energía que enruta órdenes a través de siete proveedores (TronSave, Feee, itrx, CatFee, Netts, SoHu, PowerSun). Su servidor MCP expone la API completa de MERX más operaciones directas de blockchain TRON. Soporta tanto despliegue SSE alojado como despliegue local por stdio.
 
-### Sun Protocol MCP Server
+### Servidor Sun Protocol MCP
 
-Sun Protocol provides an MCP server focused on DeFi operations within the TRON ecosystem, particularly SunSwap interactions and token management. It targets developers building DEX-integrated applications.
+Sun Protocol proporciona un servidor MCP enfocado en operaciones DeFi dentro del ecosistema TRON, particularmente interacciones con SunSwap y gestión de tokens. Está dirigido a desarrolladores que construyen aplicaciones integradas con DEX.
 
-### Netts MCP Server
+### Servidor Netts MCP
 
-Netts is an proveedor de energia that has released its own MCP server. The server focuses on alquiler de energia operations through the Netts platform specifically, without cross-provider aggregation.
+Netts es un proveedor de energía que ha lanzado su propio servidor MCP. El servidor se enfoca en operaciones de alquiler de energía a través de la plataforma Netts específicamente, sin agregación entre proveedores.
 
-### TronLink MCP Server
+### Servidor TronLink MCP
 
-TronLink, the dominant TRON wallet browser extension, has an MCP server focused on wallet operations: verificacion de saldos, transfers, and basic contract interactions. It leverages TronLink's existing infrastructure and user base.
+TronLink, la extensión de navegador de cartera TRON dominante, tiene un servidor MCP enfocado en operaciones de cartera: verificación de saldos, transferencias e interacciones básicas con contratos. Aprovecha la infraestructura existente de TronLink y su base de usuarios.
 
-### PowerSun MCP Server
+### Servidor PowerSun MCP
 
-PowerSun operates as both an proveedor de energia and a staking service. Its MCP server provides access to delegacion de energia, staking operations, and gestion de recursos through the PowerSun platform.
+PowerSun opera tanto como proveedor de energía como servicio de staking. Su servidor MCP proporciona acceso a delegación de energía, operaciones de staking y gestión de recursos a través de la plataforma PowerSun.
 
-## Feature Matrix
+## Matriz de Características
 
-### Tool Count and Coverage
+### Conteo de Herramientas y Cobertura
 
-| Server | Total Tools | Energy Market | Wallet Ops | DEX Trading | Automation | Chain Data | x402 |
+| Servidor | Herramientas Totales | Mercado de Energía | Ops de Cartera | Comercio DEX | Automatización | Datos de Cadena | x402 |
 |---|---|---|---|---|---|---|---|
-| MERX | 52 | 13 | 8 | 4 | 6 | 10 | Yes |
+| MERX | 52 | 13 | 8 | 4 | 6 | 10 | Sí |
 | Sun Protocol | ~18 | 2 | 5 | 8 | 0 | 3 | No |
 | Netts | ~12 | 6 | 3 | 0 | 2 | 1 | No |
 | TronLink | ~15 | 0 | 9 | 2 | 0 | 4 | No |
 | PowerSun | ~10 | 4 | 3 | 0 | 1 | 2 | No |
 
-MERX has the highest tool count at 52, covering the widest range of operations. Sun Protocol focuses on DEX trading with 8 DEX-related tools. TronLink leads in wallet operations. Netts and PowerSun are narrower, focusing on their respective energy platforms.
+MERX tiene el mayor conteo de herramientas con 52, cubriendo el rango más amplio de operaciones. Sun Protocol se enfoca en comercio DEX con 8 herramientas relacionadas con DEX. TronLink lidera en operaciones de cartera. Netts y PowerSun son más limitados, enfocándose en sus respectivas plataformas de energía.
 
-### Prompts and Resources
+### Prompts y Recursos
 
-| Server | Prompts | Resources | Full MCP Protocol |
+| Servidor | Prompts | Recursos | Protocolo MCP Completo |
 |---|---|---|---|
-| MERX | 30 | 21 | Yes (all 3 primitives) |
-| Sun Protocol | 0 | 3 | Partial (tools + resources) |
-| Netts | 0 | 0 | Partial (tools only) |
-| TronLink | 5 | 2 | Partial (tools + some prompts) |
-| PowerSun | 0 | 1 | Partial (tools + resources) |
+| MERX | 30 | 21 | Sí (los 3 primitivos) |
+| Sun Protocol | 0 | 3 | Parcial (herramientas + recursos) |
+| Netts | 0 | 0 | Parcial (solo herramientas) |
+| TronLink | 5 | 2 | Parcial (herramientas + algunos prompts) |
+| PowerSun | 0 | 1 | Parcial (herramientas + recursos) |
 
-The MCP protocol defines three primitives: tools, prompts, and resources. Most servers implement only tools. MERX is the only server that implements all three, with 30 prompts for guided workflows and 21 resources for structured data access.
+El protocolo MCP define tres primitivos: herramientas, prompts y recursos. La mayoría de servidores implementan solo herramientas. MERX es el único servidor que implementa los tres, con 30 prompts para flujos de trabajo guiados y 21 recursos para acceso a datos estructurados.
 
-Prompts matter because they give the AI model step-by-step guidance for complex operations. Without prompts, the model must figure out multi-tool workflows from scratch. Resources provide passive data access without requiring tool calls, reducing latency and token consumption.
+Los prompts importan porque dan al modelo de IA orientación paso a paso para operaciones complejas. Sin prompts, el modelo debe descifrar flujos de trabajo multi-herramienta desde cero. Los recursos proporcionan acceso a datos pasivo sin requerir llamadas a herramientas, reduciendo latencia y consumo de tokens.
 
-### Transport Support
+### Soporte de Transporte
 
-| Server | stdio | SSE (Hosted) | Streamable HTTP | Docker |
+| Servidor | stdio | SSE (Alojado) | HTTP Streamable | Docker |
 |---|---|---|---|---|
-| MERX | Yes | Yes | Yes | Yes |
-| Sun Protocol | Yes | No | No | No |
-| Netts | Yes | Yes | No | Yes |
-| TronLink | Yes | No | No | No |
-| PowerSun | Yes | No | No | No |
+| MERX | Sí | Sí | Sí | Sí |
+| Sun Protocol | Sí | No | No | No |
+| Netts | Sí | Sí | No | Sí |
+| TronLink | Sí | No | No | No |
+| PowerSun | Sí | No | No | No |
 
-Transport determines how an AI agent connects to the MCP server.
+El transporte determina cómo un agente de IA se conecta al servidor MCP.
 
-**stdio** requires the server to run locally on the same machine as the agent. The agent spawns the server process and communicates through standard input/output. This is the simplest deployment but requires local installation.
+**stdio** requiere que el servidor se ejecute localmente en la misma máquina que el agente. El agente genera el proceso del servidor y se comunica a través de entrada/salida estándar. Este es el despliegue más simple pero requiere instalación local.
 
-**SSE (Server-Sent Events)** allows hosted deployment. The agent connects to a URL, and the server pushes updates over HTTP. This eliminates local installation and enables remote access.
+**SSE (Eventos Enviados por Servidor)** permite despliegue alojado. El agente se conecta a una URL, y el servidor envía actualizaciones por HTTP. Esto elimina la instalación local y habilita acceso remoto.
 
-**Streamable HTTP** is the newest transport, supporting bidirectional communication with session management. It is more robust than SSE for long-running connections.
+**HTTP Streamable** es el transporte más nuevo, soportando comunicación bidireccional con gestión de sesión. Es más robusto que SSE para conexiones de larga duración.
 
-MERX supports all three transports. Most other servers support only stdio.
+MERX soporta los tres transportes. La mayoría de otros servidores soportan solo stdio.
 
-### Energy Market Coverage
+### Cobertura del Mercado de Energía
 
-| Server | Providers Queried | Best-Price Routing | Price Comparison | Standing Orders | Price History |
+| Servidor | Proveedores Consultados | Enrutamiento de Mejor Precio | Comparación de Precios | Órdenes Permanentes | Historial de Precios |
 |---|---|---|---|---|---|
-| MERX | 7 | Yes | Yes | Yes | Yes |
+| MERX | 7 | Sí | Sí | Sí | Sí |
 | Sun Protocol | 0 | No | No | No | No |
-| Netts | 1 (Netts only) | No | No | Limited | No |
+| Netts | 1 (solo Netts) | No | No | Limitado | No |
 | TronLink | 0 | No | No | No | No |
-| PowerSun | 1 (PowerSun only) | No | No | No | No |
+| PowerSun | 1 (solo PowerSun) | No | No | No | No |
 
-This is where the architectural difference between aggregators and individual providers becomes most visible. MERX queries seven providers and routes to the cheapest. Netts and PowerSun only access their own pricing. Sun Protocol and TronLink do not offer mercado de energia tools at all.
+Aquí es donde la diferencia arquitectónica entre agregadores y proveedores individuales se vuelve más visible. MERX consulta siete proveedores y enruta al más barato. Netts y PowerSun solo acceden a su propia fijación de precios. Sun Protocol y TronLink no ofrecen herramientas de mercado de energía en absoluto.
 
-For agents that need to buy energy, MERX is the only option that guarantees best-price execution across the market. Netts and PowerSun lock you into a single provider's pricing.
+Para agentes que necesitan comprar energía, MERX es la única opción que garantiza ejecución al mejor precio en el mercado. Netts y PowerSun te encierran en la fijación de precios de un único proveedor.
 
-### DEX and Token Operations
+### Operaciones DEX y Tokens
 
-| Server | Swap Execution | Quote Simulation | Multi-hop Routing | Token Approval | Liquidity Ops |
+| Servidor | Ejecución de Swap | Simulación de Cotización | Enrutamiento Multi-salto | Aprobación de Token | Ops de Liquidez |
 |---|---|---|---|---|---|
-| MERX | Yes | Yes (exact) | Yes | Yes | No |
-| Sun Protocol | Yes | Yes | Yes | Yes | Yes |
+| MERX | Sí | Sí (exacto) | Sí | Sí | No |
+| Sun Protocol | Sí | Sí | Sí | Sí | Sí |
 | Netts | No | No | No | No | No |
-| TronLink | Limited | No | No | Yes | No |
+| TronLink | Limitado | No | No | Sí | No |
 | PowerSun | No | No | No | No | No |
 
-Sun Protocol leads in DEX capabilities, with comprehensive SunSwap integration including liquidity management. MERX provides swap execution with exact energy simulation -- the swap cost is pre-calculated using `triggerConstantContract`, and energy is automatically purchased before execution if needed. This "resource-aware trading" is unique to MERX.
+Sun Protocol lidera en capacidades DEX, con integración integral de SunSwap incluyendo gestión de liquidez. MERX proporciona ejecución de swap con simulación exacta de energía -- el costo del swap se precalcula usando `triggerConstantContract`, y la energía se compra automáticamente antes de la ejecución si es necesario. Este "comercio consciente de recursos" es único en MERX.
 
-### Unique Capabilities
+### Capacidades Únicas
 
-Each server has features that others lack:
+Cada servidor tiene características que otros carecen:
 
 **MERX**:
-- Resource-aware transactions (auto-buy energy before any contract call)
-- x402 pay-per-use (no account required)
-- Cross-provider price analysis and historical data
-- Energy cost estimation for any contract call
-- Intent execution (natural-language to multi-step transaction plan)
-- Delegation monitoring with alerts
-- 30 guided prompts for complex workflows
+- Transacciones conscientes de recursos (comprar energía automáticamente antes de cualquier llamada de contrato)
+- x402 de pago por uso (sin cuenta requerida)
+- Análisis de precios entre proveedores e histórico de datos
+- Estimación de costo de energía para cualquier llamada de contrato
+- Ejecución de intención (lenguaje natural a plan de transacción multi-paso)
+- Monitoreo de delegación con alertas
+- 30 prompts guiados para flujos de trabajo complejos
 
 **Sun Protocol**:
-- Deep SunSwap integration with liquidity pool management
-- Token pair analysis and price impact calculation
-- Farming position management
+- Integración profunda de SunSwap con gestión de pool de liquidez
+- Análisis de pares de tokens y cálculo de impacto de precio
+- Gestión de posición de farming
 
 **Netts**:
-- Direct integration with Netts staking pools
-- Bulk order management for enterprise clients
+- Integración directa con pools de staking de Netts
+- Gestión de órdenes por lotes para clientes empresariales
 
 **TronLink**:
-- Browser wallet integration for user-facing applications
-- Transaction signing through TronLink extension
-- Familiar interface for existing TronLink users
+- Integración de cartera de navegador para aplicaciones orientadas al usuario
+- Firma de transacciones a través de la extensión TronLink
+- Interfaz familiar para usuarios existentes de TronLink
 
 **PowerSun**:
-- Direct staking operations (freeze/unfreeze TRX)
-- Resource recovery tracking (when frozen TRX becomes available)
+- Operaciones de staking directo (congelar/descongelar TRX)
+- Seguimiento de recuperación de recursos (cuándo TRX congelado se vuelve disponible)
 
-## Authentication Requirements
+## Requisitos de Autenticación
 
-| Server | API Key | Private Key | TronGrid Key | Account Required |
+| Servidor | Clave API | Clave Privada | Clave TronGrid | Cuenta Requerida |
 |---|---|---|---|---|
-| MERX | Optional | Optional | Not needed | No (x402 available) |
-| Sun Protocol | Not needed | Required | Required | No |
-| Netts | Required | Not needed | Not needed | Yes |
-| TronLink | Not needed | Via extension | Not needed | TronLink account |
-| PowerSun | Required | Not needed | Not needed | Yes |
+| MERX | Opcional | Opcional | No necesaria | No (x402 disponible) |
+| Sun Protocol | No necesaria | Requerida | Requerida | No |
+| Netts | Requerida | No necesaria | No necesaria | Sí |
+| TronLink | No necesaria | Vía extensión | No necesaria | Cuenta TronLink |
+| PowerSun | Requerida | No necesaria | No necesaria | Sí |
 
-MERX is unique in not requiring a TronGrid clave de API. All blockchain interactions route through the MERX API, which manages its own TronGrid connections with respaldo and limite de velocidading. This simplifies agent deployment -- one credential (MERX clave de API) replaces multiple.
+MERX es único al no requerir una clave API de TronGrid. Todas las interacciones de blockchain se enrutan a través de la API de MERX, que gestiona sus propias conexiones de TronGrid con failover y limitación de velocidad. Esto simplifica el despliegue de agentes -- una credencial (clave API de MERX) reemplaza múltiples.
 
-Sun Protocol requires a TronGrid clave de API and the user's clave privada for transaction signing. The clave privada is managed locally by the MCP server process, not transmitted to any external service.
+Sun Protocol requiere una clave API de TronGrid y la clave privada del usuario para firma de transacciones. La clave privada es gestionada localmente por el proceso del servidor MCP, no transmitida a ningún servicio externo.
 
-For MERX, authentication is optional when using x402 pay-per-use. An agent can purchase energy by paying an invoice en cadena without ever creating a MERX account or obtaining an clave de API.
+Para MERX, la autenticación es opcional cuando se usa x402 de pago por uso. Un agente puede comprar energía pagando una factura en cadena sin crear nunca una cuenta de MERX u obtener una clave API.
 
-## Performance and Reliability
+## Rendimiento y Confiabilidad
 
-### Response Times
+### Tiempos de Respuesta
 
-Response times depend heavily on whether the server runs locally (stdio) or remotely (SSE/HTTP).
+Los tiempos de respuesta dependen fuertemente de si el servidor se ejecuta localmente (stdio) o remotamente (SSE/HTTP).
 
-For locally deployed servers, tiempo de respuestas are dominated by the upstream API calls:
-- MERX: 100-300ms for price queries, 500-2000ms for ejecucion de ordenes
-- Sun Protocol: 200-500ms for swap quotes (TronGrid dependent)
-- Netts: 150-400ms for energy operations
-- TronLink: 100-200ms for verificacion de saldos
-- PowerSun: 200-400ms for delegation operations
+Para servidores desplegados localmente, los tiempos de respuesta están dominados por las llamadas API upstream:
+- MERX: 100-300ms para consultas de precios, 500-2000ms para ejecución de órdenes
+- Sun Protocol: 200-500ms para cotizaciones de swap (dependiente de TronGrid)
+- Netts: 150-400ms para operaciones de energía
+- TronLink: 100-200ms para verificación de saldos
+- PowerSun: 200-400ms para operaciones de delegación
 
-For hosted MERX SSE, add 50-100ms of network latency.
+Para MERX SSE alojado, añade 50-100ms de latencia de red.
 
-### Error Handling
+### Manejo de Errores
 
-| Server | Structured Errors | Retry Logic | Fallback on Failure |
+| Servidor | Errores Estructurados | Lógica de Reintento | Fallback en Fallo |
 |---|---|---|---|
-| MERX | Yes (code + message) | Yes | Yes (provider respaldo) |
-| Sun Protocol | Partial | No | No |
-| Netts | Yes | Limited | No (single provider) |
-| TronLink | Partial | No | No |
-| PowerSun | Limited | No | No |
+| MERX | Sí (código + mensaje) | Sí | Sí (failover de proveedor) |
+| Sun Protocol | Parcial | No | No |
+| Netts | Sí | Limitado | No (proveedor único) |
+| TronLink | Parcial | No | No |
+| PowerSun | Limitado | No | No |
 
-MERX returns errors in a consistent format with codigo de errors and descriptive messages. If a provider fails, the system automatically retries with the next-cheapest provider. This respaldo is invisible to the agent.
+MERX devuelve errores en un formato consistente con códigos de error y mensajes descriptivos. Si un proveedor falla, el sistema automáticamente reintenta con el siguiente proveedor más barato. Este failover es invisible para el agente.
 
-## Choosing the Right Server
+## Elegir el Servidor Correcto
 
-### For Energy Purchasing
+### Para Compra de Energía
 
-MERX is the clear choice. It is the only server that aggregates across multiple providers, offers enrutamiento al mejor precio, and supports orden permanentes and delegation monitoring. If your agent needs to buy energy, MERX provides the broadest coverage and lowest prices.
+MERX es la opción clara. Es el único servidor que agrega múltiples proveedores, ofrece enrutamiento de mejor precio, y soporta órdenes permanentes y monitoreo de delegación. Si tu agente necesita comprar energía, MERX proporciona la cobertura más amplia y los precios más bajos.
 
-### For DEX Trading
+### Para Comercio DEX
 
-Sun Protocol has the deepest DEX integration, including liquidity management and farming. However, MERX offers resource-aware swaps -- automatically purchasing energy before executing a swap to minimize costs. If you trade on SunSwap and want cost-optimized execution, MERX adds value. If you need liquidity pool management, Sun Protocol is the better fit.
+Sun Protocol tiene la integración DEX más profunda, incluyendo gestión de liquidez y farming. Sin embargo, MERX ofrece swaps conscientes de recursos -- comprando automáticamente energía antes de ejecutar un swap para minimizar costos. Si comercias en SunSwap y quieres ejecución optimizada para costos, MERX añade valor. Si necesitas gestión de pool de liquidez, Sun Protocol es el mejor ajuste.
 
-### For Wallet Operations
+### Para Operaciones de Cartera
 
-TronLink is strong for user-facing applications where browser wallet integration matters. For server-side operations (bots, backend services), MERX or Sun Protocol provide more comprehensive wallet tooling without browser dependencies.
+TronLink es fuerte para aplicaciones orientadas al usuario donde la integración de cartera de navegador importa. Para operaciones del lado del servidor (bots, servicios de backend), MERX o Sun Protocol proporcionan herramientas de cartera más completas sin dependencias de navegador.
 
-### For Maximum Coverage
+### Para Cobertura Máxima
 
-MERX covers the most ground with 55 tools across energy, wallets, DEX, automation, and chain data. If you want a single MCP server that handles the widest range of TRON operations, MERX is the most complete option.
+MERX cubre más terreno con 55 herramientas en energía, carteras, DEX, automatización y datos de cadena. Si quieres un único servidor MCP que maneje el rango más amplio de operaciones TRON, MERX es la opción más completa.
 
-### For Specific Providers
+### Para Proveedores Específicos
 
-If you have an existing relationship with Netts or PowerSun and want MCP access specifically to their platform, their respective servers provide direct integration without the aggregation layer.
+Si tienes una relación existente con Netts o PowerSun y quieres acceso MCP específicamente a su plataforma, sus respectivos servidores proporcionan integración directa sin la capa de agregación.
 
-## Combining Servers
+## Combinando Servidores
 
-The MCP protocol is designed for composability. An agent can connect to multiple MCP servers simultaneously. A practical configuration:
+El protocolo MCP está diseñado para composabilidad. Un agente puede conectarse a múltiples servidores MCP simultáneamente. Una configuración práctica:
 
 ```json
 {
@@ -217,21 +217,22 @@ The MCP protocol is designed for composability. An agent can connect to multiple
 }
 ```
 
-This gives the agent access to MERX for energy operations and resource-aware transactions, plus Sun Protocol for advanced DeFi operations. The agent selects the appropriate server for each task.
+Esto le da al agente acceso a MERX para operaciones de energía y transacciones conscientes de recursos, más Sun Protocol para operaciones DeFi avanzadas. El agente selecciona el servidor apropiado para cada tarea.
 
-## Conclusion
+## Conclusión
 
-The TRON MCP server landscape is still young. MERX leads in breadth (55 tools, 30 prompts, 21 resources) and mercado de energia coverage (7 providers). Sun Protocol leads in DEX depth. TronLink provides familiar wallet integration. Netts and PowerSun serve their respective platforms.
+El panorama del servidor TRON MCP es aún joven. MERX lidera en amplitud (55 herramientas, 30 prompts, 21 recursos) y cobertura del mercado de energía (7 proveedores). Sun Protocol lidera en profundidad DEX. TronLink proporciona integración de cartera familiar. Netts y PowerSun sirven a sus respectivas plataformas.
 
-For most caso de usos -- especially those involving energy optimization, reduccion de costos, and general TRON operations -- MERX provides the most complete single-server solution. For specialized DeFi workflows, combining MERX with Sun Protocol covers nearly every TRON operation an agent might need.
+Para la mayoría de casos de uso -- especialmente aquellos que involucran optimización de energía, reducción de costos y operaciones generales de TRON -- MERX proporciona la solución de servidor único más completa. Para flujos de trabajo DeFi especializados, combinar MERX con Sun Protocol cubre casi cualquier operación TRON que un agente podría necesitar.
 
-MERX Servidor MCP: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+Servidor MERX MCP: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 Plataforma: [https://merx.exchange](https://merx.exchange)
-Documentacion: [https://merx.exchange/docs](https://merx.exchange/docs)
+Documentación: [https://merx.exchange/docs](https://merx.exchange/docs)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -243,6 +244,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación MCP completa: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

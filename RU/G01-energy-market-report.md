@@ -1,112 +1,112 @@
-# Отчет о рынке energy TRON: цены, тренды и провайдеры
+# Отчет рынка энергии TRON: цены, тренды и поставщики
 
-The TRON energy market has matured from a handful of ad hoc services into a structured ecosystem of providers, aggregators, and sophisticated pricing mechanisms. For anyone building on TRON or managing transaction costs, understanding this market is no longer optional -- it directly impacts operational costs and architectural decisions.
+Рынок энергии TRON эволюционировал от горстки ad hoc сервисов в структурированную экосистему поставщиков, агрегаторов и сложных механизмов ценообразования. Для всех, кто разрабатывает на TRON или управляет затратами на транзакции, понимание этого рынка больше не опционально -- оно прямо влияет на операционные затраты и архитектурные решения.
 
-This report provides a comprehensive overview of the current TRON energy market: who the providers are, how prices are structured, what volumes look like, and where the market is heading.
+Этот отчет предоставляет комплексный обзор текущего рынка энергии TRON: кто являются поставщики, как структурируются цены, каковы объемы и куда движется рынок.
 
-## Market Overview
+## Обзор рынка
 
-TRON's energy system is fundamental to how the network operates. Every smart contract interaction -- USDT transfers, DEX swaps, NFT mints, DeFi operations -- consumes energy. Without energy, the network burns TRX from the transaction sender's wallet to cover computational costs. Energy rental emerged as a cost optimization layer: instead of burning TRX at full network rates, users can rent energy from providers who have acquired it through TRX staking.
+Система энергии TRON является фундаментальной для работы сети. Каждое взаимодействие со смарт-контрактом -- передачи USDT, своп на DEX, создание NFT, операции DeFi -- потребляет энергию. Без энергии сеть сжигает TRX с кошелька отправителя транзакции для покрытия вычислительных затрат. Аренда энергии появилась как слой оптимизации затрат: вместо сжигания TRX по полным ставкам сети, пользователи могут арендовать энергию у поставщиков, которые получили её через стейкинг TRX.
 
-The market exists because the cost difference is substantial. Burning TRX for energy costs roughly 0.21 TRX per 1,000 energy units at current network rates. Renting energy from providers costs 0.022-0.080 TRX per 1,000 energy units -- a 60-90% discount depending on the provider and market conditions.
+Рынок существует потому, что разница в стоимости существенна. Сжигание TRX для энергии стоит примерно 0,21 TRX за 1000 единиц энергии при текущих ставках сети. Аренда энергии у поставщиков стоит 0,022-0,080 TRX за 1000 единиц энергии -- скидка 60-90% в зависимости от поставщика и условий рынка.
 
-This price differential has created a multi-million-dollar market with seven significant providers competing for order flow.
+Эта ценовая разница создала рынок стоимостью в несколько миллионов долларов с семью крупными поставщиками, конкурирующими за поток заказов.
 
-## Provider Landscape
+## Ландшафт поставщиков
 
 ### TronSave
 
-**Model:** Peer-to-peer marketplace
-**Strengths:** Large order capacity, established reputation
-**Pricing:** Variable, set by individual sellers
-**Duration options:** Flexible
+**Модель:** P2P маркетплейс
+**Сильные стороны:** Большая емкость заказов, устоявшаяся репутация
+**Ценообразование:** Переменное, устанавливается отдельными продавцами
+**Варианты длительности:** Гибкие
 
-TronSave connects energy stakers directly with buyers. The P2P model means prices are determined by supply and demand among marketplace participants. For very large orders (millions of energy units), TronSave's seller base can provide competitive bulk rates because large stakers are incentivized to move volume.
+TronSave соединяет стейкеров энергии напрямую с покупателями. P2P модель означает, что цены определяются спросом и предложением среди участников маркетплейса. Для очень больших заказов (миллионы единиц энергии) база продавцов TronSave может предложить конкурентные оптовые ставки, потому что крупные стейкеры заинтересованы в перемещении объемов.
 
 ### PowerSun
 
-**Model:** Fixed-price provider
-**Strengths:** Price predictability, 10 duration tiers
-**Pricing:** Fixed rates per duration tier
-**Duration options:** 5min, 10min, 30min, 1h, 3h, 6h, 12h, 1d, 3d, 14d
+**Модель:** Поставщик с фиксированной ценой
+**Сильные стороны:** Предсказуемость цены, 10 уровней длительности
+**Ценообразование:** Фиксированные ставки за уровень длительности
+**Варианты длительности:** 5мин, 10мин, 30мин, 1ч, 3ч, 6ч, 12ч, 1д, 3д, 14д
 
-PowerSun offers the most structured pricing in the market. Fixed rates eliminate price uncertainty -- you know exactly what you will pay before ordering. The ten duration tiers cover every use case from single transactions to multi-week operations.
+PowerSun предлагает наиболее структурированное ценообразование на рынке. Фиксированные ставки исключают ценовую неопределенность -- вы точно знаете, сколько будете платить до размещения заказа. Десять уровней длительности охватывают все варианты использования от одиночных транзакций до многонедельных операций.
 
 ### Feee
 
-**Model:** Direct provider
-**Strengths:** Often competitive pricing
-**Pricing:** Dynamic, market-responsive
-**Duration options:** Multiple tiers
+**Модель:** Прямой поставщик
+**Сильные стороны:** Часто конкурентные цены
+**Ценообразование:** Динамическое, реагирует на рынок
+**Варианты длительности:** Несколько уровней
 
-Feee has positioned itself as a price-competitive alternative, frequently appearing as the cheapest option for medium-sized orders.
+Feee позиционирует себя как ценово-конкурентная альтернатива, часто появляясь как самый дешевый вариант для заказов среднего размера.
 
 ### Catfee
 
-**Model:** Direct provider
-**Strengths:** Competitive on specific order sizes
-**Pricing:** Dynamic
-**Duration options:** Multiple tiers
+**Модель:** Прямой поставщик
+**Сильные стороны:** Конкурентен при определенных размерах заказов
+**Ценообразование:** Динамическое
+**Варианты длительности:** Несколько уровней
 
-Catfee competes primarily on price for standard order sizes (50,000-200,000 energy units).
+Catfee конкурирует главным образом по цене для стандартных размеров заказов (50,000-200,000 единиц энергии).
 
 ### Netts
 
-**Model:** Direct provider
-**Strengths:** Consistent availability
-**Pricing:** Moderate
-**Duration options:** Standard tiers
+**Модель:** Прямой поставщик
+**Сильные стороны:** Стабильная доступность
+**Ценообразование:** Умеренное
+**Варианты длительности:** Стандартные уровни
 
-Netts maintains steady supply and moderate pricing. It rarely has the lowest price but provides reliable availability.
+Netts поддерживает стабильное предложение и умеренное ценообразование. Редко имеет самую низкую цену, но обеспечивает надежную доступность.
 
 ### iTRX
 
-**Model:** Direct provider
-**Strengths:** Active market participation
-**Pricing:** Competitive
-**Duration options:** Standard tiers
+**Модель:** Прямой поставщик
+**Сильные стороны:** Активное участие на рынке
+**Ценообразование:** Конкурентное
+**Варианты длительности:** Стандартные уровни
 
-iTRX is an active competitor in the mid-range pricing segment.
+iTRX является активным конкурентом в сегменте средних цен.
 
 ### Sohu
 
-**Model:** Direct provider
-**Strengths:** Market presence
-**Pricing:** Variable
-**Duration options:** Standard tiers
+**Модель:** Прямой поставщик
+**Сильные стороны:** Присутствие на рынке
+**Ценообразование:** Переменное
+**Варианты длительности:** Стандартные уровни
 
-Sohu rounds out the provider landscape, adding liquidity and competitive pressure to the market.
+Sohu завершает ландшафт поставщиков, добавляя ликвидность и конкурентное давление на рынок.
 
-## Price Ranges and Distribution
+## Диапазоны цен и распределение
 
-Energy prices across the market currently range from approximately 22 SUN to 80 SUN per unit, depending on several factors:
+Цены на энергию на рынке в настоящее время варьируются примерно от 22 SUN до 80 SUN за единицу, в зависимости от нескольких факторов:
 
-### By Order Size
+### По размеру заказа
 
-| Order Size | Typical Price Range (SUN) | Notes |
+| Размер заказа | Типичный диапазон цены (SUN) | Примечания |
 |---|---|---|
-| 10,000 - 50,000 | 28 - 50 | Small orders, some providers have minimums |
-| 50,000 - 200,000 | 25 - 40 | Standard range, most competitive |
-| 200,000 - 1,000,000 | 22 - 35 | Better rates at volume |
-| 1,000,000+ | 22 - 30 | Best rates, fewer providers available |
+| 10,000 - 50,000 | 28 - 50 | Малые заказы, у некоторых поставщиков есть минимумы |
+| 50,000 - 200,000 | 25 - 40 | Стандартный диапазон, наиболее конкурентный |
+| 200,000 - 1,000,000 | 22 - 35 | Лучшие ставки при объемах |
+| 1,000,000+ | 22 - 30 | Лучшие ставки, доступно меньше поставщиков |
 
-### By Duration
+### По длительности
 
-Longer durations command higher per-unit prices because providers lock their staked TRX (and the energy it generates) for longer periods.
+Более длительные сроки требуют более высоких цен за единицу, потому что поставщики блокируют свой стейкированный TRX (и энергию, которую он генерирует) на более длительные периоды.
 
-| Duration | Price Multiplier (vs 5min baseline) |
+| Длительность | Множитель цены (vs 5мин базовый) |
 |---|---|
-| 5 minutes | 1.0x |
-| 1 hour | 1.1-1.3x |
-| 6 hours | 1.3-1.6x |
-| 1 day | 1.5-2.0x |
-| 14 days | 2.0-3.5x |
+| 5 минут | 1.0x |
+| 1 час | 1.1-1.3x |
+| 6 часов | 1.3-1.6x |
+| 1 день | 1.5-2.0x |
+| 14 дней | 2.0-3.5x |
 
-### Best Available Price
+### Лучшая доступная цена
 
-At any given moment, the best available price across all seven providers for a standard order (65,000 energy, 1-hour duration) typically falls between 22 and 35 SUN. The exact rate depends on market conditions, time of day, and provider supply levels.
+В любой момент времени лучшая доступная цена среди всех семи поставщиков для стандартного заказа (65,000 энергии, 1 час длительности) обычно варьируется между 22 и 35 SUN. Точная ставка зависит от условий рынка, времени суток и уровней предложения поставщика.
 
-MERX aggregates all seven providers to consistently find the lowest available rate:
+MERX агрегирует все семь поставщиков, чтобы постоянно находить самую низкую доступную ставку:
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/prices \
@@ -115,40 +115,40 @@ curl -X POST https://merx.exchange/api/v1/prices \
   -d '{"energy_amount": 65000, "duration": "1h"}'
 ```
 
-## Volume Trends
+## Тренды объемов
 
-The TRON energy market's total volume is driven by the network's transaction activity, which is itself driven primarily by USDT transfers. TRON processes millions of USDT transactions daily, and the majority of sophisticated operators use energy rental rather than TRX burn.
+Общий объем рынка энергии TRON определяется активностью транзакций сети, которая сама определяется главным образом трансфертами USDT. TRON обрабатывает миллионы транзакций USDT ежедневно, и большинство опытных операторов используют аренду энергии вместо сжигания TRX.
 
-### What Drives Volume
+### Что движет объемом
 
-**USDT dominance.** TRON is the leading network for USDT transfers. Each transfer consumes approximately 65,000 energy, making USDT transfers the single largest source of energy demand.
+**Доминирование USDT.** TRON является ведущей сетью для передачи USDT. Каждый трансфер потребляет примерно 65,000 энергии, что делает передачи USDT крупнейшим источником спроса на энергию.
 
-**DeFi activity.** SunSwap and other TRON DEXs generate energy demand through swap operations (120,000-223,000 energy per swap).
+**Активность DeFi.** SunSwap и другие DEX на TRON генерируют спрос на энергию через операции своп (120,000-223,000 энергии за своп).
 
-**Token launches and airdrops.** Large-scale token distributions create burst demand as thousands of TRC-20 transfers are processed in short windows.
+**Запуски токенов и воздушные раздачи.** Крупномасштабные распределения токенов создают всплески спроса, так как тысячи TRC-20 трансфертов обрабатываются за короткие окна времени.
 
-**Payment processors.** Businesses processing TRON payments at scale are consistent, high-volume energy buyers.
+**Платежные процессоры.** Компании, обрабатывающие платежи TRON в масштабе, являются постоянными покупателями энергии большого объема.
 
-### Volume Patterns
+### Паттерны объемов
 
-Energy demand follows daily and weekly patterns:
+Спрос на энергию следует суточным и еженедельным паттернам:
 
-- **Peak hours:** Highest demand during business hours in East Asian time zones (UTC+8), where TRON usage is concentrated
-- **Off-peak:** Lower demand during late night UTC+8 and weekends
-- **Burst events:** Token launches, market volatility, and DeFi events create unpredictable demand spikes
+- **Часы пик:** Наивысший спрос в рабочие часы в часовых поясах Восточной Азии (UTC+8), где сконцентрировано использование TRON
+- **Внепиковые часы:** Более низкий спрос в позднюю ночь UTC+8 и в выходные
+- **Всплески событий:** Запуски токенов, волатильность рынка и события DeFi создают непредсказуемые всплески спроса
 
-## Market Dynamics
+## Динамика рынка
 
-### Price Competition
+### Ценовая конкуренция
 
-The seven-provider market creates genuine price competition. No single provider can maintain above-market rates without losing order flow to competitors. This competitive pressure benefits buyers, particularly when using an aggregator that routes to the cheapest option automatically.
+Рынок с семью поставщиками создает подлинную ценовую конкуренцию. Ни один поставщик не может поддерживать ставки выше рыночных без потери потока заказов конкурентам. Это конкурентное давление благоприятно для покупателей, особенно при использовании агрегатора, который автоматически маршрутизирует к самому дешевому варианту.
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// See competition in action
+// Увидеть конкуренцию в действии
 const prices = await merx.getPrices({
   energy_amount: 65000,
   duration: '1h'
@@ -157,37 +157,37 @@ const prices = await merx.getPrices({
 for (const offer of prices.providers) {
   console.log(`${offer.provider}: ${offer.price_sun} SUN`);
 }
-// Each provider competes for the order
+// Каждый поставщик конкурирует за заказ
 ```
 
-### Supply Constraints
+### Ограничения предложения
 
-Energy supply is ultimately limited by the total amount of TRX staked in the network. As TRX staking levels change (influenced by TRX price, staking rewards, and alternative yield opportunities), the total available energy for rental shifts accordingly.
+Предложение энергии в конечном итоге ограничено общим количеством TRX, стейкированного в сети. По мере изменения уровней стейкинга TRX (под влиянием цены TRX, наград за стейкинг и альтернативных возможностей доходности), общее доступное количество энергии для аренды смещается соответственно.
 
-During periods of high demand and constrained supply, prices rise. Providers with larger TRX staking reserves can maintain supply during these periods, while smaller providers may reduce availability or raise prices.
+В периоды высокого спроса и ограниченного предложения цены растут. Поставщики с большими резервами стейкированного TRX могут поддерживать предложение в эти периоды, в то время как более мелкие поставщики могут снизить доступность или повысить цены.
 
-### Provider Specialization
+### Специализация поставщиков
 
-Different providers are competitive for different order profiles:
+Разные поставщики являются конкурентными для разных профилей заказов:
 
-- Some providers offer the best rates for small, short-duration orders
-- Others specialize in large, long-duration energy blocks
-- P2P marketplaces (TronSave) can handle very large orders through their seller network
-- Fixed-price providers (PowerSun) offer stability at the cost of potentially higher rates
+- Некоторые поставщики предлагают лучшие ставки для малых заказов на короткую длительность
+- Другие специализируются на больших блоках энергии на долгую длительность
+- P2P маркетплейсы (TronSave) могут справляться с очень большими заказами через их сеть продавцов
+- Поставщики с фиксированной ценой (PowerSun) предлагают стабильность ценой потенциально более высоких ставок
 
-This specialization is one reason aggregation adds value: the cheapest provider for a 50,000-energy, 5-minute order might be different from the cheapest provider for a 5,000,000-energy, 1-day order.
+Эта специализация -- одна из причин, почему агрегация добавляет ценность: самый дешевый поставщик для заказа 50,000 энергии на 5 минут может отличаться от самого дешевого поставщика для заказа 5,000,000 энергии на 1 день.
 
-## The Aggregation Layer
+## Слой агрегации
 
-MERX operates as the market's aggregation layer, connecting buyers to all seven providers through a single interface. This provides several market-level functions:
+MERX функционирует как слой агрегации рынка, соединяя покупателей со всеми семью поставщиками через единый интерфейс. Это обеспечивает несколько функций на уровне рынка:
 
-**Price transparency.** A single API call reveals prices from all providers, making the market more efficient.
+**Прозрачность цен.** Один вызов API раскрывает цены от всех поставщиков, делая рынок более эффективным.
 
-**Automatic routing.** Orders flow to the cheapest available provider without manual comparison.
+**Автоматическая маршрутизация.** Заказы направляются к самому дешевому доступному поставщику без ручного сравнения.
 
-**Failover.** Provider outages do not disrupt energy procurement because orders route to alternatives automatically.
+**Failover.** Простои поставщика не прерывают закупки энергии, потому что заказы автоматически маршрутизируются на альтернативные варианты.
 
-**Analytics.** MERX's price analysis tools provide market intelligence:
+**Аналитика.** Инструменты ценового анализа MERX предоставляют рыночную информацию:
 
 ```typescript
 const analysis = await merx.analyzePrices({
@@ -196,54 +196,55 @@ const analysis = await merx.analyzePrices({
   period: '30d'
 });
 
-console.log(`30-day median: ${analysis.median_sun} SUN`);
-console.log(`30-day low: ${analysis.min_sun} SUN`);
-console.log(`30-day high: ${analysis.max_sun} SUN`);
+console.log(`30-дневная медиана: ${analysis.median_sun} SUN`);
+console.log(`30-дневный минимум: ${analysis.min_sun} SUN`);
+console.log(`30-дневный максимум: ${analysis.max_sun} SUN`);
 ```
 
-## Market Challenges
+## Проблемы рынка
 
-### Price Opacity
+### Непрозрачность цен
 
-Despite improvements, the energy market still lacks the transparency of traditional commodity markets. Not all providers publish real-time prices publicly, and historical price data is fragmented. Aggregators like MERX improve transparency by making price comparison accessible through APIs.
+Несмотря на улучшения, рынок энергии все еще не хватает прозрачности традиционных товарных рынков. Не все поставщики публикуют цены в реальном времени, и исторические данные о ценах фрагментированы. Агрегаторы как MERX улучшают прозрачность, делая сравнение цен доступным через API.
 
-### Quality Variation
+### Вариация качества
 
-Not all energy delegation is equal. Fill time (how quickly energy is actually delegated after an order is placed), reliability (whether the delegation completes at all), and consistency (whether the provider maintains the delegation for the full stated duration) vary across providers.
+Не все делегирование энергии одинаково. Время заполнения (как быстро энергия действительно делегируется после размещения заказа), надежность (завершается ли делегирование вообще) и стабильность (поддерживает ли поставщик делегирование в течение полного заявленного периода) варьируются среди поставщиков.
 
-MERX tracks these quality metrics and factors them into routing decisions, preferring providers with consistent fill rates and fast delegation times when prices are similar.
+MERX отслеживает эти метрики качества и учитывает их в решениях маршрутизации, отдавая предпочтение поставщикам с согласованными уровнями заполнения и быстрыми временами делегирования, когда цены аналогичны.
 
-### Regulatory Uncertainty
+### Нормативная неопределенность
 
-The regulatory landscape for crypto services, including energy rental, remains evolving globally. Providers and aggregators operating in this space must monitor regulatory developments across jurisdictions.
+Нормативная база для криптосервисов, включая аренду энергии, остается развивающейся в мировом масштабе. Поставщики и агрегаторы, работающие в этом пространстве, должны следить за нормативными разработками в различных юрисдикциях.
 
-## Market Outlook
+## Перспективы рынка
 
-Several trends are shaping the TRON energy market:
+Несколько тенденций формируют рынок энергии TRON:
 
-**Growing USDT volume.** As TRON's share of global USDT transfers continues to grow, energy demand will increase proportionally.
+**Растущий объем USDT.** По мере того как доля TRON в глобальных трансфертах USDT продолжает расти, спрос на энергию будет увеличиваться пропорционально.
 
-**Provider competition.** More providers entering the market will increase competition and likely push average prices lower.
+**Конкуренция поставщиков.** Поступление большего количества поставщиков на рынок увеличит конкуренцию и вероятно снизит средние цены.
 
-**Automation.** The shift from manual energy purchasing to automated systems (standing orders, auto-energy, API-driven procurement) is accelerating. Providers that offer robust APIs will capture more of this automated flow.
+**Автоматизация.** Переход от ручной закупки энергии к автоматизированным системам (постоянные заказы, авто-энергия, закупки на базе API) ускоряется. Поставщики, предлагающие надежные API, захватят больше этого автоматизированного потока.
 
-**AI integration.** MCP servers and AI agent capabilities are creating new interaction models for energy management. The ability for AI systems to manage energy procurement autonomously is an emerging capability.
+**Интеграция AI.** MCP серверы и возможности AI агентов создают новые модели взаимодействия для управления энергией. Способность AI систем автономно управлять закупками энергии является развивающейся возможностью.
 
-**Duration innovation.** Providers are experimenting with more flexible duration models, including pay-per-transaction pricing that could simplify the market for small buyers.
+**Инновация в длительности.** Поставщики экспериментируют с более гибкими моделями длительности, включая цену за транзакцию, которая могла бы упростить рынок для малых покупателей.
 
 ## Заключение
 
-The TRON energy market is a functional, competitive ecosystem with seven providers serving a growing demand base. Prices range from 22-80 SUN depending on order size, duration, and provider, with the best rates available through aggregation.
+Рынок энергии TRON -- это функциональная, конкурентная экосистема с семью поставщиками, обслуживающими растущую базу спроса. Цены варьируются от 22-80 SUN в зависимости от размера заказа, длительности и поставщика, с лучшими ставками доступными через агрегацию.
 
-For buyers, the market offers genuine savings over TRX burn -- 60-90% depending on the provider and order profile. The key to capturing these savings is either maintaining relationships with multiple providers or using an aggregator that handles multi-provider comparison automatically.
+Для покупателей рынок предлагает подлинные сбережения по сравнению со сжиганием TRX -- 60-90% в зависимости от поставщика и профиля заказа. Ключ к захвату этих сбережений -- либо поддерживать отношения с несколькими поставщиками, либо использовать агрегатор, который автоматически обрабатывает сравнение мультипоставщиков.
 
-Understanding market dynamics -- when prices are lower, which providers are competitive for your order profile, and how to structure purchases for optimal cost -- is the difference between mediocre and exceptional energy cost management.
+Понимание динамики рынка -- когда цены ниже, какие поставщики конкурентны для вашего профиля заказа и как структурировать покупки для оптимальной стоимости -- это разница между посредственным и исключительным управлением затратами на энергию.
 
-Explore current market prices at [https://merx.exchange](https://merx.exchange) or access price analytics through the API at [https://merx.exchange/docs](https://merx.exchange/docs).
+Исследуйте текущие рыночные цены на [https://merx.exchange](https://merx.exchange) или получите доступ к ценовой аналитике через API на [https://merx.exchange/docs](https://merx.exchange/docs).
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент -- нет установки, API ключ не требуется для инструментов только для чтения:
 
 ```json
 {
@@ -255,6 +256,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите вашего AI агента: "What is the cheapest TRON energy right now?" и получите живые цены от всех подключенных поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

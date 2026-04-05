@@ -1,285 +1,285 @@
-# Sifir Komisyonlu Ticaret: MERX Is Modeli
+# Sıfır Komisyon Ticareti: MERX İş Modeli
 
-MERX charges zero commission on energy trades. No markup on provider prices. No hidden fees. No spread. You pay exactly what the provider charges, and MERX adds nothing on top.
+MERX, enerji ticaretinde sıfır komisyon alır. Sağlayıcı fiyatlarına hiçbir marj eklenmez. Gizli ücret yok. Spread yok. Sağlayıcının talep ettiği tutarı tam olarak ödersiniz ve MERX buna hiçbir şey eklemez.
 
-This naturally raises questions. How does a business sustain itself without revenue? Is this a loss-leader strategy that ends with a rug pull on pricing? What is the catch?
+Bu doğal olarak sorular uyandırır. Gelir olmadan bir işletme nasıl ayakta kalır? Bu, fiyatlardaki rug pull ile sonlanan kayıp lider stratejisi mi? Hile nerede?
 
-There is no catch. But there is a strategy. This article explains how MERX's zero-commission model works, why it exists, and how the platform plans to sustain and monetize over time.
-
----
-
-## What Zero Commission Means, Precisely
-
-When you buy energy through MERX, the price you pay equals the provider's wholesale price. If the cheapest provider offers energy at 85 SUN per unit, you pay 85 SUN per unit. MERX does not add a margin.
-
-To put this in context, here is what a typical energy purchase looks like:
-
-```
-Energy ordered:         65,000 units
-Best provider price:    85 SUN/unit
-Total cost:             5,525,000 SUN = 5.525 TRX
-
-MERX markup:            0 SUN
-MERX fee:               0 SUN
-Total charged to buyer: 5,525,000 SUN = 5.525 TRX
-```
-
-This is verifiable. Every order response includes the provider name and price. You can check the provider's own API to confirm MERX is not inflating the price. The transparency is deliberate - it builds trust and makes the zero-commission claim auditable.
+Hiç hile yok. Ama bir strateji var. Bu makale MERX'in sıfır komisyon modelinin nasıl çalıştığını, neden var olduğunu ve platformun zaman içinde nasıl sürdürüleceğini ve para kazanacağını açıklar.
 
 ---
 
-## Why Zero Commission
+## Sıfır Komisyon Tam Olarak Ne Demektir
 
-### The Market Acquisition Phase
+MERX aracılığıyla enerji satın aldığınızda, ödediğiniz fiyat sağlayıcının toptan fiyatına eşittir. En ucuz sağlayıcı enerjiyi birim başına 85 SUN'da sunuyorsa, siz de birim başına 85 SUN ödersiniz. MERX marj eklemez.
 
-MERX is in its market acquisition phase. The energy aggregation market on TRON is nascent - most developers and businesses still integrate directly with individual providers or, worse, burn TRX for every transaction. The immediate priority is not revenue; it is adoption.
+Bunu bağlama oturtmak için, tipik bir enerji satın alımı şöyle görünür:
 
-Zero commission removes the primary objection to using an aggregator: "Why would I pay a middleman when I can go direct?" With zero commission, the middleman adds value (best-price routing, failover, single API) without adding cost.
+```
+Sipariş edilen enerji:    65.000 birim
+En iyi sağlayıcı fiyatı:  85 SUN/birim
+Toplam maliyet:           5.525.000 SUN = 5.525 TRX
 
-### The Flywheel Effect
+MERX marjı:               0 SUN
+MERX ücreti:              0 SUN
+Alıcıdan alınan toplam:    5.525.000 SUN = 5.525 TRX
+```
 
-Every new user on MERX generates data: order volume, price sensitivity, provider preferences, usage patterns. This data improves the platform:
-
-- **More order volume** gives MERX leverage to negotiate better rates with providers.
-- **Better rates** attract more users.
-- **More users** generate more data for routing optimization.
-- **Better routing** leads to better prices and reliability.
-
-Zero commission accelerates the flywheel. It is an investment in network effects that compound over time.
-
-### Comparison With Provider Direct Pricing
-
-Individual providers set their own prices and already include their margin. When you buy from TronSave at 88 SUN/unit, that 88 includes TronSave's operating costs and profit. MERX passes this price through without adding to it.
-
-Some providers offer volume discounts to large buyers. MERX, by aggregating many buyers' volume, can potentially access these discounts and pass the savings to individual users who would not qualify on their own. This is a future benefit that grows with platform volume.
+Bu doğrulanabilir. Her sipariş yanıtı sağlayıcı adını ve fiyatını içerir. MERX'in fiyatı şişirip şişirmediğini kontrol etmek için sağlayıcının kendi API'sini kontrol edebilirsiniz. Şeffaflık kasten yapılmıştır - bu güven oluşturur ve sıfır komisyon talebini denetlenebilir kılar.
 
 ---
 
-## How MERX Sustains Operations Today
+## Neden Sıfır Komisyon
 
-Running MERX is not free. The platform requires servers, development, monitoring, and operational support. During the zero-commission phase, these costs are funded by the founding team as a business investment.
+### Pazar Edinim Aşaması
 
-### Current Cost Structure
+MERX pazar edinim aşamasındadır. TRON'daki enerji toplamama pazarı yeni gelişmiştir - çoğu geliştirici ve işletme hala bireysel sağlayıcılarla doğrudan entegre olur veya daha kötüsü, her işlem için TRX yakar. Acil öncelik gelir değil; benimsenmedir.
 
-```
-Infrastructure:
-  - Dedicated server (Hetzner):       ~$150/month
-  - Domain and SSL:                   ~$20/month
-  - Monitoring and alerting:          ~$50/month
+Sıfır komisyon, bir toplayıcı kullanmaya karşı ana itirazı ortadan kaldırır: "Doğrudan gidebildiğim halde neden bir aracıya para ödeyeyim?" Sıfır komisyonla, aracı maliyet eklemeden değer ekler (en iyi fiyat yönlendirmesi, yedekleme, tek API).
 
-Development:
-  - Founding team time:               Not externally funded
-  - No venture capital (yet)
-  - No token sale
+### Çarksal Etki
 
-Operational:
-  - Provider API access:              Free (providers want volume)
-  - TRON node access:                 Public nodes + own node
-  - Redis, PostgreSQL:                Self-hosted on dedicated server
-```
+MERX'teki her yeni kullanıcı veri oluşturur: sipariş hacmi, fiyat duyarlılığı, sağlayıcı tercihleri, kullanım alışkanlıkları. Bu veriler platformu iyileştirir:
 
-The infrastructure costs are modest by any standard. This is a lean operation by design - every dollar saved on infrastructure is a dollar that does not need to be recouped from users.
+- **Daha fazla sipariş hacmi**, MERX'e sağlayıcılarla daha iyi oranlar müzakere etme gücü verir.
+- **Daha iyi oranlar** daha fazla kullanıcıyı çeker.
+- **Daha fazla kullanıcı** yönlendirme optimizasyonu için daha fazla veri oluşturur.
+- **Daha iyi yönlendirme** daha iyi fiyatlara ve güvenilirliğe yol açar.
 
----
+Sıfır komisyon çarkı hızlandırır. Bu, zaman içinde bileşik ağ etkileriyle uyum sağlayan bir yatırımdır.
 
-## The Future Revenue Model
+### Sağlayıcı Doğrudan Fiyatlandırması ile Karşılaştırma
 
-Zero commission is not the permanent state. It is the entry price for a market that MERX intends to grow. Here is how the revenue model evolves:
+Bireysel sağlayıcılar kendi fiyatlarını belirler ve zaten marjlarını içerir. TronSave'den 88 SUN/birimde satın aldığınızda, bu 88 TronSave'nin işletme maliyetlerini ve karını içerir. MERX bu fiyatı buna eklenmeden geçirir.
 
-### Phase 1: Zero Commission (Current)
-
-- 0% commission on all trades.
-- Goal: user acquisition, provider relationships, platform maturity.
-- Duration: until meaningful order volume is established.
-
-### Phase 2: Premium Features
-
-The first revenue comes from value-added services that go beyond basic price routing:
-
-**Standing Orders and Automation**
-
-```
-Basic (free):     Manual orders, best-price routing
-Premium:          Standing orders, auto-renewal, price alerts
-                  Scheduled energy procurement
-                  Webhook notifications for delegation events
-```
-
-**Analytics and Insights**
-
-```
-Basic (free):     Current prices, basic order history
-Premium:          Price prediction models
-                  Provider reliability scoring
-                  Cost optimization recommendations
-                  Custom reporting and export
-```
-
-**Priority Support**
-
-```
-Basic (free):     Documentation, community support
-Premium:          Direct support channel
-                  SLA guarantees on order execution
-                  Dedicated account management
-```
-
-The base service - routing orders to the best price - remains free. Premium features serve power users who derive enough value from the platform to justify a subscription.
-
-### Phase 3: Volume-Based Pricing
-
-For very high-volume users (millions of energy units per day), MERX may introduce a small commission that reflects the operational cost of handling large orders:
-
-```
-Volume tier:       Commission:
-0 - 1M energy/mo:  0% (forever free)
-1M - 10M:          0.5%
-10M - 100M:        0.3%
-100M+:             Negotiated
-```
-
-Even at 0.5%, the total cost is still lower than what most users pay through direct provider integration (where they cannot access best-price routing).
-
-### Phase 4: Provider Services
-
-As MERX grows into the dominant aggregation layer, providers benefit from the order flow. Future revenue streams could include:
-
-- **Featured placement**: providers pay for priority in routing (with transparency - buyers always see the actual price).
-- **Analytics for providers**: market share data, competitive pricing intelligence.
-- **Settlement services**: MERX handles payment collection and remittance, charging providers a small processing fee.
+Bazı sağlayıcılar büyük alıcılara hacim indirimleri sunarlar. MERX, birçok alıcının hacmini toplayarak, potansiyel olarak bu indirimlere erişebilir ve kendi başına nitelendirilmeyecek bireysel kullanıcılara tasarrufu aktarabilir. Bu, platform hacmi ile büyüyen gelecekteki bir faydadır.
 
 ---
 
-## Comparison With Provider Markups
+## MERX Bugün Operasyonları Nasıl Sürdürüyor
 
-How does MERX's zero commission compare with what providers already charge?
+MERX çalıştırmak ücretsiz değildir. Platform sunucular, geliştirme, izleme ve operasyonel destek gerektirir. Sıfır komisyon aşamasında, bu maliyetler kurucu ekip tarafından bir işletme yatırımı olarak finanse edilir.
 
-Providers are not charities. Their quoted prices include their operating costs and profit margins. The typical provider markup structure looks like this:
-
-```
-Provider cost structure:
-  - TRX staking cost (opportunity cost):     Base cost
-  - Infrastructure (servers, nodes):          5-10% of base
-  - Development and maintenance:              5-10% of base
-  - Profit margin:                            10-30% of base
-
-Estimated markup over raw staking cost:       20-50%
-```
-
-When you buy at 85 SUN/unit from a provider, roughly 55-70 SUN covers the raw cost of staking, and 15-30 SUN is the provider's overhead and margin. This is normal and sustainable.
-
-MERX does not add another layer of margin. The 85 SUN the provider charges is the 85 SUN you pay. Compare this with other aggregation models:
+### Mevcut Maliyet Yapısı
 
 ```
-Traditional aggregator:
-  Provider price:     85 SUN/unit
-  Aggregator markup:  5-15%
-  You pay:            89-98 SUN/unit
+Altyapı:
+  - Özel sunucu (Hetzner):            ~150$/ay
+  - Alan adı ve SSL:                  ~20$/ay
+  - İzleme ve uyarı:                  ~50$/ay
+
+Geliştirme:
+  - Kurucu ekip zamanı:               Harici olarak finanse edilmez
+  - Girişim sermayesi yok (henüz)
+  - Token satışı yok
+
+Operasyonel:
+  - Sağlayıcı API erişimi:            Ücretsiz (sağlayıcılar hacim ister)
+  - TRON düğümü erişimi:              Genel düğümler + kendi düğümü
+  - Redis, PostgreSQL:                Özel sunucuda kendi kendine barındırılan
+```
+
+Altyapı maliyetleri herhangi bir standarda göre mütevazıdır. Bu tasarım olarak yalın bir operasyondur - altyapıya tasarruf edilen her dolar, kullanıcılardan geri alınması gereken bir dolar değildir.
+
+---
+
+## Gelecek Gelir Modeli
+
+Sıfır komisyon kalıcı durum değildir. MERX'in büyütmek niyetinde olduğu bir pazarın giriş fiyatıdır. Gelir modelinin nasıl geliştiği aşağıda açıklanmıştır:
+
+### Aşama 1: Sıfır Komisyon (Mevcut)
+
+- Tüm işlemlerde %0 komisyon.
+- Hedef: kullanıcı edinimi, sağlayıcı ilişkileri, platform olgunluğu.
+- Süre: anlamlı sipariş hacmi kurulana kadar.
+
+### Aşama 2: Premium Özellikler
+
+İlk gelir, temel fiyat yönlendirmesinin ötesine geçen katma değerli hizmetlerden gelir:
+
+**Sabit Siparişler ve Otomasyon**
+
+```
+Temel (ücretsiz):   Elle verilen siparişler, en iyi fiyat yönlendirmesi
+Premium:            Sabit siparişler, otomatik yenileme, fiyat uyarıları
+                    Zamanlanan enerji satın alımı
+                    Delegasyon olayları için Webhook bildirimleri
+```
+
+**Analitik ve İçgörüler**
+
+```
+Temel (ücretsiz):   Güncel fiyatlar, temel sipariş geçmişi
+Premium:            Fiyat tahmin modelleri
+                    Sağlayıcı güvenilirlik puanlaması
+                    Maliyet optimizasyonu önerileri
+                    Özel raporlama ve dışa aktarma
+```
+
+**Öncelikli Destek**
+
+```
+Temel (ücretsiz):   Dokümantasyon, topluluk desteği
+Premium:            Doğrudan destek kanalı
+                    Sipariş yürütme SLA garantileri
+                    Özel hesap yönetimi
+```
+
+Temel hizmet - siparişleri en iyi fiyata yönlendirmek - ücretsiz kalır. Premium özellikler, platformdan yeterli değer türeten ileri kullanıcılara hizmet eder.
+
+### Aşama 3: Hacim Tabanlı Fiyatlandırma
+
+Çok yüksek hacimli kullanıcılar (günde milyonlarca enerji birimi) için MERX, büyük siparişleri işlemenin operasyonel maliyetini yansıtan küçük bir komisyon sunabilir:
+
+```
+Hacim katmanı:      Komisyon:
+0 - 1M enerji/ay:   %0 (sonsuza dek ücretsiz)
+1M - 10M:           %0,5
+10M - 100M:         %0,3
+100M+:              Müzakere edilmiş
+```
+
+%0,5'te bile, toplam maliyet çoğu kullanıcının doğrudan sağlayıcı entegrasyonu yoluyla ödediğinden düşüktür (en iyi fiyat yönlendirmesine erişemezler).
+
+### Aşama 4: Sağlayıcı Hizmetleri
+
+MERX, dominant toplamama katmanında büyüdükçe, sağlayıcılar sipariş akışından yararlanır. Gelecekteki gelir akışları şunları içerebilir:
+
+- **Öne çıkan yerleştirme**: sağlayıcılar yönlendirmede öncelik için ödeme yaparlar (şeffaflıkla - alıcılar her zaman gerçek fiyatı görür).
+- **Sağlayıcılar için analitik**: pazar payı verisi, rekabet fiyatlandırması istihbaratı.
+- **Uzlaştırma hizmetleri**: MERX ödeme tahsilatını ve gönderimi işler, sağlayıcılardan küçük bir işleme ücreti alır.
+
+---
+
+## Sağlayıcı Marjları ile Karşılaştırma
+
+MERX'in sıfır komisyonu, sağlayıcıların zaten talep ettiğiyle nasıl karşılaştırılır?
+
+Sağlayıcılar hayırseverlik kuruluşu değildir. Alıntılanan fiyatları işletme maliyetlerini ve kar marjlarını içerir. Tipik sağlayıcı marj yapısı şöyle görünür:
+
+```
+Sağlayıcı maliyet yapısı:
+  - TRX stake etme maliyeti (fırsat maliyeti):     Temel maliyet
+  - Altyapı (sunucular, düğümler):                Temel maliyetin %5-10'u
+  - Geliştirme ve bakım:                          Temel maliyetin %5-10'u
+  - Kar marjı:                                    Temel maliyetin %10-30'u
+
+Ham stake etme maliyetine göre tahmini marj:      %20-50
+```
+
+Bir sağlayıcıdan 85 SUN/birimde satın aldığınızda, kabaca 55-70 SUN ham stake etme maliyetini karşılar ve 15-30 SUN sağlayıcının genel gideri ve marjıdır. Bu normal ve sürdürülebilirdir.
+
+MERX başka bir marj katmanı eklemez. Sağlayıcının talep ettiği 85 SUN, ödediğiniz 85 SUN'dur. Bunu diğer toplamama modelleriyle karşılaştırın:
+
+```
+Geleneksel toplayıcı:
+  Sağlayıcı fiyatı:     85 SUN/birim
+  Toplayıcı marjı:      %5-15
+  Ödeyen:               89-98 SUN/birim
 
 MERX:
-  Provider price:     85 SUN/unit
-  MERX markup:        0%
-  You pay:            85 SUN/unit
+  Sağlayıcı fiyatı:     85 SUN/birim
+  MERX marjı:           %0
+  Ödeyen:               85 SUN/birim
 ```
 
 ---
 
-## The Trust Question
+## Güven Sorusu
 
-"If you are not charging, you are the product." This is a reasonable concern in any free service. Let us address it directly.
+"Ücret almıyorsan sen üründen değersin." Bu, herhangi bir ücretsiz hizmette makul bir endişedir. Bunu doğrudan ele alalım.
 
-### MERX Does Not Sell Your Data
+### MERX Verilerinizi Satmıyor
 
-Order data is used to optimize routing and improve the platform. It is not sold to third parties. There is no advertising model. Your transaction volumes and patterns are your business.
+Sipariş verisi yönlendirmeyi optimize etmek ve platformu iyileştirmek için kullanılır. Üçüncü tarafa satılmaz. Reklam modeli yok. İşlem hacimleriniz ve alışkanlıklarınız sizin işiniz.
 
-### MERX Does Not Custody Your Funds
+### MERX Fonlarınızı Saklamıyor
 
-MERX holds deposit balances for order execution. These are operational balances, not custodial assets. You can withdraw your balance at any time. The platform does not invest, lend, or otherwise use your deposited funds.
+MERX, sipariş yürütmesi için depozito bakiyesi tutar. Bunlar operasyonel bakiyelerdir, saklama varlıkları değildir. Bakiyenizi istediğiniz zaman çekebilirsiniz. Platform yatırım yapmaz, borç vermez veya yatırılan fonlarınızı başka şekilde kullanmaz.
 
-### MERX Does Not Front-Run Orders
+### MERX Siparişlerin Önünden Geçmez
 
-The order executor routes to the best available price at the moment of execution. It does not delay orders to wait for better prices (which would benefit MERX if it held a position) or route to more expensive providers when cheaper ones are available.
+Sipariş yürütücü, yürütme anında en iyi mevcut fiyata yönlendirir. MERX bir pozisyon tutuyorsa daha iyi fiyatlar için siparişleri geciktirmez (bu MERX'e fayda sağlar) veya daha ucuz olanlar varken daha pahalı sağlayıcılara yönlendirmez.
 
-### The Code Is Inspectable
+### Kod İncelenebilir
 
-The MERX SDKs are open source:
+MERX SDK'ları açık kaynaktır:
 
 - JavaScript SDK: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 - Python SDK: [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
 - MCP Sunucusu: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-Every order includes the provider name and on-chain transaction hash. You can independently verify that the delegation occurred at the price MERX quoted.
+Her sipariş sağlayıcı adını ve zincirdeki işlem hash'ini içerir. Delegasyonun MERX'in alıntı yaptığı fiyatta gerçekleştiğini bağımsız olarak doğrulayabilirsiniz.
 
 ---
 
-## Why Not Just Use Providers Directly?
+## Sağlayıcıları Doğrudan Kullanmamak Neden
 
-If MERX charges zero commission, why not integrate with providers directly and skip the aggregation layer entirely?
+MERX sıfır komisyon alıyorsa, sağlayıcılarla doğrudan entegre olup toplamama katmanını atlamak neden?
 
-You can. But here is what you give up:
+Yapabilirsiniz. Ama işte ne kaybedersiniz:
 
-### Best-Price Routing
+### En İyi Fiyat Yönlendirmesi
 
-Provider prices change throughout the day. The cheapest provider at 9 AM may be the most expensive at 3 PM. Without continuous monitoring (which MERX does every 30 seconds), you are probably not getting the best price at any given moment.
+Sağlayıcı fiyatları gün içinde değişir. Sabah 9'da en ucuz sağlayıcı, saat 3'te en pahalı olabilir. Sürekli izleme yapılmadan (MERX bunu her 30 saniyede yapar), herhangi bir anda muhtemelen en iyi fiyatı almıyorsunuz.
 
-### Automatic Failover
+### Otomatik Yedekleme
 
-If your single provider goes down, your application stops working. With MERX, a provider failure is invisible to you - orders are routed to the next cheapest option automatically.
+Tek sağlayıcınız kapanırsa, uygulamanız çalışmaz. MERX'le, sağlayıcı hatası sizin için görünmez - siparişler otomatik olarak bir sonraki en ucuz seçeneğe yönlendirilir.
 
-### Operational Simplicity
+### İşletme Basitliği
 
-Seven provider integrations means seven sets of API documentation, seven authentication methods, seven error formats, seven sets of API changes to track. One MERX integration replaces all of them.
+Yedi sağlayıcı entegrasyonu yedi API dokümantasyon seti, yedi kimlik doğrulama yöntemi, yedi hata biçimi, takip edilecek yedi API değişiklikleri seti anlamına gelir. Bir MERX entegrasyonu hepsi değiştirir.
 
-### Future-Proofing
+### Geleceğe Hazırlık
 
-New providers enter the market. Existing providers change their APIs or shut down. With MERX, new providers are automatically available to you, and defunct providers are removed - no code changes required.
+Yeni sağlayıcılar pazara girer. Mevcut sağlayıcılar API'larını değiştirir veya kapanır. MERX'le, yeni sağlayıcılar sizin için otomatik olarak kullanılabilir hale gelir ve eski sağlayıcılar kaldırılır - kod değişiklikleri gerekli değildir.
 
-The zero-commission model means you get all of these benefits at no additional cost over going direct. The only rational reason to go direct is if you have specific requirements that MERX does not support - and if that is the case, the team wants to hear about it.
-
----
-
-## For Early Adopters
-
-The zero-commission rate for early adopters is not time-limited. Users who join during this phase will be grandfathered into favorable terms as the platform evolves. This is not a bait-and-switch; it is an acknowledgment that early users take on more risk (newer platform, smaller track record) and deserve commensurate reward.
-
-If the revenue model eventually includes commissions, early adopters will either:
-- Maintain zero commission permanently, or
-- Receive significant discounts relative to later users
-
-The specifics will be communicated well in advance of any pricing changes.
+Sıfır komisyon modeli, doğrudan gitmeye kıyasla tüm bu faydaları ek maliyetsiz olarak almanız anlamına gelir. Doğrudan gitmenin tek akılcı nedeni, MERX'in desteklemediği spesifik gereksinimleriniz varsa - ve bu durum varsa, ekip bunu duymak ister.
 
 ---
 
-## Baslangic
+## Erken Benimseyenler İçin
 
-Create an account and start trading at zero commission:
+Erken benimseyenler için sıfır komisyon oranı zamana sınırlı değildir. Bu aşamada katılan kullanıcılar, platform evindeyken uygun koşullara kilitlenir. Bu bait-and-switch değil; bu erken kullanıcıların daha fazla risk aldığı (daha yeni platform, daha az track record) ve buna karşılık gelen ödül aldığı bilincidir.
 
-1. Visit [https://merx.exchange](https://merx.exchange)
-2. Create an account
-3. Generate an API key
-4. Make your first order
+Gelir modeli sonunda komisyonları içerirse, erken benimseyenler şu şekilde olur:
+- Sonsuza dek sıfır komisyon tutarlar, veya
+- Daha sonraki kullanıcılara kıyasla önemli indirimler alırlar
+
+Spesifikler herhangi bir fiyatlandırma değişikliğinden çok önce iletilecektir.
+
+---
+
+## Başlarken
+
+Sıfır komisyonla ticaret yapmaya başlayın:
+
+1. [https://merx.exchange](https://merx.exchange) adresini ziyaret edin
+2. Hesap oluşturun
+3. API anahtarı oluşturun
+4. İlk siparişinizi verin
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 
-// See current best prices (no commission added)
+// Mevcut en iyi fiyatları gör (komisyon eklenmez)
 const prices = await client.getPrices({ energy: 65000 });
-console.log(`Best price: ${prices.bestPrice.perUnit} SUN/unit`);
-console.log(`Provider: ${prices.bestPrice.provider}`);
-console.log(`MERX fee: 0`);
+console.log(`En iyi fiyat: ${prices.bestPrice.perUnit} SUN/birim`);
+console.log(`Sağlayıcı: ${prices.bestPrice.provider}`);
+console.log(`MERX ücreti: 0`);
 ```
 
-Documentation: [https://merx.exchange/docs](https://merx.exchange/docs)
+Dokümantasyon: [https://merx.exchange/docs](https://merx.exchange/docs)
 
 ---
 
-*This article is part of the MERX knowledge series. MERX, tum buyuk TRON energy saglayicilari arasinda en iyi fiyat yonlendirmesiyle sifir komisyonlu energy ticareti sunan ilk blokzincir kaynak borsasidir.*
+*Bu makale MERX bilgi serisinin bir parçasıdır. MERX, tüm büyük TRON enerji sağlayıcılarında en iyi fiyat yönlendirmesi ile sıfır komisyon enerji ticareti sunan ilk blockchain kaynak borsasıdır.*
 
-## Try It Now with AI
+## Şimdi AI ile Deneyin
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- kurulum yok, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -291,6 +291,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza şu soruyu sorun: "Şu anda en ucuz TRON enerji nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP dokümantasyonu: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

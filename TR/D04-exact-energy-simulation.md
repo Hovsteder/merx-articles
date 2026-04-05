@@ -1,93 +1,93 @@
-# Kesin Energy Simuelasyonu: MERX Bir Takasin Ne Kadara Mal Olacagini Tam Olarak Nasil Bilir
+# Tam Enerji Simülasyonu: MERX Bir Swapın Maliyetini Nasıl Tam Olarak Biliyor?
 
-## The Problem with Guessing
+## Tahmin Etmenin Sorunu
 
-Most TRON tools and wallets use hardcoded energy estimates. A USDT transfer? Budget 65,000 energy. A swap on SunSwap? Maybe 200,000. An approval? Around 50,000. These numbers are stored as constants somewhere in the codebase, and every transaction uses them regardless of the actual conditions.
+Çoğu TRON aracı ve cüzdanı sabit kodlanmış enerji tahminlerini kullanır. Bir USDT transferi? 65.000 enerji bütçelendir. SunSwap'ta bir swap? Belki 200.000. Bir onay? Yaklaşık 50.000. Bu numaralar kodun bir yerinde sabit olarak depolanır ve her işlem gerçek koşullar ne olursa olsun bunları kullanır.
 
-This approach has two failure modes, and both cost you money.
+Bu yaklaşımın iki başarısızlık modu vardır ve ikisi de sizi paraya mal olur.
 
-If the estimate is too low, the transaction runs out of energy mid-execution. The entire transaction fails, but you still pay for the bandwidth consumed by the attempt. The energy you purchased is wasted on a transaction that produced no result. You have to buy more energy and try again.
+Tahmin çok düşükse, işlem yürütme sırasında enerjiden tükenir. Tüm işlem başarısız olur, ancak yine de denemede tüketilen bant genişliğini ödersiniz. Satın aldığınız enerji, hiçbir sonuç üretmeyen bir işlem için boşa harcanır. Daha fazla enerji satın almanız ve tekrar denemeniz gerekir.
 
-If the estimate is too high, you purchase energy you never use. Delegated energy has a minimum rental period - typically one hour. Whatever is left over when the delegation expires is simply lost. Overshoot by 30% on every transaction, and over thousands of transactions, the waste adds up to serious money.
+Tahmin çok yüksekse, hiç kullanmayacağınız enerji satın alırsınız. Devredilen enerjinin minimum kiralama süresi vardır - tipik olarak bir saat. Delegasyon sona erdiğinde kalan her şey basitçe kaybolur. Her işlemde %30 fazla tahmin ederseniz ve binlerce işlem içinde, atık ciddi paraya dönüşür.
 
-MERX eliminates guessing entirely. Every energy estimate is produced by simulating the exact transaction against the live blockchain state. The result is not an approximation or a range - it is the precise number of energy units the transaction will consume.
+MERX tahmin etmeyi tamamen ortadan kaldırır. Her enerji tahmini, tam işlemin canlı blockchain durumuna karşı simüle edilmesiyle üretilir. Sonuç bir yaklaşım veya aralık değildir - işlemin tüketecek olduğu tam enerji birimi sayısıdır.
 
-## How triggerConstantContract Works
+## triggerConstantContract Nasıl Çalışır?
 
-The TRON network provides a read-only simulation endpoint called `triggerConstantContract`. This endpoint executes a smart contract call in a virtual environment that mirrors the current blockchain state but does not modify it. No transaction is broadcast. No resources are consumed. No state changes are committed.
+TRON ağı `triggerConstantContract` adlı salt okunur bir simülasyon uç noktası sağlar. Bu uç nokta, akıllı bir sözleşme çağrısını mevcut blockchain durumunu yansıtan ancak onu değiştirmeyen sanal bir ortamda yürütür. Hiçbir işlem yayınlanmaz. Hiçbir kaynak tüketilmez. Hiçbir durum değişikliği işlenir.
 
-The simulation runs the exact same bytecode that would execute in a real transaction. It uses the same storage slots, the same account balances, the same contract logic. The only difference is that the results are discarded instead of being written to the blockchain.
+Simülasyon gerçek bir işlemde yürütülecek olan tam aynı bytecode'u çalıştırır. Aynı depolama yuvalarını, aynı hesap bakiyelerini, aynı sözleşme mantığını kullanır. Tek fark, sonuçların blockchain'e yazılmak yerine atılmasıdır.
 
-The key output is `energy_used` - the exact number of energy units consumed by the simulated execution.
+Anahtar çıktı `energy_used`'dir - simüle edilen yürütme tarafından tüketilen tam enerji birimi sayısı.
 
-### The API Call
+### API Çağrısı
 
 ```javascript
 const result = await tronWeb.transactionBuilder.triggerConstantContract(
-  contractAddress,       // The contract being called
-  functionSelector,      // e.g., "transfer(address,uint256)"
-  { callValue: 0 },     // Options including any TRX value sent
-  [                      // Function parameters
+  contractAddress,       // Çağrılan sözleşme
+  functionSelector,      // örn: "transfer(address,uint256)"
+  { callValue: 0 },     // Gönderilen herhangi bir TRX değeri dahil seçenekler
+  [                      // İşlev parametreleri
     { type: 'address', value: recipientAddress },
     { type: 'uint256', value: amount }
   ],
-  senderAddress          // The address that would send the transaction
+  senderAddress          // İşlemi gönderecek olan adres
 );
 
 const energyUsed = result.energy_used;
 ```
 
-This is not a gas estimation heuristic like Ethereum's `eth_estimateGas`, which returns an upper bound with a safety margin. `triggerConstantContract` returns the exact energy consumed by the execution trace. When MERX simulates a swap that returns 223,354 energy, the on-chain execution will consume 223,354 energy.
+Bu, Ethereum'un `eth_estimateGas` gibi bir gaz tahmin buluşsal yöntemi değildir, bu da güvenlik marjı olan bir üst sınır döndürür. `triggerConstantContract` yürütme izlemesi tarafından tüketilen tam enerjiyi döndürür. MERX 223.354 enerji döndüren bir swap simüle ettiğinde, zincir üstü yürütme 223.354 enerji tüketecektir.
 
-## Why the Sender Address Matters
+## Gönderici Adresinin Neden Önemli Olduğu
 
-A subtle but critical detail: the sender address affects the simulation result.
+İnce ama kritik bir ayrıntı: gönderici adresi simülasyon sonucunu etkiler.
 
-Consider a USDT transfer. If the sender has never interacted with the USDT contract before, the contract must allocate a new storage slot for the sender's balance. This allocation costs energy. If the sender already has a balance entry, the contract only needs to update an existing slot - cheaper by thousands of energy units.
+Bir USDT transferi düşünün. Gönderici daha önce USDT sözleşmesiyle hiç etkileşimde bulunmadıysa, sözleşme göndericinin bakiyesi için yeni bir depolama yuvası ayırmalıdır. Bu ayırma enerji maliyeti. Göndericinin zaten bir bakiye girişi varsa, sözleşme yalnızca mevcut bir yuvayı güncellemelidir - binlerce enerji birimi daha ucuz.
 
-Similarly, the recipient address matters. Transferring USDT to an address that has never held USDT triggers a storage slot creation for the recipient. Transferring to an address that already has a USDT balance does not.
+Benzer şekilde, alıcı adresi önemlidir. USDT'yi hiç USDT tutmayan bir adrese aktarmak, alıcı için bir depolama yuvası oluşturmayı tetikler. USDT bakiyesi olan bir adrese aktarmak bunu tetiklemez.
 
-These differences can shift the energy cost by 10,000-20,000 units for a simple transfer. For complex DeFi operations with multiple internal calls and storage modifications, the variance is even larger.
+Bu farklılıklar basit bir transfer için enerji maliyetini 10.000-20.000 birim kaydırabilir. Birden çok iç çağrı ve depolama değişiklikleri içeren karmaşık DeFi işlemleri için varyans daha da büyüktür.
 
-This is why MERX simulates with the real sender and real recipient addresses for every transaction. A generic simulation with placeholder addresses would return a different energy value than the actual execution.
+Bu yüzden MERX her işlem için gerçek gönderici ve gerçek alıcı adreslerini simüle eder. Yer tutucu adreslerle genel bir simülasyon, gerçek yürütmeden farklı bir enerji değeri döndürecektir.
 
-## Hardcoded Estimates vs Exact Simulation
+## Sabit Kodlanmış Tahminler vs Tam Simülasyon
 
-Here is a concrete comparison using real data from TRON mainnet.
+TRON mainnet'ten gerçek veriler kullanarak somut bir karşılaştırma aşağıda verilmiştir.
 
-### USDT Transfer Scenarios
+### USDT Transfer Senaryoları
 
-| Scenario | Hardcoded Estimate | Exact Simulation |
+| Senaryo | Sabit Kodlanmış Tahmin | Tam Simülasyon |
 |---|---|---|
-| Sender has USDT, recipient has USDT | 65,000 | 29,631 |
-| Sender has USDT, recipient never held USDT | 65,000 | 64,895 |
-| Sender never approved, recipient new | 65,000 | 64,895 |
-| Transfer to contract address | 65,000 | 47,222 |
+| Gönderici USDT'ye sahip, alıcı USDT'ye sahip | 65.000 | 29.631 |
+| Gönderici USDT'ye sahip, alıcı hiç USDT tutmadı | 65.000 | 64.895 |
+| Gönderici hiç onay vermedi, alıcı yeni | 65.000 | 64.895 |
+| Sözleşme adresine transfer | 65.000 | 47.222 |
 
-The hardcoded approach uses 65,000 for all cases. Exact simulation reveals a 2x range in actual costs. In the first scenario, a hardcoded estimate causes you to purchase more than double the energy actually needed.
+Sabit kodlanmış yaklaşım tüm durumlar için 65.000 kullanır. Tam simülasyon, gerçek maliyetlerde 2x aralık ortaya çıkarır. İlk senaryoda, sabit kodlanmış bir tahmin, gerçekten gerekli olandan iki kattan fazla enerji satın almanıza neden olur.
 
 ### SunSwap V2 Swap
 
-| Scenario | Hardcoded Estimate | Exact Simulation |
+| Senaryo | Sabit Kodlanmış Tahmin | Tam Simülasyon |
 |---|---|---|
-| TRX -> USDT, direct pool | 200,000 | 223,354 |
-| USDT -> TRX, direct pool | 200,000 | 218,847 |
-| Token A -> Token B, multi-hop | 250,000 | 312,668 |
-| Small amount, same pool | 200,000 | 223,354 |
+| TRX -> USDT, doğrudan havuz | 200.000 | 223.354 |
+| USDT -> TRX, doğrudan havuz | 200.000 | 218.847 |
+| Token A -> Token B, çok atlamalı | 250.000 | 312.668 |
+| Küçük miktar, aynı havuz | 200.000 | 223.354 |
 
-For the direct TRX -> USDT swap, a hardcoded estimate of 200,000 would underestimate by 23,354 units. That transaction would fail. The alternative - bumping the hardcoded estimate to 250,000 to be safe - wastes 26,646 energy units on every single swap.
+Doğrudan TRX -> USDT swap'ı için 200.000'lik sabit kodlanmış tahmin, 23.354 birim az tahmin ederdi. Bu işlem başarısız olurdu. Alternatif - güvenli olmak için sabit kodlanmış tahmini 250.000'e yükseltmek - her tek swap'ta 26.646 enerji birimi boşa harcar.
 
-## How MERX Uses Exact Simulation
+## MERX Tam Simülasyonu Nasıl Kullanır?
 
-The MERX MCP server exposes simulation through two tools that operate at different levels of abstraction.
+MERX MCP sunucusu simülasyonu soyutlama düzeylerinde farklı çalışan iki araç aracılığıyla gösterir.
 
-### Low-Level: estimate_contract_call
+### Düşük Seviye: estimate_contract_call
 
-This tool lets you simulate any arbitrary contract call:
+Bu araç, herhangi bir keyfi sözleşme çağrısını simüle etmenizi sağlar:
 
 ```
-Tool: estimate_contract_call
-Input: {
+Araç: estimate_contract_call
+Giriş: {
   "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
   "function_selector": "transfer(address,uint256)",
   "parameters": [
@@ -98,7 +98,7 @@ Input: {
   "call_value": 0
 }
 
-Response:
+Yanıt:
 {
   "energy_used": 64895,
   "result": "0x0000...0001",
@@ -106,22 +106,22 @@ Response:
 }
 ```
 
-The response includes both the energy cost and the return value of the simulated call. For a transfer, the return value indicates whether the transfer would succeed. For a swap, it returns the output amount.
+Yanıt hem enerji maliyetini hem de simüle edilen çağrının dönüş değerini içerir. Bir transfer için, dönüş değeri transferin başarılı olup olmayacağını gösterir. Bir swap için, çıktı miktarını döndürür.
 
-### High-Level: get_swap_quote
+### Yüksek Seviye: get_swap_quote
 
-For DEX operations, MERX provides a specialized tool that combines simulation with price quoting:
+DEX işlemleri için MERX, simülasyonu fiyat alıntılaması ile birleştiren özel bir araç sağlar:
 
 ```
-Tool: get_swap_quote
-Input: {
+Araç: get_swap_quote
+Giriş: {
   "from_token": "TRX",
   "to_token": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
   "amount": "100000",
   "from_address": "TSender..."
 }
 
-Response:
+Yanıt:
 {
   "output_amount": "0.032847",
   "output_token": "USDT",
@@ -132,15 +132,15 @@ Response:
 }
 ```
 
-The `energy_required` field comes from an exact simulation of the swap with the real parameters. The `output_amount` also comes from the simulation, so the quote reflects the actual output the swap would produce at the current block.
+`energy_required` alanı, gerçek parametrelerle swap'ın tam simülasyonundan gelir. `output_amount` de simülasyondan gelir, bu nedenle alıntı mevcut blokta swap'ın üretecek olduğu gerçek çıktıyı yansıtır.
 
-## Real Data: Simulation vs On-Chain Execution
+## Gerçek Veriler: Simülasyon vs Zincir Üstü Yürütme
 
-Here is a real swap executed through the MERX MCP server on TRON mainnet.
+MERX MCP sunucusu aracılığıyla TRON mainnet'te yürütülen gerçek bir swap aşağıdadır.
 
-**Transaction: Swap 0.1 TRX for USDT via SunSwap V2**
+**İşlem: SunSwap V2 aracılığıyla 0,1 TRX'i USDT'ye takas edin**
 
-Pre-execution simulation:
+Öncesi simülasyonu yürütme:
 
 ```
 triggerConstantContract(
@@ -156,82 +156,82 @@ triggerConstantContract(
   from: "TSender..."
 )
 
-Result:
+Sonuç:
   energy_used: 223,354
   return_value: [32847]  // 0.032847 USDT
 ```
 
-On-chain execution (after energy delegation):
+Zincir üstü yürütme (enerji delegasyonundan sonra):
 
 ```
-Transaction: abc123...
-  Status: SUCCESS
-  Energy consumed: 223,354
-  Bandwidth consumed: 420
-  Output: 0.032847 USDT received
+İşlem: abc123...
+  Durum: SUCCESS
+  Tüketilen enerji: 223,354
+  Tüketilen bant genişliği: 420
+  Çıktı: 0.032847 USDT alındı
 ```
 
-The simulation returned 223,354 energy. The on-chain execution consumed 223,354 energy. Exact match. Not an approximation. Not a range. The same number.
+Simülasyon 223.354 enerji döndürdü. Zincir üstü yürütme 223.354 enerji tükettti. Tam eşleşme. Yaklaşım değil. Aralık değil. Aynı sayı.
 
-## Edge Cases and How MERX Handles Them
+## Kenar Durumları ve MERX Bunları Nasıl Yönetir?
 
-### State Changes Between Simulation and Execution
+### Simülasyon ve Yürütme Arasında Durum Değişiklikleri
 
-The blockchain state can change between the time you simulate and the time you broadcast. Another transaction might modify the same contract storage, changing the energy cost. MERX mitigates this in three ways:
+Blockchain durumu simülasyon ile yayınlama arasında değişebilir. Başka bir işlem aynı sözleşme depolamasını değiştirerek enerji maliyetini değiştirebilir. MERX bunu üç şekilde azaltır:
 
-1. **Minimize the gap.** The pipeline simulates, purchases energy, polls for delegation, and broadcasts in the tightest possible sequence. Typical gap: 5-10 seconds.
+1. **Boşluğu en aza indir.** Pipeline simüle eder, enerji satın alır, delegasyonu yoklar ve en sıkı dizide yayınlar. Tipik boşluk: 5-10 saniye.
 
-2. **Add a small buffer for volatile operations.** For DEX swaps where liquidity pool state changes frequently, MERX adds a 5% buffer to the energy purchase. This buffer covers minor state variations without significantly increasing cost.
+2. **Değişken işlemler için küçük bir tampon ekle.** Likidite havuzu durumunun sık sık değiştiği DEX swap'ları için MERX enerji satın almasına %5'lik bir tampon ekler. Bu tampon, minor durum varyasyonlarını maliyeti önemli ölçüde artırmadan kapsar.
 
-3. **Fail safely.** If the transaction runs out of energy despite the buffer, it fails before modifying state. The energy is consumed, but no tokens are incorrectly transferred. The agent can retry with a fresh simulation.
+3. **Güvenli şekilde başarısız ol.** İşlem tampona rağmen enerjiden tükense bile, durumu değiştirmeden önce başarısız olur. Enerji tüketilir, ancak hiçbir token yanlış aktarılmaz. Ajan yeni bir simülasyonla tekrar deneyebilir.
 
-### Reverted Simulations
+### Tersine Çevrilen Simülasyonlar
 
-Sometimes `triggerConstantContract` returns a revert. This means the transaction would fail on-chain. Common causes:
+Bazen `triggerConstantContract` bir revert döndürür. Bu, işlemin zincir üstünde başarısız olacağı anlamına gelir. Yaygın nedenler:
 
-- Insufficient token balance
-- Swap output below minimum (slippage exceeded)
-- Approval not set for token spending
-- Contract paused or restricted
+- Yetersiz token bakiyesi
+- Swap çıktısı minimumun altında (kayma aşıldı)
+- Token harcama için onay ayarlanmadı
+- Sözleşme duraklatılmış veya kısıtlanmış
 
-MERX surfaces these reverts before any energy is purchased:
+MERX bu revert'leri herhangi bir enerji satın alınmadan önce ortaya çıkarır:
 
 ```
-Response:
+Yanıt:
 {
   "success": false,
   "revert_reason": "INSUFFICIENT_OUTPUT_AMOUNT",
   "energy_used": 0,
-  "message": "Swap would fail: output below minimum. Adjust slippage or amount."
+  "message": "Swap başarısız olur: çıktı minimumun altında. Kayma toleransını veya miktarı ayarlayın."
 }
 ```
 
-This prevents the most expensive type of failure: buying energy for a transaction that was never going to succeed.
+Bu, en pahalı başarısızlık türünü önler: asla başarılı olmayacak olan bir işlem için enerji satın almak.
 
-### Approval Transactions
+### Onay İşlemleri
 
-TRC20 token swaps on SunSwap require an approval transaction before the swap. This is a separate contract call with its own energy cost. MERX detects when approval is needed and simulates both transactions:
+SunSwap'ta TRC20 token swap'ları, swap'tan önce bir onay işlemi gerektirir. Bu, kendi enerji maliyeti olan ayrı bir sözleşme çağrısıdır. MERX onay gerektiğinde algılar ve her iki işlemi simüle eder:
 
 ```
-Simulation results:
-  1. approve(router, MAX_UINT256): 46,312 energy
-  2. swapExactTokensForTokens(...): 223,354 energy
-  Total: 269,666 energy
+Simülasyon sonuçları:
+  1. approve(router, MAX_UINT256): 46,312 enerji
+  2. swapExactTokensForTokens(...): 223,354 enerji
+  Toplam: 269,666 enerji
 ```
 
-The agent can then purchase energy for both operations in a single order, avoiding the overhead of two separate energy market interactions.
+Ajan daha sonra her iki işlem için enerjiyi tek bir siparişle satın alabilir ve iki ayrı enerji pazar etkileşiminin genel masrafından kaçınabilir.
 
-## Building Simulation Into Your Workflow
+## Simülasyonu İş Akışınıza Entegre Etme
 
-If you are building on TRON and not using exact simulation, you are leaving money on the table or exposing yourself to transaction failures. Here is how to integrate it:
+TRON'da oluşturuyorsanız ve tam simülasyon kullanmıyorsanız, masanın üzerinde para bırakıyor veya kendinizi işlem başarısızlıklarına açıyorsunuz. İşte nasıl entegre edeceksiniz:
 
-### For MCP Agent Developers
+### MCP Ajan Geliştiricileri için
 
-Use the MERX MCP server. The `ensure_resources` and `execute_swap` tools run simulation automatically. You do not need to call `estimate_contract_call` separately unless you want to inspect the results.
+MERX MCP sunucusunu kullanın. `ensure_resources` ve `execute_swap` araçları simülasyonu otomatik olarak çalıştırır. `estimate_contract_call`'u ayrıca çağırmanız gerekmez çünkü sonuçları incelemek isterseniz.
 
-### For API Integrators
+### API İntegratörleri için
 
-Call the MERX estimation endpoint before every transaction:
+Her işlemden önce MERX tahmin uç noktasını çağırın:
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/estimate \
@@ -245,9 +245,9 @@ curl -X POST https://merx.exchange/api/v1/estimate \
   }'
 ```
 
-### For Direct TronWeb Users
+### Doğrudan TronWeb Kullanıcıları için
 
-Call `triggerConstantContract` yourself before every smart contract interaction:
+Her akıllı sözleşme etkileşiminden önce `triggerConstantContract`'ı kendiniz çağırın:
 
 ```javascript
 const simulation = await tronWeb.transactionBuilder.triggerConstantContract(
@@ -259,57 +259,58 @@ const simulation = await tronWeb.transactionBuilder.triggerConstantContract(
 );
 
 if (!simulation.result.result) {
-  console.error('Transaction would fail:', simulation.result.message);
+  console.error('İşlem başarısız olur:', simulation.result.message);
   return;
 }
 
 const energyNeeded = simulation.energy_used;
-// Now purchase exactly this much energy before broadcasting
+// Şimdi yayınlamadan önce tam bu kadar enerji satın alın
 ```
 
-## The Economics of Precision
+## Hassasiyetin Ekonomisi
 
-Consider an application that processes 1,000 USDT transfers per day.
+Günde 1.000 USDT transferi işleme koyan bir uygulamayı düşünün.
 
-With hardcoded estimates (65,000 energy per transfer):
-
-```
-Daily energy purchased: 65,000,000
-Average actual usage: 47,000,000  (varies by scenario)
-Daily waste: 18,000,000 energy
-Daily waste cost: ~94 TRX (~$24)
-Annual waste: ~$8,760
-```
-
-With exact simulation:
+Sabit kodlanmış tahminlerle (transfer başına 65.000 enerji):
 
 ```
-Daily energy purchased: 47,200,000  (actual + 0.4% rounding)
-Daily waste: 200,000  (rounding to minimum order units)
-Daily waste cost: ~1 TRX (~$0.26)
-Annual waste: ~$95
+Günlük satın alınan enerji: 65.000.000
+Ortalama gerçek kullanım: 47.000.000  (senaryoya göre değişir)
+Günlük atık: 18.000.000 enerji
+Günlük atık maliyeti: ~94 TRX (~$24)
+Yıllık atık: ~$8.760
 ```
 
-The difference is $8,665 per year for a single operation type. For applications that run multiple transaction types at higher volumes, the savings scale linearly.
+Tam simülasyonla:
 
-## Sonuc
+```
+Günlük satın alınan enerji: 47.200.000  (gerçek + %0,4 yuvarlama)
+Günlük atık: 200.000  (minimum sipariş birimlerine yuvarlama)
+Günlük atık maliyeti: ~1 TRX (~$0,26)
+Yıllık atık: ~$95
+```
 
-Exact energy simulation is not a feature. It is a requirement for any serious TRON application. The difference between a hardcoded estimate and an exact simulation is the difference between guessing and knowing. MERX chooses knowing.
+Fark, tek bir işlem türü için yıllık $8.665'tir. Daha yüksek hacimlerde birden çok işlem türü çalıştıran uygulamalar için tasarruflar doğrusal olarak ölçeklendirilir.
 
-Every transaction simulated. Every energy unit accounted for. Every swap quoted precisely. The simulation says 223,354, and the chain confirms 223,354.
+## Sonuç
 
-That is not an approximation. That is engineering.
+Tam enerji simülasyonu bir özellik değildir. Ciddi herhangi bir TRON uygulaması için bir gereksinimdir. Sabit kodlanmış tahmin ile tam simülasyon arasındaki fark, tahmin etmek ile bilmek arasındaki farktır. MERX bilmeyi seçer.
+
+Her işlem simüle edilir. Her enerji birimi hesaplanır. Her swap tam olarak alıntılanır. Simülasyon 223.354 der ve zincir 223.354'ü doğrular.
+
+O yaklaşık değildir. O mühendisliktir.
 
 ---
 
-**Baglantilar:**
-- MERX Platformu: [https://merx.exchange](https://merx.exchange)
+**Bağlantılar:**
+- MERX Platform: [https://merx.exchange](https://merx.exchange)
 - MCP Sunucusu (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - MCP Sunucusu (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- kurulum yok, salt okunur araçlar için API anahtarı yok:
 
 ```json
 {
@@ -321,6 +322,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza şunu sorun: "Şu anda TRON enerjisinin en ucuzu nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

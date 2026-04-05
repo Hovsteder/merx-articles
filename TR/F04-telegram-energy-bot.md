@@ -1,17 +1,17 @@
-# TRON Energy Satin Alan Bir Telegram Botu Olusturma
+# TRON Enerjisi Satın Alan Telegram Botu Oluşturma
 
-Telegram is the de facto communication platform for the crypto community. If you manage TRON wallets, run a dApp, or simply want a convenient way to purchase energy without opening a browser, a Telegram bot is a practical tool. This tutorial walks through building a complete Telegram bot that checks energy prices, purchases energy through MERX, and sends notifications when orders fill.
+Telegram, kripto topluluğunun fiili iletişim platformudur. TRON cüzdanlarını yönetiyorsanız, bir dApp çalıştırıyorsanız veya basitçe tarayıcı açmadan enerji satın almanın uygun bir yolunu istiyorsanız, bir Telegram botu pratik bir araçtır. Bu eğitim, enerji fiyatlarını kontrol eden, MERX aracılığıyla enerji satın alan ve siparişler dolduğunda bildirim gönderen eksiksiz bir Telegram botu oluşturmanın adımlarını açıklamaktadır.
 
-By the end of this article, you will have a working bot with three commands -- `/price`, `/buy`, and `/balance` -- plus webhook integration for real-time order status updates.
+Bu makalenin sonunda, üç komut (`/price`, `/buy` ve `/balance`) içeren ve gerçek zamanlı sipariş durumu güncellemeleri için webhook entegrasyonu sunan çalışan bir bota sahip olacaksınız.
 
-## Prerequisites
+## Ön Koşullar
 
-- Node.js 18 or later
-- A Telegram bot token (from @BotFather)
-- A MERX API key (from [https://merx.exchange](https://merx.exchange))
-- Basic familiarity with TypeScript
+- Node.js 18 veya sonrası
+- Bir Telegram bot tokeni (@BotFather'dan)
+- Bir MERX API anahtarı ([https://merx.exchange](https://merx.exchange) adresinden)
+- TypeScript konusunda temel bilgi
 
-## Project Setup
+## Proje Kurulumu
 
 ```bash
 mkdir tron-energy-bot
@@ -21,7 +21,7 @@ npm install telegraf merx-sdk dotenv express
 npm install -D typescript @types/node @types/express ts-node
 ```
 
-Create the TypeScript configuration:
+TypeScript yapılandırmasını oluşturun:
 
 ```json
 // tsconfig.json
@@ -40,7 +40,7 @@ Create the TypeScript configuration:
 }
 ```
 
-Set up your environment variables:
+Ortam değişkenlerinizi ayarlayın:
 
 ```bash
 # .env
@@ -50,47 +50,47 @@ WEBHOOK_PORT=3001
 WEBHOOK_URL=https://your-server.com/webhooks/merx
 ```
 
-## Bot Architecture
+## Bot Mimarisi
 
-The bot has three layers:
+Bot üç katmandan oluşur:
 
-1. **Telegram command handlers** -- Parse user commands and respond
-2. **MERX client** -- Interact with the energy market
-3. **Webhook server** -- Receive asynchronous order notifications
+1. **Telegram komut işleyicileri** -- Kullanıcı komutlarını ayrıştırır ve yanıt verir
+2. **MERX istemcisi** -- Enerji pazarı ile etkileşim kurar
+3. **Webhook sunucusu** -- Asenkron sipariş bildirimlerini alır
 
 ```
-User sends /price 65000
+Kullanıcı /price 65000 gönderir
        |
        v
-[Telegram Bot] -- parses command
+[Telegram Bot] -- komutu ayrıştırır
        |
        v
-[MERX Client] -- queries prices
+[MERX İstemcisi] -- fiyatları sorgular
        |
        v
-[Telegram Bot] -- formats and sends response
+[Telegram Bot] -- yanıtı biçimlendirir ve gönderir
        |
        v
-User receives price table
+Kullanıcı fiyat tablosunu alır
 
-User sends /buy 65000 1h TAddress
+Kullanıcı /buy 65000 1h TAdres gönderir
        |
        v
-[Telegram Bot] -- validates input
+[Telegram Bot] -- girdiyi doğrular
        |
        v
-[MERX Client] -- creates order
+[MERX İstemcisi] -- sipariş oluşturur
        |
        v
-[Webhook Server] -- receives order.filled
+[Webhook Sunucusu] -- order.filled alır
        |
        v
-[Telegram Bot] -- notifies user
+[Telegram Bot] -- kullanıcıyı bilgilendirir
 ```
 
-## Core Implementation
+## Temel Uygulama
 
-### Entry Point
+### Giriş Noktası
 
 ```typescript
 // src/index.ts
@@ -104,21 +104,21 @@ dotenv.config();
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN!);
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY! });
 
-// Store chat IDs for order notifications
+// Sipariş bildirimleri için sohbet kimliklerini depolayın
 const orderChatMap = new Map<string, number>();
 
-// --- Command Handlers ---
+// --- Komut İşleyicileri ---
 
 bot.command('start', (ctx) => {
   ctx.reply(
-    'TRON Energy Bot\n\n' +
-    'Commands:\n' +
-    '/price <amount> - Check energy prices\n' +
-    '/buy <amount> <duration> <address> - Buy energy\n' +
-    '/balance - Check your MERX balance\n\n' +
-    'Example:\n' +
+    'TRON Enerji Botu\n\n' +
+    'Komutlar:\n' +
+    '/price <miktar> - Enerji fiyatlarını kontrol et\n' +
+    '/buy <miktar> <süre> <adres> - Enerji satın al\n' +
+    '/balance - MERX bakiyenizi kontrol et\n\n' +
+    'Örnek:\n' +
     '/price 65000\n' +
-    '/buy 65000 1h TYourAddress123'
+    '/buy 65000 1h TAdresiniz123'
   );
 });
 
@@ -126,32 +126,32 @@ bot.command('price', handlePrice);
 bot.command('buy', handleBuy);
 bot.command('balance', handleBalance);
 
-// --- Webhook Server ---
+// --- Webhook Sunucusu ---
 
 const app = express();
 app.use(express.json());
 
 app.post('/webhooks/merx', handleMerxWebhook);
 
-// --- Start ---
+// --- Başlat ---
 
 const PORT = parseInt(process.env.WEBHOOK_PORT || '3001');
 
 app.listen(PORT, () => {
-  console.log(`Webhook server listening on port ${PORT}`);
+  console.log(`Webhook sunucusu ${PORT} portunda dinleniyor`);
 });
 
 bot.launch().then(() => {
-  console.log('Telegram bot started');
+  console.log('Telegram botu başlatıldı');
 });
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
 ```
 
-### The /price Command
+### /price Komutu
 
-The `/price` command queries MERX for current energy prices across all providers:
+`/price` komutu, tüm sağlayıcılar arasında geçerli enerji fiyatları için MERX'i sorgular:
 
 ```typescript
 // src/handlers/price.ts
@@ -160,36 +160,36 @@ async function handlePrice(ctx: Context): Promise<void> {
 
   if (args.length < 1) {
     await ctx.reply(
-      'Usage: /price <energy_amount> [duration]\n' +
-      'Example: /price 65000\n' +
-      'Example: /price 65000 1h'
+      'Kullanım: /price <enerji_miktarı> [süre]\n' +
+      'Örnek: /price 65000\n' +
+      'Örnek: /price 65000 1h'
     );
     return;
   }
 
   const amount = parseInt(args[0]);
   if (isNaN(amount) || amount < 10000) {
-    await ctx.reply('Energy amount must be a number >= 10,000');
+    await ctx.reply('Enerji miktarı 10.000 veya daha büyük bir sayı olmalıdır');
     return;
   }
 
   const duration = args[1] || '1h';
 
   try {
-    await ctx.reply('Checking prices across 7 providers...');
+    await ctx.reply('7 sağlayıcı arasında fiyatlar kontrol ediliyor...');
 
     const prices = await merx.getPrices({
       energy_amount: amount,
       duration: duration
     });
 
-    let response = `Energy prices for ${amount.toLocaleString()} units (${duration}):\n\n`;
+    let response = `${amount.toLocaleString()} birim enerji fiyatları (${duration}):\n\n`;
 
-    // Format provider prices as a table
+    // Sağlayıcı fiyatlarını tablo olarak biçimlendir
     for (const offer of prices.providers) {
       const totalTrx = (offer.price_sun * amount) / 1e6;
       const marker = offer.provider === prices.best.provider
-        ? ' << BEST'
+        ? ' << EN İYİSİ'
         : '';
 
       response +=
@@ -198,20 +198,20 @@ async function handlePrice(ctx: Context): Promise<void> {
     }
 
     const bestTotal = (prices.best.price_sun * amount) / 1e6;
-    response += `\nBest price: ${prices.best.price_sun} SUN `;
-    response += `via ${prices.best.provider}\n`;
-    response += `Total cost: ${bestTotal.toFixed(2)} TRX`;
+    response += `\nEn iyi fiyat: ${prices.best.price_sun} SUN `;
+    response += `${prices.best.provider} aracılığıyla\n`;
+    response += `Toplam maliyet: ${bestTotal.toFixed(2)} TRX`;
 
     await ctx.reply(response);
   } catch (error: any) {
-    await ctx.reply(`Error fetching prices: ${error.message}`);
+    await ctx.reply(`Fiyatları alınırken hata: ${error.message}`);
   }
 }
 ```
 
-### The /buy Command
+### /buy Komutu
 
-The `/buy` command places an energy order through MERX:
+`/buy` komutu MERX aracılığıyla bir enerji siparişi yerleştirir:
 
 ```typescript
 // src/handlers/buy.ts
@@ -220,9 +220,9 @@ async function handleBuy(ctx: Context): Promise<void> {
 
   if (args.length < 3) {
     await ctx.reply(
-      'Usage: /buy <amount> <duration> <tron_address>\n' +
-      'Example: /buy 65000 1h TYourAddress123\n\n' +
-      'Durations: 5m, 10m, 30m, 1h, 3h, 6h, 12h, 1d, 3d, 14d'
+      'Kullanım: /buy <miktar> <süre> <tron_adresi>\n' +
+      'Örnek: /buy 65000 1h TAdresiniz123\n\n' +
+      'Süreler: 5m, 10m, 30m, 1h, 3h, 6h, 12h, 1d, 3d, 14d'
     );
     return;
   }
@@ -231,14 +231,14 @@ async function handleBuy(ctx: Context): Promise<void> {
   const duration = args[1];
   const targetAddress = args[2];
 
-  // Validate inputs
+  // Girdiyi doğrula
   if (isNaN(amount) || amount < 10000) {
-    await ctx.reply('Energy amount must be a number >= 10,000');
+    await ctx.reply('Enerji miktarı 10.000 veya daha büyük bir sayı olmalıdır');
     return;
   }
 
   if (!isValidTronAddress(targetAddress)) {
-    await ctx.reply('Invalid TRON address. Must start with T.');
+    await ctx.reply('Geçersiz TRON adresi. T ile başlamalıdır.');
     return;
   }
 
@@ -248,13 +248,13 @@ async function handleBuy(ctx: Context): Promise<void> {
   ];
   if (!validDurations.includes(duration)) {
     await ctx.reply(
-      `Invalid duration. Choose from: ${validDurations.join(', ')}`
+      `Geçersiz süre. Bunlardan seçin: ${validDurations.join(', ')}`
     );
     return;
   }
 
   try {
-    // Get the best price first
+    // Önce en iyi fiyatı alın
     const prices = await merx.getPrices({
       energy_amount: amount,
       duration: duration
@@ -264,14 +264,14 @@ async function handleBuy(ctx: Context): Promise<void> {
       (prices.best.price_sun * amount) / 1e6;
 
     await ctx.reply(
-      `Placing order:\n` +
-      `Amount: ${amount.toLocaleString()} energy\n` +
-      `Duration: ${duration}\n` +
-      `Target: ${targetAddress}\n` +
-      `Price: ${prices.best.price_sun} SUN ` +
+      `Sipariş yerleştiriliyor:\n` +
+      `Miktar: ${amount.toLocaleString()} enerji\n` +
+      `Süre: ${duration}\n` +
+      `Hedef: ${targetAddress}\n` +
+      `Fiyat: ${prices.best.price_sun} SUN ` +
       `(${totalTrx.toFixed(2)} TRX)\n` +
-      `Provider: ${prices.best.provider}\n\n` +
-      `Processing...`
+      `Sağlayıcı: ${prices.best.provider}\n\n` +
+      `İşleniyor...`
     );
 
     const order = await merx.createOrder({
@@ -280,17 +280,17 @@ async function handleBuy(ctx: Context): Promise<void> {
       target_address: targetAddress
     });
 
-    // Store the chat ID for webhook notification
+    // Webhook bildirimi için sohbet kimliğini depolayın
     orderChatMap.set(order.id, ctx.chat!.id);
 
     await ctx.reply(
-      `Order placed.\n` +
-      `Order ID: ${order.id}\n` +
-      `Status: ${order.status}\n\n` +
-      `You will be notified when the order fills.`
+      `Sipariş yerleştirildi.\n` +
+      `Sipariş Kimliği: ${order.id}\n` +
+      `Durum: ${order.status}\n\n` +
+      `Sipariş dolduğunda bilgilendirileceksiniz.`
     );
   } catch (error: any) {
-    await ctx.reply(`Error placing order: ${error.message}`);
+    await ctx.reply(`Sipariş yerleştirilirken hata: ${error.message}`);
   }
 }
 
@@ -299,7 +299,7 @@ function isValidTronAddress(address: string): boolean {
 }
 ```
 
-### The /balance Command
+### /balance Komutu
 
 ```typescript
 // src/handlers/balance.ts
@@ -308,20 +308,20 @@ async function handleBalance(ctx: Context): Promise<void> {
     const balance = await merx.getBalance();
 
     await ctx.reply(
-      `MERX Account Balance:\n\n` +
-      `Available: ${balance.available_trx} TRX\n` +
-      `Reserved (in orders): ${balance.reserved_trx} TRX\n` +
-      `Total: ${balance.total_trx} TRX`
+      `MERX Hesap Bakiyesi:\n\n` +
+      `Mevcut: ${balance.available_trx} TRX\n` +
+      `Ayrılmış (siparişlerde): ${balance.reserved_trx} TRX\n` +
+      `Toplam: ${balance.total_trx} TRX`
     );
   } catch (error: any) {
-    await ctx.reply(`Error fetching balance: ${error.message}`);
+    await ctx.reply(`Bakiye alınırken hata: ${error.message}`);
   }
 }
 ```
 
-### Webhook Handler
+### Webhook İşleyici
 
-The webhook handler receives order status notifications from MERX and forwards them to the user via Telegram:
+Webhook işleyici MERX'ten sipariş durumu bildirimlerini alır ve Telegram aracılığıyla kullanıcıya iletir:
 
 ```typescript
 // src/handlers/webhook.ts
@@ -340,13 +340,13 @@ async function handleMerxWebhook(
         if (chatId) {
           await bot.telegram.sendMessage(
             chatId,
-            `Order filled.\n\n` +
-            `Order ID: ${event.data.order_id}\n` +
-            `Energy: ${event.data.energy_amount.toLocaleString()}\n` +
-            `Provider: ${event.data.provider}\n` +
-            `Price: ${event.data.price_sun} SUN\n` +
-            `Target: ${event.data.target_address}\n\n` +
-            `Energy has been delegated to the target address.`
+            `Sipariş dolduruldu.\n\n` +
+            `Sipariş Kimliği: ${event.data.order_id}\n` +
+            `Enerji: ${event.data.energy_amount.toLocaleString()}\n` +
+            `Sağlayıcı: ${event.data.provider}\n` +
+            `Fiyat: ${event.data.price_sun} SUN\n` +
+            `Hedef: ${event.data.target_address}\n\n` +
+            `Enerji hedef adrese verildi.`
           );
           orderChatMap.delete(event.data.order_id);
         }
@@ -358,10 +358,10 @@ async function handleMerxWebhook(
         if (chatId) {
           await bot.telegram.sendMessage(
             chatId,
-            `Order failed.\n\n` +
-            `Order ID: ${event.data.order_id}\n` +
-            `Reason: ${event.data.reason}\n\n` +
-            `Your balance has been refunded.`
+            `Sipariş başarısız oldu.\n\n` +
+            `Sipariş Kimliği: ${event.data.order_id}\n` +
+            `Neden: ${event.data.reason}\n\n` +
+            `Bakiyeniz iade edildi.`
           );
           orderChatMap.delete(event.data.order_id);
         }
@@ -369,16 +369,16 @@ async function handleMerxWebhook(
       }
     }
   } catch (error) {
-    console.error('Webhook processing error:', error);
+    console.error('Webhook işleme hatası:', error);
   }
 
   res.status(200).json({ received: true });
 }
 ```
 
-## Adding Price Alerts
+## Fiyat Uyarıları Ekleme
 
-Extend the bot with a `/alert` command that uses MERX standing orders to notify users when prices drop below a threshold:
+Botu, kullanıcıları fiyatlar bir eşiğin altına düştüğünde bilgilendirmek için MERX kalıcı siparişlerini kullanan bir `/alert` komutuyla genişletin:
 
 ```typescript
 bot.command('alert', async (ctx) => {
@@ -386,9 +386,9 @@ bot.command('alert', async (ctx) => {
 
   if (args.length < 2) {
     await ctx.reply(
-      'Usage: /alert <energy_amount> <max_price_sun>\n' +
-      'Example: /alert 65000 25\n\n' +
-      'You will be notified when energy price drops below the target.'
+      'Kullanım: /alert <enerji_miktarı> <maksimum_fiyat_sun>\n' +
+      'Örnek: /alert 65000 25\n\n' +
+      'Enerji fiyatı hedefinizin altına düştüğünde bilgilendirileceksiniz.'
     );
     return;
   }
@@ -407,23 +407,23 @@ bot.command('alert', async (ctx) => {
     orderChatMap.set(standing.id, ctx.chat!.id);
 
     await ctx.reply(
-      `Price alert set.\n\n` +
-      `Watching for: ${amount.toLocaleString()} energy ` +
-      `at or below ${maxPrice} SUN\n` +
-      `Alert ID: ${standing.id}\n\n` +
-      `You will be notified when this price is available.`
+      `Fiyat uyarısı ayarlandı.\n\n` +
+      `İzlenen: ${amount.toLocaleString()} enerji ` +
+      `${maxPrice} SUN veya altında\n` +
+      `Uyarı Kimliği: ${standing.id}\n\n` +
+      `Bu fiyat mevcut olduğunda bilgilendirileceksiniz.`
     );
   } catch (error: any) {
-    await ctx.reply(`Error setting alert: ${error.message}`);
+    await ctx.reply(`Uyarı ayarlanırken hata: ${error.message}`);
   }
 });
 ```
 
-## Uretim Hususlari
+## Üretim Konuları
 
-### Persistent Storage
+### Kalıcı Depolama
 
-The in-memory `orderChatMap` used above is fine for development but loses data on restart. For production, use Redis or a database:
+Yukarıda kullanılan bellek içi `orderChatMap` geliştirme için iyidir ancak yeniden başlatmada verileri kaybeder. Üretim için Redis veya bir veritabanı kullanın:
 
 ```typescript
 import Redis from 'ioredis';
@@ -433,7 +433,7 @@ async function storeOrderChat(
   orderId: string,
   chatId: number
 ): Promise<void> {
-  // Store with 24-hour TTL
+  // 24 saatlik TTL ile depolayın
   await redis.set(
     `order:${orderId}:chat`,
     chatId.toString(),
@@ -450,17 +450,17 @@ async function getOrderChat(
 }
 ```
 
-### User Authentication
+### Kullanıcı Kimlik Doğrulaması
 
-For multi-user bots, associate Telegram user IDs with MERX accounts:
+Çok kullanıcılı botlar için Telegram kullanıcı kimliklerini MERX hesaplarıyla ilişkilendirin:
 
 ```typescript
-// Store user API keys securely
+// Kullanıcı API anahtarlarını güvenli şekilde depolayın
 async function setUserApiKey(
   telegramId: number,
   apiKey: string
 ): Promise<void> {
-  // Encrypt before storing
+  // Depolamadan önce şifreleyin
   const encrypted = encrypt(apiKey);
   await redis.set(
     `user:${telegramId}:apikey`,
@@ -481,13 +481,13 @@ async function getUserClient(
 }
 ```
 
-### Rate Limiting
+### Hız Sınırlaması
 
-Prevent abuse by limiting command frequency:
+Komut sıklığını sınırlandırarak kötüye kullanımı önleyin:
 
 ```typescript
 const rateLimits = new Map<number, number>();
-const RATE_LIMIT_MS = 5000; // 5 seconds between commands
+const RATE_LIMIT_MS = 5000; // Komutlar arasında 5 saniye
 
 function isRateLimited(userId: number): boolean {
   const lastCommand = rateLimits.get(userId) || 0;
@@ -501,20 +501,20 @@ function isRateLimited(userId: number): boolean {
   return false;
 }
 
-// Apply to all commands
+// Tüm komutlara uygulayın
 bot.use(async (ctx, next) => {
   const userId = ctx.from?.id;
   if (userId && isRateLimited(userId)) {
-    await ctx.reply('Please wait a few seconds between commands.');
+    await ctx.reply('Lütfen komutlar arasında birkaç saniye bekleyin.');
     return;
   }
   return next();
 });
 ```
 
-### Hata Yonetimi
+### Hata Yönetimi
 
-Wrap all command handlers with consistent error handling:
+Tüm komut işleyicilerini tutarlı hata yönetimiyle sarın:
 
 ```typescript
 function withErrorHandling(
@@ -524,10 +524,10 @@ function withErrorHandling(
     try {
       await handler(ctx);
     } catch (error: any) {
-      console.error('Command error:', error);
+      console.error('Komut hatası:', error);
       await ctx.reply(
-        `An error occurred: ${error.message}\n` +
-        `Please try again or contact support.`
+        `Bir hata oluştu: ${error.message}\n` +
+        `Lütfen tekrar deneyin veya desteğe başvurun.`
       );
     }
   };
@@ -538,9 +538,9 @@ bot.command('buy', withErrorHandling(handleBuy));
 bot.command('balance', withErrorHandling(handleBalance));
 ```
 
-## Deployment
+## Dağıtım
 
-### Running with PM2
+### PM2 ile Çalıştırma
 
 ```bash
 npm run build
@@ -568,28 +568,28 @@ docker run -d \
   tron-energy-bot
 ```
 
-## Testing the Bot
+## Botu Test Etme
 
-1. Start the bot: `npx ts-node src/index.ts`
-2. Open Telegram and find your bot
-3. Send `/start` to see available commands
-4. Send `/price 65000` to check current energy prices
-5. Send `/buy 65000 1h TYourAddress` to place an order
-6. Wait for the webhook notification confirming the order filled
+1. Botu başlatın: `npx ts-node src/index.ts`
+2. Telegram'ı açın ve botunuzu bulun
+3. Kullanılabilir komutları görmek için `/start` gönderin
+4. Geçerli enerji fiyatlarını kontrol etmek için `/price 65000` gönderin
+5. Sipariş yerleştirmek için `/buy 65000 1h TAdresiniz` gönderin
+6. Siparişin doldurulduğunu doğrulayan webhook bildirimini bekleyin
 
-## Sonuc
+## Sonuç
 
-A Telegram bot for TRON energy purchasing turns a web-based workflow into a conversational interface. With three core commands and webhook integration, users can check prices, buy energy, and receive fill notifications without leaving Telegram.
+TRON enerji satın alınması için bir Telegram botu, web tabanlı bir iş akışını sohbetli bir arayüze dönüştürür. Üç temel komut ve webhook entegrasyonu ile, kullanıcılar Telegram'dan ayrılmadan fiyatları kontrol edebilir, enerji satın alabilir ve doldurma bildirimlerini alabilir.
 
-The implementation leverages the MERX SDK for all energy market interactions, which means the bot automatically gets best-price routing across seven providers, standing order support for price alerts, and reliable order execution with failover.
+Uygulama, tüm enerji pazarı etkileşimleri için MERX SDK'sını kullanır; bu, botun otomatik olarak yedi sağlayıcı arasında en iyi fiyat yönlendirmesini, fiyat uyarıları için kalıcı sipariş desteğini ve yük devretmeli güvenilir sipariş yürütmesini elde ettiği anlamına gelir.
 
-The complete source code in this article is production-ready with the addition of persistent storage and proper authentication. The total implementation is under 300 lines of TypeScript.
+Bu makalede yer alan tam kaynak kodu, kalıcı depolama ve uygun kimlik doğrulaması eklenmesiyle üretim için hazırdır. Toplam uygulama 300 satırdan az TypeScript'tir.
 
-For API documentation, visit [https://merx.exchange/docs](https://merx.exchange/docs). For the MCP server integration, see [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).
+API belgeleri için [https://merx.exchange/docs](https://merx.exchange/docs) adresini ziyaret edin. MCP sunucusu entegrasyonu için [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) adresine bakın.
 
-## Try It Now with AI
+## Yapay Zeka ile Şimdi Deneyin
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır kurulum, salt okuma araçları için API anahtarı gerekmez:
 
 ```json
 {
@@ -601,6 +601,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Yapay zeka aracınıza şunu sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlı sağlayıcılardan gerçek zamanlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

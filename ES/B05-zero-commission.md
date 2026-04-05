@@ -1,285 +1,286 @@
-# Operaciones sin comision: el modelo de negocio de MERX
+# Comercio sin Comisión: El Modelo de Negocio de MERX
 
-MERX charges cero comision on energy trades. No markup on provider prices. No hidden fees. No spread. You pay exactly what the provider charges, and MERX adds nothing on top.
+MERX cobra cero comisión en operaciones de energy. Sin margen sobre los precios de los proveedores. Sin tarifas ocultas. Sin spread. Pagas exactamente lo que cobra el proveedor, y MERX no añade nada más.
 
-This naturally raises questions. How does a business sustain itself without revenue? Is this a loss-leader strategy that ends with a rug pull on pricing? What is the catch?
+Esto naturalmente genera preguntas. ¿Cómo se sostiene un negocio sin ingresos? ¿Es una estrategia de pérdida líder que termina con un rug pull en precios? ¿Cuál es la trampa?
 
-Hay no catch. But there is a strategy. This article explains how MERX's cero comision model works, why it exists, and how the platform plans to sustain and monetize over time.
-
----
-
-## What Zero Commission Means, Precisely
-
-When you buy energy through MERX, the price you pay equals the provider's wholesale price. If el proveedor mas barato offers energy at 85 SUN per unit, you pay 85 SUN per unit. MERX does not add a margin.
-
-To put this in context, here is what a typical energy purchase looks like:
-
-```
-Energy ordered:         65,000 units
-Best provider price:    85 SUN/unit
-Total cost:             5,525,000 SUN = 5.525 TRX
-
-MERX markup:            0 SUN
-MERX fee:               0 SUN
-Total charged to buyer: 5,525,000 SUN = 5.525 TRX
-```
-
-This is verifiable. Every order response includes the provider name and price. You can check the provider's own API to confirm MERX is not inflating the price. The transparency is deliberate - it builds trust and makes the cero comision claim auditable.
+No hay trampa. Pero hay una estrategia. Este artículo explica cómo funciona el modelo de cero comisión de MERX, por qué existe, y cómo la plataforma planea sostenerse y monetizarse con el tiempo.
 
 ---
 
-## Why Zero Commission
+## Qué Significa Cero Comisión, Precisamente
 
-### The Market Acquisition Phase
+Cuando compras energy a través de MERX, el precio que pagas es igual al precio mayorista del proveedor. Si el proveedor más barato ofrece energy a 85 SUN por unidad, pagas 85 SUN por unidad. MERX no añade margen.
 
-MERX is in its market acquisition phase. The energy aggregation market on TRON is nascent - most developers and businesses still integrate directly with individual providers or, worse, burn TRX for every transaction. The immediate priority is not revenue; it is adoption.
+Para poner esto en contexto, así es como se ve una compra típica de energy:
 
-Zero commission removes the primary objection to using an aggregator: "Why would I pay a middleman when I can go direct?" With cero comision, the middleman adds value (enrutamiento al mejor precio, respaldo, una sola API) without adding cost.
+```
+Energy solicitado:      65,000 unidades
+Mejor precio proveedor: 85 SUN/unidad
+Costo total:            5,525,000 SUN = 5.525 TRX
 
-### The Flywheel Effect
+Margen de MERX:         0 SUN
+Tarifa de MERX:         0 SUN
+Total cobrado al buyer: 5,525,000 SUN = 5.525 TRX
+```
 
-Every new user on MERX generates data: order volume, price sensitivity, provider preferences, usage patterns. This data improves the platform:
-
-- **More order volume** gives MERX leverage to negotiate better rates with providers.
-- **Better rates** attract more users.
-- **More users** generate more data for routing optimization.
-- **Better routing** leads to better prices and reliability.
-
-Zero commission accelerates the flywheel. It is an investment in efectos de red that compound over time.
-
-### Comparison With Provider Direct Pricing
-
-Individual providers set their own prices and already include their margin. When you buy from TronSave at 88 SUN/unit, that 88 includes TronSave's operating costs and profit. MERX passes this price through without adding to it.
-
-Some providers offer volume discounts to large buyers. MERX, by aggregating many buyers' volume, can potentially access these discounts and pass the savings to individual users who would not qualify on their own. This is a future benefit that grows with platform volume.
+Esto es verificable. Cada respuesta de orden incluye el nombre del proveedor y el precio. Puedes verificar la API del proveedor directamente para confirmar que MERX no está inflando el precio. La transparencia es deliberada - construye confianza y hace que el reclamo de cero comisión sea auditable.
 
 ---
 
-## How MERX Sustains Operations Today
+## Por Qué Cero Comisión
 
-Running MERX is not free. The platform requires servers, development, monitoring, and operational support. During the cero comision phase, these costs are funded by the founding team as a business investment.
+### La Fase de Adquisición de Mercado
 
-### Current Cost Structure
+MERX está en su fase de adquisición de mercado. El mercado de agregación de energy en TRON es incipiente - la mayoría de desarrolladores y empresas aún se integran directamente con proveedores individuales o, peor aún, queman TRX en cada transacción. La prioridad inmediata no es la generación de ingresos; es la adopción.
 
-```
-Infrastructure:
-  - Dedicated server (Hetzner):       ~$150/month
-  - Domain and SSL:                   ~$20/month
-  - Monitoring and alerting:          ~$50/month
+La cero comisión elimina la objeción principal al usar un agregador: "¿Por qué pagaría a un intermediario cuando puedo ir directo?" Con cero comisión, el intermediario añade valor (enrutamiento a mejor precio, conmutación por error, API única) sin añadir costo.
 
-Development:
-  - Founding team time:               Not externally funded
-  - No venture capital (yet)
-  - No token sale
+### El Efecto Volante
 
-Operational:
-  - Provider API access:              Free (providers want volume)
-  - TRON node access:                 Public nodes + own node
-  - Redis, PostgreSQL:                Self-hosted on dedicated server
-```
+Cada nuevo usuario en MERX genera datos: volumen de órdenes, sensibilidad al precio, preferencias de proveedores, patrones de uso. Estos datos mejoran la plataforma:
 
-The infrastructure costs are modest by any standard. This is a lean operation by design - every dollar saved on infrastructure is a dollar that does not need to be recouped from users.
+- **Más volumen de órdenes** da a MERX palanca para negociar mejores tasas con proveedores.
+- **Mejores tasas** atraen más usuarios.
+- **Más usuarios** generan más datos para optimizar el enrutamiento.
+- **Mejor enrutamiento** conduce a mejores precios y confiabilidad.
 
----
+La cero comisión acelera el volante. Es una inversión en efectos de red que se componen con el tiempo.
 
-## The Future Revenue Model
+### Comparación con Precios Directos de Proveedores
 
-Zero commission is not the permanent state. It is the entry price for a market that MERX intends to grow. Aqui esta how the revenue model evolves:
+Los proveedores individuales establecen sus propios precios e incluyen su margen. Cuando compras de TronSave a 88 SUN/unidad, esos 88 incluyen los costos operativos y ganancia de TronSave. MERX transmite este precio sin añadir nada a él.
 
-### Phase 1: Zero Commission (Current)
-
-- 0% commission on all trades.
-- Goal: user acquisition, provider relationships, platform maturity.
-- Duration: until meaningful order volume is established.
-
-### Phase 2: Premium Features
-
-The first revenue comes from value-added services that go beyond basic price routing:
-
-**Standing Orders and Automation**
-
-```
-Basic (free):     Manual orders, best-price routing
-Premium:          Standing orders, auto-renewal, price alerts
-                  Scheduled energy procurement
-                  Webhook notifications for delegation events
-```
-
-**Analytics and Insights**
-
-```
-Basic (free):     Current prices, basic order history
-Premium:          Price prediction models
-                  Provider reliability scoring
-                  Cost optimization recommendations
-                  Custom reporting and export
-```
-
-**Priority Support**
-
-```
-Basic (free):     Documentation, community support
-Premium:          Direct support channel
-                  SLA guarantees on order execution
-                  Dedicated account management
-```
-
-The base service - routing orders to el mejor precio - remains free. Premium features serve power users who derive enough value from the platform to justify a subscription.
-
-### Phase 3: Volume-Based Pricing
-
-For very high-volume users (millions of unidad de energias per day), MERX may introduce a small commission that reflects the operational cost of handling large orders:
-
-```
-Volume tier:       Commission:
-0 - 1M energy/mo:  0% (forever free)
-1M - 10M:          0.5%
-10M - 100M:        0.3%
-100M+:             Negotiated
-```
-
-Even at 0.5%, the total cost is still lower than what most users pay through direct provider integration (where they cannot access enrutamiento al mejor precio).
-
-### Phase 4: Provider Services
-
-As MERX grows into the dominant aggregation layer, providers benefit from the order flow. Future revenue streams could include:
-
-- **Featured placement**: providers pay for priority in routing (with transparency - buyers always see the actual price).
-- **Analytics for providers**: market share data, competitive pricing intelligence.
-- **Settlement services**: MERX handles payment collection and remittance, charging providers a small processing fee.
+Algunos proveedores ofrecen descuentos por volumen a compradores grandes. MERX, al agregar el volumen de muchos compradores, puede potencialmente acceder a estos descuentos y pasar los ahorros a usuarios individuales que no calificarían por su cuenta. Este es un beneficio futuro que crece con el volumen de la plataforma.
 
 ---
 
-## Comparison With Provider Markups
+## Cómo MERX Sustenta Operaciones Hoy
 
-How does MERX's cero comision compare with what providers already charge?
+Ejecutar MERX no es gratis. La plataforma requiere servidores, desarrollo, monitoreo y soporte operativo. Durante la fase de cero comisión, estos costos se financian del equipo fundador como una inversión comercial.
 
-Providers are not charities. Their quoted prices include their operating costs and profit margins. The typical provider markup structure looks like this:
-
-```
-Provider cost structure:
-  - TRX staking cost (opportunity cost):     Base cost
-  - Infrastructure (servers, nodes):          5-10% of base
-  - Development and maintenance:              5-10% of base
-  - Profit margin:                            10-30% of base
-
-Estimated markup over raw staking cost:       20-50%
-```
-
-When you buy at 85 SUN/unit from a provider, roughly 55-70 SUN covers the raw cost of staking, and 15-30 SUN is the provider's overhead and margin. This is normal and sustainable.
-
-MERX does not add another layer of margin. The 85 SUN the provider charges is the 85 SUN you pay. Compare this with other aggregation models:
+### Estructura de Costos Actual
 
 ```
-Traditional aggregator:
-  Provider price:     85 SUN/unit
-  Aggregator markup:  5-15%
-  You pay:            89-98 SUN/unit
+Infraestructura:
+  - Servidor dedicado (Hetzner):      ~$150/mes
+  - Dominio y SSL:                    ~$20/mes
+  - Monitoreo y alertas:              ~$50/mes
+
+Desarrollo:
+  - Tiempo del equipo fundador:        No financiado externamente
+  - Sin capital de riesgo (por ahora)
+  - Sin venta de tokens
+
+Operacional:
+  - Acceso a API de proveedores:      Gratis (proveedores quieren volumen)
+  - Acceso a nodo TRON:               Nodos públicos + nodo propio
+  - Redis, PostgreSQL:                Auto-hospedados en servidor dedicado
+```
+
+Los costos de infraestructura son modestos por cualquier estándar. Esta es una operación eficiente por diseño - cada dólar ahorrado en infraestructura es un dólar que no necesita recuperarse de los usuarios.
+
+---
+
+## El Modelo de Ingresos Futuro
+
+Cero comisión no es el estado permanente. Es el precio de entrada para un mercado que MERX intenta crecer. Así es como el modelo de ingresos evoluciona:
+
+### Fase 1: Cero Comisión (Actual)
+
+- 0% de comisión en todos los intercambios.
+- Objetivo: adquisición de usuarios, relaciones con proveedores, madurez de plataforma.
+- Duración: hasta que se establezca un volumen de órdenes significativo.
+
+### Fase 2: Características Premium
+
+Los primeros ingresos provienen de servicios de valor añadido que van más allá del enrutamiento básico de precios:
+
+**Órdenes Permanentes y Automatización**
+
+```
+Básico (gratis):      Órdenes manuales, enrutamiento a mejor precio
+Premium:              Órdenes permanentes, auto-renovación, alertas de precio
+                      Aprovisionamiento de energy programado
+                      Notificaciones webhook para eventos de delegación
+```
+
+**Análisis e Insights**
+
+```
+Básico (gratis):      Precios actuales, historial de órdenes básico
+Premium:              Modelos de predicción de precios
+                      Puntuación de confiabilidad de proveedores
+                      Recomendaciones de optimización de costos
+                      Reportes personalizados y exportación
+```
+
+**Soporte Prioritario**
+
+```
+Básico (gratis):      Documentación, soporte comunitario
+Premium:              Canal de soporte directo
+                      Garantías SLA en ejecución de órdenes
+                      Gestión de cuenta dedicada
+```
+
+El servicio base - enrutar órdenes al mejor precio - permanece gratis. Las características premium sirven a usuarios avanzados que derivan suficiente valor de la plataforma para justificar una suscripción.
+
+### Fase 3: Precios Basados en Volumen
+
+Para usuarios con volumen muy alto (millones de unidades de energy por día), MERX puede introducir una pequeña comisión que refleje el costo operativo de manejar órdenes grandes:
+
+```
+Nivel de volumen:     Comisión:
+0 - 1M energy/mes:    0% (siempre gratis)
+1M - 10M:             0.5%
+10M - 100M:           0.3%
+100M+:                Negociado
+```
+
+Incluso a 0.5%, el costo total es aún menor que lo que la mayoría de usuarios pagan a través de integración directa con proveedores (donde no pueden acceder a enrutamiento a mejor precio).
+
+### Fase 4: Servicios para Proveedores
+
+Conforme MERX crece para convertirse en la capa de agregación dominante, los proveedores se benefician del flujo de órdenes. Los futuros flujos de ingresos podrían incluir:
+
+- **Colocación destacada**: los proveedores pagan por prioridad en enrutamiento (con transparencia - los buyers siempre ven el precio real).
+- **Análisis para proveedores**: datos de cuota de mercado, inteligencia de precios competitivos.
+- **Servicios de liquidación**: MERX maneja la recolección de pagos y remesas, cobrando a los proveedores una pequeña tarifa de procesamiento.
+
+---
+
+## Comparación con Márgenes de Proveedores
+
+¿Cómo se compara la cero comisión de MERX con lo que los proveedores ya cobran?
+
+Los proveedores no son organizaciones benéficas. Sus precios cotizados incluyen sus costos operativos y márgenes de ganancia. La estructura típica de margen de proveedor se ve así:
+
+```
+Estructura de costos del proveedor:
+  - Costo de staking de TRX (costo de oportunidad):   Costo base
+  - Infraestructura (servidores, nodos):              5-10% del base
+  - Desarrollo y mantenimiento:                        5-10% del base
+  - Margen de ganancia:                                10-30% del base
+
+Margen estimado sobre costo de staking bruto:         20-50%
+```
+
+Cuando compras a 85 SUN/unidad de un proveedor, aproximadamente 55-70 SUN cubren el costo bruto de staking, y 15-30 SUN son los gastos generales y margen del proveedor. Esto es normal y sostenible.
+
+MERX no añade otra capa de margen. Los 85 SUN que cobra el proveedor son los 85 SUN que pagas. Compara esto con otros modelos de agregación:
+
+```
+Agregador tradicional:
+  Precio de proveedor:    85 SUN/unidad
+  Margen de agregador:    5-15%
+  Tú pagas:               89-98 SUN/unidad
 
 MERX:
-  Provider price:     85 SUN/unit
-  MERX markup:        0%
-  You pay:            85 SUN/unit
+  Precio de proveedor:    85 SUN/unidad
+  Margen de MERX:         0%
+  Tú pagas:               85 SUN/unidad
 ```
 
 ---
 
-## The Trust Question
+## La Pregunta de Confianza
 
-"If you are not charging, you are the product." This is a reasonable concern in any free service. Let us address it directly.
+"Si no estás cobrando, tú eres el producto." Esta es una preocupación razonable en cualquier servicio gratuito. Dirijo­monos directamente a ella.
 
-### MERX Does Not Sell Your Data
+### MERX No Vende Tus Datos
 
-Order data is used to optimize routing and improve the platform. It is not sold to third parties. Hay no advertising model. Your transaction volumes and patterns are your business.
+Los datos de órdenes se usan para optimizar el enrutamiento y mejorar la plataforma. No se venden a terceros. No hay modelo publicitario. Tus volúmenes y patrones de transacción son tu asunto.
 
-### MERX Does Not Custody Your Funds
+### MERX No Custodia Tus Fondos
 
-MERX holds deposit balances for ejecucion de ordenes. These are operational balances, not custodial assets. You can withdraw your balance at any time. The platform does not invest, lend, or otherwise use your deposited funds.
+MERX mantiene saldos de depósito para ejecución de órdenes. Estos son saldos operacionales, no activos en custodia. Puedes retirar tu saldo en cualquier momento. La plataforma no invierte, presta, o utiliza de otra manera tus fondos depositados.
 
-### MERX Does Not Front-Run Orders
+### MERX No Adelanta Órdenes
 
-The ejecutor de ordenes routes to the best available price en el momento de la ejecucion. It does not delay orders to wait for better prices (which would benefit MERX if it held a position) or route to more expensive providers when cheaper ones are available.
+El ejecutor de órdenes enruta al mejor precio disponible en el momento de ejecución. No retrasa órdenes para esperar mejores precios (lo cual beneficiaría a MERX si tuviera una posición) ni enruta a proveedores más caros cuando hay opciones más baratas disponibles.
 
-### The Code Is Inspectable
+### El Código Es Inspectable
 
-The MERX SDKs are codigo abierto:
+Los SDKs de MERX son de código abierto:
 
 - SDK de JavaScript: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 - SDK de Python: [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
 - Servidor MCP: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-Every order includes the provider name and en cadena hash de transaccion. You can independently verify that the delegation occurred at the price MERX quoted.
+Cada orden incluye el nombre del proveedor y el hash de transacción en cadena. Puedes verificar independientemente que la delegación ocurrió al precio que MERX cotizó.
 
 ---
 
-## Why Not Just Use Providers Directly?
+## ¿Por Qué No Usar Proveedores Directamente?
 
-If MERX charges cero comision, why not integrate with providers directly and skip the aggregation layer entirely?
+Si MERX cobra cero comisión, ¿por qué no integrarse directamente con proveedores y saltar completamente la capa de agregación?
 
-You can. But here is what you give up:
+Puedes hacerlo. Pero aquí está lo que renuncias:
 
-### Best-Price Routing
+### Enrutamiento a Mejor Precio
 
-Provider prices change throughout the day. The cheapest provider at 9 AM may be el mas caro at 3 PM. Without continuous monitoring (which MERX does every 30 seconds), you are probably not getting el mejor precio en cualquier momento dado.
+Los precios de los proveedores cambian a lo largo del día. El proveedor más barato a las 9 AM puede ser el más caro a las 3 PM. Sin monitoreo continuo (que MERX hace cada 30 segundos), probablemente no estés obteniendo el mejor precio en ningún momento dado.
 
-### Automatic Failover
+### Conmutación por Error Automática
 
-If your single provider goes down, your application stops working. With MERX, a provider failure is invisible to you - orders are routed to the next cheapest option automatically.
+Si tu único proveedor se cae, tu aplicación deja de funcionar. Con MERX, un fallo de proveedor es invisible para ti - las órdenes se enrutan a la siguiente opción más barata automáticamente.
 
-### Operational Simplicity
+### Simplicidad Operacional
 
-Seven provider integrations means seven sets of API documentation, seven authentication methods, seven formato de errors, seven sets of API changes to track. One MERX integration replaces all of them.
+Siete integraciones de proveedores significa siete conjuntos de documentación de API, siete métodos de autenticación, siete formatos de error, siete conjuntos de cambios de API para rastrear. Una integración de MERX reemplaza todo esto.
 
-### Future-Proofing
+### A Prueba de Futuro
 
-New providers enter the market. Existing providers change their APIs or shut down. With MERX, new providers are automatically available to you, and defunct providers are removed - no code changes required.
+Nuevos proveedores entran al mercado. Los proveedores existentes cambian sus APIs o cierran. Con MERX, nuevos proveedores están automáticamente disponibles para ti, y los proveedores difuntos se eliminan - sin cambios de código necesarios.
 
-The cero comision model means you get all of these benefits at no additional cost over going direct. The only rational reason to go direct is if you have specific requirements that MERX does not support - and if that is the case, the team wants to hear about it.
-
----
-
-## For Early Adopters
-
-The cero comision rate for adoptante tempranos is not time-limited. Users who join during this phase will be grandfathered into favorable terms as the platform evolves. This is not a bait-and-switch; it is an acknowledgment that early users take on more risk (newer platform, smaller track record) and deserve commensurate reward.
-
-If the revenue model eventually includes commissions, adoptante tempranos will either:
-- Maintain cero comision permanently, or
-- Receive significant discounts relative to later users
-
-The specifics will be communicated well in advance of any pricing changes.
+El modelo de cero comisión significa que obtienes todos estos beneficios sin costo adicional sobre ir directo. La única razón racional para ir directo es si tienes requisitos específicos que MERX no soporta - y si ese es el caso, el equipo quiere saberlo.
 
 ---
 
-## Como comenzar
+## Para Primeros Adoptantes
 
-Create an account and start trading at cero comision:
+La tasa de cero comisión para primeros adoptantes no tiene límite de tiempo. Los usuarios que se unan durante esta fase serán grandfathered en términos favorables conforme la plataforma evoluciona. Esto no es un cambio de gancho y anzuelo; es un reconocimiento de que los usuarios tempranos asumen más riesgo (plataforma más nueva, historial más pequeño) y merecen recompensa commensurada.
 
-1. Visit [https://merx.exchange](https://merx.exchange)
-2. Create an account
-3. Generate an clave de API
-4. Make your first order
+Si el modelo de ingresos eventualmente incluye comisiones, los primeros adoptantes podrán:
+- Mantener cero comisión permanentemente, o
+- Recibir descuentos significativos relativos a usuarios posteriores
+
+Los detalles específicos se comunicarán con mucha antelación antes de cualquier cambio de precios.
+
+---
+
+## Cómo Comenzar
+
+Crea una cuenta y comienza a operar sin comisión:
+
+1. Visita [https://merx.exchange](https://merx.exchange)
+2. Crea una cuenta
+3. Genera una clave API
+4. Realiza tu primer orden
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 
-// See current best prices (no commission added)
+// Ver precios actuales mejores (sin comisión añadida)
 const prices = await client.getPrices({ energy: 65000 });
-console.log(`Best price: ${prices.bestPrice.perUnit} SUN/unit`);
-console.log(`Provider: ${prices.bestPrice.provider}`);
-console.log(`MERX fee: 0`);
+console.log(`Mejor precio: ${prices.bestPrice.perUnit} SUN/unidad`);
+console.log(`Proveedor: ${prices.bestPrice.provider}`);
+console.log(`Tarifa de MERX: 0`);
 ```
 
-Documentacion: [https://merx.exchange/docs](https://merx.exchange/docs)
+Documentación: [https://merx.exchange/docs](https://merx.exchange/docs)
 
 ---
 
-*Este articulo es parte de la serie de conocimiento de MERX. MERX es el primer exchange de recursos blockchain, offering cero comision energy trading with enrutamiento al mejor precio across all major TRON proveedor de energias.*
+*Este artículo es parte de la serie de conocimiento de MERX. MERX es el primer intercambio de recursos de blockchain, ofreciendo operaciones de energy sin comisión con enrutamiento a mejor precio a través de todos los principales proveedores de energy de TRON.*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -291,6 +292,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es el TRON energy más barato ahora mismo?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,116 +1,116 @@
-# MERX ve TronSave Karsilastirmasi: Agregator ve Tek Saglayici
+# MERX vs TronSave: Agregator vs Tek Sağlayıcı
 
-The TRON energy market has grown from a niche concern into a critical cost-optimization layer for any serious blockchain operation. Two names come up frequently in these discussions: TronSave and MERX. They serve similar goals -- reducing transaction costs on TRON -- but they approach the problem from fundamentally different angles. This article breaks down the differences, compares features side by side, and helps you decide which solution fits your use case.
+TRON enerji piyasası niş bir endişeden, herhangi bir ciddi blockchain operasyonu için kritik bir maliyet optimizasyonu katmanına dönüşmüştür. Bu tartışmalarda sıkça iki isim duyulur: TronSave ve MERX. Benzer hedeflere hizmet ederler -- TRON'da işlem maliyetlerini azaltmak -- ancak soruna temelden farklı açılardan yaklaşırlar. Bu makale farkları açıklar, özellikleri yan yana karşılaştırır ve hangi çözümün sizin kullanım durumunuza uygun olduğunu belirlemenize yardımcı olur.
 
-## What TronSave Does
+## TronSave Ne Yapar?
 
-TronSave operates as a peer-to-peer energy marketplace. It connects resource holders -- users who have staked TRX and accumulated energy -- with consumers who need that energy for smart contract interactions. The model is straightforward: sellers list their available energy at a price, buyers browse and purchase.
+TronSave eşler arası (P2P) bir enerji pazarı olarak çalışır. Kaynak sahiplerini -- TRX'e hisse koymuş ve enerji biriktirmiş kullanıcıları -- akıllı kontrat etkileşimleri için enerjiye ihtiyaç duyan tüketicilerle bağlar. Model açıktır: satıcılar mevcut enerjilerini bir fiyata listeler, alıcılar gözat ve satın alır.
 
-This P2P approach has genuine strengths. For large orders, TronSave can offer competitive pricing because you are negotiating directly with resource holders. The platform handles the delegation mechanics, so sellers freeze their TRX and TronSave facilitates the energy transfer to buyers.
+Bu P2P yaklaşımının gerçek güçleri vardır. Büyük siparişler için, TronSave rekabetçi fiyatlandırma sunabilir çünkü kaynak sahipleriyle doğrudan müzakere edersiniz. Platform delegasyon mekaniklerini yönetir, böylece satıcılar TRX'lerini dondurur ve TronSave enerji transferini alıcılara kolaylaştırır.
 
-TronSave supports multiple duration tiers and allows buyers to specify exactly how much energy they need. For organizations placing bulk orders -- hundreds of thousands of energy units at a time -- the P2P model can yield favorable rates because large sellers are incentivized to move volume.
+TronSave birden fazla süre seviyesini destekler ve alıcıların ihtiyaç duydukları enerji miktarını tam olarak belirtmelerine izin verir. Toplu siparişler veren kuruluşlar -- bir seferde yüzlerce bin enerji birimi -- P2P modelden olumlu oranlar elde edebilir çünkü büyük satıcılar hacim taşımaya teşvik edilir.
 
-### Where TronSave Falls Short
+### TronSave'in Eksik Olduğu Yerler
 
-The P2P model introduces inherent limitations. Availability depends on seller participation. During high-demand periods, the supply side may thin out, pushing prices upward or leaving orders partially filled. There is no guaranteed fill rate because the platform depends on matching buyers with willing sellers.
+P2P modeli doğal sınırlamalar getirir. Kullanılabilirlik satıcı katılımına bağlıdır. Yüksek talep dönemlerinde, arz tarafı zayıflayabilir, fiyatları yükseltir veya siparişleri kısmen doldurur. Platform alıcıları istekli satıcılarla eşleştirmeye bağlı olduğundan, garantili bir doldurma oranı yoktur.
 
-Price discovery requires effort. Buyers must evaluate multiple listings, compare durations and rates, and make decisions based on incomplete market information. For developers automating transactions, this manual evaluation process does not translate well into API calls.
+Fiyat keşfi çaba gerektirir. Alıcılar birden fazla listelemeyi değerlendirmeli, süreleri ve oranları karşılaştırmalı ve tamamlanmamış pazar bilgisine dayalı kararlar almalıdır. İşlemleri otomatikleştiren geliştiriciler için, bu manuel değerlendirme süreci API çağrılarına çevirmiş değildir.
 
-TronSave is a single provider. When their supply is constrained, your only option is to wait or pay more. There is no fallback, no alternative routing, no second source of liquidity.
+TronSave tek bir sağlayıcıdır. Onların arzı kısıtlandığında, tek seçeneğiniz beklemek veya daha fazla ödemektir. Hiçbir yedek yoktur, alternatif yönlendirme yoktur, ikincil likidite kaynağı yoktur.
 
-## What MERX Does Differently
+## MERX Farklı Ne Yapar?
 
-MERX is an energy aggregator. Rather than operating as a marketplace for a single pool of resources, MERX connects to seven providers simultaneously -- and TronSave is one of them. When you place an order through MERX, the system queries all connected providers in real time, compares prices, and routes your order to the cheapest available source.
+MERX bir enerji agregatörüdür. Tek bir kaynak havuzu için bir pazar olarak çalışmak yerine, MERX aynı anda yedi sağlayıcıya bağlanır -- ve TronSave bunlardan biridir. MERX üzerinden bir sipariş verdiğinizde, sistem tüm bağlı sağlayıcıları gerçek zamanda sorgular, fiyatları karşılaştırır ve siparişinizi en ucuz mevcut kaynağa yönlendirir.
 
-This distinction matters more than it might seem at first glance.
+Bu ayrım ilk bakışta göründüğünden daha önemlidir.
 
-### Aggregation as Architecture
+### Agregasyon Mimarisi Olarak
 
-MERX does not hold energy inventory. It does not ask sellers to list resources on its platform. Instead, it maintains live connections to TronSave, PowerSun, Feee, Catfee, Netts, iTRX, and Sohu. Each provider has different pricing models, different supply dynamics, and different strengths.
+MERX enerji envanteri tutmaz. Satıcılardan platformunda kaynakları listelemesini istemiyor. Bunun yerine, TronSave, PowerSun, Feee, Catfee, Netts, iTRX ve Sohu ile canlı bağlantılar sağlar. Her sağlayıcı farklı fiyatlandırma modellerine, farklı arz dinamiklerine ve farklı güçlü yönlere sahiptir.
 
-When you request 65,000 energy units through MERX, the system:
+MERX üzerinden 65.000 enerji birimi istediğinizde, sistem:
 
-1. Queries all active providers simultaneously
-2. Compares available prices for your specific amount and duration
-3. Routes the order to the provider offering the best rate
-4. Handles the purchase and delegation transparently
+1. Tüm aktif sağlayıcıları aynı anda sorgular
+2. Özel miktarınız ve süreniz için mevcut fiyatları karşılaştırır
+3. Siparişi en iyi oranı sunan sağlayıcıya yönlendirir
+4. Satın alma ve delegasyonu şeffaf bir şekilde işler
 
-You never need to know which provider ultimately filled your order. The API response includes the provider name for transparency, but the process is automatic.
+Hangi sağlayıcının siparişi doldurduğunu asla bilmeniz gerekmez. API yanıtı şeffaflık için sağlayıcı adını içerir, ancak işlem otomatiktir.
 
-## Feature Comparison
+## Özellik Karşılaştırması
 
-| Feature | TronSave | MERX |
+| Özellik | TronSave | MERX |
 |---|---|---|
-| Type | P2P Marketplace | Aggregator (7 providers) |
-| Price source | Seller listings | Best across all providers |
-| Includes TronSave | -- | Yes |
-| Additional providers | No | 6 more providers |
+| Tür | P2P Pazarı | Agregator (7 sağlayıcı) |
+| Fiyat kaynağı | Satıcı listeleri | Tüm sağlayıcılar arasında en iyi |
+| TronSave'i İçerir | -- | Evet |
+| Ek sağlayıcılar | Hayır | 6 daha fazla sağlayıcı |
 | API | REST | REST + WebSocket + SDK |
-| Exact energy simulation | No | Yes (triggerConstantContract) |
-| Standing orders | No | Yes (price triggers) |
-| Auto-energy for wallets | No | Yes |
-| MCP server (AI agents) | No | Yes |
-| Payment | TRX / USDT | TRX (account balance) |
-| SDK | Limited | JS + Python |
-| Price comparison | Manual | Automatic |
-| Failover on provider outage | No (single provider) | Automatic rerouting |
+| Tam enerji simülasyonu | Hayır | Evet (triggerConstantContract) |
+| Kalıcı siparişler | Hayır | Evet (fiyat tetikleyicileri) |
+| Cüzdanlar için otomatik enerji | Hayır | Evet |
+| MCP sunucusu (AI ajanları) | Hayır | Evet |
+| Ödeme | TRX / USDT | TRX (hesap bakiyesi) |
+| SDK | Sınırlı | JS + Python |
+| Fiyat karşılaştırması | Manuel | Otomatik |
+| Sağlayıcı kesintisinde yedek | Hayır (tek sağlayıcı) | Otomatik yeniden yönlendirme |
 
-## Price Dynamics
+## Fiyat Dinamikleri
 
-TronSave prices are set by individual sellers. This creates variability -- you might find an excellent deal from a motivated seller, or you might find the available listings are all above market rate.
+TronSave fiyatları bireysel satıcılar tarafından belirlenir. Bu değişkenlik yaratır -- motive olmuş bir satıcıdan harika bir anlaşma bulabilir veya mevcut tüm listeleler pazar oranının üzerinde olabilir.
 
-MERX prices reflect the best available rate across all seven providers at the moment of your query. Because providers compete for order flow, the effective price through MERX tends to sit at or near the market floor.
+MERX fiyatları, sorgu anında yedi sağlayıcı arasında mevcut olan en iyi oranı yansıtır. Sağlayıcılar sipariş akışı için rekabet ettiğinden, MERX üzerindeki etkili fiyat piyasa tabanında veya yakınında yer almaya eğilimlidir.
 
-Consider a practical scenario. You need 65,000 energy for a USDT transfer. At a given moment:
+Pratik bir senaryo düşünün. USDT transferi için 65.000 enerjiye ihtiyacınız var. Belirli bir anda:
 
-- TronSave lists energy at 35 SUN
-- PowerSun offers 30 SUN
-- Feee offers 28 SUN
+- TronSave 35 SUN'da enerji listeler
+- PowerSun 30 SUN sunar
+- Feee 28 SUN sunar
 
-If you go to TronSave directly, you pay 35 SUN. Through MERX, you pay 28 SUN because the system routes to Feee automatically. The savings compound with volume.
+Doğrudan TronSave'e giderseniz, 35 SUN ödersiniz. MERX üzerinden, 28 SUN ödersiniz çünkü sistem otomatik olarak Feee'ye yönlendirir. Tasarruflar hacim ile birleşir.
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// Get best price across all providers including TronSave
+// TronSave dahil olmak üzere tüm sağlayıcılar arasında en iyi fiyatı alın
 const prices = await merx.getPrices({
   energy_amount: 65000,
   duration: '1h'
 });
 
-// prices.providers shows each provider's offer
-// prices.best is the lowest available rate
-console.log(`Best: ${prices.best.price_sun} SUN via ${prices.best.provider}`);
+// prices.providers her sağlayıcının teklifini gösterir
+// prices.best kullanılabilir en düşük oran
+console.log(`En iyi: ${prices.best.price_sun} SUN, sağlayıcı: ${prices.best.provider}`);
 ```
 
-## When TronSave Makes Sense
+## TronSave Ne Zaman Anlamlı Olur
 
-TronSave remains a reasonable choice in specific scenarios:
+TronSave belirli senaryolarda makul bir seçim olmaya devam eder:
 
-**Very large orders with negotiation.** If you are buying millions of energy units and can negotiate directly with large stakers through TronSave's platform, you may secure a rate that beats open-market aggregation.
+**Müzakere edilebilecek çok büyük siparişler.** Milyonlarca enerji birimi satın alıyorsanız ve TronSave platformu aracılığıyla büyük hissedarlarla doğrudan müzakere edebiliyorsanız, açık pazar agregasyonunu yenen bir oran sağlayabilirsiniz.
 
-**Existing integration.** If your system already integrates with TronSave's API and works reliably, the switching cost may not justify the savings -- at least not immediately.
+**Mevcut entegrasyon.** Sistem halihazırda TronSave'in API'sine entegre ise ve güvenilir bir şekilde çalışıyorsa, geçiş maliyeti tasarrufları haklı çıkarmayabilir -- en azından hemen değil.
 
-**Preference for P2P model.** Some organizations prefer the transparency of knowing exactly who is providing their resources.
+**P2P modeline tercih.** Bazı kuruluşlar kaynakların tam olarak kim tarafından sağlandığını bilen şeffaflığı tercih ederler.
 
-## When MERX Makes More Sense
+## MERX Ne Zaman Daha Anlamlı Olur
 
-For most use cases, aggregation provides clear advantages:
+Çoğu kullanım durumu için, agregasyon açık avantajlar sağlar:
 
-**Automated operations.** If you are running a payment processor, DEX, or any system that sends transactions programmatically, MERX's single API removes the need to manage multiple provider integrations.
+**Otomatikleştirilmiş işlemler.** Bir ödeme işlemcisi, DEX veya programlı olarak işlem gönderen herhangi bir sistem çalıştırıyorsanız, MERX'in tek API'si birden fazla sağlayıcı entegrasyonunu yönetme ihtiyacını ortadan kaldırır.
 
-**Price sensitivity.** If you want the lowest available rate without manually checking seven providers, MERX handles this automatically.
+**Fiyata duyarlılık.** En düşük kullanılabilir oranı yedi sağlayıcıyı manuel olarak kontrol etmeden istiyorsanız, MERX bunu otomatik olarak işler.
 
-**Reliability requirements.** If one provider goes down, MERX routes to the next cheapest available option. With TronSave alone, an outage means no energy.
+**Güvenilirlik gereksinimleri.** Bir sağlayıcı giderse, MERX bir sonraki en ucuz mevcut seçeneğe yönlendirir. Yalnız TronSave ile, kesinti enerji yok demektir.
 
-**Variable order sizes.** Different providers excel at different order sizes. Small orders might route to one provider, large orders to another. MERX handles this routing automatically.
+**Değişken sipariş boyutları.** Farklı sağlayıcılar farklı sipariş boyutlarında mükemmeldir. Küçük siparişler bir sağlayıcıya, büyük siparişler diğerine yönlendirilebilir. MERX bu yönlendirmeyi otomatik olarak işler.
 
-**Developer experience.** MERX provides typed SDKs for JavaScript and Python, WebSocket connections for real-time price updates, and an MCP server for AI agent integration. The developer tooling is built for modern workflows.
+**Geliştirici deneyimi.** MERX, JavaScript ve Python için türlendirilmiş SDK'lar, gerçek zamanlı fiyat güncellemeleri için WebSocket bağlantıları ve AI ajanı entegrasyonu için bir MCP sunucusu sağlar. Geliştirici araçları modern iş akışları için oluşturulmuştur.
 
 ```typescript
-// Standing order: automatically buy when price drops below threshold
+// Kalıcı sipariş: fiyat eşikten düştüğünde otomatik olarak satın al
 const standing = await merx.createStandingOrder({
   energy_amount: 65000,
   max_price_sun: 25,
@@ -119,41 +119,41 @@ const standing = await merx.createStandingOrder({
 });
 ```
 
-## Integration Complexity
+## Entegrasyon Karmaşıklığı
 
-Integrating with TronSave means learning their specific API, authentication flow, error format, and order lifecycle. This is manageable for a single provider.
+TronSave ile entegrasyon, onların spesifik API'sini, kimlik doğrulama akışını, hata formatını ve sipariş yaşam döngüsünü öğrenmek anlamına gelir. Bu tek bir sağlayıcı için yönetilebilirdir.
 
-But if you want price comparison across the market, you would need to integrate with multiple providers independently. Each has its own API design, authentication method, and response format. You are looking at weeks of development work to build what MERX provides out of the box.
+Ancak piyasa genelinde fiyat karşılaştırması istiyorsanız, birden fazla sağlayıcı ile bağımsız olarak entegre olmanız gerekir. Her birinin kendi API tasarımı, kimlik doğrulama yöntemi ve yanıt biçimi vardır. MERX'in kutudan çıktığında sağladığı şeyi oluşturmak için haftalar geliştirme çalışması yapıyor.
 
-MERX consolidates all of this behind a single REST API:
+MERX bunu tümünü tek bir REST API'nin arkasına konsolidedir:
 
 ```bash
-# Get best price - one call, all providers compared
+# En iyi fiyatı al - bir çağrı, tüm sağlayıcılar karşılaştırıldı
 curl https://merx.exchange/api/v1/prices \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{"energy_amount": 65000, "duration": "1h"}'
 ```
 
-The response includes offers from every active provider, sorted by price, with the best option clearly identified. Your code does not need to know about individual provider APIs.
+Yanıt, her aktif sağlayıcıdan teklifleri içerir, fiyata göre sıralanır, en iyi seçenek açıkça tanımlanır. Kodunuz bireysel sağlayıcı API'leri hakkında bilmesine gerek yoktur.
 
-## Failover and Reliability
+## Yedek ve Güvenilirlik
 
-This is where the aggregator model shows its most practical benefit. Energy providers experience occasional downtime, API errors, or supply shortages. When you depend on a single provider, any disruption stops your operations.
+Agregator modeli en pratik faydalarını burada gösteriyor. Enerji sağlayıcıları zaman zaman kesinti, API hataları veya arz kısıtlamalarını yaşar. Tek bir sağlayıcıya bağlı olduğunuzda, herhangi bir kesinti operasyonlarınızı durdurur.
 
-MERX monitors provider health continuously. If TronSave becomes unavailable, orders route to the next cheapest provider without any action required from you. Your application code remains unchanged. The failover is invisible.
+MERX sağlayıcı sağlığını sürekli izler. TronSave kullanılamaz hale gelirse, siparişler sizin tarafınızdan hiçbir işlem yapılmadan bir sonraki en ucuz sağlayıcıya yönlendirilir. Uygulama kodunuz değişmeden kalır. Yedek görünmezdir.
 
-In practice, MERX maintains uptime metrics for each provider and uses this data for routing decisions. Providers with consistently high fill rates and low latency receive routing preference when prices are equal.
+Uygulamada, MERX her sağlayıcı için çalışma süresi metriklerini tutar ve bu verileri yönlendirme kararları için kullanır. Tutarlı yüksek doldurma oranlarına ve düşük gecikmeli sağlayıcılar, fiyatlar eşit olduğunda yönlendirme tercihini alırlar.
 
-## Exact Energy Simulation
+## Tam Enerji Simülasyonu
 
-One technical advantage worth highlighting separately: MERX provides exact energy simulation using the TRON network's `triggerConstantContract` dry-run API. Before purchasing energy, you can simulate your specific transaction and learn exactly how much energy it will consume.
+Ayrı olarak vurgulama değeri olan bir teknik avantaj: MERX, TRON ağının `triggerConstantContract` kuru çalıştırma API'sini kullanarak tam enerji simülasyonu sağlar. Enerji satın almadan önce, belirli işleminizi simüle edebilir ve tam olarak ne kadar enerji tüketecekini öğrenebilirsiniz.
 
-TronSave does not offer this capability. Without simulation, buyers must rely on hardcoded estimates -- 65,000 for a USDT transfer, 200,000 for a DEX swap. These estimates are frequently wrong by 5-30%, leading to either wasted energy (over-purchase) or partial TRX burn (under-purchase).
+TronSave bu yeteneği sunmaz. Simülasyon olmadan, alıcılar sabit tahminklere güvenmeleri gerekir -- USDT transferi için 65.000, DEX takası için 200.000. Bu tahminler sıkça %5-30 oranında yanlıştır, ya boşa harcanan enerjiye (aşırı satın alma) ya da kısmi TRX yakılmasına (yetersiz satın alma) yol açar.
 
-With MERX, the workflow is precise:
+MERX ile iş akışı kesindir:
 
 ```typescript
-// Simulate the exact transaction
+// Tam işlemi simüle edin
 const estimate = await merx.estimateEnergy({
   contract_address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
   function_selector: 'transfer(address,uint256)',
@@ -161,29 +161,30 @@ const estimate = await merx.estimateEnergy({
   owner_address: senderAddress
 });
 
-// Buy exactly what the simulation says you need
+// Simülasyonun söylediği tam miktarı satın alın
 const order = await merx.createOrder({
-  energy_amount: estimate.energy_required, // e.g., 64,285
+  energy_amount: estimate.energy_required, // örneğin, 64.285
   duration: '5m',
   target_address: senderAddress
 });
 ```
 
-Over thousands of transactions, the savings from exact estimation versus fixed estimates add up to meaningful amounts.
+Binlerce işlem üzerinde, sabit tahminlere kıyasla tam tahminden yapılan tasarruflar anlamlı miktarlar birikmesine yol açar.
 
-## The Bottom Line
+## Sonuç Olarak
 
-TronSave is a solid energy marketplace with a functioning P2P model. For users who want to interact directly with energy sellers, it serves its purpose well. The platform has an established track record and handles the mechanics of energy delegation reliably.
+TronSave, işlevsel bir P2P modeline sahip sağlam bir enerji pazarıdır. Enerji satıcılarıyla doğrudan etkileşim kurmak isteyen kullanıcılar için, amacına iyi hizmet eder. Platform yerleşik bir sicili vardır ve enerji delegasyonunun mekaniklerini güvenilir bir şekilde işler.
 
-MERX is a different category of tool. By aggregating TronSave alongside six other providers, it removes the manual work of price comparison, eliminates single-provider risk, and provides a developer-first API layer. You get TronSave's supply plus the supply of every other connected provider, and the system always routes to the best available price.
+MERX farklı bir araç kategorisidir. TronSave'i altı diğer sağlayıcı ile beraber agregasyon yaparak, fiyat karşılaştırmasının manuel çalışmasını ortadan kaldırır, tek sağlayıcı riskini elimine eder ve geliştirici odaklı bir API katmanı sağlar. TronSave'in arzını artı diğer bağlı sağlayıcıların arzını alırsınız ve sistem her zaman mevcut en iyi fiyata yönlendirir.
 
-The distinction is structural, not qualitative. TronSave is one provider doing its job well. MERX is a layer above that makes TronSave -- and six others -- work together automatically. For developers building automated systems, for businesses processing TRON transactions at scale, and for anyone who values both cost optimization and operational reliability, the aggregation model offers a clear structural advantage.
+Ayrım niteliksel değil yapısaldır. TronSave işini iyi yapan bir sağlayıcıdır. MERX, TronSave'i -- ve altı tanesini daha -- otomatik olarak birlikte çalışmasını sağlayan bir katmandır. Otomatikleştirilmiş sistemler oluşturan geliştiriciler için, TRON işlemlerini ölçekte işleyen işletmeler için ve hem maliyet optimizasyonunu hem de operasyonel güvenilirliği değerlendirenler için, agregasyon modeli açık bir yapısal avantaj sunuyor.
 
-Explore the API documentation at [https://merx.exchange/docs](https://merx.exchange/docs) or try the platform at [https://merx.exchange](https://merx.exchange).
+API belgelerine [https://merx.exchange/docs](https://merx.exchange/docs) adresinden ulaşın veya platformu [https://merx.exchange](https://merx.exchange) adresinde deneyin.
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır kurulum, salt okunur araçlar için API anahtarı gerekmiyor:
 
 ```json
 {
@@ -195,6 +196,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza şunu sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

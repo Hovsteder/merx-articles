@@ -1,165 +1,165 @@
-# TRON Bandwidth Neden Ucretsizdir (Ta Ki Olmayincaya Kadar)
+# TRON Bandwidth Neden Ücretsizdir (Ta Ki Olmayana Kadar)
 
-Every TRON account gets 600 free bandwidth points per day. For casual users sending an occasional TRX transfer, this is enough. The transaction feels free, and TRON's marketing proudly claims zero-fee transfers. But for any application processing more than a couple of transactions daily, that free bandwidth runs out fast - and what happens next can be surprisingly expensive if you are not prepared.
+Her TRON hesabı günde 600 ücretsiz bandwidth puanı alır. Ara sıra TRX transferi gönderen gündelik kullanıcılar için bu yeterlidir. İşlem ücretsiz hissettirilir ve TRON'un pazarlaması gurur bir şekilde sıfır ücretli transferler iddia eder. Ancak günde birkaçtan fazla işlem işleyen herhangi bir uygulama için bu ücretsiz bandwidth hızla tükenir ve sonra ne olur hazırlıklı değilseniz şaşırtıcı derecede pahalı olabilir.
 
-This article explains how TRON bandwidth actually works, when the free allocation fails you, what it costs when it does, and how to manage bandwidth at scale.
-
----
-
-## What Bandwidth Actually Is
-
-Bandwidth is the resource consumed by the raw byte size of every transaction on TRON. Not just smart contract calls - every single transaction, including simple TRX transfers, account updates, and votes. If it touches the blockchain, it uses bandwidth.
-
-The amount of bandwidth consumed equals the transaction's serialized byte size. A typical TRX transfer is 250-300 bytes. A USDT transfer (smart contract call) is 340-400 bytes.
-
-Think of bandwidth as a data quota. The TRON network limits how much data you can write to the blockchain per day. The free allocation gives every account a small daily quota. Exceed it, and you pay.
+Bu makale TRON bandwidth'inin gerçekte nasıl çalıştığını, ücretsiz tahsisinin ne zaman yetersiz kaldığını, bu durumda ne kadar maliyetlendiğini ve ölçekte bandwidth'i nasıl yönetileceğini açıklar.
 
 ---
 
-## The Free 600 Bandwidth Points
+## Bandwidth Gerçekte Nedir
 
-Every activated TRON account receives 600 bandwidth points per day. These regenerate continuously over a 24-hour window, similar to energy regeneration.
+Bandwidth, TRON üzerindeki her işlemin ham bayt boyutu tarafından tüketilen kaynaktır. Sadece akıllı kontrat çağrıları değil - basit TRX transferleri, hesap güncellemeleri ve oylar da dahil olmak üzere her işlem. Blockchain'e dokunursa, bandwidth kullanır.
 
-### What 600 Bandwidth Gets You
+Tüketilen bandwidth miktarı, işlemin serileştirilmiş bayt boyutuna eşittir. Tipik bir TRX transferi 250-300 bayttır. Bir USDT transferi (akıllı kontrat çağrısı) 340-400 bayttır.
 
-| Transaction Type | Bytes per TX | Transfers per Day |
+Bandwidth'i bir veri kotası olarak düşünün. TRON ağı, günde blockchain'e yazabileceğiniz veri miktarını sınırlar. Ücretsiz tahsisat, her hesaba küçük bir günlük kota sağlar. Onu aşın ve ödeme yapın.
+
+---
+
+## Ücretsiz 600 Bandwidth Puanı
+
+Her etkinleştirilen TRON hesabı günde 600 bandwidth puanı alır. Bunlar, enerji yenilenmesine benzer şekilde 24 saatlik bir pencere içinde sürekli olarak yenilenir.
+
+### 600 Bandwidth Size Ne Kadar Yetiyorsa
+
+| İşlem Türü | İşlem Başına Bayt | Günlük Transfer Sayısı |
 |-----------------|-------------|-------------------|
-| TRX transfer | ~270 | 2 |
-| USDT transfer | ~350 | 1 |
-| TRC-10 token transfer | ~280 | 2 |
-| Account permission update | ~300 | 2 |
+| TRX transferi | ~270 | 2 |
+| USDT transferi | ~350 | 1 |
+| TRC-10 token transferi | ~280 | 2 |
+| Hesap izni güncellemesi | ~300 | 2 |
 
-That is it. Two simple transfers, or one USDT transfer, per day. For a personal wallet that sends the occasional payment, this is adequate. For anything else, it is not even close.
+Hepsi bu. Günde iki basit transfer veya bir USDT transferi. Ara sıra ödeme gönderen kişisel bir cüzdan için bu yeterlidir. Başka herhangi bir şey için neredeyse hiç yeterli değildir.
 
-### Regeneration
+### Yenileme
 
-Bandwidth regenerates continuously over 24 hours. If you use 300 bandwidth at noon, you will have those 300 points back by noon the next day. But regeneration is linear - after 12 hours, you will have regenerated 150 of those 300 points.
+Bandwidth 24 saat içinde sürekli olarak yenilenir. Öğle saatinde 300 bandwidth kullanırsanız, ertesi gün öğle saatine kadar bu 300 puanı geri alırsınız. Ancak yenileme doğrusaldır - 12 saat sonra, bu 300 puanın 150'sini yenilemiş olacaksınız.
 
 ```
-Regeneration rate = 600 / 86400 = 0.00694 bandwidth points per second
+Yenileme oranı = 600 / 86400 = saniye başına 0.00694 bandwidth puanı
 ```
 
-Or roughly 25 points per hour. If you exhaust your bandwidth in the morning, you will not have meaningful capacity again until the next day.
+Saatte kabaca 25 puan. Bandwidth'inizi sabah tüketirseniz, ertesi güne kadar anlamlı bir kapasiteye sahip olmayacaksınız.
 
 ---
 
-## When Free Bandwidth Runs Out
+## Ücretsiz Bandwidth Tüklendiğinde
 
-When your bandwidth reaches zero and you send a transaction, the TRON network does not reject it. Instead, it burns TRX from your account to cover the bandwidth cost. This is the "invisible fee" that surprises developers who assumed TRON transactions are free.
+Bandwidth'iniz sıfıra düştüğünde ve bir işlem gönderdiğinizde, TRON ağı bunu reddetmez. Bunun yerine, bandwidth maliyetini karşılamak için hesabınızdan TRX yakar. Bu, TRON işlemlerinin ücretsiz olduğunu varsayan geliştiricileri şaşırtan "gizli ücret"tir.
 
-### The Burn Mechanism
+### Yanma Mekanizması
 
-The bandwidth burn price is a network parameter set by super representative voting. As of early 2026, the effective bandwidth burn rate is approximately:
+Bandwidth yanma fiyatı, süper temsilci oylaması tarafından belirlenen bir ağ parametresidir. 2026 başı itibariyle, etkin bandwidth yanma oranı yaklaşık olarak:
 
 ```
-1,000 SUN per bandwidth point (byte)
+Bandwidth puanı (bayt) başına 1.000 SUN
 ```
 
-This means:
+Bu şu anlama gelir:
 
-| Transaction Type | Bytes | Burn Cost (SUN) | Burn Cost (TRX) |
+| İşlem Türü | Bayt | Yanma Maliyeti (SUN) | Yanma Maliyeti (TRX) |
 |-----------------|-------|----------------|----------------|
-| TRX transfer | 270 | 270,000 | 0.27 |
-| USDT transfer | 350 | 350,000 | 0.35 |
+| TRX transferi | 270 | 270.000 | 0,27 |
+| USDT transferi | 350 | 350.000 | 0,35 |
 
-At $0.25/TRX, a single TRX transfer costs about $0.07 in bandwidth burns, and a USDT transfer costs about $0.09. These numbers look small in isolation. They become significant at volume.
+$0,25/TRX'te, tek bir TRX transferi yaklaşık $0,07 bandwidth yangını maliyeti ve bir USDT transferi yaklaşık $0,09 maliyeti. Bu rakamlar izole edildiğinde küçük görünür. Hacimde anlamlı hale gelirler.
 
 ---
 
-## The Volume Problem
+## Hacim Sorunu
 
-Let us calculate bandwidth costs for a payment processor handling different transaction volumes. We will assume all transactions are USDT transfers (350 bytes each) and that only the free 600 bandwidth offsets the first transfer's cost.
+Farklı işlem hacimlerini işleyen bir ödeme işlemcisinin bandwidth maliyetlerini hesaplayalım. Tüm işlemlerin USDT transferleri (her biri 350 bayt) olduğunu ve yalnızca ücretsiz 600 bandwidth'in ilk transferin maliyetini dengelediğini varsayacağız.
 
-### Daily Bandwidth Consumption
+### Günlük Bandwidth Tüketimi
 
 ```
-10 transfers/day:    10 x 350 = 3,500 bytes
-  Free bandwidth:    600 bytes
-  Burned:            2,900 bytes
-  Burn cost:         2,900,000 SUN = 2.9 TRX = $0.73/day
+10 transfer/gün:    10 x 350 = 3.500 bayt
+  Ücretsiz bandwidth:    600 bayt
+  Yakılan:            2.900 bayt
+  Yanma maliyeti:         2.900.000 SUN = 2,9 TRX = $0,73/gün
 
-100 transfers/day:   100 x 350 = 35,000 bytes
-  Free bandwidth:    600 bytes
-  Burned:            34,400 bytes
-  Burn cost:         34,400,000 SUN = 34.4 TRX = $8.60/day
+100 transfer/gün:   100 x 350 = 35.000 bayt
+  Ücretsiz bandwidth:    600 bayt
+  Yakılan:            34.400 bayt
+  Yanma maliyeti:         34.400.000 SUN = 34,4 TRX = $8,60/gün
 
-1,000 transfers/day: 1,000 x 350 = 350,000 bytes
-  Free bandwidth:    600 bytes
-  Burned:            349,400 bytes
-  Burn cost:         349,400,000 SUN = 349.4 TRX = $87.35/day
+1.000 transfer/gün: 1.000 x 350 = 350.000 bayt
+  Ücretsiz bandwidth:    600 bayt
+  Yakılan:            349.400 bayt
+  Yanma maliyeti:         349.400.000 SUN = 349,4 TRX = $87,35/gün
 ```
 
-### Monthly Bandwidth Costs
+### Aylık Bandwidth Maliyetleri
 
-| Daily Transfers | Monthly Bandwidth Cost (TRX) | Monthly Bandwidth Cost (USD) |
+| Günlük Transfer | Aylık Bandwidth Maliyeti (TRX) | Aylık Bandwidth Maliyeti (USD) |
 |----------------|-----------------------------|-----------------------------|
-| 10 | 87 | $21.75 |
-| 50 | 514 | $128.50 |
-| 100 | 1,032 | $258.00 |
-| 500 | 5,222 | $1,305.50 |
-| 1,000 | 10,482 | $2,620.50 |
+| 10 | 87 | $21,75 |
+| 50 | 514 | $128,50 |
+| 100 | 1.032 | $258,00 |
+| 500 | 5.222 | $1.305,50 |
+| 1.000 | 10.482 | $2.620,50 |
 
-At 1,000 transfers per day, bandwidth alone costs over $2,600 per month. This is often overlooked because energy costs are larger (roughly $42,000/month at the same volume for USDT transfers), but $2,600 is not negligible. It is the cost of a junior developer or a production server.
-
----
-
-## Bandwidth vs Energy: A Cost Comparison
-
-For a USDT transfer, how do bandwidth and energy costs compare?
-
-```
-Energy cost (burning):     27.30 TRX per transfer
-Bandwidth cost (burning):   0.35 TRX per transfer
-```
-
-Energy is 78x more expensive than bandwidth. This is why most optimization discussion focuses on energy. But bandwidth costs are:
-
-- **Unavoidable**: every transaction uses bandwidth, even TRX-only transfers
-- **Not covered by energy rental**: renting energy does not include bandwidth
-- **Cumulative**: they add up across all transactions, not just smart contract calls
+Günde 1.000 transfer'de, bandwidth başına aylık 2.600 dolardan fazla maliyetlidir. Bu, enerji maliyetleri daha büyük olduğu için sıklıkla göz ardı edilir (aynı hacimde USDT transferleri için ayda yaklaşık 42.000 dolar), ancak 2.600 dolar önemsizdir değil. Bir junior geliştirici veya bir üretim sunucusunun maliyetidir.
 
 ---
 
-## How to Get More Bandwidth
+## Bandwidth'e Karşı Enerji: Bir Maliyet Karşılaştırması
 
-### Option 1: Stake TRX for Bandwidth
-
-Just as you can stake TRX for energy, you can stake TRX for bandwidth. The mechanism is identical - you call `freezeBalanceV2` with `resource: "BANDWIDTH"`.
-
-The staking ratio for bandwidth is different from energy. As of early 2026, approximately:
+Bir USDT transferi için bandwidth ve enerji maliyetleri nasıl karşılaştırılır?
 
 ```
-1,000 TRX staked = ~5,000 bandwidth/day
+Enerji maliyeti (yanma):     transfer başına 27,30 TRX
+Bandwidth maliyeti (yanma):   transfer başına 0,35 TRX
 ```
 
-For 100 USDT transfers per day (35,000 bytes needed):
+Enerji, bandwidth'den 78 kez daha pahalıdır. Çoğu optimizasyon tartışması bu nedenle enerji üzerinde odaklanır. Ancak bandwidth maliyetleri:
+
+- **Kaçınılmaz**: Her işlem bandwidth kullanır, hatta yalnızca TRX transferleri de
+- **Enerji kiralama tarafından karşılanmaz**: Enerji kiralama bandwidth'i içermez
+- **Birikimli**: Tüm işlemler arasında toplanır, sadece akıllı kontrat çağrıları değil
+
+---
+
+## Daha Fazla Bandwidth Nasıl Elde Edilir
+
+### Seçenek 1: Bandwidth için TRX Stake Edin
+
+Enerji için TRX stake'leyebileceğiniz gibi, bandwidth için de TRX stake'leyebilirsiniz. Mekanizm aynıdır - `freezeBalanceV2`'yi `resource: "BANDWIDTH"` ile çağırırsınız.
+
+Bandwidth için stake oranı enerji'ninkinden farklıdır. 2026 başı itibariyle, yaklaşık olarak:
 
 ```
-Required bandwidth: 35,000 bytes/day
-Free bandwidth:     600 bytes/day
-Need from staking:  34,400 bytes/day
-TRX to stake:       34,400 / 5 = ~6,880 TRX
-Capital at $0.25:   $1,720
+1.000 TRX stake edilmiş = ~5.000 bandwidth/gün
 ```
 
-This is dramatically cheaper than staking for energy (which would require $900,000 for the same volume). Bandwidth staking is accessible even for small operations.
+Günde 100 USDT transferi için (35.000 bayt gerekli):
 
-### Option 2: Let It Burn
+```
+Gerekli bandwidth: 35.000 bayt/gün
+Ücretsiz bandwidth:     600 bayt/gün
+Stake'den gerekli:  34.400 bayt/gün
+Stake edilecek TRX:       34.400 / 5 = ~6.880 TRX
+$0,25'te Kapital:   $1.720
+```
 
-For many operations, simply burning TRX for bandwidth is the pragmatic choice. The cost is low enough that managing bandwidth staking may not be worth the operational overhead.
+Bu, enerji için stake etmekten dramatik olarak daha ucuzdur (aynı hacim için 900.000 dolar gerektirir). Bandwidth stake'leme, küçük operasyonlar için bile erişilebilir.
 
-At 100 transfers/day, the bandwidth burn cost is $258/month. If staking $1,720 worth of TRX saves you $258/month, the payback period is about 6-7 months (accounting for opportunity cost). Reasonable, but not urgent.
+### Seçenek 2: Yakmasını Bırakın
 
-### Option 3: Rent Bandwidth
+Birçok operasyon için, basitçe bandwidth için TRX yakması pratik bir seçimdir. Maliyet yeterince düşüktür ki, bandwidth stake'leme yönetimini yapmanın işletimsel ek yük olup olmadığı sorulabilir.
 
-Some energy providers also offer bandwidth delegation. This is less common than energy rental because bandwidth costs are lower and demand is smaller. MERX supports bandwidth delegation for users who need it:
+Günde 100 transfer'de, bandwidth yanma maliyeti ayda 258 dolar. 1.720 dolar değerinde TRX stake etmek ayda 258 dolar tasarruf ederse, geri ödeme süresi yaklaşık 6-7 aydır (fırsat maliyetini hesaba katarsak). Makul, ancak acil değil.
+
+### Seçenek 3: Bandwidth Kiralayın
+
+Bazı enerji sağlayıcıları ayrıca bandwidth delegasyonu da sunarlar. Bu, enerji kiralama işleminden daha az yaygındır çünkü bandwidth maliyetleri daha düşüktür ve talep daha azdır. MERX, ihtiyaç duyan kullanıcılar için bandwidth delegasyonunu destekler:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 
-// Check current bandwidth status
+// Mevcut bandwidth durumunu kontrol edin
 const resources = await client.checkAddressResources({
   address: 'your-tron-address'
 });
@@ -169,55 +169,55 @@ console.log(`Bandwidth: ${resources.bandwidth.remaining}/${resources.bandwidth.l
 
 ---
 
-## When Bandwidth Becomes Critical
+## Bandwidth Ne Zaman Kritik Hale Gelir
 
-### Scenario 1: High-Frequency Trading Bots
+### Senaryo 1: Yüksek Frekanslı Ticaret Botları
 
-A trading bot executing 500+ transactions per day will burn through free bandwidth instantly. If the bot does not hold sufficient TRX for burns, transactions will fail entirely. This is a hard failure - the bot stops working.
-
-```
-500 trades/day x 300 bytes = 150,000 bytes/day
-Free: 600 bytes
-Burn cost: 149,400,000 SUN = 149.4 TRX/day
-Monthly: ~$1,119
-```
-
-For a trading bot, $1,119/month in bandwidth costs is a cost of doing business. But if the bot's TRX balance runs dry, it halts. Monitoring TRX balance for bandwidth burns is as important as monitoring trading capital.
-
-### Scenario 2: DApp With Many Users
-
-A DApp where each user has their own address faces a different challenge. Each address gets its own 600 free bandwidth. If users make only 1-2 transactions per day, bandwidth may not be an issue. But if the DApp sponsors transactions (paying on behalf of users), all bandwidth consumption comes from a single address.
+Günde 500+ işlem yürüten bir ticaret botu, ücretsiz bandwidth'i anında tüketir. Bot bandwidth yangınları için yeterli TRX'e sahip değilse, işlemler tamamen başarısız olur. Bu sabit bir arızadır - bot çalışmayı durdurur.
 
 ```
-DApp address sponsors 10,000 user transactions/day
-10,000 x 350 bytes = 3,500,000 bytes
-Free: 600 bytes
-Burn cost: 3,499,400,000 SUN = 3,499.4 TRX/day = ~$875/day
-Monthly: ~$26,250
+500 işlem/gün x 300 bayt = 150.000 bayt/gün
+Ücretsiz: 600 bayt
+Yanma maliyeti: 149.400.000 SUN = 149,4 TRX/gün
+Aylık: ~$1.119
 ```
 
-At this scale, bandwidth staking becomes essential. The required stake of approximately 700,000 TRX ($175,000) would eliminate the $26,250 monthly burn entirely.
+Bir ticaret botu için, ayda 1.119 dolar bandwidth maliyeti ticaretin bir maliyetidir. Ancak bot'un TRX bakiyesi tükenirse, durdurulur. TRX bakiyesini bandwidth yanması için izlemek, ticaret sermayesini izlemek kadar önemlidir.
 
-### Scenario 3: Multi-Signature Wallets
+### Senaryo 2: Çok Kullanıcılı DApp
 
-Multi-sig transactions are larger than standard transactions because they contain multiple signatures. A 3-of-5 multi-sig transaction can be 600-800 bytes. This means a single multi-sig transaction can consume the entire daily free bandwidth allocation.
+Her kullanıcının kendi adresine sahip bir DApp, farklı bir zorlukla karşı karşıyadır. Her adres kendi 600 ücretsiz bandwidth'ini alır. Kullanıcılar günde yalnızca 1-2 işlem yapıyorsa, bandwidth sorun olmayabilir. Ancak DApp işlemleri sponsor'larsa (kullanıcılar adına ödeme yaparsa), tüm bandwidth tüketimi tek bir adresden gelir.
 
 ```
-Multi-sig transfer: ~700 bytes
-Free bandwidth: 600 bytes
-First transfer already exceeds free allocation by 100 bytes
-Second transfer: 700 bytes fully burned
+DApp adresi 10.000 kullanıcı işlemini sponsor'lar/gün
+10.000 x 350 bayt = 3.500.000 bayt
+Ücretsiz: 600 bayt
+Yanma maliyeti: 3.499.400.000 SUN = 3.499,4 TRX/gün = ~$875/gün
+Aylık: ~$26.250
 ```
 
-Organizations using multi-sig wallets should plan for bandwidth costs from day one.
+Bu ölçekte, bandwidth stake'leme gerekli hale gelir. Yaklaşık 700.000 TRX'in gerekli stake'i (175.000 dolar), aylık 26.250 dolar yangını tamamen ortadan kaldırır.
+
+### Senaryo 3: Çok İmzalı Cüzdanlar
+
+Çok imzalı işlemler standart işlemlerden daha büyüktür çünkü birden fazla imza içerirler. 3/5 çok imzalı işlem 600-800 bayt olabilir. Bu, tek bir çok imzalı işlemin günlük ücretsiz bandwidth tahsisinin tamamını tüketebileceği anlamına gelir.
+
+```
+Çok imzalı transfer: ~700 bayt
+Ücretsiz bandwidth: 600 bayt
+İlk transfer zaten ücretsiz tahsisi 100 bayt aşar
+İkinci transfer: 700 bayt tamamen yakılır
+```
+
+Çok imzalı cüzdanlar kullanan kuruluşlar, gün birinden itibaren bandwidth maliyetleri için plan yapmalıdır.
 
 ---
 
-## Bandwidth Monitoring Best Practices
+## Bandwidth İzleme En İyi Uygulamaları
 
-### Track Remaining Bandwidth
+### Kalan Bandwidth'i İzleyin
 
-Before submitting transactions, check your available bandwidth:
+İşlemleri göndermeden önce mevcut bandwidth'inizi kontrol edin:
 
 ```typescript
 const resources = await client.checkAddressResources({
@@ -225,78 +225,79 @@ const resources = await client.checkAddressResources({
 });
 
 const available = resources.bandwidth.remaining;
-const needed = 350; // estimated for USDT transfer
+const needed = 350; // USDT transferi için tahmini
 
 if (available < needed) {
-  console.log(`Bandwidth depleted. Will burn ${needed * 0.001} TRX`);
-  // Ensure sufficient TRX balance for burn
+  console.log(`Bandwidth tükenmiş. ${needed * 0.001} TRX yakılacak`);
+  // Yanma için yeterli TRX bakiyesi sağlayın
 }
 ```
 
-### Monitor TRX Balance for Burns
+### Yangınlar için TRX Bakiyesini İzleyin
 
-If you rely on bandwidth burning, ensure your address always has enough TRX to cover burns. Set alerts when the balance drops below a threshold:
+Bandwidth yangınına güveniyorsanız, adresinizin her zaman yangınları karşılayacak kadar TRX'e sahip olduğundan emin olun. Bakiye bir eşiğin altına düştüğünde uyarılar ayarlayın:
 
 ```
-Alert threshold = max_daily_transactions x bytes_per_tx x 0.001 TRX/byte x 3 days
+Uyarı eşiği = max_günlük_işlemler x işlem_başına_bayt x 0.001 TRX/bayt x 3 gün
 ```
 
-This gives you a 3-day buffer to replenish before the address runs out of TRX and transactions start failing.
+Bu, adres TRX'ten tükenip işlemler başarısız olmaya başlamadan önce, 3 günlük bir tampon verir.
 
-### Separate Energy and Bandwidth Concerns
+### Enerji ve Bandwidth Endişelerini Ayırın
 
-When budgeting for TRON operations, track energy and bandwidth costs separately. They have different characteristics:
+TRON operasyonları için bütçe yaparken, enerji ve bandwidth maliyetlerini ayrı olarak izleyin. Farklı karakteristiklere sahiptirler:
 
-- Energy is expensive and can be rented efficiently.
-- Bandwidth is cheap and often best handled by burning or modest staking.
-- Optimizing one does not optimize the other.
+- Enerji pahalıdır ve verimli bir şekilde kiralanabilir.
+- Bandwidth ucuzdur ve genellikle yanma veya mütevazı stake'leme ile ele alınır.
+- Birini optimize etmek diğerini optimize etmez.
 
 ---
 
-## Bandwidth in the MERX Context
+## MERX Bağlamında Bandwidth
 
-MERX provides complete resource visibility through its API. When you check prices or create orders, the platform accounts for both energy and bandwidth requirements:
+MERX, API'si aracılığıyla tam kaynak görünürlüğü sağlar. Fiyatları kontrol ettiğinizde veya siparişler oluşturduğunuzda, platform hem enerji hem de bandwidth gereksinimlerini hesaba katar:
 
 ```typescript
-// Estimate total cost including bandwidth
+// Bandwidth dahil toplam maliyeti tahmin edin
 const estimate = await client.estimateTransactionCost({
   type: 'trc20_transfer',
   from: 'sender-address',
   to: 'recipient-address'
 });
 
-console.log(`Energy cost: ${estimate.energyCost} TRX`);
-console.log(`Bandwidth cost: ${estimate.bandwidthCost} TRX`);
-console.log(`Total cost: ${estimate.totalCost} TRX`);
+console.log(`Enerji maliyeti: ${estimate.energyCost} TRX`);
+console.log(`Bandwidth maliyeti: ${estimate.bandwidthCost} TRX`);
+console.log(`Toplam maliyet: ${estimate.totalCost} TRX`);
 ```
 
-API dokumantasyonu ve eksiksiz SDK referansi: [https://merx.exchange/docs](https://merx.exchange/docs)
+API belgeleri ve tam SDK referansı: [https://merx.exchange/docs](https://merx.exchange/docs)
 
 ---
 
-## Sonuc
+## Sonuç
 
-TRON bandwidth is genuinely free - for the first 600 bytes per day. After that, it costs real TRX. The amounts are modest compared to energy costs, but they are not zero, and at scale they represent a meaningful line item.
+TRON bandwidth gerçekten ücretsizdir - günde ilk 600 bayt için. Bundan sonra gerçek TRX'e mal olur. Miktarlar enerji maliyetlerine kıyasla mütevazıdır, ancak sıfır değildir ve ölçekte anlamlı bir kalem temsil ederler.
 
-The key takeaways:
+Temel noktalar:
 
-1. **600 free bandwidth covers 1-2 transactions per day.** Plan accordingly.
-2. **After free bandwidth, TRX is burned at roughly 1,000 SUN per byte.** A USDT transfer burns about 0.35 TRX.
-3. **At 100+ transactions per day, consider staking TRX for bandwidth.** The capital requirement is modest (thousands, not millions).
-4. **Always monitor TRX balance when relying on burns.** A zero balance means failed transactions.
-5. **Bandwidth and energy are separate resources.** Renting energy does not cover bandwidth.
+1. **600 ücretsiz bandwidth günde 1-2 işlemi kapsar.** Buna göre plan yapın.
+2. **Ücretsiz bandwidth'den sonra, TRX yaklaşık olarak bayt başına 1.000 SUN ile yakılır.** Bir USDT transferi yaklaşık 0,35 TRX yakar.
+3. **Günde 100+ işlemde, bandwidth için TRX stake'lemeyi düşünün.** Kapital gereksinimi mütevazıdır (milyonlar değil, binler).
+4. **Yangınlara güvenirken her zaman TRX bakiyesini izleyin.** Sıfır bakiye başarısız işlemler anlamına gelir.
+5. **Bandwidth ve enerji ayrı kaynaklardır.** Enerji kiralama bandwidth'i kapsamaz.
 
-For developers building high-volume TRON applications, bandwidth management is a minor but essential detail. Get it right once, and it never becomes a problem. Ignore it, and it will surprise you at the worst possible time.
+Yüksek hacimli TRON uygulamaları oluşturan geliştiriciler için bandwidth yönetimi küçük ancak gerekli bir detaydır. Bir kez doğru yapın ve hiçbir zaman sorun olmayacak. Onu göz ardı edin ve en kötü zamanda sizi şaşırtacak.
 
-Start monitoring your TRON resource usage at [https://merx.exchange](https://merx.exchange).
+[https://merx.exchange](https://merx.exchange) adresinde TRON kaynak kullanımınızı izlemeye başlayın.
 
 ---
 
-*Bu makale, TRON altyapisi uzerine MERX bilgi serisinin bir parcasidir. MERX, energy ve bandwidth saglayicilarini tek bir API'de toplayan ilk blokzincir kaynak borsasidir.*
+*Bu makale, TRON altyapısı hakkında MERX bilgi serisinin bir parçasıdır. MERX, enerji ve bandwidth sağlayıcılarını tek bir API'ye toplayan ilk blockchain kaynak değişimidir.*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+Claude Desktop'a veya herhangi bir MCP uyumlu istemciye MERX ekleyin -- kurulum yok, salt okunur araçlar için API anahtarına gerek yok:
 
 ```json
 {
@@ -308,6 +309,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI agenınıza şunu sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

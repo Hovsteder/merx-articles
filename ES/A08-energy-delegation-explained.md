@@ -1,31 +1,31 @@
-# Como funciona la delegacion de energia en TRON
+# Cómo Funciona la Delegación de Energía en TRON
 
-Energy delegation is the mechanism that makes the entire TRON alquiler de energia market possible. Without it, energy would be non-transferable - stakers could only use their own energy, and there would be no way to sell or share it. Understanding how delegation works at the protocol level is essential for anyone building on TRON or evaluating proveedor de energias.
+La delegación de energía es el mecanismo que hace posible todo el mercado de alquiler de energía en TRON. Sin ella, la energía sería intransferible: los stakers solo podrían usar su propia energía y no habría forma de venderla o compartirla. Comprender cómo funciona la delegación a nivel de protocolo es esencial para cualquiera que esté construyendo en TRON o evaluando proveedores de energía.
 
-This article explains the Stake 2.0 delegation mechanism in detail: how providers delegate energy to buyers, what happens during and after the delegation period, and how MERX manages the full delegation lifecycle across multiple providers.
+Este artículo explica en detalle el mecanismo de delegación de Stake 2.0: cómo los proveedores delegan energía a los compradores, qué sucede durante y después del período de delegación, y cómo MERX gestiona el ciclo de vida completo de la delegación entre múltiples proveedores.
 
 ---
 
-## The Stake 2.0 Foundation
+## La Base de Stake 2.0
 
-TRON introduced Stake 2.0 (also called Stake v2) as a replacement for the original resource freezing mechanism. The key innovation of Stake 2.0 is the separation of staking from resource usage. Under the original model (Stake 1.0), frozen TRX produced energy that could only be used by the freezer's own address. Stake 2.0 introduced delegation, allowing one address to direct its staked resources to any other address on the network.
+TRON introdujo Stake 2.0 (también llamado Stake v2) como reemplazo del mecanismo original de congelación de recursos. La innovación clave de Stake 2.0 es la separación entre el staking y el uso de recursos. Bajo el modelo original (Stake 1.0), el TRX congelado producía energía que solo podía ser utilizada por la dirección del que lo congelaba. Stake 2.0 introdujo la delegación, permitiendo que una dirección dirija sus recursos stakeados a cualquier otra dirección en la red.
 
-### The Three Operations
+### Las Tres Operaciones
 
-Stake 2.0 delegation involves three en cadena operations:
+La delegación de Stake 2.0 implica tres operaciones en cadena:
 
 **1. Stake (freezeBalanceV2)**
 
-The provider locks TRX in the staking contract. This produces energy proportional to the amount staked and the total network stake. The energy regenerates continuously over a 24-hour window.
+El proveedor bloquea TRX en el contrato de staking. Esto produce energía proporcional a la cantidad stakeada y al total de stake de la red. La energía se regenera continuamente durante una ventana de 24 horas.
 
 ```
-Provider stakes 36,000 TRX
-Network allocates ~65,000 energy/day to provider
+El proveedor stakeea 36.000 TRX
+La red asigna ~65.000 energía/día al proveedor
 ```
 
 **2. Delegate (delegateResource)**
 
-The provider directs a portion of their energy to a target address. This is the actual delegation operation. After this transaction confirms, the target address can use the delegated energy as if it were their own.
+El proveedor dirige una parte de su energía a una dirección de destino. Esta es la operación de delegación real. Después de que se confirme esta transacción, la dirección de destino puede usar la energía delegada como si fuera propia.
 
 ```json
 {
@@ -38,17 +38,17 @@ The provider directs a portion of their energy to a target address. This is the 
 }
 ```
 
-Key parameters:
-- `owner_address`: the provider's address (the delegator)
-- `receiver_address`: the buyer's address (the recipient)
-- `resource`: ENERGY or BANDWIDTH
-- `balance`: the amount of TRX (in SUN) backing this delegation
-- `lock`: whether the delegation is locked for a minimum period
-- `lock_period`: the lock duration in days (if lock is true)
+Parámetros clave:
+- `owner_address`: la dirección del proveedor (el delegador)
+- `receiver_address`: la dirección del comprador (el receptor)
+- `resource`: ENERGY o BANDWIDTH
+- `balance`: la cantidad de TRX (en SUN) respaldando esta delegación
+- `lock`: si la delegación está bloqueada por un período mínimo
+- `lock_period`: la duración del bloqueo en días (si lock es verdadero)
 
 **3. Undelegate (undelegateResource)**
 
-When the delegation period expires, the provider reclaims the resource by undelegating. After this transaction confirms, the energy stops flowing to the buyer's address and returns to the provider's pool.
+Cuando el período de delegación expira, el proveedor reclama el recurso mediante la anulación de la delegación. Después de que se confirme esta transacción, la energía deja de fluir hacia la dirección del comprador y regresa al conjunto del proveedor.
 
 ```json
 {
@@ -61,144 +61,144 @@ When the delegation period expires, the provider reclaims the resource by undele
 
 ---
 
-## The Delegation Lifecycle
+## El Ciclo de Vida de la Delegación
 
-A complete delegation goes through several phases. Understanding each phase is critical for building reliable systems around alquiler de energia.
+Una delegación completa atraviesa varias fases. Comprender cada fase es crítico para construir sistemas confiables alrededor del alquiler de energía.
 
-### Phase 1: Order Placement
+### Fase 1: Colocación de Orden
 
-The buyer requests energy for a specific address and duration. This happens fuera de cadena - the buyer pays the provider (directly or through an aggregator like MERX), and the provider queues the delegation.
+El comprador solicita energía para una dirección específica y duración. Esto ocurre fuera de la cadena: el comprador paga al proveedor (directamente o a través de un agregador como MERX), y el proveedor pone en cola la delegación.
 
-### Phase 2: On-Chain Delegation
+### Fase 2: Delegación En Cadena
 
-The provider broadcasts the `delegateResource` transaction. This typically confirms within 3-6 seconds on TRON (one block). Once confirmed, the energy is immediately available at the buyer's address.
-
-```
-Buyer's effective energy = own_staked_energy + all_delegated_energy
-```
-
-Important: the buyer can use delegated energy immediately. Hay no warm-up period. As soon as the delegation transaction is confirmed, the buyer's next contrato inteligente call will consume delegated energy.
-
-### Phase 3: Active Delegation Period
-
-During the delegation period, the buyer uses the energy for their operations. Key behaviors during this phase:
-
-- **Regeneration**: delegated energy regenerates at the same rate as self-staked energy - continuously over 24 hours.
-- **Consumption priority**: when a buyer has both self-staked and delegated energy, TRON does not distinguish between them. All energy is pooled.
-- **Multiple delegations**: a buyer can receive delegations from multiple providers simultaneously. The cantidad de energias are additive.
-
-### Phase 4: Expiry and Reclamation
-
-When the lock period expires, the provider can execute the `undelegateResource` transaction to reclaim their resources. This is not automatic - the provider must actively call this function.
+El proveedor transmite la transacción `delegateResource`. Esto típicamente se confirma dentro de 3-6 segundos en TRON (un bloque). Una vez confirmado, la energía está inmediatamente disponible en la dirección del comprador.
 
 ```
-Timeline:
-  T+0:   delegateResource confirmed (energy active)
-  T+3d:  Lock period expires
-  T+3d+: Provider calls undelegateResource (energy removed)
+Energía efectiva del comprador = energía_stakeada_propia + toda_energía_delegada
 ```
 
-If the provider does not undelegate, the energy continues to flow to the buyer indefinitely. Providers are incentivized to reclaim promptly because the staked TRX backing the delegation cannot be used for other customers until it is undelegated.
+Importante: el comprador puede usar energía delegada inmediatamente. No hay período de calentamiento. Tan pronto como se confirme la transacción de delegación, la siguiente llamada de contrato inteligente del comprador consumirá energía delegada.
 
-### Phase 5: Post-Undelegation
+### Fase 3: Período de Delegación Activa
 
-After undelegation confirms, the provider's TRX returns to their "undelegatable" pool. They can then delegate it to the next customer. The buyer's available energy decreases by the undelegated amount.
+Durante el período de delegación, el comprador utiliza la energía para sus operaciones. Comportamientos clave durante esta fase:
+
+- **Regeneración**: la energía delegada se regenera a la misma velocidad que la energía stakeada propia, de forma continua durante 24 horas.
+- **Prioridad de consumo**: cuando un comprador tiene tanto energía stakeada propia como delegada, TRON no distingue entre ellas. Toda la energía se agrupa.
+- **Múltiples delegaciones**: un comprador puede recibir delegaciones de múltiples proveedores simultáneamente. Los montos de energía son aditivos.
+
+### Fase 4: Vencimiento y Reclamación
+
+Cuando el período de bloqueo expira, el proveedor puede ejecutar la transacción `undelegateResource` para reclamar sus recursos. Esto no es automático: el proveedor debe llamar activamente a esta función.
+
+```
+Cronología:
+  T+0:   delegateResource confirmado (energía activa)
+  T+3d:  El período de bloqueo expira
+  T+3d+: El proveedor llama a undelegateResource (energía eliminada)
+```
+
+Si el proveedor no anula la delegación, la energía continúa fluyendo hacia el comprador indefinidamente. Los proveedores están incentivados a reclamar prontamente porque el TRX stakeado respaldando la delegación no puede ser utilizado para otros clientes hasta que se anule la delegación.
+
+### Fase 5: Postanulación
+
+Después de que se confirme la anulación de la delegación, el TRX del proveedor regresa a su conjunto "indelegable". Luego pueden delegarlo al siguiente cliente. La energía disponible del comprador disminuye por la cantidad no delegada.
 
 ---
 
-## Lock Period Mechanics
+## Mecánica del Período de Bloqueo
 
-The `lock` parameter and `lock_period` in the delegation transaction deserve special attention.
+El parámetro `lock` y `lock_period` en la transacción de delegación merecen atención especial.
 
-### Locked Delegations
+### Delegaciones Bloqueadas
 
-When `lock: true`, the provider commits to maintaining the delegation for at least `lock_period` days. During this time, the provider cannot undelegate. This gives the buyer a guarantee of resource availability.
+Cuando `lock: true`, el proveedor se compromete a mantener la delegación durante al menos `lock_period` días. Durante este tiempo, el proveedor no puede anular la delegación. Esto da al comprador una garantía de disponibilidad de recursos.
 
 ```
-lock_period = 3 days
+lock_period = 3 días
 
-Day 0: Delegation created, lock starts
-Day 1: Provider CANNOT undelegate
-Day 2: Provider CANNOT undelegate
-Day 3: Lock expires, provider CAN undelegate
+Día 0: Delegación creada, bloqueo comienza
+Día 1: El proveedor NO PUEDE anular la delegación
+Día 2: El proveedor NO PUEDE anular la delegación
+Día 3: El bloqueo expira, el proveedor PUEDE anular la delegación
 ```
 
-### Unlocked Delegations
+### Delegaciones Desbloqueadas
 
-When `lock: false`, the provider can undelegate at any time - even immediately after delegating. This is risky for buyers because the provider could reclaim the energy before the buyer has used it.
+Cuando `lock: false`, el proveedor puede anular la delegación en cualquier momento, incluso inmediatamente después de delegar. Esto es arriesgado para los compradores porque el proveedor podría reclamar la energía antes de que el comprador la haya usado.
 
-En la practica, reputable providers always use locked delegations. MERX verifies that all delegations are properly locked for the purchased duration.
+En la práctica, los proveedores reputados siempre usan delegaciones bloqueadas. MERX verifica que todas las delegaciones estén correctamente bloqueadas durante la duración comprada.
 
-### Lock Period Granularity
+### Granularidad del Período de Bloqueo
 
-TRON's lock period is specified in days (blocks, technically, but the protocol maps to approximately 24-hour periods). The minimum practical lock is 1 day. Common durations in the market:
+El período de bloqueo de TRON se especifica en días (bloques técnicamente, pero el protocolo se asigna a períodos de aproximadamente 24 horas). El bloqueo práctico mínimo es de 1 día. Duraciones comunes en el mercado:
 
-| Lock Period | Typical Use Case |
-|-------------|-----------------|
-| 0 (unlocked) | Not recommended |
-| 1 day | Short-term / testing |
-| 3 days | Standard rental |
-| 7 days | Weekly operations |
-| 14 days | Bi-weekly coverage |
-| 30 days | Monthly contracts |
+| Período de Bloqueo | Caso de Uso Típico |
+|------------------|------------------|
+| 0 (desbloqueado) | No recomendado |
+| 1 día | Corto plazo / pruebas |
+| 3 días | Alquiler estándar |
+| 7 días | Operaciones semanales |
+| 14 días | Cobertura quincenal |
+| 30 días | Contratos mensuales |
 
 ---
 
-## Energy Delivery Verification
+## Verificación de Entrega de Energía
 
-How do you know the delegation actually happened? Hay several verification methods.
+¿Cómo sabes que la delegación realmente sucedió? Hay varios métodos de verificación.
 
-### On-Chain Verification
+### Verificación En Cadena
 
-Query the TRON network directly:
+Consultar directamente la red TRON:
 
 ```typescript
-// Using TronWeb
+// Usando TronWeb
 const accountResources = await tronWeb.trx.getAccountResources(buyerAddress);
-console.log('Total energy limit:', accountResources.EnergyLimit);
-console.log('Energy used:', accountResources.EnergyUsed);
-console.log('Available:', accountResources.EnergyLimit - accountResources.EnergyUsed);
+console.log('Límite total de energía:', accountResources.EnergyLimit);
+console.log('Energía usada:', accountResources.EnergyUsed);
+console.log('Disponible:', accountResources.EnergyLimit - accountResources.EnergyUsed);
 ```
 
-The `EnergyLimit` field reflects total energy from all sources: self-staked and delegated. An increase in `EnergyLimit` after a delegation confirms delivery.
+El campo `EnergyLimit` refleja la energía total de todas las fuentes: stakeada propia y delegada. Un aumento en `EnergyLimit` después de que se confirme una delegación verifica la entrega.
 
-### Delegation Record Lookup
+### Búsqueda de Registro de Delegación
 
-TRON provides APIs to query delegation records for an address:
+TRON proporciona APIs para consultar registros de delegación para una dirección:
 
 ```typescript
-// Get all delegations received by an address
+// Obtener todas las delegaciones recibidas por una dirección
 const delegations = await tronWeb.trx.getDelegatedResourceV2(
   buyerAddress,
   providerAddress
 );
 ```
 
-This returns the specific delegation amounts and lock periods from a given provider to the buyer.
+Esto devuelve los montos específicos de delegación y períodos de bloqueo de un proveedor dado al comprador.
 
-### MERX Verification
+### Verificación de MERX
 
-MERX performs automated verification after every order:
+MERX realiza verificación automatizada después de cada orden:
 
-1. Order is placed and paid.
-2. Provider executes delegation transaction.
-3. MERX monitors the blockchain for the delegation transaction confirmation.
-4. MERX queries the buyer's account resources to verify the energy increase.
-5. If verification fails (energy not received within timeout), the order is flagged and the buyer is refunded.
+1. Se coloca y paga la orden.
+2. El proveedor ejecuta la transacción de delegación.
+3. MERX monitorea la blockchain para la confirmación de la transacción de delegación.
+4. MERX consulta los recursos de la cuenta del comprador para verificar el aumento de energía.
+5. Si la verificación falla (energía no recibida dentro del tiempo límite), la orden se marca y al comprador se le reembolsa.
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 
-// Place order
+// Colocar orden
 const order = await client.createOrder({
   energy: 65000,
   targetAddress: 'TBuyerAddress...',
   duration: '1d'
 });
 
-// Check order status (includes delegation verification)
+// Verificar estado de la orden (incluye verificación de delegación)
 const status = await client.getOrder(order.id);
 console.log(status.delegationStatus);
 // 'pending' | 'confirmed' | 'verified' | 'failed'
@@ -206,114 +206,115 @@ console.log(status.delegationStatus);
 
 ---
 
-## Multi-Provider Delegation
+## Delegación de Múltiples Proveedores
 
-A single address can receive delegations from multiple providers simultaneously. This is how aggregators like MERX can split large orders across multiple providers.
+Una única dirección puede recibir delegaciones de múltiples proveedores simultáneamente. Así es como los agregadores como MERX pueden dividir órdenes grandes entre múltiples proveedores.
 
-### How It Works
-
-```
-Buyer address: TBuyer123...
-
-Delegation 1: Provider A -> 200,000 energy (65,000 x 3)
-Delegation 2: Provider B -> 130,000 energy (65,000 x 2)
-Delegation 3: Provider C ->  65,000 energy (65,000 x 1)
-
-Total delegated energy: 395,000/day
-Plus buyer's own staked energy: 0
-Total available energy: 395,000/day
-```
-
-All delegations are independent. Provider A can undelegate without affecting Provider B's or C's delegation. The buyer's total energy is simply the sum of all active delegations plus their own staked energy.
-
-### Why This Matters for Aggregation
-
-When a buyer orders 500,000 energy through MERX, no single provider may have that much available. MERX can split the order:
+### Cómo Funciona
 
 ```
-Order: 500,000 energy for TBuyer123...
+Dirección del comprador: TBuyer123...
 
-Routing:
-  Provider A: 200,000 energy at 82 SUN/unit  = 16,400,000 SUN
-  Provider B: 180,000 energy at 85 SUN/unit  = 15,300,000 SUN
-  Provider C: 120,000 energy at 88 SUN/unit  = 10,560,000 SUN
+Delegación 1: Proveedor A -> 200.000 energía (65.000 x 3)
+Delegación 2: Proveedor B -> 130.000 energía (65.000 x 2)
+Delegación 3: Proveedor C ->  65.000 energía (65.000 x 1)
 
-Total cost: 42,260,000 SUN
-Effective rate: 84.52 SUN/unit
+Energía delegada total: 395.000/día
+Más energía stakeada propia del comprador: 0
+Energía total disponible: 395.000/día
 ```
 
-The buyer sees a single order with a blended rate. Behind the scenes, three separate delegation transactions execute en cadena.
+Todas las delegaciones son independientes. El proveedor A puede anular la delegación sin afectar la delegación del proveedor B o C. La energía total del comprador es simplemente la suma de todas las delegaciones activas más su energía stakeada propia.
+
+### Por Qué Esto Es Importante para la Agregación
+
+Cuando un comprador ordena 500.000 energía a través de MERX, es posible que ningún proveedor individual tenga esa cantidad disponible. MERX puede dividir la orden:
+
+```
+Orden: 500.000 energía para TBuyer123...
+
+Enrutamiento:
+  Proveedor A: 200.000 energía a 82 SUN/unidad  = 16.400.000 SUN
+  Proveedor B: 180.000 energía a 85 SUN/unidad  = 15.300.000 SUN
+  Proveedor C: 120.000 energía a 88 SUN/unidad  = 10.560.000 SUN
+
+Costo total: 42.260.000 SUN
+Tasa efectiva: 84,52 SUN/unidad
+```
+
+El comprador ve una única orden con una tasa combinada. Detrás de escenas, tres transacciones de delegación separadas se ejecutan en cadena.
 
 ---
 
-## How MERX Manages the Delegation Lifecycle
+## Cómo MERX Gestiona el Ciclo de Vida de la Delegación
 
-MERX handles the full lifecycle of every delegation, from order to expiry, across all integrated providers.
+MERX maneja el ciclo de vida completo de cada delegación, desde la orden hasta el vencimiento, entre todos los proveedores integrados.
 
-### Order Execution
+### Ejecución de Orden
 
-1. **Price check**: Poll all providers for current mejor precio.
-2. **Routing**: Select cheapest provider(s) that can fill the order.
-3. **Execution**: Submit order to selected provider(s) via their API.
-4. **Monitoring**: Watch for en cadena delegation transaction.
-5. **Verification**: Confirm energy arrived at target address.
-6. **Notification**: Inform buyer via webhook or WebSocket.
+1. **Verificación de precio**: Sondear todos los proveedores por el precio actual más favorable.
+2. **Enrutamiento**: Seleccionar el(los) proveedor(es) más económico(s) que puedan llenar la orden.
+3. **Ejecución**: Enviar orden al(os) proveedor(es) seleccionado(s) a través de su API.
+4. **Monitoreo**: Observar la transacción de delegación en cadena.
+5. **Verificación**: Confirmar que la energía llegó a la dirección de destino.
+6. **Notificación**: Informar al comprador a través de webhook o WebSocket.
 
-### During Active Period
+### Durante el Período Activo
 
-- **Health monitoring**: Periodically verify delegations are still active.
-- **Resource tracking**: Monitor buyer's energy usage to detect issues.
-- **Alerts**: Notify buyer if energy is running low or if usage patterns suggest they need more.
+- **Monitoreo de salud**: Verificar periódicamente que las delegaciones sigan activas.
+- **Seguimiento de recursos**: Monitorear el consumo de energía del comprador para detectar problemas.
+- **Alertas**: Notificar al comprador si la energía se está agotando o si los patrones de uso sugieren que necesita más.
 
-### At Expiry
+### En el Vencimiento
 
-- **Countdown notification**: Alert buyer before delegation expires.
-- **Renewal option**: Offer automatic renewal at current mejor precio.
-- **Post-expiry verification**: Confirm energy was properly reclaimed by provider.
+- **Notificación de cuenta atrás**: Alertar al comprador antes de que venza la delegación.
+- **Opción de renovación**: Ofrecer renovación automática al precio actual más favorable.
+- **Verificación post-vencimiento**: Confirmar que la energía fue debidamente reclamada por el proveedor.
 
-### Error Handling
+### Manejo de Errores
 
-- **Delegation failure**: If provider fails to delegate within the expected timeframe, MERX routes to the next cheapest provider automatically.
-- **Partial fill**: If a provider can only fill part of an order, MERX fills the remainder from other providers.
-- **Provider downtime**: If a provider is unreachable, their prices are removed from the libro de ordenes and orders are routed to available providers.
-
----
-
-## Common Edge Cases
-
-### Energy Used Before Delegation Expires
-
-The buyer is not obligated to "return" unused energy. When the delegation expires and the provider undelegates, the energy simply stops being available. Hay nothing to return.
-
-### Provider Delegates More Than Purchased
-
-Occasionally, a provider may delegate more energy than the buyer paid for (due to internal accounting differences). The buyer benefits from the extra energy during the delegation period. MERX tracks the exact amounts ordered and delivered.
-
-### Multiple Orders to Same Address
-
-If a buyer places multiple orders for the same target address at different times, they accumulate. Each delegation is independent and expires according to its own lock period.
-
-### Address Does Not Exist
-
-TRON allows delegation to any valid address, even if it has never been activated. The energy will be available when the address is activated. However, most providers and MERX validate that the target address exists and is activated before processing orders.
+- **Fallo de delegación**: Si el proveedor no logra delegar dentro del período esperado, MERX enruta automáticamente al siguiente proveedor más económico.
+- **Llenado parcial**: Si un proveedor solo puede llenar parte de una orden, MERX llena el resto de otros proveedores.
+- **Tiempo de inactividad del proveedor**: Si un proveedor es inaccesible, sus precios se eliminan del libro de órdenes y las órdenes se enrutan a proveedores disponibles.
 
 ---
 
-## Conclusion
+## Casos Especiales Comunes
 
-Energy delegation is the foundation of TRON's resource economy. The Stake 2.0 mechanism transforms energy from a non-transferable resource into a tradeable commodity, enabling the entire provider ecosystem. Understanding how delegations work - the lock mechanics, the verification process, the multi-provider composition - is essential for anyone building production systems on TRON.
+### Energía Usada Antes de que Venza la Delegación
 
-MERX abstracts the complexity of managing delegations across multiple providers into a una sola API call, but knowing what happens under the hood helps you make better decisions about duration, volume, and provider selection.
+El comprador no está obligado a "devolver" la energía no utilizada. Cuando vence la delegación y el proveedor anula la delegación, la energía simplemente deja de estar disponible. No hay nada que devolver.
 
-Explore la API de MERX y comience a gestionar delegaciones programaticamente en [https://merx.exchange/docs](https://merx.exchange/docs).
+### Proveedor Delega Más de lo Comprado
+
+Ocasionalmente, un proveedor puede delegar más energía de la que el comprador pagó (debido a diferencias en la contabilidad interna). El comprador se beneficia de la energía extra durante el período de delegación. MERX rastrea los montos exactos ordenados y entregados.
+
+### Múltiples Órdenes para la Misma Dirección
+
+Si un comprador coloca múltiples órdenes para la misma dirección de destino en diferentes momentos, se acumulan. Cada delegación es independiente y vence según su propio período de bloqueo.
+
+### Dirección No Existe
+
+TRON permite delegación a cualquier dirección válida, incluso si nunca ha sido activada. La energía estará disponible cuando se active la dirección. Sin embargo, la mayoría de proveedores y MERX validan que la dirección de destino exista y esté activada antes de procesar órdenes.
 
 ---
 
-*Este articulo es parte de la serie de conocimiento de MERX sobre infraestructura TRON. MERX es el primer exchange de recursos blockchain. GitHub: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js).*
+## Conclusión
 
-## Try It Now with AI
+La delegación de energía es la base de la economía de recursos de TRON. El mecanismo de Stake 2.0 transforma la energía de un recurso no transferible en una mercancía negociable, permitiendo todo el ecosistema de proveedores. Comprender cómo funcionan las delegaciones (la mecánica del bloqueo, el proceso de verificación, la composición de múltiples proveedores) es esencial para cualquiera que construya sistemas de producción en TRON.
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+MERX abstrae la complejidad de gestionar delegaciones entre múltiples proveedores en una única llamada a API, pero conocer qué ocurre bajo el capó ayuda a tomar mejores decisiones sobre duración, volumen y selección de proveedores.
+
+Explora la API de MERX y comienza a gestionar delegaciones programáticamente en [https://merx.exchange/docs](https://merx.exchange/docs).
+
+---
+
+*Este artículo forma parte de la serie de conocimiento de MERX sobre infraestructura de TRON. MERX es el primer intercambio de recursos blockchain. GitHub: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js).*
+
+
+## Pruébalo Ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP: sin instalación, sin necesidad de clave de API para herramientas de solo lectura:
 
 ```json
 {
@@ -325,6 +326,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía de TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

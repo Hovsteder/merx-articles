@@ -1,44 +1,44 @@
-# API REST de MERX: 46 endpoints para comercio de energia en TRON
+# API REST de MERX: 46 Endpoints para Comercio de Energía TRON
 
-The MERX REST API provides 46 endpoints that cover the complete lifecycle of TRON energy and bandwidth trading - from tiempo real descubrimiento de precios across eight providers to ejecucion de ordenes, account management, en cadena queries, and automated orden permanentes. This article walks through the API architecture, authentication model, endpoint groups, limite de velocidads, manejo de errores, and practical code examples in curl, JavaScript, and Python.
+La API REST de MERX proporciona 46 endpoints que cubren el ciclo de vida completo del comercio de energía y bandwidth de TRON - desde el descubrimiento de precios en tiempo real a través de ocho proveedores hasta la ejecución de órdenes, gestión de cuentas, consultas en cadena y órdenes permanentes automatizadas. Este artículo recorre la arquitectura de la API, el modelo de autenticación, grupos de endpoints, límites de velocidad, manejo de errores y ejemplos prácticos de código en curl, JavaScript y Python.
 
-## Why a Unified API Matters
+## Por qué una API Unificada es Importante
 
-The TRON mercado de energia is fragmented across multiple providers, each with its own API format, authentication scheme, and pricing model. A developer who wants el mejor precio on a USDT transfer has to integrate with every provider individually, handle respaldo logic, and monitor prices continuously.
+El mercado de energía TRON está fragmentado entre múltiples proveedores, cada uno con su propio formato de API, esquema de autenticación y modelo de precios. Un desarrollador que quiere el mejor precio en una transferencia USDT tiene que integrarse con cada proveedor individualmente, manejar la lógica de conmutación por error y monitorear los precios continuamente.
 
-MERX consolidates all of that into a single REST API. One clave de API, one authentication header, one formato de error, one set of SDKs. The platform polls all connected providers every 30 seconds, routes orders to the cheapest available source, and verifies delegations en cadena.
+MERX consolida todo eso en una única API REST. Una clave API, un encabezado de autenticación, un formato de error, un conjunto de SDKs. La plataforma consulta todos los proveedores conectados cada 30 segundos, enruta órdenes a la fuente más barata disponible y verifica delegaciones en cadena.
 
-The API is versioned at `/api/v1/` and will maintain retrocompatibilidad. All endpoints return JSON in a consistent envelope format.
+La API está versionada en `/api/v1/` y mantendrá compatibilidad hacia atrás. Todos los endpoints devuelven JSON en un formato de envolvente consistente.
 
-## Authentication
+## Autenticación
 
-MERX uses clave de API authentication. Every authenticated request must include the `X-API-Key` header.
+MERX utiliza autenticación mediante clave API. Cada solicitud autenticada debe incluir el encabezado `X-API-Key`.
 
-clave de APIs are created in the MERX dashboard at [merx.exchange](https://merx.exchange) or programmatically via the `/api/v1/keys` endpoint. Each key has a permission set that controls what operations it can perform.
+Las claves API se crean en el panel de MERX en [merx.exchange](https://merx.exchange) o programáticamente a través del endpoint `/api/v1/keys`. Cada clave tiene un conjunto de permisos que controla qué operaciones puede realizar.
 
 ```bash
 curl -H "X-API-Key: sk_live_your_key_here" \
   https://merx.exchange/api/v1/balance
 ```
 
-Keys follow the format `sk_live_` followed by 64 hex characters. The raw key is shown exactly once at creation time. MERX stores only the bcrypt hash, so lost keys cannot be recovered - they must be revoked and replaced.
+Las claves siguen el formato `sk_live_` seguido de 64 caracteres hexadecimales. La clave sin procesar se muestra exactamente una vez en el momento de la creación. MERX almacena solo el hash bcrypt, por lo que las claves perdidas no pueden recuperarse - deben revocarse y reemplazarse.
 
-### Key Permissions
+### Permisos de Clave
 
-When creating an clave de API, you assign one or more permissions:
+Al crear una clave API, asigna uno o más permisos:
 
-| Permission       | Grants access to                        |
-|------------------|-----------------------------------------|
-| `create_orders`  | POST /orders, POST /ensure              |
-| `view_orders`    | GET /orders, GET /orders/:id            |
-| `view_balance`   | GET /balance, GET /history              |
-| `broadcast`      | POST /chain/broadcast                   |
+| Permiso           | Otorga acceso a                         |
+|-------------------|-----------------------------------------|
+| `create_orders`   | POST /orders, POST /ensure              |
+| `view_orders`     | GET /orders, GET /orders/:id            |
+| `view_balance`    | GET /balance, GET /history              |
+| `broadcast`       | POST /chain/broadcast                   |
 
-This allows you to create read-only keys for monitoring dashboards and restricted keys for automated trading systems.
+Esto permite crear claves de solo lectura para paneles de monitoreo y claves restringidas para sistemas de comercio automatizado.
 
-## Response Envelope
+## Envolvente de Respuesta
 
-Every response follows the same structure:
+Cada respuesta sigue la misma estructura:
 
 ```json
 {
@@ -46,135 +46,135 @@ Every response follows the same structure:
 }
 ```
 
-On error:
+En caso de error:
 
 ```json
 {
   "error": {
     "code": "INSUFFICIENT_FUNDS",
-    "message": "Account balance too low for the requested operation",
+    "message": "Saldo de cuenta muy bajo para la operación solicitada",
     "details": { "required": 150000000, "available": 42000000 }
   }
 }
 ```
 
-Error codes are machine-readable strings. The `details` field is optional and provides context for debugging.
+Los códigos de error son cadenas legibles por máquina. El campo `details` es opcional y proporciona contexto para depuración.
 
-## Endpoint Groups
+## Grupos de Endpoints
 
-The 46 endpoints are organized into nine groups. Aqui esta the complete map.
+Los 46 endpoints se organizan en nueve grupos. Aquí está el mapa completo.
 
-### Prices (6 endpoints)
+### Precios (6 endpoints)
 
-These endpoints are public - no clave de API required.
+Estos endpoints son públicos - no se requiere clave API.
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| GET    | /api/v1/prices              | Current prices from all providers        |
-| GET    | /api/v1/prices/best         | Cheapest provider for a resource type    |
-| GET    | /api/v1/prices/history      | Historical price data                    |
-| GET    | /api/v1/prices/stats        | Aggregate market statistics              |
-| GET    | /api/v1/prices/analysis     | Trend analysis and buy recommendation    |
-| GET    | /api/v1/orders/preview      | Cost preview before placing an order     |
+| Método | Ruta                        | Descripción                              |
+|--------|-----------------------------|-----------------------------------------|
+| GET    | /api/v1/prices              | Precios actuales de todos los proveedores |
+| GET    | /api/v1/prices/best         | Proveedor más barato para un tipo de recurso |
+| GET    | /api/v1/prices/history      | Datos de precios históricos              |
+| GET    | /api/v1/prices/stats        | Estadísticas agregadas del mercado       |
+| GET    | /api/v1/prices/analysis     | Análisis de tendencias y recomendación de compra |
+| GET    | /api/v1/orders/preview      | Previsualización de costo antes de colocar una orden |
 
-### Orders (3 endpoints)
+### Órdenes (3 endpoints)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| POST   | /api/v1/orders              | Create a new energy or bandwidth order   |
-| GET    | /api/v1/orders              | List orders with pagination and filters  |
-| GET    | /api/v1/orders/:id          | Get order details with fill breakdown    |
+| Método | Ruta                        | Descripción                              |
+|--------|-----------------------------|-----------------------------------------|
+| POST   | /api/v1/orders              | Crear una nueva orden de energía o bandwidth |
+| GET    | /api/v1/orders              | Listar órdenes con paginación y filtros  |
+| GET    | /api/v1/orders/:id          | Obtener detalles de la orden con desglose de ejecuciones |
 
-### Account (7 endpoints)
+### Cuenta (7 endpoints)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| GET    | /api/v1/balance             | Current TRX and USDT balances            |
-| GET    | /api/v1/deposit/info        | Deposit address and memo                 |
-| POST   | /api/v1/deposit/prepare     | Prepare a deposit transaction            |
-| POST   | /api/v1/deposit/submit      | Submit a deposit proof                   |
-| POST   | /api/v1/withdraw            | Withdraw TRX or USDT                     |
-| GET    | /api/v1/history             | Order execution history                  |
-| GET    | /api/v1/history/summary     | Aggregate account statistics             |
+| Método | Ruta                        | Descripción                              |
+|--------|-----------------------------|-----------------------------------------|
+| GET    | /api/v1/balance             | Saldos actuales de TRX y USDT            |
+| GET    | /api/v1/deposit/info        | Dirección de depósito y memo             |
+| POST   | /api/v1/deposit/prepare     | Preparar una transacción de depósito     |
+| POST   | /api/v1/deposit/submit      | Enviar comprobante de depósito           |
+| POST   | /api/v1/withdraw            | Retirar TRX o USDT                       |
+| GET    | /api/v1/history             | Historial de ejecución de órdenes        |
+| GET    | /api/v1/history/summary     | Estadísticas agregadas de la cuenta      |
 
-### API Keys (3 endpoints)
+### Claves API (3 endpoints)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| GET    | /api/v1/keys                | List all clave de APIs                        |
-| POST   | /api/v1/keys                | Create a new clave de API                     |
-| DELETE | /api/v1/keys/:id            | Revoke an clave de API                        |
+| Método | Ruta                        | Descripción                              |
+|--------|-----------------------------|-----------------------------------------|
+| GET    | /api/v1/keys                | Listar todas las claves API              |
+| POST   | /api/v1/keys                | Crear una nueva clave API                |
+| DELETE | /api/v1/keys/:id            | Revocar una clave API                    |
 
-### Authentication (2 endpoints)
+### Autenticación (2 endpoints)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| POST   | /api/v1/auth/register       | Create a new account                     |
-| POST   | /api/v1/auth/login          | Authenticate and receive a JWT token     |
+| Método | Ruta                        | Descripción                              |
+|--------|-----------------------------|-----------------------------------------|
+| POST   | /api/v1/auth/register       | Crear una nueva cuenta                   |
+| POST   | /api/v1/auth/login          | Autenticarse y recibir un token JWT      |
 
-### Estimation (2 endpoints)
+### Estimación (2 endpoints)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| POST   | /api/v1/estimate            | Estimate energy and cost for a transaction|
-| POST   | /api/v1/ensure              | Ensure minimum resources on an address   |
+| Método | Ruta                        | Descripción                              |
+|--------|-----------------------------|-----------------------------------------|
+| POST   | /api/v1/estimate            | Estimar energía y costo para una transacción |
+| POST   | /api/v1/ensure              | Asegurar recursos mínimos en una dirección |
 
 ### Webhooks (3 endpoints)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| POST   | /api/v1/webhooks            | Create a webhook subscription            |
-| GET    | /api/v1/webhooks            | List webhook subscriptions               |
-| DELETE | /api/v1/webhooks/:id        | Delete a webhook                         |
+| Método | Ruta                        | Descripción                              |
+|--------|-----------------------------|-----------------------------------------|
+| POST   | /api/v1/webhooks            | Crear una suscripción a webhook          |
+| GET    | /api/v1/webhooks            | Listar suscripciones a webhooks          |
+| DELETE | /api/v1/webhooks/:id        | Eliminar un webhook                      |
 
-### Standing Orders and Monitors (7 endpoints)
+### Órdenes Permanentes y Monitores (7 endpoints)
 
-| Method | Path                             | Description                           |
+| Método | Ruta                             | Descripción                           |
 |--------|----------------------------------|---------------------------------------|
-| POST   | /api/v1/standing-orders          | Create a orden permanente               |
-| GET    | /api/v1/standing-orders          | List orden permanentes                  |
-| GET    | /api/v1/standing-orders/:id      | Get orden permanente details            |
-| DELETE | /api/v1/standing-orders/:id      | Cancel a orden permanente               |
-| POST   | /api/v1/monitors                 | Create a resource monitor             |
-| GET    | /api/v1/monitors                 | List active monitors                  |
-| DELETE | /api/v1/monitors/:id             | Cancel a monitor                      |
+| POST   | /api/v1/standing-orders          | Crear una orden permanente            |
+| GET    | /api/v1/standing-orders          | Listar órdenes permanentes            |
+| GET    | /api/v1/standing-orders/:id      | Obtener detalles de la orden permanente |
+| DELETE | /api/v1/standing-orders/:id      | Cancelar una orden permanente         |
+| POST   | /api/v1/monitors                 | Crear un monitor de recursos          |
+| GET    | /api/v1/monitors                 | Listar monitores activos              |
+| DELETE | /api/v1/monitors/:id             | Cancelar un monitor                   |
 
-### Chain Proxy (10 endpoints)
+### Proxy de Cadena (10 endpoints)
 
-These endpoints proxy TRON network queries through MERX, eliminating the need for clients to call TronGrid directly.
+Estos endpoints hacen proxy de consultas de la red TRON a través de MERX, eliminando la necesidad de que los clientes llamen a TronGrid directamente.
 
-| Method | Path                             | Description                           |
+| Método | Ruta                             | Descripción                           |
 |--------|----------------------------------|---------------------------------------|
-| GET    | /api/v1/chain/account/:address   | Account info and resources            |
-| GET    | /api/v1/chain/balance/:address   | TRX balance                           |
-| GET    | /api/v1/chain/resources/:address | Energy and bandwidth breakdown        |
-| GET    | /api/v1/chain/transaction/:txid  | Transaction details                   |
-| GET    | /api/v1/chain/block/:number      | Block by number (or latest)           |
-| GET    | /api/v1/chain/parameters         | Chain parameters                      |
-| GET    | /api/v1/chain/history/:address   | Address transaction history           |
-| POST   | /api/v1/chain/read-contract      | Call a constant contract function     |
-| POST   | /api/v1/chain/broadcast          | Broadcast a signed transaction        |
-| GET    | /api/v1/address/:addr/resources  | Address resource summary              |
+| GET    | /api/v1/chain/account/:address   | Información de cuenta y recursos      |
+| GET    | /api/v1/chain/balance/:address   | Saldo de TRX                          |
+| GET    | /api/v1/chain/resources/:address | Desglose de energía y bandwidth       |
+| GET    | /api/v1/chain/transaction/:txid  | Detalles de la transacción            |
+| GET    | /api/v1/chain/block/:number      | Bloque por número (o el más reciente) |
+| GET    | /api/v1/chain/parameters         | Parámetros de la cadena               |
+| GET    | /api/v1/chain/history/:address   | Historial de transacciones de la dirección |
+| POST   | /api/v1/chain/read-contract      | Llamar a una función de contrato constante |
+| POST   | /api/v1/chain/broadcast          | Transmitir una transacción firmada    |
+| GET    | /api/v1/address/:addr/resources  | Resumen de recursos de la dirección   |
 
-### x402 Pay-Per-Use (3 endpoints)
+### x402 Pago Por Uso (3 endpoints)
 
-| Method | Path                        | Description                              |
-|--------|-----------------------------|------------------------------------------|
-| POST   | /api/v1/x402/invoice        | Create a payment invoice                 |
-| GET    | /api/v1/x402/invoice/:id    | Check invoice status                     |
-| POST   | /api/v1/x402/verify         | Verify payment and execute order         |
+| Método | Ruta                        | Descripción                              |
+|--------|-----------------------------|-----------------------------------------|
+| POST   | /api/v1/x402/invoice        | Crear una factura de pago                |
+| GET    | /api/v1/x402/invoice/:id    | Verificar estado de la factura           |
+| POST   | /api/v1/x402/verify         | Verificar pago y ejecutar orden          |
 
-## Key Endpoints in Detail
+## Endpoints Clave en Detalle
 
 ### GET /api/v1/prices
 
-Returns current pricing from all active providers. No authentication required. This is the endpoint you call to see the full market at a glance.
+Devuelve precios actuales de todos los proveedores activos. No se requiere autenticación. Este es el endpoint que llama para ver el mercado completo de un vistazo.
 
 ```bash
 curl https://merx.exchange/api/v1/prices
 ```
 
-Response (abbreviated):
+Respuesta (abreviada):
 
 ```json
 {
@@ -195,11 +195,11 @@ Response (abbreviated):
 }
 ```
 
-Each provider entry includes the price tiers (by duration), available capacity, and the timestamp of the last successful poll.
+Cada entrada de proveedor incluye los niveles de precios (por duración), capacidad disponible y la marca de tiempo del último sondeo exitoso.
 
 ### POST /api/v1/orders
 
-Creates an energy or bandwidth order. The platform matches the order against available providers and routes to the cheapest one that can fulfill it.
+Crea una orden de energía o bandwidth. La plataforma compara la orden con los proveedores disponibles y enruta al más barato que pueda cumplirla.
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/orders \
@@ -215,7 +215,7 @@ curl -X POST https://merx.exchange/api/v1/orders \
   }'
 ```
 
-Response:
+Respuesta:
 
 ```json
 {
@@ -227,17 +227,17 @@ Response:
 }
 ```
 
-The `Idempotency-Key` header prevents duplicate orders if the same request is retried. If the key has been seen before, the API returns the original order instead of creating a new one.
+El encabezado `Idempotency-Key` previene órdenes duplicadas si se reintenta la misma solicitud. Si la clave ha sido vista antes, la API devuelve la orden original en lugar de crear una nueva.
 
-Order types:
-- `MARKET` - execute immediately at best available price
-- `LIMIT` - execute only if price is at or below `max_price_sun`
-- `PERIODIC` - recurring order on a schedule
-- `BROADCAST` - broadcast a pre-signed delegation transaction
+Tipos de orden:
+- `MARKET` - ejecutar inmediatamente al mejor precio disponible
+- `LIMIT` - ejecutar solo si el precio es igual o inferior a `max_price_sun`
+- `PERIODIC` - orden recurrente en un horario
+- `BROADCAST` - transmitir una transacción de delegación pre-firmada
 
 ### GET /api/v1/orders/:id
 
-Returns the order with its fill details - which providers fulfilled the order, at what price, and the en cadena transaction IDs.
+Devuelve la orden con sus detalles de ejecución - qué proveedores cumplieron la orden, a qué precio y los IDs de transacción en cadena.
 
 ```bash
 curl -H "X-API-Key: sk_live_your_key_here" \
@@ -272,7 +272,7 @@ curl -H "X-API-Key: sk_live_your_key_here" \
 
 ### POST /api/v1/estimate
 
-Estimates the energy and bandwidth required for a TRON operation, then compares the rental cost against the TRX costo de quema.
+Estima la energía y bandwidth requeridos para una operación TRON, luego compara el costo de alquiler contra el costo de quema de TRX.
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/estimate \
@@ -303,54 +303,54 @@ curl -X POST https://merx.exchange/api/v1/estimate \
 }
 ```
 
-This endpoint is useful for showing users exactly how much they save by renting energy through MERX versus burning TRX.
+Este endpoint es útil para mostrar a los usuarios exactamente cuánto ahorran alquilando energía a través de MERX versus quemar TRX.
 
-## Rate Limits
+## Límites de Velocidad
 
-Rate limits are applied per IP address using sliding windows.
+Los límites de velocidad se aplican por dirección IP usando ventanas deslizantes.
 
-| Endpoint group      | Limit              | Window  |
+| Grupo de endpoints  | Límite             | Ventana |
 |---------------------|--------------------|---------|
-| Prices (public)     | 300 requests       | 1 min   |
-| Default (general)   | 100 requests       | 1 min   |
-| Balance             | 60 requests        | 1 min   |
-| History             | 60 requests        | 1 min   |
-| Orders              | 10 requests        | 1 min   |
-| Withdrawals         | 5 requests         | 1 min   |
-| Broadcast           | 20 requests        | 1 min   |
-| Registration        | 5 requests         | 1 hour  |
+| Precios (público)   | 300 solicitudes    | 1 min   |
+| Predeterminado (general) | 100 solicitudes | 1 min   |
+| Balance             | 60 solicitudes     | 1 min   |
+| Historial           | 60 solicitudes     | 1 min   |
+| Órdenes             | 10 solicitudes     | 1 min   |
+| Retiros             | 5 solicitudes      | 1 min   |
+| Broadcast           | 20 solicitudes     | 1 min   |
+| Registro            | 5 solicitudes      | 1 hora  |
 
-When a limite de velocidad is exceeded, the API returns HTTP 429 with the standard formato de error:
+Cuando se excede un límite de velocidad, la API devuelve HTTP 429 con el formato de error estándar:
 
 ```json
 {
   "error": {
     "code": "RATE_LIMITED",
-    "message": "Rate limit exceeded"
+    "message": "Límite de velocidad excedido"
   }
 }
 ```
 
-Rate limit headers (`RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`) are included in all responses following the IETF draft standard.
+Los encabezados de límite de velocidad (`RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`) se incluyen en todas las respuestas siguiendo el estándar de borrador IETF.
 
-## Error Codes
+## Códigos de Error
 
-| Code                   | HTTP | Description                                        |
-|------------------------|------|----------------------------------------------------|
-| `UNAUTHORIZED`         | 401  | Invalid or missing clave de API                         |
-| `RATE_LIMITED`         | 429  | Too many requests                                  |
-| `VALIDATION_ERROR`    | 400  | Request body or parameters failed validation       |
-| `INVALID_ADDRESS`     | 400  | Not a valid TRON address                           |
-| `INSUFFICIENT_FUNDS`  | 400  | Account balance too low                            |
-| `BELOW_MINIMUM_ORDER` | 400  | Order amount below provider minimum                |
-| `DUPLICATE_REQUEST`   | 409  | Idempotency key already used                       |
-| `ORDER_NOT_FOUND`     | 404  | Order or resource does not exist                   |
-| `PROVIDER_UNAVAILABLE`| 404  | No provider can fulfill the request                |
-| `INTERNAL_ERROR`      | 500  | Server-side error                                  |
+| Código                  | HTTP | Descripción                                    |
+|-------------------------|------|------------------------------------------------|
+| `UNAUTHORIZED`          | 401  | Clave API inválida o faltante                 |
+| `RATE_LIMITED`          | 429  | Demasiadas solicitudes                         |
+| `VALIDATION_ERROR`     | 400  | Cuerpo o parámetros de solicitud fallaron en validación |
+| `INVALID_ADDRESS`      | 400  | No es una dirección TRON válida                |
+| `INSUFFICIENT_FUNDS`   | 400  | Saldo de cuenta demasiado bajo                 |
+| `BELOW_MINIMUM_ORDER`  | 400  | Monto de orden por debajo del mínimo del proveedor |
+| `DUPLICATE_REQUEST`    | 409  | Clave de idempotencia ya utilizada             |
+| `ORDER_NOT_FOUND`      | 404  | Orden o recurso no existe                      |
+| `PROVIDER_UNAVAILABLE` | 404  | Ningún proveedor puede cumplir la solicitud    |
+| `INTERNAL_ERROR`       | 500  | Error del lado del servidor                    |
 
-## Quick Start with SDKs
+## Inicio Rápido con SDKs
 
-While the REST API can be called directly with any HTTP client, MERX provides official SDKs for JavaScript and Python that handle authentication, error parsing, and type safety.
+Si bien la API REST se puede llamar directamente con cualquier cliente HTTP, MERX proporciona SDKs oficiales para JavaScript y Python que manejan autenticación, análisis de errores y seguridad de tipos.
 
 ### JavaScript / TypeScript
 
@@ -363,10 +363,10 @@ import { MerxClient } from 'merx-sdk'
 
 const merx = new MerxClient({ apiKey: 'sk_live_your_key_here' })
 
-// Get all prices
+// Obtener todos los precios
 const prices = await merx.prices.list()
 
-// Create an order
+// Crear una orden
 const order = await merx.orders.create({
   resource_type: 'ENERGY',
   amount: 65000,
@@ -374,7 +374,7 @@ const order = await merx.orders.create({
   duration_sec: 3600,
 })
 
-// Check order status
+// Verificar estado de la orden
 const details = await merx.orders.get(order.id)
 ```
 
@@ -389,10 +389,10 @@ from merx import MerxClient
 
 client = MerxClient(api_key="sk_live_your_key_here")
 
-# Get all prices
+# Obtener todos los precios
 prices = client.prices.list()
 
-# Create an order
+# Crear una orden
 order = client.orders.create(
     resource_type="ENERGY",
     amount=65000,
@@ -400,42 +400,43 @@ order = client.orders.create(
     duration_sec=3600,
 )
 
-# Check order status
+# Verificar estado de la orden
 details = client.orders.get(order.id)
 ```
 
-## WebSocket for Real-Time Data
+## WebSocket para Datos en Tiempo Real
 
-Ademas to the REST API, MERX provides a WebSocket endpoint at `wss://merx.exchange/ws` for tiempo real actualizacion de precioss. Price changes are pushed to connected clients as they happen, with updates arriving every 30 seconds per provider.
+Además de la API REST, MERX proporciona un endpoint WebSocket en `wss://merx.exchange/ws` para actualizaciones de precios en tiempo real. Los cambios de precio se empujan a los clientes conectados a medida que suceden, con actualizaciones llegando cada 30 segundos por proveedor.
 
-The WebSocket connection supports provider filtering - subscribe only to the providers you care about, and ignore the rest.
+La conexión WebSocket admite filtrado de proveedores - suscribirse solo a los proveedores que te importan e ignorar el resto.
 
-## Standing Orders
+## Órdenes Permanentes
 
-Standing orders automate energy purchases based on triggers. You can set a price threshold, a schedule, or a balance condition, and the platform executes orders automatically within your specified budget.
+Las órdenes permanentes automatizan compras de energía basadas en disparadores. Puede establecer un umbral de precio, un horario o una condición de saldo, y la plataforma ejecuta órdenes automáticamente dentro de su presupuesto especificado.
 
-Trigger types include `price_below`, `price_above`, `schedule`, `balance_below`, and `provider_available`. Action types include `buy_resource`, `ensure_resources`, `deposit_trx`, and `notify_only`.
+Los tipos de disparador incluyen `price_below`, `price_above`, `schedule`, `balance_below` y `provider_available`. Los tipos de acción incluyen `buy_resource`, `ensure_resources`, `deposit_trx` y `notify_only`.
 
-This makes MERX suitable for fully automated infrastructure management - set your rules once, and the platform handles execution.
+Esto hace que MERX sea adecuado para gestión de infraestructura completamente automatizada - establezca sus reglas una vez, y la plataforma maneja la ejecución.
 
-## What Comes Next
+## Lo Que Viene Después
 
-The MERX API is designed for developers and businesses that need reliable, cost-effective access to TRON network resources. Whether you are building a procesador de pagos, a DeFi application, or an exchange, the API provides the building blocks to manage energy and bandwidth programmatically.
+La API de MERX está diseñada para desarrolladores y empresas que necesitan acceso confiable y rentable a los recursos de la red TRON. Ya sea que esté construyendo un procesador de pagos, una aplicación DeFi o un intercambio, la API proporciona los componentes básicos para gestionar energía y bandwidth programáticamente.
 
-Full API documentation is available at [merx.exchange/docs](https://merx.exchange/docs). The JavaScript SDK is on [GitHub](https://github.com/Hovsteder/merx-sdk-js) and [npm](https://www.npmjs.com/package/merx-sdk). The Python SDK is on [PyPI](https://pypi.org/project/merx-sdk/).
+La documentación completa de la API está disponible en [merx.exchange/docs](https://merx.exchange/docs). El SDK de JavaScript está en [GitHub](https://github.com/Hovsteder/merx-sdk-js) y [npm](https://www.npmjs.com/package/merx-sdk). El SDK de Python está en [PyPI](https://pypi.org/project/merx-sdk/).
 
 ---
 
 **Enlaces:**
 - Plataforma: [merx.exchange](https://merx.exchange)
-- Documentacion: [merx.exchange/docs](https://merx.exchange/docs)
+- Documentación: [merx.exchange/docs](https://merx.exchange/docs)
 - SDK de JavaScript: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) | [npm](https://www.npmjs.com/package/merx-sdk)
 - SDK de Python: [pypi.org/project/merx-sdk](https://pypi.org/project/merx-sdk/)
 - Servidor MCP: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp) | [npm](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Agregue MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -447,6 +448,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregúntale a tu agente de IA: "¿Cuál es la energía TRON más barata en este momento?" y obtén precios actuales de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

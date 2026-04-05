@@ -1,22 +1,22 @@
-# Precios de energia en TRON en tiempo real via WebSocket
+# Precios de Energía TRON en Tiempo Real vía WebSocket
 
-MERX provides a WebSocket endpoint at `wss://merx.exchange/ws` that streams tiempo real TRON energy and bandwidth prices from all connected providers. This article covers the connection protocol, message format, provider filtering via subscription messages, heartbeat and reconnection strategies, and complete code examples in JavaScript and Python - including a practical price alert bot that notifies you when energy drops below a target price.
+MERX proporciona un endpoint WebSocket en `wss://merx.exchange/ws` que transmite en tiempo real los precios de energía y bandwidth de TRON de todos los proveedores conectados. Este artículo cubre el protocolo de conexión, el formato de mensajes, el filtrado de proveedores mediante mensajes de suscripción, las estrategias de latido del corazón y reconexión, y ejemplos de código completos en JavaScript y Python, incluyendo un bot práctico de alerta de precios que te notifica cuando la energía cae por debajo de un precio objetivo.
 
-## Why WebSocket Instead of Polling
+## Por Qué WebSocket en Lugar de Polling
 
-The MERX REST API at `/api/v1/prices` returns current prices from all providers. You can poll it at regular intervals, and with a limite de velocidad of 300 requests per minute, you can refresh every 200 milliseconds if you want.
+La API REST de MERX en `/api/v1/prices` devuelve los precios actuales de todos los proveedores. Puedes consultarla a intervalos regulares, y con un límite de velocidad de 300 solicitudes por minuto, puedes actualizar cada 200 milisegundos si lo deseas.
 
-But polling has inherent drawbacks. Each request is a full HTTP roundtrip with TLS handshake overhead. You never know the exact moment a cambios de precios - you only discover it at your next poll interval. And if you have many clients, each one hammers the same endpoint independently.
+Pero el polling tiene inconvenientes inherentes. Cada solicitud es un recorrido completo de HTTP con sobrecarga de handshake TLS. Nunca sabes el momento exacto en que cambia un precio, solo lo descubres en tu próximo intervalo de consulta. Y si tienes muchos clientes, cada uno bombardea el mismo endpoint de forma independiente.
 
-The WebSocket connection solves all of these. A single persistent connection receives actualizacion de precioss the moment they happen. The MERX monitor de precios service polls all eight providers every 30 seconds and publishes updates via Redis pub/sub. The WebSocket server subscribes to that channel and fans out updates to all connected clients instantly.
+La conexión WebSocket resuelve todo esto. Una única conexión persistente recibe actualizaciones de precios en el momento en que suceden. El servicio de monitoreo de precios de MERX consulta a los ocho proveedores cada 30 segundos y publica las actualizaciones vía Redis pub/sub. El servidor WebSocket se suscribe a ese canal y distribuye las actualizaciones a todos los clientes conectados instantáneamente.
 
-The result: lower latency, lower bandwidth usage, and guaranteed delivery of every price change.
+El resultado: menor latencia, menor uso de bandwidth, y entrega garantizada de cada cambio de precio.
 
-## Connection
+## Conexión
 
-Connect to the WebSocket endpoint at `wss://merx.exchange/ws`. No authentication is required - price data is public.
+Conéctate al endpoint WebSocket en `wss://merx.exchange/ws`. No se requiere autenticación, los datos de precios son públicos.
 
-### JavaScript (Browser or Node.js)
+### JavaScript (Navegador o Node.js)
 
 ```javascript
 const ws = new WebSocket('wss://merx.exchange/ws')
@@ -40,7 +40,7 @@ ws.addEventListener('error', (error) => {
 })
 ```
 
-### Python (using websockets library)
+### Python (usando la librería websockets)
 
 ```python
 import asyncio
@@ -58,11 +58,11 @@ async def listen():
 asyncio.run(listen())
 ```
 
-Install the websockets library with `pip install websockets`.
+Instala la librería websockets con `pip install websockets`.
 
-## Message Format
+## Formato de Mensajes
 
-Every message from the server is a JSON object with three fields:
+Cada mensaje del servidor es un objeto JSON con tres campos:
 
 ```json
 {
@@ -84,20 +84,20 @@ Every message from the server is a JSON object with three fields:
 }
 ```
 
-| Field      | Type   | Description                                          |
+| Campo      | Tipo   | Descripción                                          |
 |------------|--------|------------------------------------------------------|
-| `type`     | string | Always `"price_update"`                              |
-| `provider` | string | Provider identifier (e.g., "sohu", "catfee", "itrx") |
-| `data`     | object | Full provider price data, same format as REST API    |
-| `ts`       | number | Server timestamp in milliseconds                     |
+| `type`     | string | Siempre `"price_update"`                             |
+| `provider` | string | Identificador del proveedor (ej: "sohu", "catfee", "itrx") |
+| `data`     | object | Datos de precios completos del proveedor, mismo formato que la API REST |
+| `ts`       | number | Marca de tiempo del servidor en milisegundos         |
 
-The `data` object has the same structure as a single element in the `/api/v1/prices` REST response. Esto significa you can use the same parsing logic for both tiempo real and polled data.
+El objeto `data` tiene la misma estructura que un elemento único en la respuesta de la API REST `/api/v1/prices`. Esto significa que puedes usar la misma lógica de análisis para datos en tiempo real y consultados.
 
-### Provider Identifiers
+### Identificadores de Proveedores
 
-MERX currently monitors eight providers:
+MERX monitorea actualmente ocho proveedores:
 
-| Provider   | Identifier   |
+| Proveedor  | Identificador |
 |------------|-------------|
 | Sohu       | `sohu`      |
 | CatFee     | `catfee`    |
@@ -108,31 +108,31 @@ MERX currently monitors eight providers:
 | PowerSun   | `powersun`  |
 | TEM        | `tem`       |
 
-Each provider sends an update approximately every 30 seconds. With eight providers, you can expect roughly one update every 3-4 seconds on average.
+Cada proveedor envía una actualización aproximadamente cada 30 segundos. Con ocho proveedores, puedes esperar aproximadamente una actualización cada 3-4 segundos en promedio.
 
-## Subscribing to Specific Providers
+## Suscribirse a Proveedores Específicos
 
-By default, a new connection receives updates from all providers. To filter, send a subscribe message after connecting:
+Por defecto, una nueva conexión recibe actualizaciones de todos los proveedores. Para filtrar, envía un mensaje de suscripción después de conectarte:
 
 ```json
 { "subscribe": ["sohu", "catfee", "itrx"] }
 ```
 
-This tells the server to send updates only from the specified providers. All other updates are silently dropped for your connection.
+Esto le indica al servidor que envíe actualizaciones solo de los proveedores especificados. Todas las demás actualizaciones se descartan silenciosamente para tu conexión.
 
-To reset and receive all updates again, send an empty array:
+Para restablecer y recibir todas las actualizaciones nuevamente, envía un array vacío:
 
 ```json
 { "subscribe": [] }
 ```
 
-### JavaScript Subscribe Example
+### Ejemplo de Suscripción en JavaScript
 
 ```javascript
 const ws = new WebSocket('wss://merx.exchange/ws')
 
 ws.addEventListener('open', () => {
-  // Only receive updates from sohu and catfee
+  // Solo recibir actualizaciones de sohu y catfee
   ws.send(JSON.stringify({
     subscribe: ['sohu', 'catfee']
   }))
@@ -140,12 +140,12 @@ ws.addEventListener('open', () => {
 
 ws.addEventListener('message', (event) => {
   const msg = JSON.parse(event.data)
-  // msg.provider will only be "sohu" or "catfee"
+  // msg.provider solo será "sohu" o "catfee"
   console.log(`${msg.provider}: ${msg.data.energy_prices[0]?.price_sun} SUN`)
 })
 ```
 
-### Python Subscribe Example
+### Ejemplo de Suscripción en Python
 
 ```python
 import asyncio
@@ -154,7 +154,7 @@ import websockets
 
 async def listen_filtered():
     async with websockets.connect("wss://merx.exchange/ws") as ws:
-        # Subscribe to specific providers
+        # Suscribirse a proveedores específicos
         await ws.send(json.dumps({
             "subscribe": ["sohu", "catfee"]
         }))
@@ -169,42 +169,42 @@ async def listen_filtered():
 asyncio.run(listen_filtered())
 ```
 
-You can change your subscription at any time by sending a new subscribe message. The server replaces the previous filter with the new one.
+Puedes cambiar tu suscripción en cualquier momento enviando un nuevo mensaje de suscripción. El servidor reemplaza el filtro anterior con el nuevo.
 
-## Heartbeat and Connection Health
+## Latido del Corazón y Salud de la Conexión
 
-The MERX WebSocket server sends ping frames every 30 seconds. Clients must respond with pong frames to keep the connection alive. If a client fails to respond to a ping, the server terminates the connection on the next heartbeat cycle (approximately 30 seconds later).
+El servidor WebSocket de MERX envía frames de ping cada 30 segundos. Los clientes deben responder con frames de pong para mantener la conexión activa. Si un cliente no responde a un ping, el servidor termina la conexión en el siguiente ciclo de latido (aproximadamente 30 segundos después).
 
-Most WebSocket libraries handle ping/pong automatically at the protocol level. The `websockets` Python library and browser `WebSocket` API both respond to pings without any additional code.
+La mayoría de las librerías WebSocket manejan ping/pong automáticamente a nivel de protocolo. La librería `websockets` de Python y la API `WebSocket` del navegador ambas responden a pings sin código adicional.
 
-For Node.js using the `ws` library, pong responses are also automatic. However, if you are using a library that does not handle pings automatically, you need to listen for the ping event:
+Para Node.js usando la librería `ws`, las respuestas de pong también son automáticas. Sin embargo, si usas una librería que no maneja pings automáticamente, necesitas escuchar el evento de ping:
 
 ```javascript
-// Node.js with 'ws' library (handles pong automatically)
+// Node.js con la librería 'ws' (maneja pong automáticamente)
 import WebSocket from 'ws'
 
 const ws = new WebSocket('wss://merx.exchange/ws')
 
 ws.on('ping', () => {
-  // ws library sends pong automatically
-  // This handler is just for logging
+  // la librería ws envía pong automáticamente
+  // Este manejador es solo para registro
   console.log('Received ping, pong sent')
 })
 ```
 
-## Reconnection Strategy
+## Estrategia de Reconexión
 
-WebSocket connections can drop for many reasons: network interruptions, server deployments, load balancer timeouts. A production client must handle reconnection gracefully.
+Las conexiones WebSocket pueden caerse por muchas razones: interrupciones de red, despliegues de servidor, timeouts de balanceador de carga. Un cliente de producción debe manejar la reconexión correctamente.
 
-The recommended strategy is exponential backoff with jitter:
+La estrategia recomendada es backoff exponencial con jitter:
 
-1. On disconnect, wait 1 second before reconnecting.
-2. If the reconnection fails, double the wait time: 2s, 4s, 8s, up to a maximum of 30 seconds.
-3. Add random jitter (0-1 second) to prevent all clients from reconnecting simultaneously.
-4. On successful reconnection, reset the backoff to 1 second.
-5. Re-send your subscription message after reconnecting.
+1. Al desconectar, espera 1 segundo antes de reconectar.
+2. Si la reconexión falla, duplica el tiempo de espera: 2s, 4s, 8s, hasta un máximo de 30 segundos.
+3. Añade jitter aleatorio (0-1 segundo) para evitar que todos los clientes se reconecten simultáneamente.
+4. Al reconectar exitosamente, restablece el backoff a 1 segundo.
+5. Reenvía tu mensaje de suscripción después de reconectar.
 
-### JavaScript Reconnection
+### Reconexión en JavaScript
 
 ```javascript
 function createConnection(providers = []) {
@@ -253,11 +253,11 @@ function handlePriceUpdate(msg) {
   }
 }
 
-// Connect and subscribe to two providers
+// Conectar y suscribirse a dos proveedores
 createConnection(['sohu', 'catfee'])
 ```
 
-### Python Reconnection
+### Reconexión en Python
 
 ```python
 import asyncio
@@ -296,11 +296,11 @@ def handle_price_update(msg):
 asyncio.run(listen_with_reconnect(["sohu", "catfee"]))
 ```
 
-## Building a Price Alert Bot
+## Construir un Bot de Alerta de Precios
 
-Aqui esta a practical caso de uso: a bot that monitors tiempo real prices and sends a notification when energy drops below a target price. This example uses a simple console alert, but you can replace it with a Telegram message, a Slack webhook, or an email.
+Aquí hay un caso de uso práctico: un bot que monitorea precios en tiempo real y envía una notificación cuando la energía cae por debajo de un precio objetivo. Este ejemplo usa una alerta simple en consola, pero puedes reemplazarla con un mensaje de Telegram, un webhook de Slack, o un correo electrónico.
 
-### JavaScript Price Alert Bot
+### Bot de Alerta de Precios en JavaScript
 
 ```javascript
 const TARGET_PRICE_SUN = 25
@@ -348,7 +348,7 @@ function checkPriceAlert(msg) {
     console.log(`ALERT: ${msg.provider} energy at ${cheapest} SUN (target: ${TARGET_PRICE_SUN})`)
     console.log(`  Available: ${msg.data.available_energy.toLocaleString()} units`)
     console.log(`  Time: ${new Date(msg.ts).toISOString()}`)
-    // Replace with your notification logic:
+    // Reemplaza con tu lógica de notificación:
     // sendTelegramMessage(...)
     // postToSlack(...)
   }
@@ -357,7 +357,7 @@ function checkPriceAlert(msg) {
 createAlertBot()
 ```
 
-### Python Price Alert Bot
+### Bot de Alerta de Precios en Python
 
 ```python
 import asyncio
@@ -404,14 +404,14 @@ def check_alert(msg):
         available = msg["data"].get("available_energy", 0)
         print(f"ALERT: {provider} energy at {cheapest} SUN (target: {TARGET_PRICE_SUN})")
         print(f"  Available: {available:,} units")
-        # Replace with your notification logic
+        # Reemplaza con tu lógica de notificación
 
 asyncio.run(alert_bot())
 ```
 
-## Maintaining Local State
+## Mantener Estado Local
 
-For applications that need to display a live market view, maintain a local dictionary of the latest prices from each provider and update it on every message:
+Para aplicaciones que necesitan mostrar una vista de mercado en vivo, mantén un diccionario local de los últimos precios de cada proveedor y actualízalo en cada mensaje:
 
 ```javascript
 const latestPrices = new Map()
@@ -422,7 +422,7 @@ function handlePriceUpdate(msg) {
     receivedAt: msg.ts,
   })
 
-  // Find current cheapest across all providers
+  // Encuentra el más barato actual entre todos los proveedores
   let cheapest = null
   for (const [provider, entry] of latestPrices) {
     const prices = entry.data.energy_prices || []
@@ -439,16 +439,16 @@ function handlePriceUpdate(msg) {
 }
 ```
 
-## Combining WebSocket with REST API
+## Combinando WebSocket con API REST
 
-A common pattern is to use the REST API for the initial state load and the WebSocket for incremental updates:
+Un patrón común es usar la API REST para la carga de estado inicial y WebSocket para actualizaciones incrementales:
 
 ```javascript
 import { MerxClient } from 'merx-sdk'
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY })
 
-// Load initial state from REST API
+// Cargar estado inicial desde la API REST
 const initialPrices = await merx.prices.list()
 const priceMap = new Map()
 for (const p of initialPrices) {
@@ -456,37 +456,38 @@ for (const p of initialPrices) {
 }
 console.log(`Loaded ${priceMap.size} providers from REST API`)
 
-// Switch to WebSocket for real-time updates
+// Cambiar a WebSocket para actualizaciones en tiempo real
 const ws = new WebSocket('wss://merx.exchange/ws')
 ws.addEventListener('message', (event) => {
   const msg = JSON.parse(event.data)
   priceMap.set(msg.provider, msg.data)
-  // Your UI or logic now has a continuously updated price map
+  // Tu UI o lógica ahora tiene un mapa de precios continuamente actualizado
 })
 ```
 
-This ensures you have a complete market view from the first render, with zero-latency updates from that point forward.
+Esto asegura que tengas una vista de mercado completa desde el primer renderizado, con actualizaciones de latencia cero desde ese punto en adelante.
 
-## Performance Considerations
+## Consideraciones de Rendimiento
 
-The WebSocket endpoint is designed for high-throughput consumption. A few notes for production deployments:
+El endpoint WebSocket está diseñado para consumo de alto rendimiento. Algunas notas para despliegues de producción:
 
-- Each provider update is approximately 200-500 bytes of JSON. With eight providers updating every 30 seconds, total bandwidth is under 1 KB/s.
-- Use the subscription filter to reduce traffic if you only need specific providers.
-- The server-side heartbeat interval is 30 seconds. If your application has a firewall or proxy that closes idle connections sooner, send application-level keepalive messages.
-- The WebSocket path is `/ws`. Make sure your reverse proxy or load balancer is configured to upgrade HTTP connections on this path.
+- Cada actualización de proveedor es aproximadamente 200-500 bytes de JSON. Con ocho proveedores actualizando cada 30 segundos, el bandwidth total es menor a 1 KB/s.
+- Usa el filtro de suscripción para reducir tráfico si solo necesitas proveedores específicos.
+- El intervalo de latido del lado del servidor es 30 segundos. Si tu aplicación tiene un firewall o proxy que cierra conexiones inactivas antes, envía mensajes de keepalive a nivel de aplicación.
+- La ruta WebSocket es `/ws`. Asegúrate de que tu proxy inverso o balanceador de carga esté configurado para actualizar conexiones HTTP en esta ruta.
 
-## Resources
+## Recursos
 
 - Plataforma: [merx.exchange](https://merx.exchange)
-- Documentacion: [merx.exchange/docs](https://merx.exchange/docs)
+- Documentación: [merx.exchange/docs](https://merx.exchange/docs)
 - SDK de JavaScript: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) | [npm](https://www.npmjs.com/package/merx-sdk)
 - SDK de Python: [pypi.org/project/merx-sdk](https://pypi.org/project/merx-sdk/)
 - Servidor MCP: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP, sin instalación, sin necesidad de API key para herramientas de solo lectura:
 
 ```json
 {
@@ -498,6 +499,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es la energía TRON más barata ahora mismo?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

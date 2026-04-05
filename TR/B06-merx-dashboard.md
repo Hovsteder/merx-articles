@@ -1,281 +1,282 @@
-# MERX Kontrol Paneli: Kod Yazmadan Energy Ticareti
+# MERX Panosu: Kod Yazmadan Enerji Alışverişi
 
-Not every energy buyer is a developer. Not every developer wants to write code for a one-off purchase. And not every organization has the engineering bandwidth to integrate an API before they can start saving on TRON transaction costs.
+Her enerji alıcısı bir geliştirici değildir. Her geliştirici tek seferlik bir satın alma için kod yazmak istemez. Ve her kuruluşun TRON işlem maliyetlerinden tasarruf etmeye başlamadan önce bir API'yi entegre etmek için mühendislik kapasitesi yoktur.
 
-The MERX dashboard at [merx.exchange](https://merx.exchange) provides a complete web interface for buying energy, comparing provider prices, managing your balance, tracking orders, and generating API keys -- all without writing a single line of code. This article walks through every feature of the dashboard and shows how to use it effectively.
+[merx.exchange](https://merx.exchange) adresindeki MERX panosu, enerji satın almak, sağlayıcı fiyatlarını karşılaştırmak, bakiyenizi yönetmek, siparişleri izlemek ve API anahtarları oluşturmak için -- tek bir kod satırı yazılmadan -- tam bir web arayüzü sağlar. Bu makale panonun tüm özelliklerini ele almakta ve etkili kullanımını göstermektedir.
 
-## Baslangic
+## Başlarken
 
-Navigate to [merx.exchange](https://merx.exchange) and create an account. The registration requires an email address and password. No KYC. No identity verification. No waiting period. Your account is active immediately.
+[merx.exchange](https://merx.exchange) adresine gidin ve bir hesap oluşturun. Kayıt bir e-posta adresi ve şifre gerektirir. KYC yok. Kimlik doğrulaması yok. Bekleme süresi yok. Hesabınız hemen aktif olur.
 
-Once logged in, you land on the main dashboard view. The interface follows a dark theme with high-contrast typography -- no visual noise, no unnecessary decoration, just the information you need to make purchase decisions.
+Oturum açtıktan sonra ana pano görünümüne ulaşırsınız. Arayüz koyu bir tema izler ve yüksek kontrastlı tipografi kullanır -- görsel gürültü yok, gereksiz dekorasyon yok, sadece satın alma kararlarını vermek için ihtiyacınız olan bilgiler.
 
-## The Price Panel
+## Fiyat Paneli
 
-The first thing you see on the dashboard is the live price panel. This displays current energy prices from all seven integrated providers, updated every 30 seconds.
+Panoda ilk gördüğünüz şey canlı fiyat panelidir. Bu, tümleştirilmiş yedi sağlayıcıdan gelen güncel enerji fiyatlarını gösterir ve her 30 saniyede güncellenir.
 
 ```
-Provider      1h Price    1d Price    Available
+Sağlayıcı     1s Fiyat    1g Fiyat    Kullanılabilir
+---------------------------------------------------
+Feee          28 SUN      22 SUN      Evet
+Netts         31 SUN      24 SUN      Evet
+itrx          32 SUN      23 SUN      Evet
+CatFee        30 SUN      25 SUN      Evet
+PowerSun      33 SUN      26 SUN      Evet
+TronSave      35 SUN      28 SUN      Evet
+SoHu          34 SUN      27 SUN      Evet
+```
+
+Panel her süre katmanı için en ucuz sağlayıcıyı vurgular. Fiyatlar SUN cinsinden gösterilir (enerji birimi başına) -- sağlayıcıların oranlarını dahili olarak nasıl belirttiğinden bağımsız olarak doğrudan karşılaştırma yapmanızı sağlayan standart birim.
+
+### Fiyatların Anlamı
+
+Her fiyat, belirtilen kiralama süresi için birim enerji başına maliyeti temsil eder. Satın almanızın toplam maliyetini hesaplamak için:
+
+```
+Toplam maliyet = enerji_miktarı * birim_fiyat
+
+Örnek:
+  65.000 enerji * 28 SUN/birim = 1.820.000 SUN = 1,82 TRX
+```
+
+Pano bir sipariş girdiğinizde bu hesaplamayı otomatik olarak gerçekleştirir. Onaylamadan önce toplam maliyeti hem SUN hem de TRX cinsinden görsünüz.
+
+### Fiyat Geçmişi
+
+Canlı fiyatların altında, geçmiş 24 saat, 7 gün veya 30 günde fiyatların nasıl hareket ettiğini gösteren geçmiş bir grafik vardır. Bu, örüntüleri belirlemenize yardımcı olur -- fiyatlar genellikle yoğun olmayan saatlerde (00:00-08:00 UTC) daha düşük ve yoğun işlem dönemlerinde daha yüksektir.
+
+Grafik sadece bilgi amaçlı değildir. Büyük bir sipariş veriyorsanız ve zaman esnekliği varsa, bir fiyat düşüşü için birkaç saat beklemek anlamlı bir yüzde tasarrufu yapabilir.
+
+## Sipariş Oluşturma
+
+Sipariş oluşturma formu panonun temel işlevidir. İşlem şu şekildedir:
+
+### Adım 1: Sipariş Parametrelerini Girin
+
+Üç alanı doldurun:
+
+- **Enerji miktarı**: İhtiyacınız olan enerji birimi sayısı. Emin değilseniz, pano yaygın miktarlar için hızlı seçim düğmeleri sağlar:
+  - 32.000 (minimal USDT transferi)
+  - 65.000 (standart USDT transferi)
+  - 200.000 (DEX swapı)
+  - 500.000 (karmaşık kontrat etkileşimi)
+  - Özel miktar
+
+- **Hedef adres**: Enerji delegasyonunu alacak TRON adresi. Bu, enerji gerektiren işlemi yürütecek adresidir. Pano ilerlemeden önce adres biçimini doğrular.
+
+- **Süre**: Enerjiye ne kadar süre ihtiyacınız olduğu. Seçenekler tipik olarak 1 saat, 1 gün, 3 gün, 7 gün, 14 gün ve 30 günü içerir.
+
+### Adım 2: Teklifi İnceleyin
+
+Parametrelerinizi girdikten sonra, pano detaylı bir teklif görüntüler:
+
+```
+Sipariş Özeti
 -------------------------------------------------
-Feee          28 SUN      22 SUN      Yes
-Netts         31 SUN      24 SUN      Yes
-itrx          32 SUN      23 SUN      Yes
-CatFee        30 SUN      25 SUN      Yes
-PowerSun      33 SUN      26 SUN      Yes
-TronSave      35 SUN      28 SUN      Yes
-SoHu          34 SUN      27 SUN      Yes
+Enerji:           65.000 birim
+Süre:             1 saat
+Hedef:            TYourAddress...
+En iyi sağlayıcı: Feee
+Birim başına fiyat: 28 SUN
+Toplam maliyet:   1.820.000 SUN (1,82 TRX)
+Hesap bakiyesi:   50,00 TRX
+Sonraki bakiye:   48,18 TRX
 ```
 
-The panel highlights the cheapest provider for each duration tier. Prices are displayed in SUN per energy unit -- the standard denomination that allows direct comparison across providers regardless of how they internally quote their rates.
+Teklif, tam olarak hangi sağlayıcının siparişi yerine getireceğini, birim başına fiyatı, toplam maliyeti ve hesap bakiyeniz üzerindeki etkisini gösterir. Gizli ücret veya marj yoktur.
 
-### What the Prices Mean
+### Adım 3: Onaylayın ve Gerçekleştirin
 
-Each price represents the cost per unit of energy for the specified rental duration. To calculate the total cost for your purchase:
+Onay düğmesine tıklayın. Sipariş MERX arka ucuna gönderilir; bu da onu seçilen sağlayıcıya yönlendirir. Delegasyon tipik olarak saniyeler içinde tamamlanır.
 
-```
-Total cost = energy_amount * price_per_unit
+Sipariş yerine getirildikten sonra, pano sipariş durumunu, zincir üstü delegasyon işlem hash'ini ve kiralama üzerindeki kalan zamanı göstermek için güncellenir.
 
-Example:
-  65,000 energy * 28 SUN/unit = 1,820,000 SUN = 1.82 TRX
-```
+## Bakiyenizi Yönetme
 
-The dashboard performs this calculation automatically when you enter an order. You see the total cost in both SUN and TRX before confirming.
+### Fon Yatırma
 
-### Price History
+Enerji satın almadan önce, MERX'te bir TRX bakiyesine ihtiyacınız vardır. Para yatırma işlemi:
 
-Below the live prices, a historical chart shows how prices have moved over the past 24 hours, 7 days, or 30 days. This helps you identify patterns -- prices tend to be lower during off-peak hours (00:00-08:00 UTC) and higher during peak transaction periods.
+1. Bakiye bölümüne gidin
+2. "Para Yatır"a tıklayın
+3. Pano benzersiz para yatırma adresinizi görüntüler
+4. Herhangi bir TRON cüzdanından bu adrese TRX gönderin
+5. Para yatırma, zincir üstü onaylamadan sonra otomatik olarak kredi verilir
 
-The chart is not just informational. If you are placing a large order and timing flexibility exists, waiting a few hours for a price dip can save a meaningful percentage.
+Para yatırma monitör servisi gelen işlemleri sürekli olarak izler. Krediler tipik olarak işlem zincir üstünde onaylandıktan 1-2 dakika içinde görünür.
 
-## Creating an Order
+### Bakiye Geçmişini Görüntüleme
 
-The order creation form is the core function of the dashboard. Here is the process:
-
-### Step 1: Enter Order Parameters
-
-Fill in three fields:
-
-- **Energy amount**: The number of energy units you need. If you are unsure, the dashboard provides quick-select buttons for common amounts:
-  - 32,000 (minimal USDT transfer)
-  - 65,000 (standard USDT transfer)
-  - 200,000 (DEX swap)
-  - 500,000 (complex contract interaction)
-  - Custom amount
-
-- **Target address**: The TRON address that will receive the energy delegation. This is the address that will execute the transaction needing energy. The dashboard validates the address format before proceeding.
-
-- **Duration**: How long you need the energy. Options typically include 1 hour, 1 day, 3 days, 7 days, 14 days, and 30 days.
-
-### Step 2: Review the Quote
-
-After entering your parameters, the dashboard displays a detailed quote:
+Bakiye bölümü tüm bakiye değişikliklerinin tam geçmişini gösterir:
 
 ```
-Order Summary
--------------------------------------------------
-Energy:           65,000 units
-Duration:         1 hour
-Target:           TYourAddress...
-Best provider:    Feee
-Price per unit:   28 SUN
-Total cost:       1,820,000 SUN (1.82 TRX)
-Account balance:  50.00 TRX
-Balance after:    48.18 TRX
-```
-
-The quote shows exactly which provider will fulfill the order, the per-unit price, the total cost, and the impact on your account balance. There are no hidden fees or markups.
-
-### Step 3: Confirm and Execute
-
-Click the confirm button. The order is submitted to the MERX backend, which routes it to the selected provider for execution. The delegation typically completes within seconds.
-
-Once the order is filled, the dashboard updates to show the order status, the on-chain delegation transaction hash, and the time remaining on the rental.
-
-## Managing Your Balance
-
-### Depositing Funds
-
-Before you can buy energy, you need a TRX balance on MERX. The deposit process:
-
-1. Navigate to the Balance section
-2. Click "Deposit"
-3. The dashboard displays your unique deposit address
-4. Send TRX to that address from any TRON wallet
-5. The deposit is credited automatically after on-chain confirmation
-
-The deposit monitor service watches for incoming transactions continuously. Credits typically appear within 1-2 minutes of the transaction being confirmed on-chain.
-
-### Viewing Balance History
-
-The balance section shows a complete history of all balance changes:
-
-```
-Date/Time            Type          Amount       Balance
+Tarih/Saat           Tür           Miktar        Bakiye
 -----------------------------------------------------------
-2026-03-28 14:30     Deposit       +100.00 TRX  100.00 TRX
-2026-03-28 14:35     Order #1247   -1.82 TRX    98.18 TRX
-2026-03-28 16:20     Order #1248   -1.95 TRX    96.23 TRX
-2026-03-29 09:00     Deposit       +50.00 TRX   146.23 TRX
-2026-03-29 09:15     Order #1249   -5.40 TRX    140.83 TRX
+2026-03-28 14:30     Para Yatır    +100,00 TRX   100,00 TRX
+2026-03-28 14:35     Sipariş #1247 -1,82 TRX     98,18 TRX
+2026-03-28 16:20     Sipariş #1248 -1,95 TRX     96,23 TRX
+2026-03-29 09:00     Para Yatır    +50,00 TRX    146,23 TRX
+2026-03-29 09:15     Sipariş #1249 -5,40 TRX     140,83 TRX
 ```
 
-Every entry corresponds to a double-entry ledger record in the MERX accounting system. The sum of all entries always reconciles to your current balance -- this is verifiable and auditable.
+Her giriş MERX muhasebe sistemindeki bir çift yönlü defter kaydına karşılık gelir. Tüm girdilerin toplamı her zaman mevcut bakiyenizle uzlaşır -- bu doğrulanabilir ve denetlenebilirdir.
 
-### Withdrawals
+### Para Çekme
 
-If you need to withdraw TRX from your MERX account:
+Eğer MERX hesabınızdan TRX çekmek istiyorsanız:
 
-1. Navigate to the Balance section
-2. Click "Withdraw"
-3. Enter the destination TRON address
-4. Enter the amount to withdraw
-5. Confirm the withdrawal
+1. Bakiye bölümüne gidin
+2. "Para Çek"e tıklayın
+3. Hedef TRON adresini girin
+4. Çekilecek miktarı girin
+5. Para çekme işlemini onaylayın
 
-Withdrawals are processed by the treasury-signer service and broadcast to the TRON network. Processing time depends on network conditions but typically completes within a few minutes.
+Para çekme işlemleri, hazine-imzalayıcı servisi tarafından işlenir ve TRON ağına yayınlanır. İşleme süresi ağ koşullarına bağlıdır ancak tipik olarak birkaç dakika içinde tamamlanır.
 
-## Order History
+## Sipariş Geçmişi
 
-The Order History view provides a searchable, filterable list of all your past orders. Each entry shows:
+Sipariş Geçmişi görünümü, tüm geçmiş siparişlerinizin aranabilir, filtrelenebilir bir listesini sağlar. Her giriş şunları gösterir:
 
-- **Order ID**: Unique identifier for reference
-- **Date/Time**: When the order was placed
-- **Energy Amount**: How many energy units were purchased
-- **Duration**: Rental period
-- **Provider**: Which provider fulfilled the order
-- **Price**: Per-unit price in SUN
-- **Total Cost**: Total amount charged in TRX
-- **Status**: Pending, Active, Completed, or Failed
-- **Target Address**: Where the energy was delegated
+- **Sipariş ID**: Referans için benzersiz tanımlayıcı
+- **Tarih/Saat**: Siparişin ne zaman verildiği
+- **Enerji Miktarı**: Kaç enerji birimi satın alındığı
+- **Süre**: Kiralama dönemi
+- **Sağlayıcı**: Siparişi hangi sağlayıcının yerine getirdiği
+- **Fiyat**: SUN cinsinden birim başına fiyat
+- **Toplam Maliyet**: TRX cinsinden tahsil edilen toplam tutar
+- **Durum**: Beklemede, Aktif, Tamamlandı veya Başarısız
+- **Hedef Adres**: Enerji nereye delege edildiği
 
-### Filtering and Search
+### Filtreleme ve Arama
 
-You can filter orders by:
+Siparişleri şu ölçütlere göre filtreleyebilirsiniz:
 
-- Date range
-- Status (active, completed, all)
-- Provider
-- Target address
+- Tarih aralığı
+- Durum (aktif, tamamlandı, tümü)
+- Sağlayıcı
+- Hedef adres
 
-This is particularly useful for organizations that purchase energy for multiple addresses and need to track costs per wallet or per application.
+Bu, özellikle birden çok adres için enerji satın alan ve cüzdan veya uygulama başına maliyetleri izlemesi gereken kuruluşlar için faydalıdır.
 
-### Order Details
+### Sipariş Ayrıntıları
 
-Clicking on any order opens a detail view with full information:
+Herhangi bir siparişe tıklamak, tam bilgisinin yer aldığı bir ayrıntı görünümünü açar:
 
 ```
-Order #1247
+Sipariş #1247
 -------------------------------------------------
-Status:           Completed
-Created:          2026-03-28 14:35:22 UTC
-Energy:           65,000 units
-Duration:         1 hour (expired)
-Provider:         Feee
-Price:            28 SUN/unit
-Total:            1.82 TRX
-Target:           TYourAddress...
-TX Hash:          7f3a2b...
-Delegation Start: 2026-03-28 14:35:30 UTC
-Delegation End:   2026-03-28 15:35:30 UTC
+Durum:              Tamamlandı
+Oluşturuldu:        2026-03-28 14:35:22 UTC
+Enerji:             65.000 birim
+Süre:               1 saat (süresi doldu)
+Sağlayıcı:          Feee
+Fiyat:              28 SUN/birim
+Toplam:             1,82 TRX
+Hedef:              TYourAddress...
+TX Hash:            7f3a2b...
+Delegasyon Başlangıcı: 2026-03-28 14:35:30 UTC
+Delegasyon Sonu:      2026-03-28 15:35:30 UTC
 ```
 
-The transaction hash is a link to the on-chain delegation record, verifiable through any TRON block explorer.
+İşlem hash'i zincir üstü delegasyon kaydına bir bağlantıdır; herhangi bir TRON blok tarayıcısı aracılığıyla doğrulanabilir.
 
-## Generating API Keys
+## API Anahtarları Oluşturma
 
-When you are ready to integrate MERX into your application programmatically, the dashboard lets you generate API keys without needing to contact support.
+MERX'i uygulamanıza programlama yoluyla entegre etmeye hazır olduğunuzda, pano desteğe ihtiyaç duymadan API anahtarları oluşturmanıza olanak tanır.
 
-1. Navigate to the Settings or API section
-2. Click "Generate API Key"
-3. Provide a label for the key (e.g., "Production server", "Staging environment")
-4. The key is displayed once -- copy it immediately
-5. The key is stored hashed on the server; it cannot be retrieved again
+1. Ayarlar veya API bölümüne gidin
+2. "API Anahtarı Oluştur"a tıklayın
+3. Anahtar için bir etiket sağlayın (örn. "Üretim sunucusu", "Hazırlama ortamı")
+4. Anahtar bir kez görüntülenir -- hemen kopyalayın
+5. Anahtar sunucuda şifreli olarak depolanır; tekrar alınamaz
 
-You can manage multiple API keys, each with its own label. If a key is compromised, revoke it from the dashboard and generate a new one. Revoking a key is immediate -- all requests using the revoked key will fail with an authentication error.
+Her biri kendi etiketi olan birden çok API anahtarını yönetebilirsiniz. Bir anahtar tehlikeye girerse, panelden iptal edin ve yeni bir tane oluşturun. Bir anahtarı iptal etmek anında gerçekleşir -- iptal edilen anahtarı kullanan tüm istekler bir kimlik doğrulaması hatası ile başarısız olur.
 
-### API Key Security
+### API Anahtarı Güvenliği
 
-API keys authenticate your requests to the MERX REST API, WebSocket feeds, and SDKs. Treat them like passwords:
+API anahtarları MERX REST API, WebSocket akışları ve SDK'lara yönelik isteklerinizi doğrular. Onlara parolalar gibi davranın:
 
-- Never commit API keys to version control
-- Store them in environment variables or secret managers
-- Use separate keys for development, staging, and production
-- Rotate keys periodically
+- API anahtarlarını asla sürüm denetimine işlemeyin
+- Onları ortam değişkenlerinde veya gizli yöneticilerde saklayın
+- Geliştirme, hazırlama ve üretim için ayrı anahtarlar kullanın
+- Anahtarları periyodik olarak döndürün
 
-The dashboard shows the last-used timestamp for each key, making it easy to identify and revoke unused keys.
+Pano her anahtar için son kullanılan zaman damgasını gösterir; bu sayede kullanılmayan anahtarları belirlemeyi ve iptal etmeyi kolaylaştırır.
 
-## Monitoring Active Delegations
+## Aktif Delegasyonları İzleme
 
-The dashboard includes a real-time view of your active energy delegations:
+Pano, aktif enerji delegasyonlarınızın gerçek zamanlı görünümünü içerir:
 
 ```
-Active Delegations
+Aktif Delegasyonlar
 -------------------------------------------------
-Target            Energy     Expires           Remaining
-TAddr1...         65,000     2026-03-30 15:00  2h 30m
-TAddr2...         200,000    2026-03-31 09:00  20h 30m
-TAddr3...         500,000    2026-04-02 12:00  3d 2h 30m
+Hedef            Enerji     Süresi Doluyor      Kalan
+TAddr1...        65.000     2026-03-30 15:00    2s 30d
+TAddr2...        200.000    2026-03-31 09:00    20s 30d
+TAddr3...        500.000    2026-04-02 12:00    3g 2s 30d
 ```
 
-For each active delegation, you can:
+Her aktif delegasyon için şunları yapabilirsiniz:
 
-- See the exact expiration time
-- View the remaining time
-- See how much energy is available
-- Extend the delegation by placing a new order for the same address
+- Tam bitiş zamanını görmek
+- Kalan zamanı görmek
+- Ne kadar enerji bulunduğunu görmek
+- Aynı adres için yeni bir sipariş vererek delegasyonu uzatmak
 
-The system does not currently support canceling an active delegation early (energy delegation on TRON is an on-chain operation that runs until its specified duration expires), but you can always extend an existing delegation by purchasing additional energy for the same target address.
+Sistem şu anda aktif bir delegasyonu erken iptal etmeyi desteklemez (TRON'daki enerji delegasyonu, belirtilen süresi boyunca çalışan bir zincir üstü işlemdir), ancak aynı hedef adres için ek enerji satın alarak her zaman mevcut bir delegasyonu uzatabilirsiniz.
 
-## Energy Estimation Tool
+## Enerji Tahmini Aracı
 
-The dashboard includes a built-in energy estimation tool. If you are not sure how much energy your transaction will need, you can simulate it directly from the dashboard:
+Pano, yerleşik bir enerji tahmini aracı içerir. İşleminizin ne kadar enerji gerekeceğinden emin değilseniz, bunu doğrudan panodan simüle edebilirsiniz:
 
-1. Enter the contract address (e.g., the USDT contract)
-2. Select the function (e.g., transfer)
-3. Enter the parameters (recipient address, amount)
-4. Click "Estimate"
+1. Kontrat adresini girin (örn. USDT kontratı)
+2. İşlevi seçin (örn. transfer)
+3. Parametreleri girin (alıcı adresi, miktar)
+4. "Tahmin Et"e tıklayın
 
-The tool calls `triggerConstantContract` under the hood and returns the exact energy required for your specific transaction against the current contract state. This eliminates guesswork and prevents over-purchasing or under-purchasing energy.
+Araç, arka planda `triggerConstantContract` çağrısı yapar ve geçerli kontrat durumuna karşı spesifik işleminiz için gereken tam enerjiyi döndürür. Bu, tahmin etme ihtiyacını ortadan kaldırır ve aşırı veya yetersiz enerji satın almayı engeller.
 
-## Who the Dashboard Is For
+## Pano Kimin İçin?
 
-### Business Operators
+### İşletme Operatörleri
 
-If you run a business that sends USDT payments -- payroll, vendor payments, remittances -- you do not need a developer to integrate an API. Open the dashboard, deposit TRX, and start buying energy before each batch of transfers. The cost savings are immediate and significant.
+USDT ödemeleri gönderen bir işletme yönetiyorsanız -- bordro, satıcı ödemeleri, remitanslar -- bir gelişticiye API entegrasyonu için ihtiyacınız yoktur. Panoyu açın, TRX yatırın ve her transfer partisinden önce enerji satın almaya başlayın. Maliyet tasarrufu hemen ve önemlidir.
 
-### Developers Evaluating MERX
+### MERX'i Değerlendiren Geliştiriciler
 
-Before committing to an API integration, use the dashboard to test the service. Place a few orders, observe the pricing, verify that delegations arrive on-chain as expected. Once you are satisfied, generate an API key and move to programmatic access.
+Bir API entegrasyonuna taahhüt etmeden önce, hizmeti test etmek için panoyu kullanın. Birkaç sipariş verin, fiyatlandırmayı gözlemleyin, delegasyonların zincir üstünde beklendiği gibi gelip gelmediğini doğrulayın. İkna olduktan sonra, bir API anahtarı oluşturun ve programlama erişimine geçin.
 
-### Finance Teams
+### Finans Ekipleri
 
-The order history and balance views provide the reporting that finance teams need: what was spent, when, on what, from which provider. Export this data for reconciliation with your internal accounting systems.
+Sipariş geçmişi ve bakiye görünümleri, finans ekiplerinin ihtiyaç duyduğu raporlamayı sağlar: ne harcandı, ne zaman, ne için, hangi sağlayıcıdan. Bu verileri iç muhasebe sistemleriyle uzlaştırma için dışa aktarın.
 
-### Occasional Users
+### Ara Sıra Kullanıcılar
 
-If you make TRON transactions occasionally -- a few per week or per month -- the dashboard is likely all you need. No integration, no code, no maintenance. Just log in, buy energy, and save 90% on transaction fees.
+TRON işlemleri ara sıra yapıyorsanız -- haftada veya ayda birkaç işlem -- pano muhtemelen ihtiyacınız olan herşeydir. Entegrasyon yok, kod yok, bakım yok. Sadece oturum açın, enerji satın alın ve işlem ücretlerinde %90 tasarruf edin.
 
-## From Dashboard to API
+## Panodan API'ye
 
-The dashboard and the API share the same backend. Every action you perform in the dashboard -- checking prices, placing orders, viewing history -- maps directly to an API endpoint. When you are ready to automate:
+Pano ve API aynı arka ucu paylaşır. Panoda gerçekleştirdiğiniz her işlem -- fiyatları kontrol etmek, sipariş vermek, geçmişi görmek -- doğrudan bir API uç noktasına eşlenir. Otomasyona hazır olduğunuzda:
 
 ```
-Dashboard action          API equivalent
+Pano işlemi               API eşdeğeri
 -----------------------------------------------------------
-View prices               GET /api/v1/prices
-Create order              POST /api/v1/orders
-View order                GET /api/v1/orders/:id
-View balance              GET /api/v1/balance
-Estimate energy           POST /api/v1/estimate
+Fiyatları görüntüle       GET /api/v1/prices
+Sipariş oluştur           POST /api/v1/orders
+Siparişi görüntüle        GET /api/v1/orders/:id
+Bakiyeyi görüntüle        GET /api/v1/balance
+Enerji tahmin et          POST /api/v1/estimate
 ```
 
-The transition from dashboard user to API user is seamless. Your account, balance, and order history carry over. The only addition is the API key you generate from the dashboard itself.
+Pano kullanıcısından API kullanıcısına geçiş sorunsuzdur. Hesabınız, bakiye ve sipariş geçmişi aktarılır. Tek ek, panoda oluşturduğunuz API anahtarıdır.
 
-Eksiksiz dokumantasyon: [https://merx.exchange/docs](https://merx.exchange/docs)
+Tam dokümantasyon: [https://merx.exchange/docs](https://merx.exchange/docs)
 Platform: [https://merx.exchange](https://merx.exchange)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır kurulum, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -287,6 +288,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI aracınıza şunları sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP dokümantasyonu: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

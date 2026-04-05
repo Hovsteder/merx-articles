@@ -1,22 +1,22 @@
-# x402 Pay-Per-Use: покупка energy TRON без аккаунта
+# x402 Pay-Per-Use: Покупайте TRON Energy без аккаунта
 
 ## Проблема регистрации
 
-Every blockchain service follows the same pattern: create an account, verify your email, generate an API key, fund an internal balance, then start using the service. For a human user, this is a minor inconvenience. For an autonomous AI agent, it is a hard stop.
+Каждый блокчейн-сервис следует одной схеме: создать аккаунт, подтвердить email, сгенерировать API ключ, пополнить внутренний баланс, затем начать использовать сервис. Для человека это небольшое неудобство. Для автономного AI-агента это непреодолимое препятствие.
 
-Agents do not have email addresses. They do not want internal balances managed by third parties. They do not want to trust a platform with custody of their funds. What agents want is simple: pay for a service, receive the service, move on. No relationship. No state. No trust.
+Агенты не имеют адресов электронной почты. Они не хотят, чтобы внутренние балансы управлялись третьими лицами. Они не хотят доверять платформе хранение своих средств. Чего хотят агенты, так это просто: заплатить за сервис, получить сервис, двигаться дальше. Никаких отношений. Никакого состояния. Никакого доверия.
 
-The x402 protocol makes this possible. Inspired by the HTTP 402 "Payment Required" status code (defined in 1997 but never widely implemented), x402 enables pay-per-use commerce where payment is verified on-chain rather than through accounts and API keys.
+Протокол x402 делает это возможным. Вдохновлённый HTTP 402 "Payment Required" (определён в 1997 году, но никогда не был широко реализован), x402 обеспечивает коммерцию с оплатой за использование, где платёж проверяется в блокчейне, а не через аккаунты и API ключи.
 
-MERX implements x402 for energy purchases. Any entity with a TRON wallet - human, agent, or smart contract - can buy energy in a single transaction without creating an account, without depositing funds, and without any prior relationship with the MERX platform.
+MERX реализует x402 для покупки энергии. Любой субъект с TRON кошельком — человек, агент или смарт-контракт — может купить энергию в одной транзакции без создания аккаунта, без пополнения средств и без какого-либо предыдущего взаимодействия с платформой MERX.
 
 ## Как это работает
 
-The x402 flow has five steps. Each step is verifiable on-chain, and at no point does the buyer need to trust MERX with custody of their funds.
+Поток x402 состоит из пяти шагов. Каждый шаг проверяется в блокчейне, и покупателю никогда не нужно доверять MERX хранение своих средств.
 
-### Step 1: Request an Invoice
+### Шаг 1: Запрос счёта
 
-The buyer calls `create_paid_order` with the desired energy parameters:
+Покупатель вызывает `create_paid_order` с желаемыми параметрами энергии:
 
 ```
 Tool: create_paid_order
@@ -42,52 +42,52 @@ Response:
 }
 ```
 
-The invoice is a quote, not a commitment. No funds have moved. The buyer can inspect the price, compare it to alternatives, and decide whether to proceed. The invoice expires after 5 minutes - if not paid within that window, the quoted price is no longer guaranteed.
+Счёт — это предложение цены, а не обязательство. Никакие средства не переместились. Покупатель может проверить цену, сравнить её с альтернативами и решить, продолжать ли. Счёт истекает через 5 минут — если не оплачен в этот период, цена больше не гарантируется.
 
-### Step 2: Sign the Payment Locally
+### Шаг 2: Подпишите платёж локально
 
-The buyer constructs a TRX transfer transaction from their wallet to the MERX treasury address. The critical detail is the memo field, which must contain the exact string from the invoice.
+Покупатель создаёт транзакцию передачи TRX со своего кошелька на адрес казны MERX. Критическая деталь — поле memo, которое должно содержать точную строку из счёта.
 
 ```javascript
 const tx = await tronWeb.transactionBuilder.sendTrx(
   invoice.pay_to,        // TMerxTreasuryAddress
-  invoice.amount_sun,    // 1430000 (1.43 TRX in SUN)
+  invoice.amount_sun,    // 1430000 (1.43 TRX в SUN)
   buyerAddress
 );
 
-// Add memo to transaction data
+// Добавить memo в данные транзакции
 const txWithMemo = await tronWeb.transactionBuilder.addUpdateData(
   tx,
   invoice.memo,          // "merx_xpay_abc123"
   'utf8'
 );
 
-// Sign locally - private key never leaves the buyer's machine
+// Подпишите локально - приватный ключ никогда не покидает машину покупателя
 const signedTx = await tronWeb.trx.sign(txWithMemo);
 ```
 
-The payment is signed with the buyer's private key on the buyer's machine. The private key is never shared with MERX, never transmitted over the network, and never stored anywhere outside the buyer's control.
+Платёж подписывается приватным ключом покупателя на машине покупателя. Приватный ключ никогда не передаётся MERX, никогда не передаётся по сети и никогда не хранится где-либо вне контроля покупателя.
 
-### Step 3: Broadcast the Payment
+### Шаг 3: Трансляция платежа
 
-The signed transaction is broadcast to the TRON network:
+Подписанная транзакция транслируется в сеть TRON:
 
 ```javascript
 const result = await tronWeb.trx.sendRawTransaction(signedTx);
 const txHash = result.txid;
 ```
 
-At this point, the payment is on-chain. It is visible to anyone who queries the TRON blockchain. The TRX has moved from the buyer's address to the MERX treasury address, and the memo field contains the invoice identifier.
+На этом этапе платёж находится в блокчейне. Он видим каждому, кто запрашивает блокчейн TRON. TRX переместился с адреса покупателя на адрес казны MERX, и поле memo содержит идентификатор счёта.
 
-### Step 4: MERX Verifies On-Chain
+### Шаг 4: MERX проверяет в блокчейне
 
-MERX monitors its treasury address for incoming transactions. When a transaction arrives, MERX:
+MERX отслеживает свой адрес казны на входящие транзакции. Когда приходит транзакция, MERX:
 
-1. Reads the memo field
-2. Matches it against outstanding invoices
-3. Verifies the amount matches the invoice (exact amount required)
-4. Verifies the invoice has not expired
-5. Verifies the invoice has not already been paid (prevents double-claiming)
+1. Читает поле memo
+2. Сопоставляет его с непокрытыми счётами
+3. Проверяет, что сумма соответствует счёту (требуется точная сумма)
+4. Проверяет, что счёт не истёк
+5. Проверяет, что счёт не был уже оплачен (предотвращает двойное требование)
 
 ```
 Verification:
@@ -102,9 +102,9 @@ Verification:
   Result: VERIFIED
 ```
 
-### Step 5: Energy Delegation
+### Шаг 5: Делегирование энергии
 
-With payment verified, MERX places the energy order through its provider network:
+Платёж проверен, MERX размещает заказ энергии через сеть поставщиков:
 
 ```
 Order placed:
@@ -117,11 +117,11 @@ Delegation confirmed after 4.1 seconds
 Energy available at TBuyerAddress: 65,000
 ```
 
-The buyer now has 65,000 energy delegated to their address for 1 hour. They can use it for USDT transfers, DEX swaps, or any other smart contract interaction.
+Покупатель теперь имеет 65 000 энергии, делегированной на его адрес на 1 час. Он может использовать её для передачи USDT, обмена на DEX или любого другого взаимодействия со смарт-контрактом.
 
 ## Полный поток агента
 
-Here is how an AI agent executes the entire x402 flow through the MERX MCP server:
+Вот как AI-агент выполняет весь поток x402 через MCP-сервер MERX:
 
 ```
 Agent: "I need to send 100 USDT to TRecipient. I don't have a MERX account."
@@ -149,38 +149,38 @@ Funds deposited: No
 Trust required: Minimal (payment verified on-chain)
 ```
 
-## Security: Why the Memo Matters
+## Безопасность: почему memo важна
 
-The memo field is the linchpin of x402 security. Without it, any TRX transfer to the MERX treasury could be claimed as payment for any invoice. This creates two attack vectors:
+Поле memo — основа безопасности x402. Без неё любая передача TRX на казну MERX могла бы быть заявлена как платёж для любого счёта. Это создаёт два вектора атак:
 
-### Cross-Payment Attack
+### Перекрёстная атака на платёж
 
-Without memo verification, an attacker could:
-1. Request an invoice for 65,000 energy (1.43 TRX)
-2. Wait for someone else to send 1.43 TRX to the MERX treasury for an unrelated reason
-3. Claim that unrelated payment as their invoice payment
-4. Receive free energy
+Без проверки memo злоумышленник мог бы:
+1. Запросить счёт на 65 000 энергии (1.43 TRX)
+2. Дождаться, пока кто-то другой отправит 1.43 TRX на казну MERX по какой-то другой причине
+3. Заявить этот не связанный платёж как платёж за свой счёт
+4. Получить бесплатную энергию
 
-The memo prevents this. Every invoice has a unique memo string. A payment is only matched to an invoice if the memo field contains the exact string. Random TRX transfers to the treasury address - which happen on any active address - are ignored because they lack a valid memo.
+Memo это предотвращает. Каждый счёт имеет уникальную строку memo. Платёж сопоставляется со счётом только если поле memo содержит точную строку. Случайные передачи TRX на адрес казны — которые происходят на любом активном адресе — игнорируются, потому что им не хватает действительного memo.
 
-### Replay Attack
+### Атака воспроизведения
 
-Without expiration and single-use enforcement, an attacker could:
-1. Pay an invoice legitimately
-2. Reference the same payment transaction hash for a second invoice
-3. Receive energy twice for one payment
+Без истечения и однократного применения злоумышленник мог бы:
+1. Оплатить счёт легально
+2. Ссылаться на эту же транзакцию платежа для второго счёта
+3. Получить энергию дважды за одну оплату
 
-MERX prevents this with two mechanisms:
-- Each invoice is marked as PAID after the first successful verification. A second payment claiming the same memo is rejected.
-- Each payment transaction can only be matched to one invoice. The transaction hash is recorded and cannot be reused.
+MERX предотвращает это двумя механизмами:
+- Каждый счёт отмечается как ОПЛАЧЕН после первой успешной проверки. Второй платёж, ссылающийся на тот же memo, отклоняется.
+- Каждая транзакция платежа может быть сопоставлена только с одним счётом. Хеш транзакции записывается и не может быть использован повторно.
 
-### Amount Verification
+### Проверка суммы
 
-The payment amount must exactly match the invoice amount. Sending 1.42 TRX instead of 1.43 TRX results in a failed verification. This prevents attacks where an attacker sends a minimal amount (e.g., 0.000001 TRX) with a valid memo to claim an invoice at a fraction of the price.
+Сумма платежа должна точно совпадать с суммой счёта. Отправка 1.42 TRX вместо 1.43 TRX приводит к неудачной проверке. Это предотвращает атаки, когда злоумышленник отправляет минимальную сумму (например, 0.000001 TRX) с действительным memo, чтобы заявить счёт за дробную часть цены.
 
-## Real Mainnet Transaction
+## Реальная транзакция в Mainnet
 
-Here is a verified x402 transaction from TRON mainnet:
+Вот проверенная транзакция x402 из mainnet TRON:
 
 ```
 Invoice:
@@ -212,45 +212,45 @@ Energy Delegation:
   Expires at: 2026-03-28T15:22:23Z
 ```
 
-From invoice request to energy delegation: 23 seconds. No account. No API key. No prior relationship.
+От запроса счёта до делегирования энергии: 23 секунды. Никакого аккаунта. Никакого API ключа. Никакого предыдущего взаимодействия.
 
-## Когда использовать x402 vs Account-Based Access
+## Когда использовать x402 вместо доступа на основе аккаунта
 
-x402 is ideal for:
+x402 идеален для:
 
-- **AI agents** that operate autonomously and should not depend on managed accounts
-- **One-time purchases** where the overhead of account creation exceeds the value of the transaction
-- **Privacy-conscious users** who do not want to create accounts or provide identifying information
-- **Testing and evaluation** where developers want to try the service before committing to an account
-- **Cross-platform agents** that interact with many services and should not maintain separate accounts for each
+- **AI-агентов**, которые работают автономно и не должны зависеть от управляемых аккаунтов
+- **Одноразовых покупок**, где затраты на создание аккаунта превышают стоимость транзакции
+- **Пользователей, заботящихся о конфиденциальности**, которые не хотят создавать аккаунты или предоставлять личную информацию
+- **Тестирования и оценки**, когда разработчики хотят попробовать сервис перед тем, как взять на себя обязательства по аккаунту
+- **Агентов на нескольких платформах**, которые взаимодействуют со многими сервисами и не должны поддерживать отдельные аккаунты для каждого
 
-Account-based access is better for:
+Доступ на основе аккаунта лучше для:
 
-- **High-volume operations** where the per-transaction overhead of x402 (invoice creation + payment broadcast + verification) matters
-- **Standing orders and monitors** which require persistent server-side state linked to an account
-- **Balance-based billing** where prepaid credit is more efficient than per-transaction payments
-- **Team operations** where multiple users share an account with role-based access
+- **Высокообъёмных операций**, где накладные расходы x402 (создание счёта + трансляция платежа + проверка) имеют значение
+- **Постоянных заказов и мониторинга**, которые требуют постоянного состояния на стороне сервера, связанного с аккаунтом
+- **Биллинга на основе баланса**, где предоплаченный кредит более эффективен, чем платежи за транзакцию
+- **Операций команды**, где несколько пользователей делят аккаунт с доступом на основе ролей
 
-Many users start with x402 for evaluation and migrate to account-based access as their usage grows. The two models are complementary, not competing.
+Многие пользователи начинают с x402 для оценки и мигрируют на доступ на основе аккаунта по мере роста использования. Эти две модели дополняют друг друга, а не конкурируют.
 
-## x402 и будущее коммерции агентов
+## x402 и будущее торговли агентов
 
-The x402 protocol represents a broader shift in how services are consumed. Traditional SaaS billing - monthly subscriptions, tiered pricing, usage limits - assumes a human customer who creates an account, evaluates pricing tiers, and makes a purchasing decision. This model breaks down when the customer is an AI agent that needs to make purchasing decisions autonomously, in real-time, for specific tasks.
+Протокол x402 представляет более широкий сдвиг в том, как потребляются сервисы. Традиционный биллинг SaaS — ежемесячные подписки, уровневое ценообразование, лимиты использования — предполагает человеческого клиента, который создаёт аккаунт, оценивает ценовые уровни и принимает решение о покупке. Эта модель ломается, когда клиент — AI-агент, который должен принимать решения о покупке автономно, в реальном времени, для конкретных задач.
 
-x402 aligns with the agent economy:
+x402 соответствует экономике агентов:
 
-- **No registration** - Agents do not have identities in the traditional sense. x402 requires only a wallet address.
-- **Per-use pricing** - Agents should pay for what they use, when they use it, in amounts proportional to the task at hand.
-- **On-chain verification** - Trust is established through cryptographic proof, not through account credentials or business relationships.
-- **Composability** - An agent can use x402 to pay for energy from MERX, then use that energy to interact with any TRON smart contract. The payment and the service are decoupled.
+- **Без регистрации** — Агенты не имеют идентичности в традиционном смысле. x402 требует только адрес кошелька.
+- **Оплата за использование** — Агенты должны платить за то, что они используют, когда они это используют, в суммах, пропорциональных задаче.
+- **Проверка в блокчейне** — Доверие устанавливается через криптографическое доказательство, а не через учётные данные аккаунта или деловые отношения.
+- **Компонуемость** — Агент может использовать x402 для оплаты энергии у MERX, а затем использовать эту энергию для взаимодействия с любым смарт-контрактом TRON. Платёж и сервис разделены.
 
-MERX is the first energy exchange to implement x402. As the protocol matures, we expect other blockchain services to adopt similar pay-per-use models optimized for agent consumption.
+MERX — первая энергетическая биржа, реализующая x402. По мере развития протокола мы ожидаем, что другие блокчейн-сервисы примут аналогичные модели оплаты за использование, оптимизированные для потребления агентами.
 
 ## Детали реализации для разработчиков
 
-### Building an x402 Client
+### Создание клиента x402
 
-If you are building an application that uses MERX x402 without the MCP server, here is the minimal implementation:
+Если вы создаёте приложение, использующее MERX x402 без MCP-сервера, вот минимальная реализация:
 
 ```javascript
 const TronWeb = require('tronweb');
@@ -298,40 +298,41 @@ async function buyEnergyX402(tronWeb, energyAmount, durationHours, targetAddress
 }
 ```
 
-### Error Handling
+### Обработка ошибок
 
-Common failure modes and their resolutions:
+Распространённые режимы отказа и их решения:
 
-| Error | Cause | Resolution |
+| Ошибка | Причина | Решение |
 |---|---|---|
-| `INVOICE_EXPIRED` | Payment not sent within 5 minutes | Request a new invoice |
-| `AMOUNT_MISMATCH` | Payment amount differs from invoice | Send exact amount; request new invoice if price changed |
-| `MEMO_NOT_FOUND` | Payment missing memo field | Resend with correct memo; funds from failed attempt are not auto-refunded |
-| `ALREADY_PAID` | Invoice was already fulfilled | Check order status; this is not an error if you are polling |
-| `PROVIDER_UNAVAILABLE` | No provider can fill the order | Retry after a few minutes; the invoice payment will be credited to a MERX balance for manual withdrawal |
+| `INVOICE_EXPIRED` | Платёж не отправлен в течение 5 минут | Запросить новый счёт |
+| `AMOUNT_MISMATCH` | Сумма платежа отличается от счёта | Отправить точную сумму; запросить новый счёт, если цена изменилась |
+| `MEMO_NOT_FOUND` | В платёже отсутствует поле memo | Отправить снова с правильным memo; средства из неудачной попытки не возвращаются автоматически |
+| `ALREADY_PAID` | Счёт уже был исполнен | Проверить статус заказа; это не ошибка, если вы опрашиваете |
+| `PROVIDER_UNAVAILABLE` | Ни один поставщик не может выполнить заказ | Повторить попытку через несколько минут; сумма платежа будет зачислена на баланс MERX для ручивого вывода |
 
-### Refund Policy
+### Политика возврата
 
-If MERX cannot fulfill the order after payment is verified (e.g., all providers are temporarily unavailable), the payment amount is credited to a claimable balance associated with the payer's TRON address. The payer can claim this balance through a separate endpoint without creating an account - the claim is verified by signing a message with the same private key that sent the original payment.
+Если MERX не может выполнить заказ после проверки платежа (например, все поставщики временно недоступны), сумма платежа зачисляется на затребуемый баланс, связанный с адресом TRON плательщика. Плательщик может затребовать этот баланс через отдельный endpoint без создания аккаунта — затребование проверяется подписанием сообщения тем же приватным ключом, который отправил исходный платёж.
 
 ## Заключение
 
-The HTTP 402 status code was defined nearly 30 years ago with the vision of native internet payments. That vision was ahead of its time. Blockchains finally provide the infrastructure to make it real.
+Код состояния HTTP 402 был определён почти 30 лет назад с видением нативных интернет-платежей. Это видение было впереди своего времени. Блокчейны, наконец, предоставляют инфраструктуру, чтобы сделать это реальностью.
 
-MERX x402 turns energy purchasing into a single atomic flow: request, pay, receive. No accounts. No API keys. No trust assumptions beyond what the blockchain provides.
+MERX x402 превращает покупку энергии в один атомарный поток: запрос, оплата, получение. Никаких аккаунтов. Никаких API ключей. Никаких предположений о доверии, выходящих за рамки того, что предоставляет блокчейн.
 
-For AI agents, this is the natural purchasing model. For developers, it is the simplest integration path. For the ecosystem, it is a proof of concept for how blockchain services will be consumed in the agent economy.
+Для AI-агентов это естественная модель покупки. Для разработчиков это самый простой путь интеграции. Для экосистемы это доказательство концепции того, как блокчейн-сервисы будут потребляться в экономике агентов.
 
 ---
 
 **Ссылки:**
 - Платформа MERX: [https://merx.exchange](https://merx.exchange)
-- MCP Server (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
-- MCP Server (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
+- MCP-сервер (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+- MCP-сервер (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — без установки, никакой API ключ не требуется для инструментов только для чтения:
 
 ```json
 {
@@ -343,6 +344,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите вашего AI-агента: "What is the cheapest TRON energy right now?" и получите живые цены от всех подключённых поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

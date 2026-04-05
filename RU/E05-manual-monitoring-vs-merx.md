@@ -1,100 +1,100 @@
-# MERX против ручного мониторинга провайдеров: анализ времени и затрат
+# MERX vs Manual Provider Monitoring: Time and Cost Analysis
 
-If you buy TRON energy regularly, you have probably developed a routine. Open TronSave, check prices. Open PowerSun, check prices. Open Feee. Open Catfee. Compare numbers in your head or a spreadsheet. Pick the cheapest. Place the order. Repeat.
+Если вы регулярно покупаете TRON energy, вы наверняка выработали определённый порядок действий. Открыть TronSave, проверить цены. Открыть PowerSun, проверить цены. Открыть Feee. Открыть Catfee. Сравнить числа в голове или в таблице. Выбрать самый дешёвый вариант. Разместить заказ. Повторить.
 
-This process works. It is also a spectacular waste of time.
+Такой процесс работает. Это также впечатляющая трата времени.
 
-This article quantifies exactly how much time and money manual provider monitoring costs compared to using an aggregation service like MERX. The numbers are not theoretical -- they are based on the actual workflow of comparing seven providers and the real-world implications of doing so manually.
+В этой статье мы рассчитаем, сколько времени и денег обходится ручное мониторирование провайдеров по сравнению с использованием сервиса агрегации, такого как MERX. Цифры не теоретические — они основаны на реальном рабочем процессе сравнения семи провайдеров и реальных последствиях ручного выполнения этой работы.
 
-## The Manual Monitoring Workflow
+## Рабочий процесс ручного мониторирования
 
-Let us walk through what manual provider comparison actually involves when done properly.
+Давайте разберёмся, что на самом деле включает в себя ручное сравнение провайдеров при правильном выполнении.
 
-### Step 1: Check Each Provider
+### Шаг 1: Проверить каждого провайдера
 
-The TRON energy market currently has seven significant providers: TronSave, PowerSun, Feee, Catfee, Netts, iTRX, and Sohu. Each has its own website or API, its own interface, and its own way of displaying prices.
+На рынке TRON energy в настоящее время действует семь значительных провайдеров: TronSave, PowerSun, Feee, Catfee, Netts, iTRX и Sohu. У каждого есть свой веб-сайт или API, свой интерфейс и свой способ отображения цен.
 
-To compare them manually, you need to:
+Чтобы сравнить их вручную, вам нужно:
 
-1. Open each provider's interface (7 browser tabs or API calls)
-2. Enter your desired energy amount on each
-3. Select your desired duration on each
-4. Note the quoted price from each
-5. Account for differences in pricing models (per-unit vs flat rate, SUN vs TRX)
-6. Compare the results
+1. Открыть интерфейс каждого провайдера (7 вкладок браузера или API-запросов)
+2. Ввести требуемый объём energy на каждом
+3. Выбрать требуемую длительность на каждом
+4. Записать предложенную цену от каждого
+5. Учесть различия в ценовых моделях (за единицу или фиксированная ставка, SUN vs TRX)
+6. Сравнить результаты
 
-**Estimated time per comparison: 8-15 minutes.** This assumes you know all seven providers, have accounts on each, and know how to navigate their interfaces efficiently. For a newcomer, add another 30 minutes for initial setup per provider.
+**估расчётное время на одно сравнение: 8-15 минут.** Это предполагает, что вы знаете всех семь провайдеров, имеете аккаунты у каждого и умеете эффективно ориентироваться в их интерфейсах. Для новичка добавьте ещё 30 минут на первоначальную настройку для каждого провайдера.
 
-### Step 2: Account for Availability
+### Шаг 2: Проверить доступность
 
-Price is not the only variable. A provider might quote a great rate but not have sufficient supply to fill your order. Some providers show available supply; others do not. You might place an order at the cheapest provider only to find it cannot be fully filled.
+Цена — не единственная переменная. Провайдер может предложить отличную ставку, но не иметь достаточного предложения для выполнения вашего заказа. Некоторые провайдеры показывают доступное предложение, другие нет. Вы можете разместить заказ у самого дешёвого провайдера только для того, чтобы обнаружить, что он не может полностью его выполнить.
 
-**Additional time for availability verification: 2-5 minutes.**
+**Дополнительное время на проверку доступности: 2-5 минут.**
 
-### Step 3: Place the Order
+### Шаг 3: Разместить заказ
 
-Once you have identified the best option, you need to place the order on that specific provider's platform. Different providers have different order flows, payment methods, and confirmation processes.
+После того как вы определили лучший вариант, вам нужно разместить заказ на платформе этого провайдера. Разные провайдеры имеют разные процессы размещения заказов, методы оплаты и процедуры подтверждения.
 
-**Order placement time: 2-5 minutes.**
+**Время размещения заказа: 2-5 минут.**
 
-### Total Time Per Order
+### Общее время на один заказ
 
-For a single, well-executed manual comparison:
+Для одного хорошо выполненного ручного сравнения:
 
-| Step | Time |
+| Шаг | Время |
 |---|---|
-| Check 7 providers | 8-15 min |
-| Verify availability | 2-5 min |
-| Place order | 2-5 min |
-| **Total** | **12-25 min** |
+| Проверить 7 провайдеров | 8-15 мин |
+| Проверить доступность | 2-5 мин |
+| Разместить заказ | 2-5 мин |
+| **Итого** | **12-25 мин** |
 
-Let us use the conservative middle estimate: 15 minutes per order.
+Используем консервативную среднюю оценку: 15 минут на заказ.
 
-## The Cost of Time
+## Стоимость времени
 
-### For Individual Users
+### Для индивидуальных пользователей
 
-If you buy energy once a day, that is 15 minutes daily on provider comparison. Over a month, that is 7.5 hours. Over a year, it is 91 hours -- more than two full work weeks spent opening tabs and comparing prices.
+Если вы покупаете energy один раз в день, это 15 минут в день на сравнение провайдеров. За месяц это 7,5 часов. За год это 91 час — более двух полных рабочих недель, проведённых на открытии вкладок и сравнении цен.
 
-If your time is worth $50/hour (a conservative rate for anyone building on blockchain), that is $4,550 per year in time cost alone.
+Если ваше время стоит $50/час (консервативная ставка для любого, кто разрабатывает на блокчейне), это $4 550 в год только в виде затрат на время.
 
-### For Development Teams
+### Для команд разработки
 
-For teams running automated systems that need energy for each transaction, the manual approach does not even function. You cannot have a developer manually comparing prices every time your payment processor needs to send a USDT transfer.
+Для команд, запускающих автоматизированные системы, требующие energy для каждой транзакции, ручной подход вообще не работает. Вы не можете просить разработчика вручную сравнивать цены каждый раз, когда вашему процессору платежей нужно отправить USDT-трансфер.
 
-Teams that try to semi-automate this end up building internal tools: scripts that scrape provider websites, spreadsheets that track historical prices, cron jobs that check rates periodically. These internal tools require maintenance, break when providers change their interfaces, and represent ongoing engineering overhead.
+Команды, пытающиеся частично автоматизировать этот процесс, в итоге создают внутренние инструменты: скрипты, парсящие веб-сайты провайдеров, таблицы, отслеживающие исторические цены, cron-задачи, проверяющие ставки периодически. Эти внутренние инструменты требуют обслуживания, ломаются при изменении интерфейсов провайдеров и представляют собой постоянную нагрузку на инженерные ресурсы.
 
-**Estimated cost of building and maintaining an internal price comparison system: 40-80 hours of developer time initially, plus 2-4 hours per month for maintenance.** At $100/hour for developer time, that is $4,000-$8,000 upfront plus $200-$400 monthly.
+**估расчётная стоимость разработки и обслуживания внутренней системы сравнения цен: 40-80 часов времени разработчика первоначально, плюс 2-4 часа в месяц на обслуживание.** При $100/час для времени разработчика это $4 000-$8 000 первоначально плюс $200-$400 ежемесячно.
 
-### For Businesses at Scale
+### Для бизнеса в масштабе
 
-Businesses processing hundreds or thousands of TRON transactions daily face an impossible manual task. At 100 transactions per day, manual comparison would require 25 hours daily -- more than a full-time employee doing nothing but checking energy prices.
+Бизнесы, обрабатывающие сотни или тысячи TRON-транзакций ежедневно, сталкиваются с невозможным ручным заданием. При 100 транзакциях в день ручное сравнение потребовало бы 25 часов в день — более одного полного рабочего дня, посвящённого исключительно проверке цен на energy.
 
-Even with batching (buying energy for multiple transactions at once), the comparison workflow does not scale.
+Даже при группировке покупок (покупка energy для нескольких транзакций одновременно) рабочий процесс сравнения не масштабируется.
 
-## The Price Window Problem
+## Проблема ценовых окон
 
-Time cost is quantifiable but not the largest issue. The bigger problem is missed price windows.
+Стоимость времени поддаётся количественной оценке, но это не главная проблема. Большее значение имеет упущение ценовых окон.
 
-Energy prices on TRON fluctuate throughout the day. Providers adjust rates based on supply, demand, and competitive positioning. A price that was available when you started your 15-minute comparison might not exist when you finish.
+Цены на energy в TRON колеблются на протяжении дня. Провайдеры корректируют ставки на основе предложения, спроса и конкурентного позиционирования. Цена, которая была доступна, когда вы начали 15-минутное сравнение, может исчезнуть к завершению.
 
-### How Price Windows Work
+### Как работают ценовые окна
 
-Suppose you start comparing providers at 10:00 AM. Provider A quotes 26 SUN. By the time you finish checking all seven providers and return to place your order with Provider A, it is 10:12 AM. Their rate has shifted to 29 SUN because another buyer took the available supply at 26 SUN.
+Предположим, вы начали сравнивать провайдеров в 10:00. Провайдер A предлагает 26 SUN. К тому времени, как вы закончите проверять всех семь провайдеров и вернётесь, чтобы разместить заказ у провайдера A, уже 10:12. Их ставка изменилась на 29 SUN, потому что другой покупатель взял доступное предложение по 26 SUN.
 
-You missed the window.
+Вы упустили окно.
 
-This happens more frequently than most users realize. The best prices are often available for minutes, not hours. Manual comparison is structurally unable to capture short-lived price opportunities.
+Это происходит чаще, чем думает большинство пользователей. Лучшие цены часто доступны в течение минут, а не часов. Ручное сравнение структурно не способно захватить краткосрочные ценовые возможности.
 
-### Quantifying Missed Windows
+### Количественная оценка упущенных окон
 
-Based on typical price volatility in the TRON energy market, prices can swing 10-20% within a single hour during active periods. If you are consistently 10-15 minutes behind the best available price, you are statistically paying 3-8% more than the instantaneous best price.
+На основе типичной волатильности цен на TRON energy цены могут колебаться на 10-20% в течение одного часа в периоды активности. Если вы постоянно отстаёте на 10-15 минут от лучшей доступной цены, вы статистически переплачиваете на 3-8% сравнительно с мгновенной лучшей ценой.
 
-On energy purchases totaling 1,000,000 SUN per month, a 5% premium from missed windows costs 50,000 SUN -- roughly $2-4 depending on TRX price.
+На покупки energy в объёме 1 000 000 SUN в месяц премия в размере 5% от упущенных окон обойдётся в 50 000 SUN — примерно $2-4 в зависимости от цены TRX.
 
-## The MERX Alternative
+## Альтернатива MERX
 
-MERX eliminates the manual comparison workflow entirely. A single API call queries all seven providers simultaneously and returns the best available price:
+MERX полностью исключает рабочий процесс ручного сравнения. Один API-запрос запрашивает всех семь провайдеров одновременно и возвращает лучшую доступную цену:
 
 ```bash
 curl https://merx.exchange/api/v1/prices \
@@ -102,11 +102,11 @@ curl https://merx.exchange/api/v1/prices \
   -d '{"energy_amount": 65000, "duration": "1h"}'
 ```
 
-**Time per comparison: under 500 milliseconds.** Not 15 minutes. Half a second.
+**Время на одно сравнение: менее 500 миллисекунд.** Не 15 минут. Полсекунды.
 
-The response includes prices from all active providers, sorted by rate, with the best option identified. No tabs to open, no interfaces to navigate, no manual comparison needed.
+Ответ включает цены всех активных провайдеров, отсортированные по ставке, с указанием лучшего варианта. Нет вкладок для открытия, интерфейсов для навигации, ручного сравнения не требуется.
 
-### Placing an Order
+### Размещение заказа
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -119,15 +119,15 @@ const order = await merx.createOrder({
   target_address: 'TYourAddress...'
 });
 
-// Order placed at the best available price
-// Total time from price check to order: < 1 second
+// Заказ размещен по лучшей доступной цене
+// Общее время от проверки цены до размещения заказа: < 1 секунда
 ```
 
-The entire workflow -- price comparison across seven providers, best price selection, and order placement -- takes less than one second programmatically.
+Весь рабочий процесс — сравнение цен у семи провайдеров, выбор лучшей цены и размещение заказа — занимает менее одной секунды программно.
 
-## Standing Orders: Eliminating Active Monitoring Entirely
+## Стоящие заказы: полное исключение активного мониторирования
 
-MERX standing orders go further than just speeding up the comparison process. They eliminate the need for you to be present at all.
+Стоящие заказы MERX идут дальше простого ускорения процесса сравнения. Они исключают необходимость вашего присутствия вообще.
 
 ```typescript
 const standing = await merx.createStandingOrder({
@@ -139,78 +139,79 @@ const standing = await merx.createStandingOrder({
 });
 ```
 
-This creates a persistent order that monitors prices across all seven providers continuously. When any provider's rate drops to or below 25 SUN for your specified amount and duration, the order executes automatically.
+Это создаёт постоянный заказ, который непрерывно мониторит цены у всех семи провайдеров. Когда ставка любого провайдера упадёт до или ниже 25 SUN для указанного объёма и длительности, заказ выполняется автоматически.
 
-### Why Standing Orders Change the Economics
+### Почему стоящие заказы меняют экономику
 
-With manual monitoring, you can check prices a few times per day at best. Each check takes 15 minutes and captures a single snapshot of the market.
+При ручном мониторировании вы можете проверять цены несколько раз в день в лучшем случае. Каждая проверка занимает 15 минут и фиксирует один снимок рынка.
 
-A standing order monitors the market continuously -- every price update from every provider. It captures price dips that last minutes or even seconds, opportunities that no human monitoring process could catch.
+Стоящий заказ мониторит рынок непрерывно — каждое обновление цены от каждого провайдера. Он захватывает падения цен, которые длятся минуты или даже секунды, возможности, которые никакой процесс ручного мониторирования не мог бы поймать.
 
-For organizations with flexible timing on their energy purchases, standing orders consistently achieve lower average prices than manual buying. The system never sleeps, never gets distracted, and never misses a window.
+Для организаций с гибким временем выполнения покупок energy стоящие заказы постоянно достигают более низких средних цен, чем ручная покупка. Система никогда не спит, никогда не отвлекается и никогда не упускает окно.
 
-## Time and Cost Comparison
+## Сравнение времени и затрат
 
-| Metric | Manual Monitoring | MERX |
+| Метрика | Ручное мониторирование | MERX |
 |---|---|---|
-| Time per comparison | 12-25 minutes | < 1 second |
-| Orders per day (1 order) | 15 min/day | Seconds/day |
-| Monthly time cost (1/day) | 7.5 hours | Negligible |
-| Annual time cost (1/day) | 91 hours | Negligible |
-| Price window capture | Often missed | Real-time |
-| Off-hours monitoring | Not feasible | Continuous |
-| Provider outage handling | Manual switchover | Automatic |
-| Scaling to 100 orders/day | Impossible manually | Same API call |
+| Время на одно сравнение | 12-25 минут | < 1 секунда |
+| Заказов в день (1 заказ) | 15 мин/день | Секунды/день |
+| Затраты времени в месяц (1/день) | 7,5 часов | Незначительно |
+| Затраты времени в год (1/день) | 91 час | Незначительно |
+| Захват ценовых окон | Часто упускаются | В реальном времени |
+| Мониторирование в нерабочее время | Невозможно | Непрерывно |
+| Обработка сбоев провайдера | Ручное переключение | Автоматическое |
+| Масштабирование до 100 заказов/день | Невозможно вручную | Тот же API-запрос |
 
-### Dollar Comparison (1 order/day, $50/hr time value)
+### Денежное сравнение (1 заказ/день, $50/час стоимость времени)
 
-| Cost Component | Manual | MERX |
+| Компонент затрат | Ручное | MERX |
 |---|---|---|
-| Time cost per year | $4,550 | ~$0 |
-| Missed price windows (est.) | $500-2,000/yr | $0 |
-| Internal tooling (if built) | $4,000-8,000 + $200-400/mo | $0 |
-| MERX service cost | $0 | Included in spread |
-| **Net annual cost** | **$5,050 - $14,550** | **Spread on orders** |
+| Затраты времени в год | $4 550 | ~$0 |
+| Упущенные ценовые окна (примерно) | $500-2 000/год | $0 |
+| Внутренние инструменты (если разработаны) | $4 000-8 000 + $200-400/мес | $0 |
+| Стоимость сервиса MERX | $0 | Включена в спред |
+| **Чистые годовые затраты** | **$5 050 - $14 550** | **Спред на заказах** |
 
-The MERX cost model is built into the price spread -- the difference between provider cost and the rate charged to you. For most users, this spread is significantly less than the time and opportunity cost of manual monitoring.
+Модель стоимости MERX встроена в ценовой спред — разницу между стоимостью для провайдера и ставкой, взимаемой с вас. Для большинства пользователей этот спред значительно меньше затрат на время и упущенные возможности ручного мониторирования.
 
-## The Automation Multiplier
+## Мультипликатор автоматизации
 
-The real value of aggregation becomes clear at scale. Manual monitoring is a linear cost -- more orders mean proportionally more time. MERX's cost is per-order, and the API call time remains constant regardless of volume.
+Истинная ценность агрегации становится очевидной в масштабе. Ручное мониторирование — это линейная стоимость — больше заказов означает пропорционально больше времени. Стоимость MERX — за заказ, и время API-запроса остаётся постоянным независимо от объёма.
 
-A payment processor handling 500 USDT transfers per day cannot manually compare energy prices for each transaction. The only options are:
+Процессор платежей, обрабатывающий 500 USDT-трансфертов в день, не может вручную сравнивать цены на energy для каждой транзакции. Варианты только три:
 
-1. Pick one provider and accept whatever they charge (overpaying on average)
-2. Build an internal comparison system (high upfront and maintenance cost)
-3. Use an aggregator (immediate best-price access with zero operational overhead)
+1. Выбрать одного провайдера и согласиться с тем, что они взимают (в среднем переплачивать)
+2. Разработать внутреннюю систему сравнения (высокие первоначальные и постоянные затраты)
+3. Использовать агрегатор (немедленный доступ к лучшей цене без операционных затрат)
 
-Option 3 is the only one that scales without proportional cost increase.
+Вариант 3 — единственный, который масштабируется без пропорционального увеличения затрат.
 
-## Beyond Price Comparison
+## Помимо сравнения цен
 
-Manual monitoring only addresses the price question. MERX also handles:
+Ручное мониторирование решает только ценовой вопрос. MERX также обрабатывает:
 
-- **Exact energy estimation** using transaction simulation, so you never over-purchase or under-purchase
-- **Automatic failover** if a provider is down, with no manual intervention needed
-- **WebSocket price feeds** for applications that need real-time market data
-- **Webhooks** for asynchronous order status notifications
-- **Auto-energy** configuration for wallets that should always have energy available
+- **Точную оценку energy** с использованием моделирования транзакций, чтобы вы никогда не переплачивали и не недоплачивали
+- **Автоматический failover**, если провайдер недоступен, без ручного вмешательства
+- **WebSocket-потоки цен** для приложений, требующих данные рынка в реальном времени
+- **Webhooks** для асинхронных уведомлений о статусе заказа
+- **Auto-energy-конфигурацию** для кошельков, которые всегда должны иметь energy
 
-Each of these capabilities would require additional manual processes or custom development if handled outside an aggregator.
+Каждая из этих возможностей потребовала бы дополнительных ручных процессов или пользовательской разработки при обработке вне агрегатора.
 
 ## Заключение
 
-Manual provider monitoring is a remnant of the early TRON energy market when there were two or three providers and checking them took minutes. With seven active providers and a dynamic pricing environment, the manual approach costs more in time and missed opportunities than any aggregation fee.
+Ручное мониторирование провайдеров — это наследие ранних дней рынка TRON energy, когда было два-три провайдера и проверка их требовала минут. С семью активными провайдерами и динамической ценовой средой ручной подход обходится дороже в отношении затраченного времени и упущенных возможностей, чем любой сбор на агрегацию.
 
-The math is straightforward. If you value your time at any meaningful rate, the hours spent on manual comparison exceed the cost of using an aggregator within the first month. Add the opportunity cost of missed price windows, and the case becomes even clearer.
+Математика проста. Если вы цените своё время хотя бы на сколько-нибудь значимую ставку, часы, потраченные на ручное сравнение, превышают стоимость использования агрегатора в течение первого месяца. Добавьте стоимость упущенных ценовых окон, и аргумент становится ещё очевиднее.
 
-MERX replaces a 15-minute manual workflow with a sub-second API call, captures price opportunities that manual monitoring cannot, and scales from one order per day to thousands without additional effort.
+MERX заменяет 15-минутный ручной рабочий процесс на API-запрос менее чем за секунду, захватывает ценовые возможности, которые ручное мониторирование не может, и масштабируется от одного заказа в день до тысяч без дополнительных усилий.
 
-Try the platform at [https://merx.exchange](https://merx.exchange) or explore the documentation at [https://merx.exchange/docs](https://merx.exchange/docs).
+Попробуйте платформу на [https://merx.exchange](https://merx.exchange) или изучите документацию на [https://merx.exchange/docs](https://merx.exchange/docs).
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент — без установки, без необходимости в API-ключе для инструментов только для чтения:
 
 ```json
 {
@@ -222,6 +223,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите вашего AI-агента: "Какая самая дешёвая TRON energy прямо сейчас?" и получите живые цены со всех подключённых провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

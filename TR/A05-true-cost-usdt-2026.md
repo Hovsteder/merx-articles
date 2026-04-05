@@ -1,254 +1,254 @@
-# 2026'da TRON Uzerinde USDT Transferlerinin Gercek Maliyeti
+# TRON'da USDT Transfer'larının Gerçek Maliyeti 2026'da
 
-Tether (USDT) on TRON processes more daily transactions than any other stablecoin on any blockchain. The reason is straightforward: TRON offers lower fees and faster confirmations than Ethereum. But "lower" does not mean "free," and the true cost of a USDT transfer in 2026 depends entirely on how you manage TRON's resource model.
+Tether (USDT) TRON üzerinde, herhangi bir blockchain'deki diğer stablecoin'lerden daha fazla günlük işlem gerçekleştirir. Nedeni basittir: TRON, Ethereum'dan daha düşük ücretler ve daha hızlı onaylar sunmaktadır. Ancak "daha düşük" "ücretsiz" anlamına gelmez ve 2026'da bir USDT transfer'inin gerçek maliyeti tamamen TRON'un kaynak modelini nasıl yönettiğinize bağlıdır.
 
-This article breaks down the actual numbers. No vague claims about "low fees" - we will calculate the exact cost per transfer under every scenario, at every volume level, using real market data from early 2026.
-
----
-
-## Why USDT Transfers Cost Anything at All
-
-A USDT transfer on TRON is a smart contract call. Specifically, it invokes the `transfer(address,uint256)` function on the TRC-20 USDT contract. This operation consumes two network resources:
-
-- **Energy**: approximately 65,000 units per transfer
-- **Bandwidth**: approximately 350 bytes per transfer
-
-If you do not have these resources available through staking or rental, the TRON network burns TRX from your account to cover them. This is the "default" cost that most casual users pay without realizing there are cheaper alternatives.
+Bu makale gerçek rakamları ortaya koymaktadır. "Düşük ücretler" hakkında muğlak iddialar yok - 2026'nın başından itibaren gerçek pazar verilerini kullanarak her senaryo altında ve her hacim seviyesinde transfer başına tam maliyeti hesaplayacağız.
 
 ---
 
-## Scenario 1: Burning TRX (No Resource Management)
+## USDT Transfer'ları Neden Hiç Bir Maliyete Sahiptir
 
-When you send a USDT transfer with zero energy and zero bandwidth, the network burns TRX to cover both.
+TRON üzerinde bir USDT transfer'i bir akıllı sözleşme çağrısıdır. Spesifik olarak, TRC-20 USDT sözleşmesinde `transfer(address,uint256)` işlevini çağırır. Bu işlem iki ağ kaynağı tüketir:
 
-### Energy Burn Cost
+- **Energy**: transfer başına yaklaşık 65.000 birim
+- **Bandwidth**: transfer başına yaklaşık 350 bayt
 
-The energy burn price on TRON is set by network governance. As of early 2026, the effective cost of burning TRX for energy is approximately **420 SUN per energy unit**.
+Stake'leme veya kiralama yoluyla bu kaynakları mevcut değilse, TRON ağı bunları karşılamak için hesabınızdan TRX yakar. Bu, çoğu gündelik kullanıcının daha ucuz alternatifler olduğunun farkında olmadan ödediği "varsayılan" maliyettir.
 
-```
-65,000 energy x 420 SUN = 27,300,000 SUN = 27.3 TRX
-```
+---
 
-### Bandwidth Burn Cost
+## Senaryo 1: TRX Yakma (Kaynak Yönetimi Yok)
 
-Bandwidth burn costs are lower but still present:
+Sıfır energy ve sıfır bandwidth ile bir USDT transfer'i gönderdiğinizde, ağ her ikisini de karşılamak için TRX yakar.
 
-```
-350 bytes x 1,000 SUN/byte = 350,000 SUN = 0.35 TRX
-```
+### Energy Yakma Maliyeti
 
-### Total Burn Cost Per Transfer
+TRON'da energy yakma fiyatı ağ yönetişimi tarafından belirlenir. 2026'nın başı itibariyle, energy için TRX yakmanın etkili maliyeti yaklaşık **420 SUN/energy birimi**'dir.
 
 ```
-Energy burn:     27.30 TRX
-Bandwidth burn:   0.35 TRX
+65.000 energy x 420 SUN = 27.300.000 SUN = 27,3 TRX
+```
+
+### Bandwidth Yakma Maliyeti
+
+Bandwidth yakma maliyetleri daha düşüktür ancak yine de mevcuttur:
+
+```
+350 bayt x 1.000 SUN/bayt = 350.000 SUN = 0,35 TRX
+```
+
+### Transfer Başına Toplam Yakma Maliyeti
+
+```
+Energy yakma:      27,30 TRX
+Bandwidth yakma:    0,35 TRX
 --------------------------
-Total:           27.65 TRX
+Toplam:            27,65 TRX
 ```
 
-At a TRX price of $0.25, that is approximately **$6.91 per USDT transfer**.
+TRX fiyatı $0,25'de, bu yaklaşık **transfer başına $6,91**'dir.
 
-This is the sticker price that catches people off guard. TRON's reputation for "cheap transfers" is based on the assumption that you are managing your resources. Without management, a single USDT transfer costs nearly $7 - comparable to Ethereum during low-gas periods.
+Bu, insanları şaşırtan etiket fiyatıdır. TRON'un "ucuz transfer'ler" konusundaki itibarı, kaynakları yönettiğiniz varsayımına dayanmaktadır. Yönetim olmadan, tek bir USDT transfer'i yaklaşık $7'ye mal olur - düşük gas dönemlerinde Ethereum'a benzer.
 
 ---
 
-## Scenario 2: Staking Your Own TRX
+## Senaryo 2: Kendi TRX'inizi Stake'lemek
 
-Under TRON's Stake 2.0 system, you can lock TRX to receive energy. The energy regenerates over 24 hours, giving you a daily budget.
+TRON'un Stake 2.0 sistemi kapsamında, energy almak için TRX kilitleyebilirsiniz. Energy 24 saat içinde yenilenir ve size günlük bir bütçe verir.
 
-### Current Staking Ratios
+### Güncel Stake'leme Oranları
 
-As of early 2026, the approximate staking ratio is:
+2026'nın başı itibariyle, yaklaşık stake'leme oranı şöyledir:
 
 ```
-~36,000 TRX staked = ~65,000 energy/day = 1 USDT transfer/day
+~36.000 TRX stake'lendi = ~65.000 energy/gün = günde 1 USDT transfer'i
 ```
 
-This ratio fluctuates as the total network stake changes. When more TRX is staked network-wide, you need more TRX to get the same energy share.
+Bu oran, ağ çapında toplam stake değiştiğinde dalgalanır. Daha fazla TRX ağ çapında stake'lendiğinde, aynı energy payını almak için daha fazla TRX'e ihtiyaç duyarsınız.
 
-### Cost Analysis for Staking
+### Stake'leme için Maliyet Analizi
 
-The cost of staking is the opportunity cost of locked capital:
+Stake'lemenin maliyeti, kilitli sermayenin fırsat maliyetidir:
 
-| Daily Transfers | TRX Required | Capital (at $0.25) | Annual Opportunity Cost (5%) |
+| Günlük Transfer'ler | Gerekli TRX | Sermaye ($0,25'de) | Yıllık Fırsat Maliyeti (%5) |
 |----------------|-------------|-------------------|--------------------------|
-| 1 | 36,000 | $9,000 | $450 |
-| 10 | 360,000 | $90,000 | $4,500 |
-| 100 | 3,600,000 | $900,000 | $45,000 |
-| 1,000 | 36,000,000 | $9,000,000 | $450,000 |
+| 1 | 36.000 | $9.000 | $450 |
+| 10 | 360.000 | $90.000 | $4.500 |
+| 100 | 3.600.000 | $900.000 | $45.000 |
+| 1.000 | 36.000.000 | $9.000.000 | $450.000 |
 
-Additional considerations:
+Ek hususlar:
 
-- **Lock period**: 14 days to unstake. Your capital is illiquid during this period.
-- **TRX price risk**: If TRX drops 20% while staked, you lose capital value beyond the opportunity cost.
-- **No stockpiling**: Energy regenerates daily. You cannot save unused energy for busy days.
+- **Kilitleme süresi**: Unstake'lemek için 14 gün. Sermayeniz bu süre boyunca likit değildir.
+- **TRX fiyat riski**: Stake'lenmiş durumdayken TRX %20 düşerse, fırsat maliyetinin ötesinde sermaye değeri kaybedersiniz.
+- **Stok yapma yok**: Energy günlük olarak yenilenir. Meşgul günler için kullanılmayan energy'yi biriktiresiniz.
 
-### Effective Cost Per Transfer (Staking)
+### Transfer Başına Etkili Maliyet (Stake'leme)
 
-If we account for the opportunity cost of capital at 5% annual return:
+Sermayenin %5 yıllık getiri fırsat maliyetini hesaba katarsak:
 
 ```
-1 transfer/day:    $450/year / 365 = $1.23/transfer
-10 transfers/day:  $4,500/year / 3,650 = $1.23/transfer
-100 transfers/day: $45,000/year / 36,500 = $1.23/transfer
+Günde 1 transfer:    $450/yıl / 365 = $1,23/transfer
+Günde 10 transfer:   $4.500/yıl / 3.650 = $1,23/transfer
+Günde 100 transfer:  $45.000/yıl / 36.500 = $1,23/transfer
 ```
 
-The per-transfer cost is constant because the relationship is linear. You need proportionally more TRX for proportionally more transfers. At $1.23 per transfer, staking is significantly cheaper than burning ($6.91) but still substantial.
+Transfer başına maliyet sabittir çünkü ilişki doğrusaldır. Orantılı olarak daha fazla transfer için orantılı olarak daha fazla TRX'e ihtiyaç duyarsınız. $1,23/transfer ile, stake'leme yakma'dan ($6,91) önemli ölçüde daha ucuzdur ancak yine de önemlidir.
 
 ---
 
-## Scenario 3: Renting Energy from a Single Provider
+## Senaryo 3: Tek Bir Sağlayıcıdan Energy Kiralamak
 
-The energy rental market on TRON consists of multiple providers who stake large amounts of TRX and delegate energy to customers for a fee. Major providers in 2026 include TronSave, Feee, itrx, CatFee, Netts, SoHu, and others.
+TRON'daki energy kiralama pazarı, büyük miktarlarda TRX stake'leyen ve müşterilere energy'yi bir ücret karşılığında devreden birden fazla sağlayıcıdan oluşur. 2026'da ana sağlayıcılar arasında TronSave, Feee, itrx, CatFee, Netts, SoHu ve diğerleri yer almaktadır.
 
-### Current Provider Pricing (Early 2026)
+### Güncel Sağlayıcı Fiyatlandırması (2026'nın Başı)
 
-Provider prices vary by duration, volume, and market conditions:
+Sağlayıcı fiyatları süre, hacim ve pazar koşullarına göre değişir:
 
-| Duration | Typical Price Range (SUN/energy) | Per Transfer Cost (TRX) |
+| Süre | Tipik Fiyat Aralığı (SUN/energy) | Transfer Başına Maliyet (TRX) |
 |----------|--------------------------------|------------------------|
-| 1 hour | 80-130 SUN | 5.20-8.45 TRX |
-| 1 day | 85-120 SUN | 5.53-7.80 TRX |
-| 3 days | 90-115 SUN | 5.85-7.48 TRX |
-| 7 days | 95-125 SUN | 6.18-8.13 TRX |
-| 30 days | 100-140 SUN | 6.50-9.10 TRX |
+| 1 saat | 80-130 SUN | 5,20-8,45 TRX |
+| 1 gün | 85-120 SUN | 5,53-7,80 TRX |
+| 3 gün | 90-115 SUN | 5,85-7,48 TRX |
+| 7 gün | 95-125 SUN | 6,18-8,13 TRX |
+| 30 gün | 100-140 SUN | 6,50-9,10 TRX |
 
-Shorter durations are generally cheaper per unit because the provider's capital is locked for less time. However, shorter durations mean more frequent renewals and more operational complexity.
+Daha kısa süreler genellikle birim başına daha ucuzdur çünkü sağlayıcının sermayesi daha kısa süre kilitlenir. Ancak daha kısa süreler daha sık yenilemeleri ve daha fazla operasyonel karmaşıklığı anlamına gelir.
 
-### The Single-Provider Problem
+### Tek Sağlayıcı Problemi
 
-When you integrate with one provider, you get that provider's price and availability. If they are out of stock, have downtime, or raise prices, you have no fallback. This is fine for hobbyist use but unacceptable for production systems.
+Bir sağlayıcı ile entegre olduğunuzda, o sağlayıcının fiyatını ve kullanılabilirliğini elde edersiniz. Stok tükendiyse, kapalıysa veya fiyatlar yükseliyorsa, hiçbir yedeğiniz yoktur. Bu hobici kullanım için iyidir ancak üretim sistemleri için kabul edilemez.
 
 ---
 
-## Scenario 4: Renting via MERX Aggregation
+## Senaryo 4: MERX Agregasyonu Aracılığıyla Kiralama
 
-MERX aggregates all major energy providers into a single API and routes orders to the cheapest available option in real time. The price monitor polls every provider every 30 seconds, maintaining a live price feed.
+MERX, tüm ana energy sağlayıcıları tek bir API'de toplar ve siparişleri gerçek zamanlı olarak en ucuz kullanılabilir seçeneğe yönlendirir. Fiyat monitörü her 30 saniyede bir her sağlayıcıyı yoklar ve canlı bir fiyat akışı korur.
 
-### MERX Best-Price Routing
+### MERX En İyi Fiyat Yönlendirmesi
 
-Instead of getting one provider's price, you get the best price across all providers at the moment of your order:
+Bir sağlayıcının fiyatını almak yerine, siparişiniz sırasında tüm sağlayıcılar arasında en iyi fiyatı alırsınız:
 
 ```
-Best available price (early 2026): ~80-90 SUN/energy
-Per transfer cost: ~5.20-5.85 TRX
+Mevcut en iyi fiyat (2026'nın başı): ~80-90 SUN/energy
+Transfer başına maliyet: ~5,20-5,85 TRX
 ```
 
-At $0.25/TRX, that is approximately **$1.30-$1.46 per USDT transfer**.
+$0,25/TRX'de, bu yaklaşık **transfer başına $1,30-$1,46**'dir.
 
-### MERX Volume Pricing
+### MERX Hacim Fiyatlandırması
 
-For high-volume users, the savings compound:
+Yüksek hacimli kullanıcılar için tasarruflar bileşik olur:
 
-| Daily Transfers | Monthly Cost (Burn) | Monthly Cost (MERX) | Monthly Savings |
+| Günlük Transfer'ler | Aylık Maliyet (Yakma) | Aylık Maliyet (MERX) | Aylık Tasarruf |
 |----------------|--------------------|--------------------|----------------|
-| 10 | $2,073 | $420 | $1,653 (80%) |
-| 50 | $10,365 | $2,100 | $8,265 (80%) |
-| 100 | $20,730 | $4,200 | $16,530 (80%) |
-| 500 | $103,650 | $21,000 | $82,650 (80%) |
-| 1,000 | $207,300 | $42,000 | $165,300 (80%) |
+| 10 | $2.073 | $420 | $1.653 (%80) |
+| 50 | $10.365 | $2.100 | $8.265 (%80) |
+| 100 | $20.730 | $4.200 | $16.530 (%80) |
+| 500 | $103.650 | $21.000 | $82.650 (%80) |
+| 1.000 | $207.300 | $42.000 | $165.300 (%80) |
 
-MERX currently operates with zero commission for early adopters, meaning you pay exactly the provider's wholesale price with no markup.
-
----
-
-## Monthly Cost Projections: The Full Picture
-
-Let us put all four scenarios side by side for a business doing 100 USDT transfers per day:
-
-```
-Monthly transfers: 3,000
-
-Scenario 1 - Burn everything:
-  3,000 x 27.65 TRX = 82,950 TRX = $20,738/month
-
-Scenario 2 - Stake your own TRX:
-  Capital required: 3,600,000 TRX ($900,000)
-  Opportunity cost: $3,750/month
-  Bandwidth costs: ~$26/month
-  Total: ~$3,776/month
-
-Scenario 3 - Single provider (average):
-  3,000 x 6.50 TRX = 19,500 TRX = $4,875/month
-
-Scenario 4 - MERX (best price):
-  3,000 x 5.50 TRX = 16,500 TRX = $4,125/month
-```
-
-### Which Scenario Wins?
-
-It depends on your constraints:
-
-- **Lowest ongoing cost**: Staking, if you have $900,000 in TRX and can tolerate the price risk and illiquidity.
-- **Lowest capital requirement + lowest cost**: MERX aggregation, requiring only a deposit balance (no locked capital).
-- **Simplest integration**: MERX, with a single API replacing multiple provider integrations.
-- **Worst option**: Burning. There is no scenario where burning makes financial sense for regular transfers.
+MERX şu anda erken benimseyenler için sıfır komisyon ile çalışır, yani sağlayıcının toptan fiyatını hiçbir işaretleme olmadan ödemeniz anlamına gelir.
 
 ---
 
-## Hidden Costs Most Calculators Miss
+## Aylık Maliyet Projeksiyonları: Tam Resim
 
-### Bandwidth Is Not Free at Volume
-
-The free 600 bandwidth per day covers roughly one to two simple transfers. At 100 USDT transfers per day (350 bytes each), you need 35,000 bytes of bandwidth daily. After the free 600, you burn TRX for the rest:
+Günde 100 USDT transfer yapan bir işletme için dört senaryo yanyana koymamızı sağlayın:
 
 ```
-34,400 bytes x 1,000 SUN = 34,400,000 SUN = 34.4 TRX/day
-Monthly: ~1,032 TRX = ~$258
+Aylık transfer'ler: 3.000
+
+Senaryo 1 - Her şeyi yak:
+  3.000 x 27,65 TRX = 82.950 TRX = $20.738/ay
+
+Senaryo 2 - Kendi TRX'inizi stake'leyin:
+  Gerekli sermaye: 3.600.000 TRX ($900.000)
+  Fırsat maliyeti: $3.750/ay
+  Bandwidth maliyetleri: ~$26/ay
+  Toplam: ~$3.776/ay
+
+Senaryo 3 - Tek sağlayıcı (ortalama):
+  3.000 x 6,50 TRX = 19.500 TRX = $4.875/ay
+
+Senaryo 4 - MERX (en iyi fiyat):
+  3.000 x 5,50 TRX = 16.500 TRX = $4.125/ay
 ```
 
-Not enormous, but not zero either. Most cost calculators ignore this entirely.
+### Hangi Senaryo Kazanır?
 
-### Failed Transaction Costs
+Kısıtlamalarınıza bağlıdır:
 
-On TRON, failed transactions still consume bandwidth (but not energy). If your application has a 2% failure rate, you are paying bandwidth costs for transactions that accomplish nothing.
-
-### Price Volatility
-
-All TRX-denominated costs are subject to TRX price fluctuations. A 20% increase in TRX price increases your USD costs by 20%. MERX displays prices in both SUN and USD to help you track real costs.
-
-### Integration and Maintenance
-
-If you integrate directly with multiple providers, you bear the cost of maintaining those integrations: API changes, downtime handling, provider-specific quirks. MERX abstracts this away, but it is worth quantifying if you are evaluating build-vs-buy.
+- **En düşük devam eden maliyet**: Stake'leme, eğer $900.000 TRX'iniz varsa ve fiyat riskini ve likidite eksikliğini tolere edebiliyorsanız.
+- **En düşük sermaye gereksinimi + en düşük maliyet**: MERX agregasyonu, yalnızca bir mevduat bakiyesi gerektirir (kilitli sermaye yok).
+- **En basit entegrasyon**: MERX, tek bir API ile birden fazla sağlayıcı entegrasyonunun yerini alır.
+- **En kötü seçenek**: Yakma. Düzenli transfer'ler için yakmanın finansal anlamda mantıklı olduğu hiçbir senaryo yoktur.
 
 ---
 
-## Cost Optimization Strategies
+## Çoğu Hesaplayıcının Kaçırdığı Gizli Maliyetler
 
-### 1. Never Burn
+### Bandwidth Hacimde Ücretsiz Değildir
 
-This is the single highest-impact optimization. Moving from burning to any form of energy procurement (staking, renting, or aggregating) saves approximately 80%.
+Günlük 600 bandwidth'in ücretsiz kısımı yaklaşık bir ila iki basit transfer'i kapsar. Günde 100 USDT transfer'i (her biri 350 bayt), günlük 35.000 bayta ihtiyaç duyarsınız. Ücretsiz 600'ün sonrasında, geri kalanı için TRX yakarsınız:
 
-### 2. Batch When Possible
+```
+34.400 bayt x 1.000 SUN = 34.400.000 SUN = 34,4 TRX/gün
+Aylık: ~1.032 TRX = ~$258
+```
 
-If your application can batch transfers (e.g., process withdrawals every hour instead of on-demand), you can rent energy in blocks that align with your batch schedule. One-hour energy rentals are typically the cheapest per unit.
+Muazzam değildir, ancak sıfır da değildir. Çoğu maliyet hesaplayıcısı bunu tamamen görmezden gelir.
 
-### 3. Use an Aggregator
+### Başarısız İşlem Maliyetleri
 
-Even if you have a preferred provider, routing through an aggregator like MERX ensures you automatically get the best price when your preferred provider is expensive or unavailable.
+TRON'da, başarısız işlemler yine de bandwidth'i tüketir (ancak energy'yi tüketmez). Uygulamanızda %2 başarısızlık oranı varsa, hiçbir şey başarmayan işlemler için bandwidth maliyetleri ödüyorsunuz.
 
-### 4. Monitor and Adapt
+### Fiyat Volatilitesi
 
-Energy prices fluctuate based on network demand. MERX provides price history and WebSocket price feeds so you can time non-urgent operations for low-price periods:
+Tüm TRX cinsinden maliyetler TRX fiyat dalgalanmalarına tabidir. TRX fiyatında %20 artış, USD maliyetlerinizi %20 artırır. MERX, gerçek maliyetleri izlemenize yardımcı olmak için fiyatları hem SUN'da hem de USD'de gösterir.
+
+### Entegrasyon ve Bakım
+
+Birden fazla sağlayıcı ile doğrudan entegre olursanız, bu entegrasyonları koruma maliyetini karşılarsınız: API değişiklikleri, kapalı kalma süreleri işleme, sağlayıcıya özgü tuhaflıklar. MERX bunu soyutlar, ancak build-vs-buy değerlendirmesi yapıyorsanız nicelleştirmeye değer.
+
+---
+
+## Maliyet Optimizasyonu Stratejileri
+
+### 1. Hiç Yakma
+
+Bu tek en yüksek etkili optimizasyondur. Yakma'dan herhangi bir enerji tedarik biçimine (stake'leme, kiralama veya agregasyona) geçmek yaklaşık %80 tasarruf sağlar.
+
+### 2. Mümkün Olduğunda Grupla
+
+Uygulamanız transfer'leri gruplandırabilirse (ör. talep üzerine yerine her saatte bir çekilişleri işle), energy'yi batch programınıza uygun bloklarda kiralayabilirsiniz. Bir saatlik energy kiralamaları tipik olarak birim başına en ucuzdur.
+
+### 3. Bir Agregator Kullanın
+
+Tercih edilen bir sağlayıcınız olsa da, MERX gibi bir agregator aracılığıyla yönlendirmek, tercih edilen sağlayıcınız pahalı veya mevcut değilse otomatik olarak en iyi fiyatı almanızı sağlar.
+
+### 4. İzleyin ve Uyum Sağlayın
+
+Energy fiyatları ağ talebine bağlı olarak dalgalanır. MERX, fiyat geçmişi ve WebSocket fiyat akışları sağlayarak acil olmayan işlemleri düşük fiyat dönemlerine zamanlamanızı sağlar:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 
-// Get current best price
+// Güncel en iyi fiyatı al
 const prices = await client.getPrices({ energy: 65000 });
 console.log(`Best price: ${prices.bestPrice.perUnit} SUN/energy`);
 
-// Get price history for analysis
+// Analiz için fiyat geçmişini al
 const history = await client.getPriceHistory({ period: '24h' });
 ```
 
-SDK and API dokumantasyonu: [https://merx.exchange/docs](https://merx.exchange/docs)
+SDK ve API belgeleri: [https://merx.exchange/docs](https://merx.exchange/docs)
 
-### 5. Set Standing Orders
+### 5. Kalıcı Emirler Ayarlayın
 
-For predictable recurring needs, MERX standing orders automatically procure energy at or below your target price:
+Öngörülebilir tekrarlayan ihtiyaçlar için, MERX kalıcı emirleri otomatik olarak hedef fiyatınız ve altında energy'yi tedarik eder:
 
 ```typescript
 await client.createStandingOrder({
@@ -261,21 +261,21 @@ await client.createStandingOrder({
 
 ---
 
-## The Bottom Line
+## Sonuç
 
-The true cost of a USDT transfer on TRON in 2026 is not a single number. It ranges from $1.30 (optimized, aggregated rental) to $6.91 (naive burning), a 5x difference determined entirely by how you manage TRON's resource model.
+2026'da TRON'da bir USDT transfer'inin gerçek maliyeti tek bir sayı değildir. TRON'un kaynak modelini nasıl yönettiğiniz tarafından tamamen belirlenen, yaklaşık $1,30 (optimize edilmiş, toplam kiralama) ile $6,91 (saf yakma) arasında değişir - 5 kat fark.
 
-For any application doing more than a handful of transfers per day, the choice is clear: stop burning TRX for energy. The savings from even basic energy rental are dramatic, and aggregation through MERX pushes costs to the lowest available market rate with zero additional complexity.
+Günde birden fazla transfer yapan herhangi bir uygulama için seçim açıktır: energy için TRX yakma'yı durdurun. Hatta temel energy kiralama'nın tasarrufları dramatiktir ve MERX aracılığıyla agregasyon maliyetleri sıfır ek karmaşıklıkla mevcut en düşük pazar oranına iter.
 
-Check current energy prices and calculate your potential savings at [https://merx.exchange](https://merx.exchange).
+Güncel energy fiyatlarını kontrol edin ve olası tasarruflarınızı [https://merx.exchange](https://merx.exchange)'de hesaplayın.
 
 ---
 
-*Bu makale, TRON altyapisi uzerine MERX bilgi serisinin bir parcasidir. MERX, tum buyuk energy saglayicilarini tek bir API'de toplayan ilk blokzincir kaynak borsasidir. Kaynak kodu ve SDK'lar su adreste mevcuttur: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) and [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python).*
+*Bu makale, TRON altyapısında MERX bilgi serilerinin bir parçasıdır. MERX, tüm ana energy sağlayıcılarını tek bir API'de toplamak olan ilk blockchain kaynak değişimidir. Kaynak kodu ve SDK'lar [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) ve [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)'da mevcuttur.*
 
-## Try It Now with AI
+## Şimdi AI ile Deneyin
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır kurulum, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -287,6 +287,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI acentanıza sorun: "Şu an en ucuz TRON energy nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

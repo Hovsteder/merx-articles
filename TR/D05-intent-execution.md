@@ -1,39 +1,39 @@
-# Niyet Yurutme: TRON Uzerinde Yapay Zeka Ajanlari Icin Cok Adimli Planlar
+# İşlem Yürütme: TRON'da AI Ajanları için Çok Adımlı Planlar
 
-## The Problem with One-at-a-Time
+## Tek Seferde Bir Problemi ile İlgili Sorun
 
-AI agents interacting with TRON face a structural problem when tasks involve multiple on-chain operations. Consider a simple scenario: an agent needs to send 100 USDT to Alice and then swap 50 TRX for USDT. Each operation requires its own energy purchase, its own delegation wait, and its own broadcast cycle.
+TRON ile etkileşime giren AI ajanları, görevler birden fazla zincir üstü işlem içerdiğinde yapısal bir sorunla karşılaşır. Basit bir senaryoyu düşünün: bir ajanın 100 USDT'yi Alice'e göndermesi ve ardından 50 TRX'i USDT için takas etmesi gerekiyor. Her işlem kendi energy satın almasını, kendi delegasyon beklentisini ve kendi yayın döngüsünü gerektirir.
 
-With the one-at-a-time approach, the agent makes at least 8 tool calls:
+Tek seferde bir yaklaşımla, ajan en az 8 araç çağrısı yapar:
 
-1. Estimate energy for USDT transfer
-2. Buy energy for USDT transfer
-3. Wait for delegation
-4. Execute USDT transfer
-5. Estimate energy for swap
-6. Buy energy for swap
-7. Wait for delegation
-8. Execute swap
+1. USDT transferi için energy tahmini
+2. USDT transferi için energy satın alma
+3. Delegasyon bekleme
+4. USDT transferi yürütme
+5. Takas için energy tahmini
+6. Takas için energy satın alma
+7. Delegasyon bekleme
+8. Takası yürütme
 
-Each energy purchase is a separate market interaction with its own transaction overhead. Each delegation wait adds 3-6 seconds of latency. The total wall-clock time can exceed 30 seconds for what should be a simple two-step task.
+Her energy satın alması, kendi işlem yükü ile ayrı bir pazar etkileşimidir. Her delegasyon beklentisi 3-6 saniye gecikme ekler. Toplam duvar saati süresi, basit bir iki adımlı görev için 30 saniyeyi aşabilir.
 
-MERX solves this with intent execution - a system that takes a multi-step plan from an AI agent, simulates every step, optimizes resource purchases across all steps, and executes the entire plan in sequence.
+MERX bunu niyet yürütme ile çözer - bir AI ajanından çok adımlı bir plan alan, her adımı simüle eden, tüm adımlar arasında kaynak satın almalarını optimize eden ve tüm planı sırayla yürüten bir sistem.
 
-## What Is an Intent
+## Niyet Nedir?
 
-In the MERX system, an intent is a declarative description of what the agent wants to accomplish, expressed as an ordered list of actions. The agent specifies the desired outcome, and MERX handles the execution mechanics.
+MERX sisteminde, bir niyet ajanın başarmak istediğini ifade eden bildirimsel bir açıklama olup, sıralı bir eylemler listesi olarak gösterilir. Ajan istenen sonucu belirtir ve MERX yürütme mekaniğini işler.
 
-An intent differs from a sequence of tool calls in three important ways:
+Bir niyet, bir araç çağrısı dizisinden üç önemli şekilde farklıdır:
 
-1. **Resource optimization** - MERX can batch energy purchases across all steps, buying the total energy needed in a single order rather than step by step.
+1. **Kaynak optimizasyonu** - MERX, tüm adımlar arasında energy satın almalarını toplu olarak yapabilir, adım adım yerine tek bir siparişte ihtiyaç duyulan toplam energy'yi satın alabilir.
 
-2. **Pre-validation** - Every step is simulated before any step executes. If step 3 of a 5-step plan would fail, the agent knows before step 1 is broadcast.
+2. **Ön doğrulama** - Her adım herhangi bir adım yürütülmeden önce simüle edilir. 5 adımlı bir planın 3. adımı başarısız olursa, ajan bunu 1. adım yayınlanmadan önce bilir.
 
-3. **Atomic planning** - The agent submits the entire plan at once, giving MERX visibility into the full scope of work. This enables optimizations that are impossible when steps are submitted individually.
+3. **Atomik planlama** - Ajan tüm planı bir kez gönderir ve bu da MERX'e çalışın tam kapsamı hakkında görünürlük sağlar. Bu, adımlar bireysel olarak gönderildiğinde imkansız olan optimizasyonları sağlar.
 
-## The execute_intent Tool
+## execute_intent Aracı
 
-The MCP server exposes intent execution through the `execute_intent` tool:
+MCP sunucusu niyet yürütmesini `execute_intent` aracı aracılığıyla ortaya çıkarır:
 
 ```
 Tool: execute_intent
@@ -61,15 +61,15 @@ Input: {
 }
 ```
 
-The response includes the simulation results for each step, the total resource cost, and the execution status of each step after completion.
+Yanıt, her adım için simülasyon sonuçlarını, toplam kaynak maliyetini ve tamamlanmadan sonra her adımın yürütme durumunu içerir.
 
-## Supported Actions
+## Desteklenen İşlemler
 
-The intent system supports the following action types:
+Niyet sistemi aşağıdaki işlem türlerini destekler:
 
 ### transfer_trx
 
-Send TRX to an address. This is a native transfer that consumes bandwidth but no energy.
+Bir adrese TRX gönderin. Bu, bandwidth'i tüketir ancak energy tüketmez yerel bir transferdir.
 
 ```json
 {
@@ -83,7 +83,7 @@ Send TRX to an address. This is a native transfer that consumes bandwidth but no
 
 ### transfer_trc20
 
-Send a TRC20 token (USDT, USDC, etc.) to an address. Consumes energy for the smart contract call.
+Bir adrese TRC20 tokenini (USDT, USDC, vb.) gönderin. Akıllı kontrat çağrısı için energy tüketir.
 
 ```json
 {
@@ -98,7 +98,7 @@ Send a TRC20 token (USDT, USDC, etc.) to an address. Consumes energy for the sma
 
 ### swap
 
-Execute a token swap on SunSwap V2. Includes exact energy simulation for the specific swap parameters.
+SunSwap V2'de token takası yürütün. Belirli takas parametreleri için tam energy simülasyonunu içerir.
 
 ```json
 {
@@ -114,7 +114,7 @@ Execute a token swap on SunSwap V2. Includes exact energy simulation for the spe
 
 ### approve
 
-Set a spending approval for a TRC20 token. Required before swapping tokens (not needed for swapping TRX).
+Bir TRC20 tokeninin harcama onayını ayarlayın. Token takası yapmadan önce gereklidir (TRX takası için gerekli değildir).
 
 ```json
 {
@@ -129,7 +129,7 @@ Set a spending approval for a TRC20 token. Required before swapping tokens (not 
 
 ### call_contract
 
-Execute an arbitrary smart contract call. This is the escape hatch for operations not covered by the specific action types.
+Rastgele akıllı kontrat çağrısını yürütün. Bu, belirli işlem türleri tarafından kapsanmayan işlemler için kaçış yoludur.
 
 ```json
 {
@@ -145,7 +145,7 @@ Execute an arbitrary smart contract call. This is the escape hatch for operation
 
 ### buy_resource
 
-Purchase energy or bandwidth as a step in the plan. Useful when the agent wants explicit control over resource timing.
+Planda bir adım olarak energy veya bandwidth satın alın. Ajan kaynak zamanlaması üzerinde açık kontrol istediğinde kullanışlıdır.
 
 ```json
 {
@@ -158,55 +158,55 @@ Purchase energy or bandwidth as a step in the plan. Useful when the agent wants 
 }
 ```
 
-## Resource Strategies
+## Kaynak Stratejileri
 
-The `resource_strategy` parameter controls how MERX handles energy purchases across the intent's steps.
+`resource_strategy` parametresi MERX'in niyetin adımları arasında energy satın almalarını nasıl işlediğini kontrol eder.
 
 ### batch_cheapest
 
-This is the default and recommended strategy. MERX simulates all steps, sums the total energy required, subtracts available resources, and makes a single energy purchase for the entire intent.
+Bu varsayılan ve önerilen stratejidir. MERX tüm adımları simüle eder, gerekli toplam energy'yi toplar, mevcut kaynakları çıkarır ve tüm niyet için tek bir energy satın alması yapar.
 
 ```
 Step 1 (transfer_trc20): 64,895 energy
 Step 2 (swap):           223,354 energy
-Total needed:            288,249 energy
-Currently available:     0 energy
-Purchase:                290,000 energy (rounded to order unit)
+Toplam gerekli:          288,249 energy
+Şu anda mevcut:          0 energy
+Satın alma:              290,000 energy (sipariş birimine yuvarlanmış)
 ```
 
-One purchase. One delegation wait. Then all steps execute sequentially using the pooled energy.
+Bir satın alma. Bir delegasyon beklentisi. Sonra tüm adımlar havuzlanmış energy'yi kullanarak sırayla yürütülür.
 
-Benefits:
-- Single market interaction (lower overhead)
-- Single delegation wait (lower latency)
-- Potential volume discount on larger orders
-- Simpler failure handling
+Faydaları:
+- Tek pazar etkileşimi (daha düşük yük)
+- Tek delegasyon beklentisi (daha düşük gecikme)
+- Daha büyük siparişlerde potansiyel hacim indirimi
+- Daha basit hata işleme
 
 ### per_step
 
-Each step purchases its own energy independently. Use this when steps are conditional or when you need to minimize risk (if step 1 fails, you haven't purchased energy for step 2).
+Her adım bağımsız olarak kendi energy'sini satın alır. Adımlar koşullu olduğunda veya riski en aza indirmek istediğinizde (1. adım başarısız olursa, 2. adım için energy satın almamışsınızdır) bunu kullanın.
 
 ```
-Step 1: buy 65,000 energy -> wait -> execute transfer
-Step 2: buy 225,000 energy -> wait -> execute swap
+Step 1: 65,000 energy satın al -> bekle -> transferi yürüt
+Step 2: 225,000 energy satın al -> bekle -> takası yürüt
 ```
 
-This strategy is slower (two delegation waits) but wastes less energy if execution is halted mid-plan.
+Bu strateji daha yavaştır (iki delegasyon beklentisi) ancak yürütme planda durdurulursa daha az energy boşa harcar.
 
-## Stateful Simulation
+## Durum Saklı Simülasyon
 
-The intent system's simulation engine maintains state across steps. This is critical for plans where later steps depend on the results of earlier steps.
+Niyetin simülasyon motoru adımlar arasında durumu saklı tutar. Bu, sonraki adımların önceki adımların sonuçlarına bağlı olduğu planlar için kritiktir.
 
-Consider this intent: "Swap 50 TRX for USDT, then send the received USDT to Alice."
+Bu niyeti düşünün: "50 TRX'i USDT için takas edin, sonra alınan USDT'yi Alice'e gönderin."
 
-The simulation engine:
+Simülasyon motoru:
 
-1. Simulates step 1 (swap). Result: agent receives 16.42 USDT.
-2. Updates the simulated state to reflect the new USDT balance.
-3. Simulates step 2 (transfer 16.42 USDT to Alice) against the updated state.
-4. Confirms step 2 would succeed with the balance from step 1.
+1. Adım 1'i (takas) simüle eder. Sonuç: ajan 16.42 USDT alır.
+2. Yeni USDT bakiyesini yansıtmak için simüle edilen durumu günceller.
+3. Adım 2'yi (16.42 USDT'yi Alice'e transfer etme) güncellenmiş duruma karşı simüle eder.
+4. Adım 2'nin Adım 1'den gelen bakiye ile başarılı olacağını doğrular.
 
-Without stateful simulation, step 2 would be simulated against the agent's current balance (which might not include the USDT from the swap). The simulation would incorrectly report that step 2 would fail due to insufficient balance.
+Durum saklı simülasyon olmadan, Adım 2 ajanın mevcut bakiyesine karşı simüle edilir (bu takastan USDT'yi içermeyebilir). Simülasyon yanlışlıkla Adım 2'nin yetersiz bakiye nedeniyle başarısız olacağını bildirirdi.
 
 ```
 Tool: execute_intent
@@ -234,11 +234,11 @@ Input: {
 }
 ```
 
-The `use_previous_output` parameter tells the intent system to use the output amount from the preceding step as the input amount for this step.
+`use_previous_output` parametresi niyet sistemine önceki adımdan çıktı miktarını bu adım için giriş miktarı olarak kullanmasını söyler.
 
-## Simulation Response
+## Simülasyon Yanıtı
 
-Before execution begins, the intent system returns a simulation summary:
+Yürütme başlamadan önce, niyet sistemi simülasyon özeti döndürür:
 
 ```json
 {
@@ -273,11 +273,11 @@ Before execution begins, the intent system returns a simulation summary:
 }
 ```
 
-The agent sees the full plan with costs before any on-chain action is taken. If the costs are unacceptable or a step would fail, the agent can modify the plan without spending anything.
+Ajan, herhangi bir zincir üstü işlem yapılmadan önce maliyetlerle tam planı görür. Maliyetler kabul edilemez ise veya bir adım başarısız olursa, ajan hiçbir şey harcamadan planı değiştirebilir.
 
-## Execution and Error Handling
+## Yürütme ve Hata İşleme
 
-Once the agent confirms the plan (or if auto-execution is enabled), the intent executes step by step:
+Ajan plan onayladığında (veya otomatik yürütme etkinleştirilirse), niyet adım adım yürütülür:
 
 ```json
 {
@@ -307,9 +307,9 @@ Once the agent confirms the plan (or if auto-execution is enabled), the intent e
 }
 ```
 
-### Failure Mid-Execution
+### Yürütme Sırasında Başarısızlık
 
-If a step fails during execution (not during simulation), the intent system stops and reports the failure:
+Yürütme sırasında bir adım başarısız olursa (simülasyon sırasında değil), niyet sistemi durur ve başarısızlığı bildirir:
 
 ```json
 {
@@ -335,13 +335,13 @@ If a step fails during execution (not during simulation), the intent system stop
 }
 ```
 
-Step 1 has already been committed on-chain and cannot be reversed. The agent receives the remaining energy balance and can decide how to proceed - retry the failed step with adjusted parameters, execute a different action, or let the energy expire.
+Adım 1 zaten zincir üstü olarak kaydedilmiştir ve tersine çevrilemez. Ajan kalan energy bakiyesini alır ve nasıl devam edeceğine karar verebilir - başarısız adımı ayarlanmış parametrelerle yeniden deneyin, farklı bir işlem yürütün veya energy'nin süresi dolmasını bekleyin.
 
-## Real-World Example: Treasury Rebalancing
+## Gerçek Dünya Örneği: Hazine Yeniden Dengeleme
 
-Here is a realistic multi-step intent that an agent might execute for treasury management:
+Burada bir ajanın hazine yönetimi için yürütebileceği gerçekçi bir çok adımlı niyet:
 
-"Swap 1,000 TRX for USDT, send 300 USDT to the operations wallet, send 200 USDT to the marketing wallet, keep the rest."
+"1.000 TRX'i USDT için takas edin, 300 USDT'yi operasyon cüzdanına gönderin, 200 USDT'yi pazarlama cüzdanına gönderin, geri kalanı tutun."
 
 ```
 Tool: execute_intent
@@ -377,63 +377,64 @@ Input: {
 }
 ```
 
-Simulation:
+Simülasyon:
 
 ```
-Step 1 (swap):     223,354 energy
-Step 2 (transfer): 29,631 energy  (OpsWallet already has USDT)
-Step 3 (transfer): 64,895 energy  (MarketingWallet is new to USDT)
-Total:             317,880 energy
+Step 1 (takas):     223,354 energy
+Step 2 (transfer):  29,631 energy  (OpsWallet zaten USDT'ye sahip)
+Step 3 (transfer):  64,895 energy  (MarketingWallet USDT için yeni)
+Toplam:             317,880 energy
 
-Batch purchase: 320,000 energy at 16.83 TRX from catfee
+Toplu satın alma: 320,000 energy catfee'den 16.83 TRX'e
 
-Without intent batching: 3 separate purchases = ~18.20 TRX
-With intent batching: 1 purchase = 16.83 TRX
-Savings from batching: 1.37 TRX + reduced latency (1 wait vs 3)
+Niyet toplamadan yapılan satın almalar: 3 ayrı satın alma = ~18.20 TRX
+Niyet toplamadan yapılan satın almalar: 1 satın alma = 16.83 TRX
+Toplamadan tasarruf: 1.37 TRX + azalan gecikme (1 bekleme vs 3)
 ```
 
-## When to Use Intents vs Individual Tools
+## Niyetleri vs Bireysel Araçları Ne Zaman Kullanacağınız
 
-Use `execute_intent` when:
+`execute_intent`'i şu durumlarda kullanın:
 
-- The task involves two or more on-chain operations
-- Steps have dependencies (step 2 uses the output of step 1)
-- You want to minimize total resource costs through batching
-- You need pre-validation of the entire plan before committing
+- Görev iki veya daha fazla zincir üstü işlem içeriyor
+- Adımların bağımlılıkları var (adım 2 adım 1'in çıktısını kullanıyor)
+- Toplu işlem aracılığıyla toplam kaynak maliyetini en aza indirmek istiyorsunuz
+- Taahhüt etmeden önce tüm planın ön doğrulanmasına ihtiyacınız var
 
-Use individual tools when:
+Bireysel araçları şu durumlarda kullanın:
 
-- The task is a single operation
-- The agent needs to make decisions between steps based on external input
-- Steps are separated by significant time gaps
-- The agent wants maximum control over each stage of execution
+- Görev tek bir işlem
+- Ajan, adımlar arasında harici girdiye dayalı kararlar alması gerekiyor
+- Adımlar önemli zaman boşluklarıyla ayrılıyor
+- Ajan yürütmenin her aşaması üzerinde maksimum kontrol istiyorsa
 
-## Intents and Agent Autonomy
+## Niyetler ve Ajan Özerkliği
 
-The intent system is designed for agent autonomy. An agent that receives a high-level instruction like "rebalance the treasury" can decompose it into concrete steps, construct an intent, simulate it, review the costs, and execute - all without human intervention at any stage.
+Niyet sistemi ajan özerkliği için tasarlanmıştır. "Hazineyi yeniden dengeleme" gibi yüksek seviyeli bir talimat alan bir ajan bunu somut adımlara ayırabilir, bir niyet oluşturabilir, simüle edebilir, maliyetleri gözden geçirebilir ve yürütebilir - tüm bunları herhangi bir aşamada insan müdahalesi olmadan.
 
-The simulation step serves as the agent's safety check. Before committing any funds, the agent can verify that every step will succeed, the total cost is within budget, and the expected outputs match the desired outcome. This is the equivalent of a human reviewing a transaction before clicking "confirm," but executed programmatically by the agent itself.
+Simülasyon adımı ajanın güvenlik kontrolü olarak hizmet eder. Herhangi bir fon taahhütünden önce, ajan her adımın başarılı olacağını, toplam maliyetin bütçe içinde olduğunu ve beklenen çıktıların istenen sonuçla eşleştiğini doğrulayabilir. Bu, bir insanın bir işlemi onaylamadan önce gözden geçirmesine eşdeğerdir, ancak ajan tarafından programlı olarak yürütülür.
 
-Combined with standing orders for recurring resource purchases and monitors for balance alerts, the intent system enables fully autonomous on-chain operations that run 24/7 without human oversight.
+Tekrarlanan kaynak satın almalar için sabit siparişlerle ve bakiye uyarıları için monitörlerle birlikte, niyet sistemi insan gözetimi olmadan 24/7 çalışan tamamen özerk zincir üstü işlemleri sağlar.
 
-## Sonuc
+## Sonuç
 
-Single-step execution is the training wheels of blockchain automation. Real agent workflows involve multiple operations, dependencies between steps, and resource optimization across the full plan.
+Tek adımlı yürütme, blockchain otomasyonunun eğitim tekerlekleridir. Gerçek ajan iş akışları çoklu işlemler, adımlar arasındaki bağımlılıklar ve tüm plan arasında kaynak optimizasyonunu içerir.
 
-MERX intent execution gives AI agents the ability to think in plans rather than individual actions. Simulate everything. Optimize resources across the full scope. Execute with confidence that every step has been pre-validated.
+MERX niyet yürütmesi AI ajanlarına bireysel eylemler yerine planlar halinde düşünme yeteneği verir. Her şeyi simüle edin. Kaynakları tam kapsam arasında optimize edin. Her adımın ön doğrulama yapıldığından emin olarak güvenle yürütün.
 
-The blockchain is not a single-operation environment. Your agent should not be either.
+Blockchain tek işlem ortamı değildir. Ajanınız da olmamalıdır.
 
 ---
 
-**Baglantilar:**
+**Bağlantılar:**
 - MERX Platformu: [https://merx.exchange](https://merx.exchange)
 - MCP Sunucusu (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - MCP Sunucusu (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şu Anda AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır kurulum, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -445,6 +446,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza şunları sorun: "Şu anda en ucuz TRON energy nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgelendirmesi: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

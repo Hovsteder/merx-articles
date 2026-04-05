@@ -1,61 +1,61 @@
-# Autenticacion de la API de MERX: claves, permisos y limites de velocidad
+# Autenticación de API de MERX: Claves, Permisos y Límites de Velocidad
 
-Every API integration starts with authentication. Get it right, and your automated energy trading runs smoothly around the clock. Get it wrong, and you are dealing with leaked credentials, unexplained 403 errors, or limite de velocidad bans that halt your production systems at the worst possible moment.
+Toda integración de API comienza con autenticación. Si lo haces bien, tu comercio automatizado de energy funciona sin problemas las 24 horas. Si lo haces mal, te enfrentas a credenciales filtradas, errores 403 inexplicables o prohibiciones por límite de velocidad que detienen tus sistemas de producción en el peor momento posible.
 
-MERX provides two authentication methods, each designed for a different caso de uso. This article covers both in detail - how they work, when to use each, how to manage permissions granularly, and what limite de velocidads apply across the API surface.
+MERX proporciona dos métodos de autenticación, cada uno diseñado para un caso de uso diferente. Este artículo cubre ambos en detalle: cómo funcionan, cuándo usar cada uno, cómo gestionar permisos de manera granular y qué límites de velocidad se aplican en toda la superficie de la API.
 
-## Two Authentication Methods
+## Dos Métodos de Autenticación
 
-MERX supports two ways to authenticate API requests: clave de APIs and JWT tokens. They serve different purposes and are not interchangeable.
+MERX admite dos formas de autenticar solicitudes de API: claves de API y tokens JWT. Sirven propósitos diferentes y no son intercambiables.
 
-### API Key Authentication
+### Autenticación con Clave de API
 
-clave de APIs are long-lived credentials designed for server-to-server communication. You create them through the API or admin panel, assign specific permissions, and include them in every request via the `X-API-Key` header.
+Las claves de API son credenciales de larga duración diseñadas para comunicación servidor a servidor. Las creas a través de la API o del panel de administración, asignas permisos específicos e incluyes en cada solicitud mediante el encabezado `X-API-Key`.
 
 ```bash
 curl https://merx.exchange/api/v1/prices \
   -H "X-API-Key: merx_live_k7x9m2p4..."
 ```
 
-clave de APIs are the right choice when:
+Las claves de API son la opción correcta cuando:
 
-- Your backend service calls MERX on behalf of your users.
-- You run scheduled jobs that create orders or check balances.
-- You want fine-grained permission control (an order-creation key that cannot withdraw funds).
-- You need credentials that work without an interactive login flow.
+- Tu servicio de backend llama a MERX en nombre de tus usuarios.
+- Ejecutas trabajos programados que crean órdenes o verifican saldos.
+- Deseas control de permisos granular (una clave de creación de órdenes que no puede retirar fondos).
+- Necesitas credenciales que funcionen sin un flujo de inicio de sesión interactivo.
 
-clave de APIs never expire on their own. They remain valid until you explicitly revoke them. This makes them convenient for long-running services but demands careful management.
+Las claves de API nunca caducan por sí solas. Siguen siendo válidas hasta que las revokes explícitamente. Esto las hace convenientes para servicios de larga duración, pero requiere una gestión cuidadosa.
 
-### JWT Token Authentication
+### Autenticación con Token JWT
 
-JWT tokens are short-lived credentials issued after a login. You authenticate with your email and password (or via OAuth), receive a JWT, and include it in requests via the `Authorization` header with a `Bearer` prefix.
+Los tokens JWT son credenciales de corta duración emitidas después de un inicio de sesión. Te autenticas con tu correo electrónico y contraseña (o a través de OAuth), recibes un JWT e incluyes en solicitudes mediante el encabezado `Authorization` con prefijo `Bearer`.
 
 ```bash
 curl https://merx.exchange/api/v1/balance \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
 ```
 
-JWTs are the right choice when:
+Los JWT son la opción correcta cuando:
 
-- A human user interacts with a frontend that calls the API.
-- You want time-limited access that expires automatically.
-- You are building a web or mobile application with a login flow.
+- Un usuario humano interactúa con una interfaz que llama a la API.
+- Deseas acceso con límite de tiempo que caduque automáticamente.
+- Estás construyendo una aplicación web o móvil con un flujo de inicio de sesión.
 
-JWT tokens issued by MERX expire after 24 hours. After expiration, the client must re-authenticate to get a new token. Refresh tokens extend sessions without requiring the user to log in again.
+Los tokens JWT emitidos por MERX caducan después de 24 horas. Después de la caducidad, el cliente debe volver a autenticarse para obtener un nuevo token. Los tokens de actualización extienden las sesiones sin requerir que el usuario inicie sesión nuevamente.
 
-### Which One to Use
+### Cuál Usar
 
-For programmatic integrations - payment bots, automated trading, backend services - use clave de APIs. They are simpler to manage, support granular permissions, and do not require a login flow.
+Para integraciones programáticas (bots de pago, comercio automatizado, servicios de backend), usa claves de API. Son más simples de gestionar, admiten permisos granulares y no requieren un flujo de inicio de sesión.
 
-For user-facing applications where a human logs in, use JWT tokens. They provide session-based access with automatic expiration, reducing the risk of credential leakage from client-side code.
+Para aplicaciones orientadas al usuario donde un humano inicia sesión, usa tokens JWT. Proporcionan acceso basado en sesión con caducidad automática, reduciendo el riesgo de filtración de credenciales desde código del lado del cliente.
 
-You can use both in the same system. A common pattern: JWT authentication for your admin panel (human operators log in to manage settings), clave de API authentication for your backend services (automated order creation, balance monitoring).
+Puedes usar ambos en el mismo sistema. Un patrón común: autenticación JWT para tu panel de administración (operadores humanos inician sesión para gestionar configuración), autenticación con clave de API para tus servicios de backend (creación automática de órdenes, monitoreo de saldo).
 
-## Creating and Managing API Keys
+## Creación y Gestión de Claves de API
 
-### Creating a Key
+### Crear una Clave
 
-Create clave de APIs via the API itself or through the MERX web dashboard. The API endpoint is `POST /api/v1/keys`:
+Crea claves de API a través de la API misma o a través del panel web de MERX. El endpoint de API es `POST /api/v1/keys`:
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/keys \
@@ -67,7 +67,7 @@ curl -X POST https://merx.exchange/api/v1/keys \
   }'
 ```
 
-The response includes the full clave de API. This is the only time the complete key is returned. Store it immediately in your secrets manager.
+La respuesta incluye la clave de API completa. Esta es la única vez que se devuelve la clave completa. Almacénala inmediatamente en tu gestor de secretos.
 
 ```json
 {
@@ -79,9 +79,9 @@ The response includes the full clave de API. This is the only time the complete 
 }
 ```
 
-Note: the key creation endpoint requires JWT authentication. You must log in first to create clave de APIs. This is a deliberate security decision - clave de APIs cannot create other clave de APIs.
+Nota: el endpoint de creación de clave requiere autenticación JWT. Debes iniciar sesión primero para crear claves de API. Esta es una decisión de seguridad deliberada: las claves de API no pueden crear otras claves de API.
 
-### Using the JavaScript SDK
+### Usando el SDK de JavaScript
 
 ```javascript
 import { MerxClient } from 'merx-sdk';
@@ -91,12 +91,12 @@ const merx = new MerxClient({
   baseUrl: 'https://merx.exchange/api/v1',
 });
 
-// The SDK automatically includes the X-API-Key header
+// El SDK incluye automáticamente el encabezado X-API-Key
 const prices = await merx.prices.list();
 const balance = await merx.account.getBalance();
 ```
 
-### Using the Python SDK
+### Usando el SDK de Python
 
 ```python
 from merx_sdk import MerxClient
@@ -110,48 +110,48 @@ prices = client.get_prices()
 balance = client.get_balance()
 ```
 
-### Listing and Revoking Keys
+### Listar y Revocar Claves
 
-List all active keys for your account:
+Lista todas las claves activas para tu cuenta:
 
 ```bash
 curl https://merx.exchange/api/v1/keys \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
 ```
 
-Revoke a key immediately:
+Revoca una clave inmediatamente:
 
 ```bash
 curl -X DELETE https://merx.exchange/api/v1/keys/key_8f3k2m9x \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
 ```
 
-Revocation is instant. Any request using the revoked key returns 401 immediately. Hay no grace period.
+La revocación es instantánea. Cualquier solicitud que use la clave revocada devuelve 401 inmediatamente. No hay período de gracia.
 
-## Permission Types
+## Tipos de Permisos
 
-MERX clave de APIs support granular permissions. When creating a key, you specify exactly which operations it can perform. A key without a required permission receives a 403 Forbidden response.
+Las claves de API de MERX admiten permisos granulares. Al crear una clave, especificas exactamente qué operaciones puede realizar. Una clave sin un permiso requerido recibe una respuesta 403 Forbidden.
 
-### Available Permissions
+### Permisos Disponibles
 
-| Permission | Description | Typical Use Case |
-|-----------|-------------|-----------------|
-| `view_balance` | Read account balance and transaction history | Monitoring dashboards, alerting |
-| `view_orders` | Read estado de la orden and order history | Order tracking, reporting |
-| `create_orders` | Create new energy and bandwidth orders | Automated bot de tradings |
-| `broadcast` | Submit signed transactions for broadcast | Custom transaction workflows |
+| Permiso | Descripción | Caso de Uso Típico |
+|---------|-------------|-------------------|
+| `view_balance` | Leer saldo de cuenta e historial de transacciones | Paneles de monitoreo, alertas |
+| `view_orders` | Leer estado de órdenes e historial de órdenes | Seguimiento de órdenes, reportes |
+| `create_orders` | Crear nuevas órdenes de energy y bandwidth | Bots de comercio automatizado |
+| `broadcast` | Enviar transacciones firmadas para transmisión | Flujos de transacciones personalizados |
 
-### Permission Design Principles
+### Principios de Diseño de Permisos
 
-**Least privilege.** Give each key only the permissions it needs. A monitoring dashboard does not need `create_orders`. A price display widget does not need `view_balance`.
+**Mínimo privilegio.** Dale a cada clave solo los permisos que necesita. Un panel de monitoreo no necesita `create_orders`. Un widget de visualización de precios no necesita `view_balance`.
 
-**Separate keys for separate concerns.** Use one key for your order bot (`create_orders`, `view_orders`, `view_balance`) and a different key for your monitoring system (`view_balance`, `view_orders`). If the monitoring key leaks, the attacker cannot create orders.
+**Claves separadas para preocupaciones separadas.** Usa una clave para tu bot de órdenes (`create_orders`, `view_orders`, `view_balance`) y una clave diferente para tu sistema de monitoreo (`view_balance`, `view_orders`). Si la clave de monitoreo se filtra, el atacante no puede crear órdenes.
 
-**No withdrawal permission on clave de APIs.** Withdrawals require JWT authentication. This is intentional. An clave de API, even with full permissions, cannot withdraw funds from your account. This adds a layer of protection for the highest-risk operation.
+**Sin permiso de retiro en claves de API.** Los retiros requieren autenticación JWT. Esto es intencional. Una clave de API, incluso con permisos completos, no puede retirar fondos de tu cuenta. Esto añade una capa de protección para la operación de mayor riesgo.
 
-### Example: Minimal Key for a Price Widget
+### Ejemplo: Clave Mínima para un Widget de Precios
 
-A public-facing price widget only needs to fetch prices. It does not need authentication at all since the prices endpoint is public, but if you want to track usage:
+Un widget de precios de acceso público solo necesita obtener precios. No necesita autenticación en absoluto ya que el endpoint de precios es público, pero si deseas rastrear el uso:
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/keys \
@@ -163,9 +163,9 @@ curl -X POST https://merx.exchange/api/v1/keys \
   }'
 ```
 
-A key with an empty permissions array can access public endpoints (prices, provider list) while allowing you to track request volume and apply limite de velocidads per key.
+Una clave con un array de permisos vacío puede acceder a endpoints públicos (precios, lista de proveedores) mientras te permite rastrear volumen de solicitudes y aplicar límites de velocidad por clave.
 
-### Example: Full Trading Bot Key
+### Ejemplo: Clave de Bot de Comercio Completo
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/keys \
@@ -177,24 +177,24 @@ curl -X POST https://merx.exchange/api/v1/keys \
   }'
 ```
 
-## Rate Limits
+## Límites de Velocidad
 
-MERX applies limite de velocidads per endpoint category, not per key. All limite de velocidads are measured in requests per minute from the same authenticated identity (clave de API or JWT session).
+MERX aplica límites de velocidad por categoría de endpoint, no por clave. Todos los límites de velocidad se miden en solicitudes por minuto desde la misma identidad autenticada (clave de API o sesión JWT).
 
-### Rate Limit Table
+### Tabla de Límites de Velocidad
 
-| Endpoint Category | Rate Limit | Examples |
-|------------------|-----------|---------|
-| Price data | 300/min | `GET /prices`, `GET /prices/history` |
-| Order creation | 10/min | `POST /orders` |
-| Order queries | 60/min | `GET /orders`, `GET /orders/:id` |
-| Withdrawals | 5/min | `POST /withdraw` |
-| Account data | 60/min | `GET /balance`, `GET /keys` |
-| Key management | 10/min | `POST /keys`, `DELETE /keys/:id` |
+| Categoría de Endpoint | Límite de Velocidad | Ejemplos |
+|----------------------|-------------------|---------|
+| Datos de precios | 300/min | `GET /prices`, `GET /prices/history` |
+| Creación de órdenes | 10/min | `POST /orders` |
+| Consultas de órdenes | 60/min | `GET /orders`, `GET /orders/:id` |
+| Retiros | 5/min | `POST /withdraw` |
+| Datos de cuenta | 60/min | `GET /balance`, `GET /keys` |
+| Gestión de claves | 10/min | `POST /keys`, `DELETE /keys/:id` |
 
-### Rate Limit Headers
+### Encabezados de Límite de Velocidad
 
-Every response includes limite de velocidad information in HTTP headers:
+Cada respuesta incluye información de límite de velocidad en encabezados HTTP:
 
 ```
 X-RateLimit-Limit: 300
@@ -202,13 +202,13 @@ X-RateLimit-Remaining: 287
 X-RateLimit-Reset: 1711785660
 ```
 
-- `X-RateLimit-Limit` - maximum requests allowed in the current window.
-- `X-RateLimit-Remaining` - requests remaining before the limit is reached.
-- `X-RateLimit-Reset` - Unix timestamp when the window resets.
+- `X-RateLimit-Limit` - máximo de solicitudes permitidas en la ventana actual.
+- `X-RateLimit-Remaining` - solicitudes restantes antes de alcanzar el límite.
+- `X-RateLimit-Reset` - marca de tiempo Unix cuando se reinicia la ventana.
 
-### When You Hit the Limit
+### Cuando Alcanzas el Límite
 
-Exceeding the limite de velocidad returns HTTP 429 Too Many Requests with a `Retry-After` header indicating how many seconds to wait:
+Exceder el límite de velocidad devuelve HTTP 429 Too Many Requests con un encabezado `Retry-After` indicando cuántos segundos esperar:
 
 ```json
 {
@@ -224,19 +224,19 @@ Exceeding the limite de velocidad returns HTTP 429 Too Many Requests with a `Ret
 }
 ```
 
-### Handling Rate Limits in Code
+### Manejo de Límites de Velocidad en Código
 
-The SDKs handle limite de velocidads automatically with configurable retry behavior:
+Los SDK manejan automáticamente los límites de velocidad con comportamiento de reintentos configurable:
 
 ```javascript
 const merx = new MerxClient({
   apiKey: process.env.MERX_API_KEY,
   maxRetries: 3,
-  retryOnRateLimit: true, // Automatically wait and retry on 429
+  retryOnRateLimit: true, // Automáticamente espera y reintenta en 429
 });
 ```
 
-For raw HTTP clients, implement backoff based on the `Retry-After` header:
+Para clientes HTTP sin procesar, implementa backoff basado en el encabezado `Retry-After`:
 
 ```python
 import requests
@@ -261,48 +261,48 @@ def merx_request(method, path, **kwargs):
     raise Exception("Rate limit retries exhausted")
 ```
 
-## Security Best Practices
+## Mejores Prácticas de Seguridad
 
-### Store Keys in Environment Variables
+### Almacena Claves en Variables de Entorno
 
-Never hardcode clave de APIs in source code. Use environment variables or a secrets manager:
+Nunca codifiques claves de API en el código fuente. Usa variables de entorno o un gestor de secretos:
 
 ```bash
-# .env file (never commit this)
+# archivo .env (nunca confirmes esto)
 MERX_API_KEY=merx_live_k7x9m2p4q8r1s5t3u7v2w6x0y4z...
 ```
 
 ```javascript
-// Load from environment
+// Carga desde el entorno
 const merx = new MerxClient({
   apiKey: process.env.MERX_API_KEY,
 });
 ```
 
-### Rotate Keys Periodically
+### Rota Claves Periódicamente
 
-Create a new key, update your services to use it, then revoke the old key. MERX supports multiple active keys simultaneously, so you can rotate without downtime:
+Crea una clave nueva, actualiza tus servicios para usarla, luego revoca la clave anterior. MERX admite múltiples claves activas simultáneamente, para que puedas rotar sin tiempo de inactividad:
 
-1. Create a new key with the same permissions.
-2. Deploy the new key to your services.
-3. Verify the new key works in production.
-4. Revoke the old key.
+1. Crea una clave nueva con los mismos permisos.
+2. Desplega la clave nueva a tus servicios.
+3. Verifica que la clave nueva funcione en producción.
+4. Revoca la clave anterior.
 
-### Monitor Key Usage
+### Monitorea el Uso de Claves
 
-Review your clave de API list periodically. Revoke keys that are no longer in use. Each key has a `last_used_at` timestamp - if a key has not been used in months, it is a candidate for revocation.
+Revisa tu lista de claves de API periódicamente. Revoca las claves que ya no se usan. Cada clave tiene una marca de tiempo `last_used_at`: si una clave no se ha usado en meses, es candidata para revocación.
 
-### Never Expose Keys in Client-Side Code
+### Nunca Expongas Claves en Código del Lado del Cliente
 
-clave de APIs should never appear in JavaScript running in a browser, mobile app bundles, or any code that end users can inspect. If you need to call MERX from a frontend, proxy the requests through your backend, which holds the clave de API server-side.
+Las claves de API nunca deben aparecer en JavaScript ejecutándose en un navegador, paquetes de aplicaciones móviles o cualquier código que los usuarios finales puedan inspeccionar. Si necesitas llamar a MERX desde una interfaz, envía las solicitudes a través de tu backend, que mantiene la clave de API del lado del servidor.
 
 ```
-Browser -> Your Backend (holds API key) -> MERX API
+Navegador -> Tu Backend (mantiene clave de API) -> API de MERX
 ```
 
-### Use Separate Keys for Separate Environments
+### Usa Claves Separadas para Entornos Separados
 
-Maintain distinct keys for development, staging, and production. If a development key leaks, it cannot affect production. MERX does not currently have environment-scoped keys, but naming conventions help:
+Mantén claves distintas para desarrollo, pruebas y producción. Si una clave de desarrollo se filtra, no puede afectar la producción. MERX actualmente no tiene claves con alcance de entorno, pero las convenciones de nombres ayudan:
 
 ```
 dev-price-monitor
@@ -311,32 +311,33 @@ prod-order-bot
 prod-balance-alerter
 ```
 
-### Audit on Suspicion
+### Audita en Caso de Sospecha
 
-If you suspect a key has been compromised, revoke it immediately and create a replacement. Check your recent order and withdrawal history for unauthorized activity. MERX logs all clave de API usage with IP addresses, which can help identify the source of unauthorized access.
+Si sospechas que una clave ha sido comprometida, revócala inmediatamente y crea un reemplazo. Verifica tu historial reciente de órdenes y retiros para actividad no autorizada. MERX registra todo el uso de claves de API con direcciones IP, lo que puede ayudar a identificar la fuente del acceso no autorizado.
 
-## Putting It All Together
+## Juntando Todo
 
-A complete authentication setup for a production system typically looks like this:
+Una configuración de autenticación completa para un sistema de producción típicamente se ve así:
 
-1. Log in via the web dashboard to get a JWT session.
-2. Create separate clave de APIs for each service: order bot, monitoring, reporting.
-3. Assign minimal permissions to each key.
-4. Store keys in your secrets manager or environment variables.
-5. Implement limite de velocidad handling with automatic retry.
-6. Set up key rotation on a regular schedule (quarterly is reasonable).
-7. Monitor key usage and revoke unused keys.
+1. Inicia sesión a través del panel web para obtener una sesión JWT.
+2. Crea claves de API separadas para cada servicio: bot de órdenes, monitoreo, reportes.
+3. Asigna permisos mínimos a cada clave.
+4. Almacena las claves en tu gestor de secretos o variables de entorno.
+5. Implementa manejo de límites de velocidad con reintentos automáticos.
+6. Configura rotación de claves en un horario regular (trimestral es razonable).
+7. Monitorea el uso de claves y revoca las claves no utilizadas.
 
-Authentication is the foundation of every MERX integration. Spending an hour getting it right saves days of debugging and security incidents down the line.
+La autenticación es el fundamento de cada integración de MERX. Dedicar una hora a hacerlo bien ahorra días de depuración e incidentes de seguridad más adelante.
 
 - Plataforma y panel: [merx.exchange](https://merx.exchange)
-- Full API reference: [merx.exchange/docs](https://merx.exchange/docs)
+- Referencia completa de API: [merx.exchange/docs](https://merx.exchange/docs)
 - SDK de JavaScript: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 - SDK de Python: [github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin necesidad de clave de API para herramientas de solo lectura:
 
 ```json
 {
@@ -348,6 +349,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregúntale a tu agente de IA: "¿Cuál es el energy de TRON más barato en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

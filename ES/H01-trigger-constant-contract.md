@@ -1,47 +1,47 @@
-# Como triggerConstantContract permite la simulacion exacta de energia
+# Cómo triggerConstantContract Permite la Simulación Exacta de Energía
 
-Every developer who has purchased TRON energy has faced the same problem: how much energy does my transaction actually need? The standard approach is to use hardcoded estimates -- 65,000 for a USDT transfer, 200,000 for a DEX swap -- and hope the estimate is close enough. It usually is not.
+Todo desarrollador que ha comprado energía de TRON se ha enfrentado al mismo problema: ¿cuánta energía necesita realmente mi transacción? El enfoque estándar es usar estimaciones codificadas — 65.000 para una transferencia USDT, 200.000 para un intercambio DEX — y esperar que la estimación sea lo suficientemente cercana. Generalmente no lo es.
 
-The solution exists in the TRON protocol itself: `triggerConstantContract`, a dry-run API that simulates contrato inteligente execution without broadcasting a transaction. This article provides a technical deep-dive into how this mechanism works, how MERX uses it for precise estimacion de energia, and why it produces fundamentally better results than hardcoded values.
+La solución existe en el protocolo TRON mismo: `triggerConstantContract`, una API de simulación que ejecuta contratos inteligentes sin transmitir una transacción. Este artículo proporciona un análisis técnico profundo de cómo funciona este mecanismo, cómo MERX lo utiliza para estimaciones de energía precisas, y por qué produce resultados fundamentalmente mejores que los valores codificados.
 
-## The Problem with Hardcoded Estimates
+## El Problema con las Estimaciones Codificadas
 
-Consider a USDT transfer. The commonly cited figure is 65,000 energy. But the actual energy consumed depends on multiple factors:
+Considera una transferencia USDT. La cifra comúnmente citada es 65.000 de energía. Pero la energía real consumida depende de múltiples factores:
 
-- **First-time recipient**: If the recipient address has never held USDT, the contract must create a new balance mapping. This storage allocation costs significantly more energy than updating an existing balance.
-- **Contract state**: The USDT contract's internal state (total holder count, storage layout) affects gas consumption.
-- **Approval state**: If the transfer involves an approved allowance (transferFrom vs direct transfer), the execution path and costo de energia differ.
-- **Token amount**: While amount does not directly affect energy in most ERC-20/TRC-20 implementations, some tokens with custom logic (taxes, rebasing, hooks) consume variable energy based on the amount.
+- **Destinatario por primera vez**: Si la dirección del destinatario nunca ha tenido USDT, el contrato debe crear un nuevo mapeo de saldo. Esta asignación de almacenamiento cuesta significativamente más energía que actualizar un saldo existente.
+- **Estado del contrato**: El estado interno del contrato USDT (recuento total de titulares, diseño de almacenamiento) afecta el consumo de gas.
+- **Estado de aprobación**: Si la transferencia implica una asignación aprobada (transferFrom vs transferencia directa), la ruta de ejecución y el costo de energía difieren.
+- **Cantidad de token**: Aunque la cantidad no afecta directamente la energía en la mayoría de implementaciones ERC-20/TRC-20, algunos tokens con lógica personalizada (impuestos, rebasales, hooks) consumen energía variable según la cantidad.
 
-A "65,000 energy" USDT transfer might actually consume:
+Una transferencia USDT de "65.000 energía" podría consumir realmente:
 
-- 31,895 energy (direct transfer to existing holder, optimal path)
-- 64,285 energy (standard transfer to existing holder)
-- 65,527 energy (transfer to new holder, new storage slot)
-- 94,000+ energy (complex token with transfer hooks)
+- 31.895 de energía (transferencia directa a titular existente, ruta óptima)
+- 64.285 de energía (transferencia estándar a titular existente)
+- 65.527 de energía (transferencia a nuevo titular, nuevo slot de almacenamiento)
+- 94.000+ de energía (token complejo con hooks de transferencia)
 
-Using 65,000 as a fixed estimate means you over-purchase in some cases (wasting money) and under-purchase in others (causing partial TRX burn).
+Usar 65.000 como estimación fija significa que sobre-compras en algunos casos (desperdiciando dinero) e infra-compras en otros (causando quemas parciales de TRX).
 
-## What triggerConstantContract Does
+## Qué Hace triggerConstantContract
 
-`triggerConstantContract` is a TRON full node API method that executes a contrato inteligente call in a read-only simulation environment. The node processes the call exactly as it would for a real transaction -- including all storage reads, state checks, and computational steps -- but does not:
+`triggerConstantContract` es un método API de nodos completos de TRON que ejecuta una llamada de contrato inteligente en un entorno de simulación de solo lectura. El nodo procesa la llamada exactamente como lo haría para una transacción real — incluyendo todas las lecturas de almacenamiento, verificaciones de estado y pasos computacionales — pero no:
 
-- Broadcast the transaction to the network
-- Modify any blockchain state
-- Consume any actual energy or TRX
-- Require any balance or authorization
+- Transmite la transacción a la red
+- Modifica ningún estado de blockchain
+- Consume energía o TRX reales
+- Requiere ningún saldo o autorización
 
-The response includes the exact energy (gas) consumed during simulation, along with the return value and any state changes that would have occurred.
+La respuesta incluye la energía exacta (gas) consumida durante la simulación, junto con el valor de retorno y cualquier cambio de estado que hubiera ocurrido.
 
-### API Endpoint
+### Punto Final de API
 
-The method is available through TRON full nodes and TronGrid:
+El método está disponible a través de nodos completos de TRON y TronGrid:
 
 ```
 POST https://api.trongrid.io/wallet/triggerconstantcontract
 ```
 
-### Request Structure
+### Estructura de Solicitud
 
 ```json
 {
@@ -53,14 +53,14 @@ POST https://api.trongrid.io/wallet/triggerconstantcontract
 }
 ```
 
-The key fields:
+Los campos clave:
 
-- **owner_address**: The address that would send the transaction (affects storage read costs and authorization checks)
-- **contract_address**: The contrato inteligente to call
-- **function_selector**: The function signature in Solidity format
-- **parameter**: ABI-encoded function parameters
+- **owner_address**: La dirección que enviaría la transacción (afecta los costos de lectura de almacenamiento y verificaciones de autorización)
+- **contract_address**: El contrato inteligente a llamar
+- **function_selector**: La firma de función en formato Solidity
+- **parameter**: Parámetros de función codificados en ABI
 
-### Response Structure
+### Estructura de Respuesta
 
 ```json
 {
@@ -77,37 +77,37 @@ The key fields:
 }
 ```
 
-The `energy_used` field contains the exact consumo de energia for this specific call with these specific parameters against the current contract state.
+El campo `energy_used` contiene el consumo exacto de energía para esta llamada específica con estos parámetros específicos contra el estado actual del contrato.
 
-## ABI Encoding
+## Codificación ABI
 
-The `parameter` field requires ABI-encoded function arguments. Understanding ABI encoding is necessary for constructing correct simulation requests.
+El campo `parameter` requiere argumentos de función codificados en ABI. Es necesario entender la codificación ABI para construir solicitudes de simulación correctas.
 
-### Basic Types
+### Tipos Básicos
 
-ABI encoding pads all values to 32 bytes (64 hex characters):
+La codificación ABI rellena todos los valores a 32 bytes (64 caracteres hexadecimales):
 
 ```
-address: Left-pad to 32 bytes
+address: Rellenar a la izquierda a 32 bytes
   TJGPeXwDpe6MBY2gwGPVbXbNJhkALrfLjX
   -> 0000000000000000000000005e09d2c48fee51bfb71e4f4a5d3e2f2c3a8b7d01
 
-uint256: Left-pad to 32 bytes
-  1000000 (1 USDT in 6-decimal format)
+uint256: Rellenar a la izquierda a 32 bytes
+  1000000 (1 USDT en formato de 6 decimales)
   -> 00000000000000000000000000000000000000000000000000000000000f4240
 ```
 
-### Encoding a USDT Transfer
+### Codificación de una Transferencia USDT
 
-For `transfer(address,uint256)` with recipient `TRecipient...` and amount `1000000`:
+Para `transfer(address,uint256)` con destinatario `TRecipient...` y cantidad `1000000`:
 
 ```
 parameter = <recipient_padded_32_bytes><amount_padded_32_bytes>
 ```
 
-### Using TronWeb for ABI Encoding
+### Usando TronWeb para Codificación ABI
 
-TronWeb simplifies ABI encoding:
+TronWeb simplifica la codificación ABI:
 
 ```typescript
 import TronWeb from 'tronweb';
@@ -117,9 +117,9 @@ const tronWeb = new TronWeb({
   headers: { 'TRON-PRO-API-KEY': process.env.TRONGRID_KEY }
 });
 
-// Method 1: Using triggerConstantContract directly
+// Método 1: Usando triggerConstantContract directamente
 const result = await tronWeb.transactionBuilder.triggerConstantContract(
-  'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', // USDT contract
+  'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', // contrato USDT
   'transfer(address,uint256)',
   {},
   [
@@ -129,15 +129,15 @@ const result = await tronWeb.transactionBuilder.triggerConstantContract(
   senderAddress
 );
 
-console.log(`Energy used: ${result.energy_used}`);
+console.log(`Energía usada: ${result.energy_used}`);
 ```
 
-### Complex Function Signatures
+### Firmas de Función Complejas
 
-For more complex calls (DEX swaps, NFT mints), the ABI encoding includes multiple parameters and potentially dynamic types:
+Para llamadas más complejas (intercambios DEX, acuñación de NFT), la codificación ABI incluye múltiples parámetros y potencialmente tipos dinámicos:
 
 ```typescript
-// SunSwap swap simulation
+// Simulación de intercambio SunSwap
 const swapResult = await tronWeb.transactionBuilder.triggerConstantContract(
   SUNSWAP_ROUTER_ADDRESS,
   'swapExactTokensForTokens(uint256,uint256,address[],address,uint256)',
@@ -152,15 +152,15 @@ const swapResult = await tronWeb.transactionBuilder.triggerConstantContract(
   senderAddress
 );
 
-console.log(`Swap energy: ${swapResult.energy_used}`);
-// Might return 187,432 instead of the assumed 200,000
+console.log(`Energía de intercambio: ${swapResult.energy_used}`);
+// Podría devolver 187.432 en lugar de los 200.000 asumidos
 ```
 
-## How MERX Uses triggerConstantContract
+## Cómo MERX Usa triggerConstantContract
 
-MERX wraps the triggerConstantContract functionality in its `estimateEnergy` method, adding several layers of value:
+MERX envuelve la funcionalidad de triggerConstantContract en su método `estimateEnergy`, agregando varios niveles de valor:
 
-### Simplified Interface
+### Interfaz Simplificada
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -174,17 +174,17 @@ const estimate = await merx.estimateEnergy({
   owner_address: senderAddress
 });
 
-console.log(`Exact energy: ${estimate.energy_required}`);
+console.log(`Energía exacta: ${estimate.energy_required}`);
 ```
 
-MERX handles ABI encoding internally, so you pass human-readable parameters instead of hex-encoded bytes.
+MERX maneja la codificación ABI internamente, por lo que pasas parámetros legibles por humanos en lugar de bytes codificados en hexadecimal.
 
-### Integration with Pricing
+### Integración con Precios
 
-The estimate integrates directly with the pricing engine:
+La estimación se integra directamente con el motor de precios:
 
 ```typescript
-// Estimate energy
+// Estimar energía
 const estimate = await merx.estimateEnergy({
   contract_address: USDT_CONTRACT,
   function_selector: 'transfer(address,uint256)',
@@ -192,28 +192,28 @@ const estimate = await merx.estimateEnergy({
   owner_address: sender
 });
 
-// Get price for exact amount
+// Obtener precio para cantidad exacta
 const prices = await merx.getPrices({
   energy_amount: estimate.energy_required,
   duration: '5m'
 });
 
-// Buy exactly what you need at the best price
+// Comprar exactamente lo que necesitas al mejor precio
 const order = await merx.createOrder({
   energy_amount: estimate.energy_required,
   duration: '5m',
   target_address: sender
 });
 
-// Total cost is minimized: exact amount at best price
+// El costo total se minimiza: cantidad exacta al mejor precio
 const costTrx =
   (prices.best.price_sun * estimate.energy_required) / 1e6;
-console.log(`Total cost: ${costTrx.toFixed(4)} TRX`);
+console.log(`Costo total: ${costTrx.toFixed(4)} TRX`);
 ```
 
-### Error Detection
+### Detección de Errores
 
-If the simulated transaction would revert (insufficient balance, unauthorized call, contract error), the simulation catches this before you spend money on energy:
+Si la transacción simulada se revertería (saldo insuficiente, llamada no autorizada, error de contrato), la simulación lo detecta antes de que gastes dinero en energía:
 
 ```typescript
 try {
@@ -226,50 +226,50 @@ try {
 } catch (error) {
   if (error.code === 'SIMULATION_REVERT') {
     console.error(
-      'Transaction would fail: ' + error.message
+      'La transacción fallaría: ' + error.message
     );
-    // Do not buy energy for a transaction that will fail
+    // No compres energía para una transacción que no puede tener éxito
   }
 }
 ```
 
-This prevents the common and expensive mistake of buying energy for a transaction that cannot succeed.
+Esto previene el error común y costoso de comprar energía para una transacción que no puede tener éxito.
 
-## Comparison with Hardcoded Estimates
+## Comparación con Estimaciones Codificadas
 
-### Accuracy
+### Precisión
 
-| Transaction Type | Hardcoded Estimate | triggerConstantContract | Difference |
+| Tipo de Transacción | Estimación Codificada | triggerConstantContract | Diferencia |
 |---|---|---|---|
-| USDT transfer (existing holder) | 65,000 | 64,285 | -1.1% |
-| USDT transfer (new holder) | 65,000 | 65,527 | +0.8% |
-| USDT transferFrom | 65,000 | 51,481 | -20.8% |
-| SunSwap simple swap | 200,000 | 143,287 | -28.4% |
-| SunSwap multi-hop swap | 200,000 | 212,456 | +6.2% |
-| NFT mint (simple) | 150,000 | 112,340 | -25.1% |
-| NFT mint (complex) | 150,000 | 267,891 | +78.6% |
+| Transferencia USDT (titular existente) | 65.000 | 64.285 | -1,1% |
+| Transferencia USDT (nuevo titular) | 65.000 | 65.527 | +0,8% |
+| USDT transferFrom | 65.000 | 51.481 | -20,8% |
+| Intercambio SunSwap simple | 200.000 | 143.287 | -28,4% |
+| Intercambio SunSwap multi-salto | 200.000 | 212.456 | +6,2% |
+| Acuñación NFT (simple) | 150.000 | 112.340 | -25,1% |
+| Acuñación NFT (compleja) | 150.000 | 267.891 | +78,6% |
 
-The differences are not random noise -- they are consistent for given transaction types and states. Hardcoded estimates are wrong by 1-80% depending on the transaction.
+Las diferencias no son ruido aleatorio — son consistentes para tipos de transacción y estados dados. Las estimaciones codificadas están erradas entre 1-80% dependiendo de la transacción.
 
-### Cost Impact
+### Impacto en Costos
 
-For a system processing 1,000 USDT transfers daily, the cost difference between hardcoded (65,000) and exact (average 63,500) estimation at 28 SUN:
+Para un sistema que procesa 1.000 transferencias USDT diarias, la diferencia de costo entre estimación codificada (65.000) y exacta (promedio 63.500) a 28 SUN:
 
-- Hardcoded: 65,000 x 1,000 x 28 = 1,820,000,000 SUN = 1,820 TRX
-- Exact: 63,500 x 1,000 x 28 = 1,778,000,000 SUN = 1,778 TRX
-- Daily savings: 42 TRX ($5.04)
-- Monthly savings: 1,260 TRX ($151)
-- Annual savings: 15,330 TRX ($1,840)
+- Codificada: 65.000 x 1.000 x 28 = 1.820.000.000 SUN = 1.820 TRX
+- Exacta: 63.500 x 1.000 x 28 = 1.778.000.000 SUN = 1.778 TRX
+- Ahorro diario: 42 TRX ($5,04)
+- Ahorro mensual: 1.260 TRX ($151)
+- Ahorro anual: 15.330 TRX ($1.840)
 
-For DEX operations where the hardcoded estimate is further off (200,000 vs actual ~155,000 average), the savings are proportionally larger.
+Para operaciones DEX donde la estimación codificada está más desviada (200.000 vs actual ~155.000 promedio), los ahorros son proporcionalmente mayores.
 
-## Edge Cases and Considerations
+## Casos Extremos y Consideraciones
 
-### State-Dependent Results
+### Resultados Dependientes del Estado
 
-Simulation results are valid for the current contract state. If the contract state changes between simulation and execution (another transaction modifies a relevant storage slot), the actual consumo de energia might differ slightly.
+Los resultados de la simulación son válidos para el estado actual del contrato. Si el estado del contrato cambia entre la simulación y la ejecución (otra transacción modifica un slot de almacenamiento relevante), el consumo real de energía podría diferir ligeramente.
 
-En la practica, this is rarely significant for common operations like token transfers. For complex DeFi interactions that depend on pool balances or global state, add a small buffer (2-5%) to the simulation result:
+En la práctica, esto rara vez es significativo para operaciones comunes como transferencias de tokens. Para interacciones complejas de DeFi que dependen de saldos de pools o estado global, añade un pequeño búfer (2-5%) al resultado de la simulación:
 
 ```typescript
 const estimate = await merx.estimateEnergy({
@@ -279,28 +279,28 @@ const estimate = await merx.estimateEnergy({
   owner_address: sender
 });
 
-// Add 5% buffer for state-dependent operations
+// Añadir búfer del 5% para operaciones dependientes del estado
 const energyToOrder =
   Math.ceil(estimate.energy_required * 1.05);
 ```
 
-### First-Call vs Subsequent Calls
+### Primera Llamada vs Llamadas Posteriores
 
-Some contrato inteligentes have initialization logic that runs on the first interaction from a new address. The first call might cost more energy than subsequent calls. Simulation captures this correctly because it reflects the current state -- if the address has never interacted with the contract, the simulation includes the initialization cost.
+Algunos contratos inteligentes tienen lógica de inicialización que se ejecuta en la primera interacción desde una dirección nueva. La primera llamada podría costar más energía que las llamadas posteriores. La simulación captura esto correctamente porque refleja el estado actual — si la dirección nunca ha interactuado con el contrato, la simulación incluye el costo de inicialización.
 
-### Gas vs Energy
+### Gas vs Energía
 
-In TRON's EVM implementation, gas and energy are conceptually equivalent but use different units. The `triggerConstantContract` response returns the value in unidad de energias directly, matching what you need to purchase from providers.
+En la implementación EVM de TRON, gas y energía son conceptualmente equivalentes pero usan diferentes unidades. La respuesta de `triggerConstantContract` devuelve el valor en unidades de energía directamente, coincidiendo con lo que necesitas comprar a proveedores.
 
-### Rate Limits
+### Límites de Velocidad
 
-TronGrid applies limite de velocidads to API calls, including `triggerConstantContract`. For high-frequency operations, use a paid TronGrid plan or run your own full node. MERX's estimation endpoint handles limite de velocidading internally by distributing queries across multiple full node connections.
+TronGrid aplica límites de velocidad a llamadas de API, incluyendo `triggerConstantContract`. Para operaciones de alta frecuencia, utiliza un plan TronGrid de pago o ejecuta tu propio nodo completo. El punto final de estimación de MERX maneja los límites de velocidad internamente distribuyendo consultas entre múltiples conexiones de nodos completos.
 
-## Integration Patterns
+## Patrones de Integración
 
-### Pre-Transaction Estimation
+### Estimación Pre-Transacción
 
-The most common pattern: estimate before every transaction.
+El patrón más común: estimar antes de cada transacción.
 
 ```typescript
 async function sendWithExactEnergy(
@@ -309,7 +309,7 @@ async function sendWithExactEnergy(
   params: any[],
   sender: string
 ): Promise<string> {
-  // 1. Simulate
+  // 1. Simular
   const estimate = await merx.estimateEnergy({
     contract_address: contract,
     function_selector: method,
@@ -317,7 +317,7 @@ async function sendWithExactEnergy(
     owner_address: sender
   });
 
-  // 2. Purchase exact energy
+  // 2. Comprar energía exacta
   const order = await merx.createOrder({
     energy_amount: estimate.energy_required,
     duration: '5m',
@@ -326,16 +326,16 @@ async function sendWithExactEnergy(
 
   await waitForFill(order.id);
 
-  // 3. Execute the transaction with zero waste
+  // 3. Ejecutar la transacción sin desperdicio
   return await broadcastTransaction(
     contract, method, params, sender
   );
 }
 ```
 
-### Batch Estimation
+### Estimación por Lotes
 
-For batch operations, simulate all transactions and purchase energy in aggregate:
+Para operaciones por lotes, simula todas las transacciones y compra energía en agregado:
 
 ```typescript
 async function batchWithExactEnergy(
@@ -353,7 +353,7 @@ async function batchWithExactEnergy(
     totalEnergy += estimate.energy_required;
   }
 
-  // Single purchase for all operations
+  // Compra única para todas las operaciones
   await merx.createOrder({
     energy_amount: Math.ceil(totalEnergy * 1.02),
     duration: '30m',
@@ -362,9 +362,9 @@ async function batchWithExactEnergy(
 }
 ```
 
-### Cached Estimation
+### Estimación en Caché
 
-For repetitive operations with the same contract and similar parameters, cache the estimate and refresh periodically:
+Para operaciones repetitivas con el mismo contrato y parámetros similares, almacena en caché la estimación y actualiza periódicamente:
 
 ```typescript
 class EstimationCache {
@@ -372,7 +372,7 @@ class EstimationCache {
     energy: number;
     timestamp: number;
   }>();
-  private ttlMs = 300000; // 5 minutes
+  private ttlMs = 300000; // 5 minutos
 
   async getEstimate(
     contract: string,
@@ -404,23 +404,23 @@ class EstimationCache {
 }
 ```
 
-Caching is appropriate for operations where the costo de energia is stable (token transfers to existing holders) but should be avoided for operations where the cost varies significantly (DeFi swaps where pool state changes frequently).
+El almacenamiento en caché es apropiado para operaciones donde el costo de energía es estable (transferencias de tokens a titulares existentes) pero debe evitarse para operaciones donde el costo varía significativamente (intercambios DeFi donde el estado del pool cambia frecuentemente).
 
-## Conclusion
+## Conclusión
 
-`triggerConstantContract` transforms compra de energia from an estimation game into a precise calculation. Instead of guessing how much energy your transaction needs and hoping the guess is close enough, you simulate the exact transaction against the current contract state and get the exact number.
+`triggerConstantContract` transforma la compra de energía de un juego de estimación a un cálculo preciso. En lugar de adivinar cuánta energía necesita tu transacción y esperar que la adivinanza sea lo suficientemente cercana, simulas la transacción exacta contra el estado actual del contrato y obtienes el número exacto.
 
-MERX integrates this capability directly into its compra de energia workflow. Simulate, get the exact amount, purchase at the best available price from seven providers, and execute the transaction with zero waste and zero TRX burn.
+MERX integra esta capacidad directamente en su flujo de trabajo de compra de energía. Simula, obtén la cantidad exacta, compra al mejor precio disponible de siete proveedores, y ejecuta la transacción sin desperdicio y sin quema de TRX.
 
-The technical mechanism is straightforward -- a dry-run of your contrato inteligente call that reports consumo de energia without broadcasting. The practical impact is significant -- eliminating both the waste of over-purchasing and the penalties of under-purchasing, while catching transactions that would fail before you spend money on energy.
+El mecanismo técnico es directo — una ejecución en seco de tu llamada de contrato inteligente que reporta consumo de energía sin transmitir. El impacto práctico es significativo — eliminando tanto el desperdicio de sobre-compra como las penalizaciones de infra-compra, mientras detectas transacciones que fallarían antes de gastar dinero en energía.
 
-For developers building on TRON, exact simulation is not an optimization -- it is a necessity for cost-effective operations at any meaningful scale.
+Para desarrolladores construyendo en TRON, la simulación exacta no es una optimización — es una necesidad para operaciones rentables a cualquier escala significativa.
 
-Explore the estimation API at [https://merx.exchange/docs](https://merx.exchange/docs) or try the platform at [https://merx.exchange](https://merx.exchange). For AI agent integration with estimation capabilities, see the MCP server at [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).
+Explora la API de estimación en [https://merx.exchange/docs](https://merx.exchange/docs) o prueba la plataforma en [https://merx.exchange](https://merx.exchange). Para integración de agentes de IA con capacidades de estimación, consulta el servidor MCP en [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).
 
-## Try It Now with AI
+## Pruébalo Ahora con IA
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+Añade MERX a Claude Desktop o cualquier cliente compatible con MCP — sin instalación, sin necesidad de clave de API para herramientas de solo lectura:
 
 ```json
 {
@@ -432,6 +432,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es el TRON energy más barato ahora?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

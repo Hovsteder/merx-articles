@@ -1,24 +1,24 @@
-# Ресурсно-осведомленные транзакции: как MERX автоматически оптимизирует каждую TX
+# Осведомлённые о ресурсах транзакции: Как MERX автоматически оптимизирует каждую TX
 
-## The Hidden Cost of Ignoring TRON Resources
+## Скрытая стоимость игнорирования ресурсов TRON
 
-Every transaction on the TRON network consumes two types of resources: energy and bandwidth. Energy powers smart contract execution - every opcode, every storage write, every token transfer. Bandwidth covers the raw bytes of the transaction itself. When you do not have these resources delegated or staked, the network burns your TRX to cover the cost.
+Каждая транзакция в сети TRON потребляет два типа ресурсов: energy и bandwidth. Energy питает выполнение смарт-контрактов - каждый опкод, каждая запись в хранилище, каждый перевод токена. Bandwidth охватывает сырые байты самой транзакции. Когда у вас нет этих ресурсов в делегировании или стейкинге, сеть сжигает ваш TRX для покрытия стоимости.
 
-For a simple USDT transfer, this burn can reach 27 TRX - roughly $7 at current prices. For a DEX swap, it can exceed 50 TRX. Most wallets and SDKs simply let this happen. They broadcast the transaction, the network burns your TRX, and you pay the maximum possible fee without ever being told there was a cheaper option.
+Для простого перевода USDT, это сжигание может достичь 27 TRX - примерно $7 по текущим ценам. Для свопа на DEX это может превысить 50 TRX. Большинство кошельков и SDK просто позволяют этому происходить. Они транслируют транзакцию, сеть сжигает ваш TRX, и вы платите максимально возможную комиссию, даже не узнав, что была более дешёвая опция.
 
-MERX takes a fundamentally different approach. Every transaction that passes through the MERX MCP server goes through a resource-aware pipeline that estimates costs, checks existing resources, purchases only the deficit, waits for delegation, and only then signs and broadcasts. The result is consistent 80-90% savings on every transaction.
+MERX придерживается принципиально иного подхода. Каждая транзакция, проходящая через MCP-сервер MERX, проходит через конвейер, осведомлённый о ресурсах, который оценивает затраты, проверяет существующие ресурсы, покупает только дефицит, ожидает делегирования, и только потом подписывает и транслирует. Результатом является последовательная экономия 80-90% на каждой транзакции.
 
-This article explains exactly how that pipeline works.
+Эта статья объясняет точно, как работает этот конвейер.
 
-## Конвейер ресурсно-осведомленных транзакций
+## Конвейер транзакций, осведомлённых о ресурсах
 
-The pipeline has six stages. Each stage must complete before the next begins. Skipping a stage or reordering them creates race conditions that can result in failed transactions or wasted resource purchases.
+Конвейер состоит из шести этапов. Каждый этап должен завершиться до начала следующего. Пропуск этапа или переупорядочивание создаёт состояния гонки, которые могут привести к неудачным транзакциям или напрасным покупкам ресурсов.
 
-### Stage 1: Estimate Energy and Bandwidth
+### Этап 1: Оцените Energy и Bandwidth
 
-Before doing anything, MERX needs to know exactly how many resources this specific transaction will consume. This is not a lookup table or a hardcoded constant. MERX uses `triggerConstantContract` to simulate the exact transaction with the exact parameters against the current state of the blockchain.
+Перед всем прочим MERX должен знать точно, сколько ресурсов эта конкретная транзакция потребит. Это не таблица поиска или жестко закодированная константа. MERX использует `triggerConstantContract` для симуляции точной транзакции с точными параметрами против текущего состояния блокчейна.
 
-For a USDT transfer of 100 USDT from address A to address B:
+Для передачи USDT в размере 100 USDT с адреса A на адрес B:
 
 ```
 Tool: estimate_transaction_cost
@@ -40,9 +40,9 @@ Response:
 }
 ```
 
-The simulation runs against the live blockchain state. If the recipient has never held USDT before, the energy cost will be higher (because the contract needs to create a new storage slot). If the sender's allowance needs updating, that adds energy. Every variable is accounted for.
+Симуляция запускается против живого состояния блокчейна. Если получатель никогда раньше не владел USDT, затраты на energy будут выше (потому что контракту нужно создать новый слот хранилища). Если allowance отправителя требует обновления, это добавляет energy. Каждая переменная учитывается.
 
-For a SunSwap trade, the simulation captures the exact routing, slippage calculation, and liquidity pool state:
+Для торговли SunSwap симуляция захватывает точную маршрутизацию, расчёт slippage и состояние пула ликвидности:
 
 ```
 Simulation result for SunSwap V2:
@@ -51,11 +51,11 @@ Simulation result for SunSwap V2:
 - Router path: TRX -> USDT via pool 0x...
 ```
 
-This precision is critical. Overestimating wastes money on unused energy. Underestimating causes the transaction to fail, and you lose both the energy purchase cost and the failed transaction's bandwidth.
+Эта точность критична. Переоценка напрасно растрачивает деньги на неиспользованную energy. Недооценка вызывает отказ транзакции, и вы теряете как стоимость покупки energy, так и bandwidth неудачной транзакции.
 
-### Stage 2: Check Current Resources
+### Этап 2: Проверьте текущие ресурсы
 
-The agent's address may already have some resources from previous delegations, staking, or the daily free bandwidth allowance. MERX checks what is already available:
+Адрес агента может уже иметь некоторые ресурсы от предыдущих делегирований, стейкинга или дневного бесплатного allowance bandwidth. MERX проверяет, что уже доступно:
 
 ```
 Tool: check_address_resources
@@ -78,11 +78,11 @@ Response:
 }
 ```
 
-In this example, the address has 12,000 energy available and 1,400 bandwidth from the daily free allocation.
+В этом примере адрес имеет 12 000 доступной energy и 1 400 bandwidth из дневного бесплатного allowance.
 
-### Stage 3: Calculate the Deficit
+### Этап 3: Рассчитайте дефицит
 
-MERX subtracts available resources from required resources to determine exactly what needs to be purchased:
+MERX вычитает доступные ресурсы из требуемых ресурсов, чтобы определить точно, что нужно купить:
 
 ```
 Energy needed:     64,895
@@ -95,15 +95,15 @@ Bandwidth available: 1,400
 Bandwidth deficit:     0 (sufficient)
 ```
 
-Two important rules apply here:
+Здесь применяются два важных правила:
 
-**Energy minimum: 65,000 units.** The TRON energy delegation market operates in minimum blocks of approximately 65,000 energy. If the deficit is less than 65,000, MERX rounds up to 65,000. If the deficit is 0 (the address already has enough energy), no purchase is made.
+**Минимум energy: 65 000 единиц.** Рынок делегирования energy TRON работает с минимальными блоками примерно в 65 000 energy. Если дефицит меньше 65 000, MERX округляет до 65 000. Если дефицит равен 0 (адрес уже имеет достаточно energy), покупка не совершается.
 
-**Bandwidth threshold: 1,500 units.** If the bandwidth deficit is less than 1,500, MERX skips the bandwidth purchase entirely. Every TRON address gets 1,500 free bandwidth per day, which regenerates continuously. For most single transactions, the free allocation is sufficient. Purchasing bandwidth only makes sense for high-frequency operations that exhaust the daily allowance.
+**Порог bandwidth: 1 500 единиц.** Если дефицит bandwidth меньше 1 500, MERX полностью пропускает покупку bandwidth. Каждый адрес TRON получает 1 500 бесплатного bandwidth в день, который непрерывно восстанавливается. Для большинства одиночных транзакций бесплатное allowance достаточно. Покупка bandwidth имеет смысл только для высокочастотных операций, которые исчерпывают дневное allowance.
 
-### Stage 4: Purchase the Deficit
+### Этап 4: Купите дефицит
 
-With the exact deficit calculated, MERX queries all available energy providers for the best price:
+С точно рассчитанным дефицитом MERX запрашивает все доступные поставщики energy для получения лучшей цены:
 
 ```
 Tool: get_best_price
@@ -125,7 +125,7 @@ Response:
 }
 ```
 
-MERX places the order with the cheapest provider:
+MERX размещает заказ у самого дешёвого поставщика:
 
 ```
 Tool: create_order
@@ -136,13 +136,13 @@ Input: {
 }
 ```
 
-The order is placed, and the provider begins the delegation process.
+Заказ размещается, и поставщик начинает процесс делегирования.
 
-### Stage 5: Poll Until Delegation Arrives
+### Этап 5: Опрашивайте до прихода делегирования
 
-This is the stage most implementations get wrong. Energy delegation on TRON is not instant. After the provider broadcasts the delegation transaction, it must be confirmed by the network. This typically takes 3-6 seconds but can take longer during network congestion.
+Это этап, который неправильно реализуют большинство реализаций. Делегирование energy на TRON не является мгновенным. После того как поставщик трансляирует транзакцию делегирования, она должна быть подтверждена сетью. Это обычно занимает 3-6 секунд, но может занять больше времени во время перегрузки сети.
 
-MERX polls the target address's resource balance at regular intervals:
+MERX опрашивает баланс ресурсов целевого адреса с регулярными интервалами:
 
 ```
 Polling cycle:
@@ -152,13 +152,13 @@ Polling cycle:
   -> Proceed to Stage 6
 ```
 
-The polling uses exponential backoff starting at 3 seconds, with a maximum wait of 60 seconds before timing out. If the delegation does not arrive within the timeout window, the pipeline reports an error rather than broadcasting a transaction that would burn TRX.
+Опрос использует экспоненциальный backoff, начиная с 3 секунд, с максимальным ожиданием 60 секунд перед timeout. Если делегирование не прибывает в пределах временного окна, конвейер сообщает об ошибке, а не транслирует транзакцию, которая будет сжигать TRX.
 
-This polling stage is what prevents the race condition that plagues naive implementations. Without it, the sequence would be: buy energy, immediately broadcast transaction, transaction executes before delegation confirms, TRX is burned anyway, and you have paid for both the energy and the burn.
+Этот этап опроса - это то, что предотвращает состояние гонки, которое мучает наивные реализации. Без него, последовательность будет: купить energy, немедленно трансляировать транзакцию, транзакция выполнить до подтверждения делегирования, TRX сжигается в любом случае, и вы заплатили за обе energy и сжигание.
 
-### Stage 6: Sign Locally and Broadcast
+### Этап 6: Подпишите локально и трансляируйте
 
-Only after confirming that the delegated energy is available on-chain does MERX sign and broadcast the actual transaction:
+Только после подтверждения, что делегированная energy доступна в цепи, MERX подписывает и транслирует фактическую транзакцию:
 
 ```
 1. Build transaction object with TronWeb
@@ -167,11 +167,11 @@ Only after confirming that the delegated energy is available on-chain does MERX 
 4. Return transaction hash
 ```
 
-The transaction now executes using the delegated energy, consuming approximately 65,000 energy units instead of burning 27 TRX.
+Транзакция теперь выполняется с использованием делегированной energy, потребляя примерно 65 000 единиц energy вместо сжигания 27 TRX.
 
-## The ensure_resources Tool: The Pipeline in One Call
+## Инструмент ensure_resources: конвейер в одном вызове
 
-For agents that want to use the pipeline without managing each stage individually, MERX provides `ensure_resources`:
+Для агентов, которые хотят использовать конвейер без управления каждым этапом отдельно, MERX предоставляет `ensure_resources`:
 
 ```
 Tool: ensure_resources
@@ -182,13 +182,13 @@ Input: {
 }
 ```
 
-This single tool call executes Stages 2 through 5 internally. It checks current resources, calculates the deficit, finds the best price, places the order, and polls until delegation arrives. The agent receives a response only when the address is fully provisioned and ready for the transaction.
+Этот единственный вызов инструмента внутренне выполняет этапы 2-5. Он проверяет текущие ресурсы, рассчитывает дефицит, находит лучшую цену, размещает заказ и опрашивает до прихода делегирования. Агент получает ответ только когда адрес полностью обеспечен и готов к транзакции.
 
-## Real Example: A SunSwap Trade
+## Реальный пример: торговля SunSwap
 
-Here is the complete pipeline for a real SunSwap V2 trade - swapping 0.1 TRX for USDT.
+Вот полный конвейер для реальной торговли SunSwap V2 - своп 0.1 TRX на USDT.
 
-**Stage 1 - Simulation:**
+**Этап 1 - Симуляция:**
 
 ```
 triggerConstantContract(
@@ -201,7 +201,7 @@ triggerConstantContract(
 Result: energy_estimate = 223,354
 ```
 
-**Stage 2 - Check resources:**
+**Этап 2 - Проверьте ресурсы:**
 
 ```
 Address resources:
@@ -209,7 +209,7 @@ Address resources:
   Bandwidth: 1,420 (free)
 ```
 
-**Stage 3 - Calculate deficit:**
+**Этап 3 - Рассчитайте дефицит:**
 
 ```
 Energy deficit: 223,354
@@ -217,7 +217,7 @@ Energy deficit: 223,354
 Bandwidth deficit: 0 (free allocation covers 345 needed)
 ```
 
-**Stage 4 - Purchase:**
+**Этап 4 - Купите:**
 
 ```
 Best price for 225,000 energy / 1 hour:
@@ -225,14 +225,14 @@ Best price for 225,000 energy / 1 hour:
   Price: 11.82 TRX
 ```
 
-**Stage 5 - Poll:**
+**Этап 5 - Опрашивайте:**
 
 ```
 Delegation confirmed after 4.2 seconds
 Address now has 225,000 energy available
 ```
 
-**Stage 6 - Execute:**
+**Этап 6 - Выполните:**
 
 ```
 Swap transaction broadcast
@@ -243,33 +243,33 @@ Net cost: 11.82 TRX instead of ~53 TRX burned
 Savings: 78%
 ```
 
-The entire pipeline executed autonomously. The agent asked to swap TRX for USDT, and MERX handled every resource calculation, purchase, and timing issue behind the scenes.
+Весь конвейер выполнился автономно. Агент попросил своп TRX на USDT, и MERX обработал каждый расчёт ресурсов, покупку и проблему синхронизации за кулисами.
 
-## Почему порядок операций важен
+## Почему порядок операций имеет значение
 
-The pipeline's strict ordering prevents three categories of failures:
+Строгое упорядочивание конвейера предотвращает три категории отказов:
 
-### Race Condition: Buy Then Immediately Broadcast
+### Состояние гонки: купить и сразу трансляировать
 
-If you buy energy and broadcast the transaction in the same block, the delegation may not have been processed yet. The transaction executes without delegated energy, burns TRX, and you have paid twice - once for the energy (which goes unused) and once for the TRX burn.
+Если вы купите energy и трансляируете транзакцию в том же блоке, делегирование может ещё не быть обработано. Транзакция выполняется без делегированной energy, сжигает TRX, и вы заплатили дважды - один раз за energy (которая остаётся неиспользованной) и один раз за сжигание TRX.
 
-MERX prevents this by polling until delegation is confirmed on-chain before proceeding.
+MERX предотвращает это путём опроса до подтверждения делегирования в цепи перед продолжением.
 
-### Overestimation: Hardcoded Energy Values
+### Переоценка: жестко закодированные значения energy
 
-Many tools use hardcoded energy estimates (e.g., "USDT transfers always cost 65,000 energy"). But the actual cost depends on the specific addresses involved, their token holding history, the contract's internal state, and even the block number. A transfer to a new address costs more than a transfer to an address that already holds the token.
+Многие инструменты используют жестко закодированные оценки energy (например, "передачи USDT всегда стоят 65 000 energy"). Но фактическая стоимость зависит от конкретных задействованных адресов, их истории владения токеном, внутреннего состояния контракта и даже номера блока. Передача на новый адрес стоит больше, чем передача на адрес, который уже владеет токеном.
 
-MERX prevents this by simulating the exact transaction with real parameters against live blockchain state.
+MERX предотвращает это путём симуляции точной транзакции с реальными параметрами против живого состояния блокчейна.
 
-### Underestimation: Insufficient Resources
+### Недооценка: недостаточные ресурсы
 
-If you underestimate energy requirements and the transaction runs out of energy mid-execution, it fails. You lose the bandwidth for the transaction attempt, and the energy you purchased is wasted on a failed transaction.
+Если вы недооцените требования energy и транзакция исчерпает energy во время выполнения, она не удаётся. Вы теряете bandwidth для попытки транзакции, и купленная energy напрасно тратится на неудачную транзакцию.
 
-MERX prevents this by using `triggerConstantContract` for exact simulation and adding a small buffer when ordering.
+MERX предотвращает это путём использования `triggerConstantContract` для точной симуляции и добавления небольшого буфера при заказе.
 
-## Разница на практике
+## Различие на практике
 
-Without resource-aware transactions (standard wallet behavior):
+Без транзакций, осведомлённых о ресурсах (стандартное поведение кошелька):
 
 ```
 USDT transfer: 27 TRX burned (~$7.00)
@@ -277,7 +277,7 @@ SunSwap trade: 53 TRX burned (~$13.75)
 Approve + Swap: 68 TRX burned (~$17.65)
 ```
 
-With MERX resource-aware pipeline:
+С конвейером MERX, осведомлённым о ресурсах:
 
 ```
 USDT transfer: 3.42 TRX (energy purchase)
@@ -285,13 +285,13 @@ SunSwap trade: 11.82 TRX (energy purchase)
 Approve + Swap: 14.93 TRX (energy purchase)
 ```
 
-For an agent executing 100 USDT transfers per day, that is the difference between $700/day and $342/day - over $130,000 in annual savings.
+Для агента, выполняющего 100 передач USDT в день, это разница между $700/день и $342/день - более $130 000 в годовой экономии.
 
 ## Интеграция для разработчиков
 
-If you are building an application that interacts with TRON, integrating the MERX resource-aware pipeline requires no architectural changes. The MCP server handles the entire pipeline internally.
+Если вы создаёте приложение, которое взаимодействует с TRON, интеграция конвейера MERX, осведомлённого о ресурсах, не требует никаких архитектурных изменений. MCP-сервер обрабатывает весь конвейер внутренне.
 
-For direct API integration:
+Для прямой интеграции API:
 
 ```bash
 # Step 1: Get estimation
@@ -308,26 +308,27 @@ curl -X POST https://merx.exchange/api/v1/ensure-resources \
 # Step 3: Broadcast your transaction (signed client-side)
 ```
 
-The `ensure-resources` endpoint handles price comparison, order placement, and delegation polling. Your application receives a response only when the address is ready.
+Endpoint `ensure-resources` обрабатывает сравнение цен, размещение заказа и опрос делегирования. Ваше приложение получает ответ только когда адрес готов.
 
 ## Заключение
 
-Resource-aware transactions are not an optimization. They are the correct way to interact with the TRON network. Broadcasting transactions without first ensuring adequate resources is the equivalent of sending an HTTP request without checking if the server is reachable - it might work, but when it fails, you pay the price.
+Транзакции, осведомлённые о ресурсах, это не оптимизация. Это правильный способ взаимодействия с сетью TRON. Трансляция транзакций без предварительного обеспечения достаточных ресурсов эквивалентна отправке HTTP-запроса без проверки, доступен ли сервер - это может сработать, но когда это не удаётся, вы платите цену.
 
-MERX makes the correct approach the default approach. Every transaction goes through the pipeline. Every resource deficit is calculated precisely. Every purchase is made at the best available price. Every delegation is confirmed before the transaction is broadcast.
+MERX делает правильный подход подходом по умолчанию. Каждая транзакция проходит через конвейер. Каждый дефицит ресурсов рассчитывается точно. Каждая покупка совершается по лучшей доступной цене. Каждое делегирование подтверждается перед трансляцией транзакции.
 
-The result is predictable, minimal-cost transactions on every single interaction with the TRON blockchain.
+Результатом являются предсказуемые, минимально затратные транзакции на каждом единственном взаимодействии с блокчейном TRON.
 
 ---
 
 **Ссылки:**
-- Платформа MERX: [https://merx.exchange](https://merx.exchange)
+- MERX Platform: [https://merx.exchange](https://merx.exchange)
 - MCP Server (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - MCP Server (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с ИИ
+
+Добавьте MERX в Claude Desktop или любой MCP-совместимый клиент -- нулевая установка, никакой API ключ не требуется для инструментов только для чтения:
 
 ```json
 {
@@ -339,6 +340,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите вашего ИИ-агента: "Какая сейчас самая дешёвая energy TRON?" и получите живые цены от всех подключённых поставщиков.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

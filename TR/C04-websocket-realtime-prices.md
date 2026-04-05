@@ -1,46 +1,46 @@
-# WebSocket ile Gercek Zamanli TRON Energy Fiyatlari
+# TRON Enerji Fiyatlarını WebSocket ile Gerçek Zamanda İzleyin
 
-MERX provides a WebSocket endpoint at `wss://merx.exchange/ws` that streams real-time TRON energy and bandwidth prices from all connected providers. This article covers the connection protocol, message format, provider filtering via subscription messages, heartbeat and reconnection strategies, and complete code examples in JavaScript and Python - including a practical price alert bot that notifies you when energy drops below a target price.
+MERX, `wss://merx.exchange/ws` adresinde bir WebSocket uç noktası sağlayarak bağlantılı tüm sağlayıcılardan TRON enerji ve bandwidth fiyatlarını gerçek zamanda aktarır. Bu makale bağlantı protokolünü, ileti biçimini, abonelik iletileri aracılığıyla sağlayıcı filtrelemesini, sinyal kalp atışı ve yeniden bağlantı stratejilerini ve JavaScript ve Python'da tam kod örneklerini kapsar; ayrıca enerji belirli bir hedef fiyatın altına düştüğünde sizi bilgilendiren pratik bir fiyat uyarı botu da içerir.
 
-## Why WebSocket Instead of Polling
+## WebSocket Neden Polling Yerine Kullanılır?
 
-The MERX REST API at `/api/v1/prices` returns current prices from all providers. You can poll it at regular intervals, and with a rate limit of 300 requests per minute, you can refresh every 200 milliseconds if you want.
+MERX REST API'si `/api/v1/prices` adresinde tüm sağlayıcılardan güncel fiyatları döndürür. Bunu düzenli aralıklarla sorgulanabilir ve dakika başına 300 istek sınırı sayesinde isterse 200 milisaniyede bir yenileyebilirsiniz.
 
-But polling has inherent drawbacks. Each request is a full HTTP roundtrip with TLS handshake overhead. You never know the exact moment a price changes - you only discover it at your next poll interval. And if you have many clients, each one hammers the same endpoint independently.
+Ancak polling'in doğasında bulunan dezavantajları vardır. Her istek, TLS el sıkışması yükü ile tam bir HTTP gidiş-dönüş yapılır. Bir fiyatın tam olarak ne zaman değiştiğini hiç bilemezsiniz; bunu sadece sonraki anket aralığınızda keşfedersiniz. Ve çok sayıda istemciniz varsa, her biri aynı uç noktaya bağımsız olarak istekte bulunur.
 
-The WebSocket connection solves all of these. A single persistent connection receives price updates the moment they happen. The MERX price monitor service polls all eight providers every 30 seconds and publishes updates via Redis pub/sub. The WebSocket server subscribes to that channel and fans out updates to all connected clients instantly.
+WebSocket bağlantısı tüm bu sorunları çözer. Tek bir kalıcı bağlantı, fiyat güncellemelerini gerçekleşir gerçekleşmez alır. MERX fiyat izleme hizmeti sekiz sağlayıcının tamamını her 30 saniyede sorgulanır ve güncellemeleri Redis pub/sub aracılığıyla yayınlar. WebSocket sunucusu o kanala abone olur ve güncellemeleri bağlı tüm istemcilere anında dağıtır.
 
-The result: lower latency, lower bandwidth usage, and guaranteed delivery of every price change.
+Sonuç: daha düşük gecikme süresi, daha düşük bant genişliği kullanımı ve her fiyat değişikliğinin garantili teslimi.
 
-## Connection
+## Bağlantı
 
-Connect to the WebSocket endpoint at `wss://merx.exchange/ws`. No authentication is required - price data is public.
+WebSocket uç noktasına `wss://merx.exchange/ws` adresinden bağlanın. Kimlik doğrulama gerekli değildir; fiyat verileri herkese açıktır.
 
-### JavaScript (Browser or Node.js)
+### JavaScript (Tarayıcı veya Node.js)
 
 ```javascript
 const ws = new WebSocket('wss://merx.exchange/ws')
 
 ws.addEventListener('open', () => {
-  console.log('Connected to MERX WebSocket')
+  console.log('MERX WebSocket\'e bağlandı')
 })
 
 ws.addEventListener('message', (event) => {
   const msg = JSON.parse(event.data)
-  console.log(`[${msg.provider}] Price update at ${new Date(msg.ts).toISOString()}`)
+  console.log(`[${msg.provider}] Fiyat güncellemesi ${new Date(msg.ts).toISOString()} tarihinde`)
   console.log(msg.data)
 })
 
 ws.addEventListener('close', (event) => {
-  console.log(`Disconnected: code=${event.code} reason=${event.reason}`)
+  console.log(`Bağlantı kesildi: code=${event.code} reason=${event.reason}`)
 })
 
 ws.addEventListener('error', (error) => {
-  console.error('WebSocket error:', error)
+  console.error('WebSocket hatası:', error)
 })
 ```
 
-### Python (using websockets library)
+### Python (websockets kütüphanesi kullanarak)
 
 ```python
 import asyncio
@@ -50,7 +50,7 @@ import websockets
 async def listen():
     uri = "wss://merx.exchange/ws"
     async with websockets.connect(uri) as ws:
-        print("Connected to MERX WebSocket")
+        print("MERX WebSocket\'e bağlandı")
         async for raw in ws:
             msg = json.loads(raw)
             print(f"[{msg['provider']}] {msg['data']}")
@@ -58,11 +58,11 @@ async def listen():
 asyncio.run(listen())
 ```
 
-Install the websockets library with `pip install websockets`.
+websockets kütüphanesini `pip install websockets` ile yükleyin.
 
-## Message Format
+## İleti Biçimi
 
-Every message from the server is a JSON object with three fields:
+Sunucudan gelen her ileti, üç alan içeren bir JSON nesnesidir:
 
 ```json
 {
@@ -84,20 +84,20 @@ Every message from the server is a JSON object with three fields:
 }
 ```
 
-| Field      | Type   | Description                                          |
-|------------|--------|------------------------------------------------------|
-| `type`     | string | Always `"price_update"`                              |
-| `provider` | string | Provider identifier (e.g., "sohu", "catfee", "itrx") |
-| `data`     | object | Full provider price data, same format as REST API    |
-| `ts`       | number | Server timestamp in milliseconds                     |
+| Alan       | Tür    | Açıklama                                                  |
+|------------|--------|-----------------------------------------------------------|
+| `type`     | string | Her zaman `"price_update"`                                |
+| `provider` | string | Sağlayıcı tanımlayıcısı (ör. "sohu", "catfee", "itrx")    |
+| `data`     | object | Tam sağlayıcı fiyat verisi, REST API ile aynı biçim      |
+| `ts`       | number | Sunucu zaman damgası (milisaniye cinsinden)              |
 
-The `data` object has the same structure as a single element in the `/api/v1/prices` REST response. This means you can use the same parsing logic for both real-time and polled data.
+`data` nesnesi, `/api/v1/prices` REST yanıtındaki tek bir öğe ile aynı yapıya sahiptir. Bu, gerçek zamanlı ve sorgulanmış veriler için aynı ayrıştırma mantığını kullanabileceğiniz anlamına gelir.
 
-### Provider Identifiers
+### Sağlayıcı Tanımlayıcıları
 
-MERX currently monitors eight providers:
+MERX şu anda sekiz sağlayıcıyı izlemektedir:
 
-| Provider   | Identifier   |
+| Sağlayıcı   | Tanımlayıcı  |
 |------------|-------------|
 | Sohu       | `sohu`      |
 | CatFee     | `catfee`    |
@@ -108,31 +108,31 @@ MERX currently monitors eight providers:
 | PowerSun   | `powersun`  |
 | TEM        | `tem`       |
 
-Each provider sends an update approximately every 30 seconds. With eight providers, you can expect roughly one update every 3-4 seconds on average.
+Her sağlayıcı yaklaşık olarak her 30 saniyede bir güncelleme gönderir. Sekiz sağlayıcı ile ortalama olarak yaklaşık her 3-4 saniyede bir güncelleme alacaksınız.
 
-## Subscribing to Specific Providers
+## Belirli Sağlayıcılara Abone Olma
 
-By default, a new connection receives updates from all providers. To filter, send a subscribe message after connecting:
+Varsayılan olarak, yeni bir bağlantı tüm sağlayıcılardan güncellemeler alır. Filtrelemek için bağlandıktan sonra bir abone iletisi gönderin:
 
 ```json
 { "subscribe": ["sohu", "catfee", "itrx"] }
 ```
 
-This tells the server to send updates only from the specified providers. All other updates are silently dropped for your connection.
+Bu sunucuya yalnızca belirtilen sağlayıcılardan güncellemeler göndermesini söyler. Diğer tüm güncellemeler bağlantınız için sessizce atılır.
 
-To reset and receive all updates again, send an empty array:
+Sıfırlamak ve tüm güncellemeleri almaya başlamak için boş bir dizi gönderin:
 
 ```json
 { "subscribe": [] }
 ```
 
-### JavaScript Subscribe Example
+### JavaScript Abone Olma Örneği
 
 ```javascript
 const ws = new WebSocket('wss://merx.exchange/ws')
 
 ws.addEventListener('open', () => {
-  // Only receive updates from sohu and catfee
+  // Sadece sohu ve catfee'den güncellemeler alın
   ws.send(JSON.stringify({
     subscribe: ['sohu', 'catfee']
   }))
@@ -140,12 +140,12 @@ ws.addEventListener('open', () => {
 
 ws.addEventListener('message', (event) => {
   const msg = JSON.parse(event.data)
-  // msg.provider will only be "sohu" or "catfee"
+  // msg.provider sadece "sohu" veya "catfee" olacak
   console.log(`${msg.provider}: ${msg.data.energy_prices[0]?.price_sun} SUN`)
 })
 ```
 
-### Python Subscribe Example
+### Python Abone Olma Örneği
 
 ```python
 import asyncio
@@ -154,11 +154,11 @@ import websockets
 
 async def listen_filtered():
     async with websockets.connect("wss://merx.exchange/ws") as ws:
-        # Subscribe to specific providers
+        # Belirli sağlayıcılara abone olun
         await ws.send(json.dumps({
             "subscribe": ["sohu", "catfee"]
         }))
-        print("Subscribed to sohu and catfee")
+        print("sohu ve catfee'ye abone olundu")
 
         async for raw in ws:
             msg = json.loads(raw)
@@ -169,42 +169,42 @@ async def listen_filtered():
 asyncio.run(listen_filtered())
 ```
 
-You can change your subscription at any time by sending a new subscribe message. The server replaces the previous filter with the new one.
+Herhangi bir zamanda yeni bir abone iletisi göndererek aboneliğinizi değiştirebilirsiniz. Sunucu önceki filtreyi yenisiyle değiştirir.
 
-## Heartbeat and Connection Health
+## Sinyal Kalp Atışı ve Bağlantı Sağlığı
 
-The MERX WebSocket server sends ping frames every 30 seconds. Clients must respond with pong frames to keep the connection alive. If a client fails to respond to a ping, the server terminates the connection on the next heartbeat cycle (approximately 30 seconds later).
+MERX WebSocket sunucusu her 30 saniyede ping frame'leri gönderir. İstemciler bağlantıyı canlı tutmak için pong frame'leriyle yanıt vermelidir. Bir istemci ping'e yanıt vermezse, sunucu bir sonraki sinyal kalp atışı döngüsünde bağlantıyı sonlandırır (yaklaşık 30 saniye sonra).
 
-Most WebSocket libraries handle ping/pong automatically at the protocol level. The `websockets` Python library and browser `WebSocket` API both respond to pings without any additional code.
+Çoğu WebSocket kütüphanesi ping/pong'u protokol seviyesinde otomatik olarak işler. Python `websockets` kütüphanesi ve tarayıcı `WebSocket` API'si her ikisi de herhangi bir ek kod olmadan ping'lere yanıt verir.
 
-For Node.js using the `ws` library, pong responses are also automatic. However, if you are using a library that does not handle pings automatically, you need to listen for the ping event:
+Node.js'de `ws` kütüphanesi kullanıyorsanız, pong yanıtları da otomatiktir. Ancak ping'leri otomatik olarak işlemeyen bir kütüphane kullanıyorsanız, ping olayını dinlemeniz gerekir:
 
 ```javascript
-// Node.js with 'ws' library (handles pong automatically)
+// Node.js 'ws' kütüphanesi ile (pong'u otomatik olarak işler)
 import WebSocket from 'ws'
 
 const ws = new WebSocket('wss://merx.exchange/ws')
 
 ws.on('ping', () => {
-  // ws library sends pong automatically
-  // This handler is just for logging
-  console.log('Received ping, pong sent')
+  // ws kütüphanesi pong'u otomatik olarak gönderir
+  // Bu handler sadece günlüğe kaydetmek içindir
+  console.log('Ping alındı, pong gönderildi')
 })
 ```
 
-## Reconnection Strategy
+## Yeniden Bağlantı Stratejisi
 
-WebSocket connections can drop for many reasons: network interruptions, server deployments, load balancer timeouts. A production client must handle reconnection gracefully.
+WebSocket bağlantıları birçok nedenle kesilir: ağ kesintileri, sunucu dağıtımları, yük dengeleyici zaman aşımları. Bir üretim istemcisi yeniden bağlantıyı zarif bir şekilde işlemelidir.
 
-The recommended strategy is exponential backoff with jitter:
+Önerilen strateji, jitter ile üstel geri çekilmedir:
 
-1. On disconnect, wait 1 second before reconnecting.
-2. If the reconnection fails, double the wait time: 2s, 4s, 8s, up to a maximum of 30 seconds.
-3. Add random jitter (0-1 second) to prevent all clients from reconnecting simultaneously.
-4. On successful reconnection, reset the backoff to 1 second.
-5. Re-send your subscription message after reconnecting.
+1. Bağlantı kesildiğinde, yeniden bağlanmadan önce 1 saniye bekleyin.
+2. Yeniden bağlantı başarısız olursa, bekleme süresini iki katına çıkarın: 2s, 4s, 8s, maksimum 30 saniyeye kadar.
+3. Tüm istemcilerin aynı anda yeniden bağlanmasını önlemek için rastgele jitter ekleyin (0-1 saniye).
+4. Başarılı yeniden bağlantıda, geri çekilmeyi 1 saniyeye sıfırlayın.
+5. Yeniden bağlandıktan sonra abonelik iletinizi tekrar gönderin.
 
-### JavaScript Reconnection
+### JavaScript Yeniden Bağlantı
 
 ```javascript
 function createConnection(providers = []) {
@@ -215,8 +215,8 @@ function createConnection(providers = []) {
     const ws = new WebSocket('wss://merx.exchange/ws')
 
     ws.addEventListener('open', () => {
-      console.log('Connected')
-      backoff = 1000  // Reset backoff on success
+      console.log('Bağlantı kuruldu')
+      backoff = 1000  // Başarıda geri çekilmeyi sıfırla
 
       if (providers.length > 0) {
         ws.send(JSON.stringify({ subscribe: providers }))
@@ -231,13 +231,13 @@ function createConnection(providers = []) {
     ws.addEventListener('close', () => {
       const jitter = Math.random() * 1000
       const delay = Math.min(backoff + jitter, maxBackoff)
-      console.log(`Disconnected. Reconnecting in ${Math.round(delay)}ms`)
+      console.log(`Bağlantı kesildi. ${Math.round(delay)}ms içinde yeniden bağlanılacak`)
       setTimeout(connect, delay)
       backoff = Math.min(backoff * 2, maxBackoff)
     })
 
     ws.addEventListener('error', () => {
-      ws.close()  // Triggers the close handler for reconnection
+      ws.close()  // Yeniden bağlantı için close handler'ı tetikler
     })
 
     return ws
@@ -253,11 +253,11 @@ function handlePriceUpdate(msg) {
   }
 }
 
-// Connect and subscribe to two providers
+// İki sağlayıcıya bağlanın ve abone olun
 createConnection(['sohu', 'catfee'])
 ```
 
-### Python Reconnection
+### Python Yeniden Bağlantı
 
 ```python
 import asyncio
@@ -271,8 +271,8 @@ async def listen_with_reconnect(providers=None):
     while True:
         try:
             async with websockets.connect("wss://merx.exchange/ws") as ws:
-                print("Connected")
-                backoff = 1.0  # Reset on success
+                print("Bağlantı kuruldu")
+                backoff = 1.0  # Başarıda sıfırla
 
                 if providers:
                     await ws.send(json.dumps({"subscribe": providers}))
@@ -284,7 +284,7 @@ async def listen_with_reconnect(providers=None):
         except (websockets.ConnectionClosed, ConnectionError, OSError) as e:
             jitter = asyncio.get_event_loop().time() % 1
             delay = min(backoff + jitter, max_backoff)
-            print(f"Disconnected ({e}). Reconnecting in {delay:.1f}s")
+            print(f"Bağlantı kesildi ({e}). {delay:.1f}s içinde yeniden bağlanılacak")
             await asyncio.sleep(delay)
             backoff = min(backoff * 2, max_backoff)
 
@@ -296,15 +296,15 @@ def handle_price_update(msg):
 asyncio.run(listen_with_reconnect(["sohu", "catfee"]))
 ```
 
-## Building a Price Alert Bot
+## Fiyat Uyarı Botu Oluşturma
 
-Here is a practical use case: a bot that monitors real-time prices and sends a notification when energy drops below a target price. This example uses a simple console alert, but you can replace it with a Telegram message, a Slack webhook, or an email.
+İşte pratik bir kullanım örneği: gerçek zamanlı fiyatları izleyen ve enerji belirli bir hedef fiyatın altına düştüğünde bildirim gönderen bir bot. Bu örnek basit bir konsol uyarısı kullanır, ancak bunu Telegram iletisi, Slack webhook'u veya e-posta ile değiştirebilirsiniz.
 
-### JavaScript Price Alert Bot
+### JavaScript Fiyat Uyarı Botu
 
 ```javascript
 const TARGET_PRICE_SUN = 25
-const COOLDOWN_MS = 300000  // 5 minutes between alerts
+const COOLDOWN_MS = 300000  // Uyarılar arasında 5 dakika
 
 let lastAlertTime = 0
 
@@ -315,7 +315,7 @@ function createAlertBot() {
     const ws = new WebSocket('wss://merx.exchange/ws')
 
     ws.addEventListener('open', () => {
-      console.log('Price alert bot connected')
+      console.log('Fiyat uyarı botu bağlandı')
       backoff = 1000
     })
 
@@ -345,10 +345,10 @@ function checkPriceAlert(msg) {
 
   if (cheapest <= TARGET_PRICE_SUN && now - lastAlertTime > COOLDOWN_MS) {
     lastAlertTime = now
-    console.log(`ALERT: ${msg.provider} energy at ${cheapest} SUN (target: ${TARGET_PRICE_SUN})`)
-    console.log(`  Available: ${msg.data.available_energy.toLocaleString()} units`)
-    console.log(`  Time: ${new Date(msg.ts).toISOString()}`)
-    // Replace with your notification logic:
+    console.log(`UYARI: ${msg.provider} enerjisi ${cheapest} SUN'da (hedef: ${TARGET_PRICE_SUN})`)
+    console.log(`  Mevcut: ${msg.data.available_energy.toLocaleString()} birim`)
+    console.log(`  Zaman: ${new Date(msg.ts).toISOString()}`)
+    // Bildirim mantığınız ile değiştirin:
     // sendTelegramMessage(...)
     // postToSlack(...)
   }
@@ -357,7 +357,7 @@ function checkPriceAlert(msg) {
 createAlertBot()
 ```
 
-### Python Price Alert Bot
+### Python Fiyat Uyarı Botu
 
 ```python
 import asyncio
@@ -366,7 +366,7 @@ import time
 import websockets
 
 TARGET_PRICE_SUN = 25
-COOLDOWN_SEC = 300  # 5 minutes between alerts
+COOLDOWN_SEC = 300  # Uyarılar arasında 5 dakika
 last_alert_time = 0
 
 async def alert_bot():
@@ -376,7 +376,7 @@ async def alert_bot():
     while True:
         try:
             async with websockets.connect("wss://merx.exchange/ws") as ws:
-                print("Price alert bot connected")
+                print("Fiyat uyarı botu bağlandı")
                 backoff = 1.0
 
                 async for raw in ws:
@@ -385,7 +385,7 @@ async def alert_bot():
 
         except (websockets.ConnectionClosed, ConnectionError, OSError):
             delay = min(backoff + (time.time() % 1), 30.0)
-            print(f"Reconnecting in {delay:.1f}s")
+            print(f"{delay:.1f}s içinde yeniden bağlanılacak")
             await asyncio.sleep(delay)
             backoff = min(backoff * 2, 30.0)
 
@@ -402,16 +402,16 @@ def check_alert(msg):
         last_alert_time = now
         provider = msg["provider"]
         available = msg["data"].get("available_energy", 0)
-        print(f"ALERT: {provider} energy at {cheapest} SUN (target: {TARGET_PRICE_SUN})")
-        print(f"  Available: {available:,} units")
-        # Replace with your notification logic
+        print(f"UYARI: {provider} enerjisi {cheapest} SUN'da (hedef: {TARGET_PRICE_SUN})")
+        print(f"  Mevcut: {available:,} birim")
+        # Bildirim mantığınız ile değiştirin
 
 asyncio.run(alert_bot())
 ```
 
-## Maintaining Local State
+## Yerel Durumu Koruma
 
-For applications that need to display a live market view, maintain a local dictionary of the latest prices from each provider and update it on every message:
+Canlı bir pazarı görüntülemesi gereken uygulamalar için, her sağlayıcıdan en son fiyatların yerel bir sözlüğünü tutun ve her iletide güncelleyin:
 
 ```javascript
 const latestPrices = new Map()
@@ -422,7 +422,7 @@ function handlePriceUpdate(msg) {
     receivedAt: msg.ts,
   })
 
-  // Find current cheapest across all providers
+  // Tüm sağlayıcılar arasında en ucuz olanı bulun
   let cheapest = null
   for (const [provider, entry] of latestPrices) {
     const prices = entry.data.energy_prices || []
@@ -434,59 +434,60 @@ function handlePriceUpdate(msg) {
   }
 
   if (cheapest) {
-    console.log(`Market best: ${cheapest.provider} at ${cheapest.price} SUN`)
+    console.log(`Pazarın en iyisi: ${cheapest.provider} ${cheapest.price} SUN'da`)
   }
 }
 ```
 
-## Combining WebSocket with REST API
+## WebSocket'i REST API ile Birleştirme
 
-A common pattern is to use the REST API for the initial state load and the WebSocket for incremental updates:
+Yaygın bir model, ilk durum yüklü için REST API'sını ve artımlı güncellemeler için WebSocket'i kullanmaktır:
 
 ```javascript
 import { MerxClient } from 'merx-sdk'
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY })
 
-// Load initial state from REST API
+// REST API'sından ilk durumu yükleyin
 const initialPrices = await merx.prices.list()
 const priceMap = new Map()
 for (const p of initialPrices) {
   priceMap.set(p.provider, p)
 }
-console.log(`Loaded ${priceMap.size} providers from REST API`)
+console.log(`REST API'sından ${priceMap.size} sağlayıcı yüklendi`)
 
-// Switch to WebSocket for real-time updates
+// Gerçek zamanlı güncellemeler için WebSocket'e geçin
 const ws = new WebSocket('wss://merx.exchange/ws')
 ws.addEventListener('message', (event) => {
   const msg = JSON.parse(event.data)
   priceMap.set(msg.provider, msg.data)
-  // Your UI or logic now has a continuously updated price map
+  // İlk renderdan itibaren UI veya mantığınız sürekli güncellenmiş bir fiyat haritasına sahip
 })
 ```
 
-This ensures you have a complete market view from the first render, with zero-latency updates from that point forward.
+Bu, ilk render'dan bir tam pazarı görünümüne sahip olmanızı, o noktadan ileri sıfır gecikme süresiyle güncellemeler almanızı sağlar.
 
-## Performans Considerations
+## Performans Dikkatleri
 
-The WebSocket endpoint is designed for high-throughput consumption. A few notes for production deployments:
+WebSocket uç noktası yüksek aktarım hızı tüketimine yönelik tasarlanmıştır. Üretim dağıtımları için birkaç not:
 
-- Each provider update is approximately 200-500 bytes of JSON. With eight providers updating every 30 seconds, total bandwidth is under 1 KB/s.
-- Use the subscription filter to reduce traffic if you only need specific providers.
-- The server-side heartbeat interval is 30 seconds. If your application has a firewall or proxy that closes idle connections sooner, send application-level keepalive messages.
-- The WebSocket path is `/ws`. Make sure your reverse proxy or load balancer is configured to upgrade HTTP connections on this path.
+- Her sağlayıcı güncellemesi yaklaşık 200-500 bayt JSON'dır. Sekiz sağlayıcı her 30 saniyede güncellendiğinde, toplam bant genişliği saniyede 1 KB'ın altındadır.
+- Sadece belirli sağlayıcılara ihtiyacınız varsa trafiği azaltmak için abonelik filtresini kullanın.
+- Sunucu tarafı sinyal kalp atışı aralığı 30 saniyedir. Uygulamanızda boşta bağlantıları daha erken kapatan bir güvenlik duvarı veya proxy varsa, uygulama düzeyinde canlı tutma iletileri gönderin.
+- WebSocket yolu `/ws` dir. Ters proxy veya yük dengeleyicinizin bu yoldaki HTTP bağlantılarını yükseltmek için yapılandırıldığından emin olun.
 
 ## Kaynaklar
 
 - Platform: [merx.exchange](https://merx.exchange)
-- Dokumantasyon: [merx.exchange/docs](https://merx.exchange/docs)
+- Belgelendirme: [merx.exchange/docs](https://merx.exchange/docs)
 - JavaScript SDK: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) | [npm](https://www.npmjs.com/package/merx-sdk)
 - Python SDK: [pypi.org/project/merx-sdk](https://pypi.org/project/merx-sdk/)
 - MCP Sunucusu: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- kurulum yok, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -498,6 +499,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınıza sorun: "TRON enerjisinin şu anda en ucuz fiyatı ne?" ve bağlantılı tüm sağlayıcılardan canlı fiyatları alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgelendirmesi: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

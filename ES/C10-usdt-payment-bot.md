@@ -1,36 +1,36 @@
-# Construyendo un bot de pagos de USDT con el SDK de MERX
+# Construir un Bot de Pagos USDT con MERX SDK
 
-Sending USDT on TRON should be simple. You have a recipient address, an amount, and a wallet with funds. But if you send USDT without energy, the TRON protocol burns approximately 27 TRX from your wallet to cover the costo de transaccion. At scale - hundreds or thousands of transfers per day - that costo de quema becomes a significant expense.
+Enviar USDT en TRON debería ser simple. Tienes una dirección de destinatario, una cantidad y una billetera con fondos. Pero si envías USDT sin energía, el protocolo TRON quema aproximadamente 27 TRX de tu billetera para cubrir el costo de la transacción. A escala —cientos o miles de transferencias por día— ese costo de quema se convierte en un gasto significativo.
 
-This tutorial builds a complete USDT payment bot that eliminates that cost. The bot receives payment requests, rents energy through MERX at a fraction of the burn price, sends the USDT with the rented energy, and reports the savings. It handles errors, supports retries, and integrates webhook notifications for production reliability.
+Este tutorial construye un bot completo de pagos USDT que elimina ese costo. El bot recibe solicitudes de pago, renta energía a través de MERX a una fracción del precio de quema, envía el USDT con la energía alquilada e informa los ahorros. Maneja errores, admite reintentos e integra notificaciones webhook para confiabilidad en producción.
 
-By the end, you will have a working payment bot that saves over 90 percent on every USDT transfer.
+Al final, tendrás un bot de pagos funcional que ahorra más del 90 por ciento en cada transferencia de USDT.
 
-## Architecture Overview
+## Descripción General de la Arquitectura
 
-The bot follows a straightforward pipeline:
+El bot sigue un pipeline sencillo:
 
-1. Receive a payment request (recipient address + amount).
-2. Check your MERX account balance.
-3. Estimate the energy required for the transfer.
-4. Create an energy order through MERX.
-5. Wait for the delegacion de energia to complete.
-6. Send the USDT transfer using the delegated energy.
-7. Report the transaction and savings.
+1. Recibir una solicitud de pago (dirección del destinatario + cantidad).
+2. Verificar el saldo de tu cuenta MERX.
+3. Estimar la energía requerida para la transferencia.
+4. Crear una orden de energía a través de MERX.
+5. Esperar a que se complete la delegación de energía.
+6. Enviar la transferencia USDT usando la energía delegada.
+7. Informar la transacción y los ahorros.
 
-Each step is isolated and retryable. If the energy order fails, the USDT is never sent. If the USDT transfer fails, you still have the energy (it expires after the rental period, but no funds are lost).
+Cada paso está aislado y es reintentable. Si la orden de energía falla, el USDT nunca se envía. Si la transferencia USDT falla, aún tienes la energía (expira después del período de alquiler, pero no se pierden fondos).
 
-## Prerequisites
+## Requisitos Previos
 
-Before building, you need:
+Antes de construir, necesitas:
 
-- **Node.js 18 or later** - the bot uses ES modules and modern JavaScript features.
-- **A MERX account with balance** - sign up at [merx.exchange](https://merx.exchange) and deposit TRX.
-- **A MERX clave de API** - create one with `create_orders`, `view_orders`, and `view_balance` permissions.
-- **A TRON wallet** - with USDT balance for the payments and a small amount of TRX for bandwidth.
-- **TronWeb** - for signing and broadcasting the USDT transfer transaction.
+- **Node.js 18 o posterior** - el bot usa módulos ES y características modernas de JavaScript.
+- **Una cuenta MERX con saldo** - regístrate en [merx.exchange](https://merx.exchange) y deposita TRX.
+- **Una clave API de MERX** - crea una con permisos `create_orders`, `view_orders` y `view_balance`.
+- **Una billetera TRON** - con saldo de USDT para los pagos y una pequeña cantidad de TRX para bandwidth.
+- **TronWeb** - para firmar y transmitir la transacción de transferencia USDT.
 
-### Project Setup
+### Configuración del Proyecto
 
 ```bash
 mkdir usdt-payment-bot
@@ -39,7 +39,7 @@ npm init -y
 npm install merx-sdk tronweb dotenv uuid
 ```
 
-Create a `.env` file (never commit this to version control):
+Crea un archivo `.env` (nunca confirmes esto en control de versiones):
 
 ```bash
 MERX_API_KEY=merx_live_your_key_here
@@ -49,9 +49,9 @@ USDT_CONTRACT=TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t
 MIN_SAVINGS_PERCENT=50
 ```
 
-## Step 1: Initialize the Clients
+## Paso 1: Inicializar los Clientes
 
-Create the MERX client and TronWeb instance:
+Crea el cliente MERX e instancia de TronWeb:
 
 ```javascript
 // src/clients.js
@@ -75,9 +75,9 @@ export const USDT_CONTRACT = process.env.USDT_CONTRACT;
 export const SENDER_ADDRESS = tronWeb.defaultAddress.base58;
 ```
 
-## Step 2: Check MERX Balance
+## Paso 2: Verificar Saldo de MERX
 
-Before doing anything, verify you have sufficient balance to rent energy:
+Antes de hacer cualquier cosa, verifica que tengas saldo suficiente para alquilar energía:
 
 ```javascript
 // src/balance.js
@@ -103,9 +103,9 @@ export async function checkMerxBalance(requiredSun) {
 }
 ```
 
-## Step 3: Estimate Energy Cost
+## Paso 3: Estimar Costo de Energía
 
-Use the MERX estimation API to determine how much energy the transfer needs and what it will cost:
+Usa la API de estimación de MERX para determinar cuánta energía necesita la transferencia y cuánto costará:
 
 ```javascript
 // src/estimate.js
@@ -136,9 +136,9 @@ export async function estimateTransferCost() {
 }
 ```
 
-## Step 4: Create the Energy Order
+## Paso 4: Crear la Orden de Energía
 
-Order energy through MERX with an idempotency key for safe retries:
+Ordena energía a través de MERX con una clave de idempotencia para reintentos seguros:
 
 ```javascript
 // src/order.js
@@ -169,9 +169,9 @@ export async function createEnergyOrder(energyAmount, targetAddress, durationHou
 }
 ```
 
-## Step 5: Wait for Energy Delegation
+## Paso 5: Esperar Delegación de Energía
 
-After creating the order, wait for the energy to be delegated en cadena. The bot polls the estado de la orden with a timeout:
+Después de crear la orden, espera a que la energía se delegue en cadena. El bot sondea el estado de la orden con un tiempo de espera:
 
 ```javascript
 // src/wait.js
@@ -179,7 +179,7 @@ import { merx } from './clients.js';
 
 export async function waitForFill(orderId, timeoutMs = 60000) {
   const startTime = Date.now();
-  const pollInterval = 2000; // 2 seconds
+  const pollInterval = 2000; // 2 segundos
 
   while (Date.now() - startTime < timeoutMs) {
     const order = await merx.orders.get(orderId);
@@ -199,7 +199,7 @@ export async function waitForFill(orderId, timeoutMs = 60000) {
       );
     }
 
-    // Still pending or processing - wait and poll again
+    // Aún pendiente o procesándose - espera y sondea de nuevo
     await new Promise((resolve) => setTimeout(resolve, pollInterval));
   }
 
@@ -207,33 +207,33 @@ export async function waitForFill(orderId, timeoutMs = 60000) {
 }
 ```
 
-For production systems, consider using webhooks instead of polling (covered later in this article).
+Para sistemas en producción, considera usar webhooks en lugar de sondeo (cubierto más adelante en este artículo).
 
-## Step 6: Send the USDT Transfer
+## Paso 6: Enviar la Transferencia USDT
 
-With energy delegated to your address, send the USDT transfer. The energy is consumed instead of burning TRX:
+Con energía delegada a tu dirección, envía la transferencia USDT. La energía se consume en lugar de quemar TRX:
 
 ```javascript
 // src/transfer.js
 import { tronWeb, USDT_CONTRACT, SENDER_ADDRESS } from './clients.js';
 
 export async function sendUSDT(recipientAddress, amountUSDT) {
-  // USDT has 6 decimals on TRON
+  // USDT tiene 6 decimales en TRON
   const amountSun = Math.floor(amountUSDT * 1_000_000);
 
-  // Validate recipient address
+  // Validar dirección del destinatario
   if (!tronWeb.isAddress(recipientAddress)) {
     throw new Error(`Invalid TRON address: ${recipientAddress}`);
   }
 
-  // Build the TRC-20 transfer transaction
+  // Construir la transacción de transferencia TRC-20
   const contract = await tronWeb.contract().at(USDT_CONTRACT);
 
   const tx = await contract.methods
     .transfer(recipientAddress, amountSun)
     .send({
       from: SENDER_ADDRESS,
-      feeLimit: 100_000_000, // 100 TRX fee limit (safety cap)
+      feeLimit: 100_000_000, // límite de tarifa de 100 TRX (límite de seguridad)
     });
 
   return {
@@ -245,9 +245,9 @@ export async function sendUSDT(recipientAddress, amountUSDT) {
 }
 ```
 
-## Step 7: Putting It All Together
+## Paso 7: Ponerlo Todo Junto
 
-The main bot function orchestrates all steps:
+La función principal del bot orquesta todos los pasos:
 
 ```javascript
 // src/bot.js
@@ -267,7 +267,7 @@ export async function processPayment(recipientAddress, amountUSDT) {
   console.log(`Recipient: ${recipientAddress}`);
   console.log(`Amount: ${amountUSDT} USDT`);
 
-  // Step 1: Estimate costs
+  // Paso 1: Estimar costos
   console.log('\n[1/5] Estimating energy cost...');
   const estimate = await estimateTransferCost();
   console.log(`  Energy required: ${estimate.energyRequired}`);
@@ -275,19 +275,19 @@ export async function processPayment(recipientAddress, amountUSDT) {
   console.log(`  Rental cost: ${estimate.rentalCostTRX}`);
   console.log(`  Savings: ${estimate.savingsPercent}%`);
 
-  // Step 2: Decide whether renting is worthwhile
+  // Paso 2: Decidir si el alquiler es rentable
   if (estimate.savingsPercent < MIN_SAVINGS_PERCENT) {
     console.log(`  Savings below threshold (${MIN_SAVINGS_PERCENT}%). Skipping energy rental.`);
     const tx = await sendUSDT(recipientAddress, amountUSDT);
     return { ...tx, energyRented: false, savings: null };
   }
 
-  // Step 3: Check MERX balance
+  // Paso 3: Verificar saldo de MERX
   console.log('\n[2/5] Checking MERX balance...');
   const balance = await checkMerxBalance(estimate.rentalCostSun);
   console.log(`  Available: ${balance.availableTRX} TRX`);
 
-  // Step 4: Create energy order
+  // Paso 4: Crear orden de energía
   console.log('\n[3/5] Creating energy order...');
   const order = await createEnergyOrder(
     estimate.energyRequired,
@@ -298,13 +298,13 @@ export async function processPayment(recipientAddress, amountUSDT) {
   console.log(`  Provider: ${order.provider}`);
   console.log(`  Status: ${order.status}`);
 
-  // Step 5: Wait for energy delegation
+  // Paso 5: Esperar delegación de energía
   console.log('\n[4/5] Waiting for energy delegation...');
   const fill = await waitForFill(order.orderId);
   console.log(`  Filled by: ${fill.provider}`);
   console.log(`  Delegation TX: ${fill.txHash}`);
 
-  // Step 6: Send USDT with delegated energy
+  // Paso 6: Enviar USDT con energía delegada
   console.log('\n[5/5] Sending USDT...');
   const tx = await sendUSDT(recipientAddress, amountUSDT);
   console.log(`  TX Hash: ${tx.txHash}`);
@@ -331,7 +331,7 @@ export async function processPayment(recipientAddress, amountUSDT) {
 }
 ```
 
-### Running the Bot
+### Ejecutar el Bot
 
 ```javascript
 // index.js
@@ -358,7 +358,7 @@ try {
 node index.js TRecipientAddressHere 100
 ```
 
-Sample output:
+Salida de ejemplo:
 
 ```
 --- Payment Request ---
@@ -392,13 +392,13 @@ Amount: 100 USDT
   Saved: 25.94 TRX (94.8%)
 ```
 
-## Error Handling
+## Manejo de Errores
 
-Production payment systems need robust manejo de errores. Aqui estan the failure modes and how to handle each.
+Los sistemas de pagos en producción necesitan manejo de errores sólido. Estos son los modos de fallo y cómo manejar cada uno.
 
-### Insufficient MERX Balance
+### Saldo Insuficiente en MERX
 
-If your MERX account runs low, the bot should alert you and optionally fall back to burning TRX:
+Si tu cuenta MERX se agota, el bot debería alertarte y opcionalmente recurrir a quemar TRX:
 
 ```javascript
 try {
@@ -406,7 +406,7 @@ try {
 } catch (err) {
   if (err.message.includes('Insufficient MERX balance')) {
     console.warn('MERX balance low. Sending without energy rental.');
-    // Optionally: send alert to ops team
+    // Opcionalmente: enviar alerta al equipo de operaciones
     // await alertOps('MERX balance low', err.message);
     const tx = await sendUSDT(recipientAddress, amountUSDT);
     return { ...tx, energyRented: false, fallbackReason: 'low_balance' };
@@ -415,13 +415,13 @@ try {
 }
 ```
 
-### Order Fill Timeout
+### Tiempo de Espera de Llenado de Orden
 
-If the proveedor de energia takes too long to delegate, cancel and retry with a different provider or fall back:
+Si el proveedor de energía tarda demasiado en delegar, cancela e intenta de nuevo con un proveedor diferente o recurre:
 
 ```javascript
 try {
-  const fill = await waitForFill(order.orderId, 30000); // 30-second timeout
+  const fill = await waitForFill(order.orderId, 30000); // tiempo de espera de 30 segundos
 } catch (err) {
   if (err.message.includes('timed out')) {
     console.warn('Energy delegation timed out. Sending without energy.');
@@ -432,9 +432,9 @@ try {
 }
 ```
 
-### USDT Transfer Failure
+### Fallo de Transferencia USDT
 
-If the USDT transfer itself fails (insufficient balance, contract error), the energy is not wasted - it remains delegated for the rental duration. You can retry the transfer:
+Si la transferencia USDT en sí falla (saldo insuficiente, error de contrato), la energía no se desperdicia —permanece delegada durante la duración del alquiler. Puedes reintentar la transferencia:
 
 ```javascript
 async function sendUSDTWithRetry(recipientAddress, amountUSDT, maxRetries = 3) {
@@ -450,13 +450,13 @@ async function sendUSDTWithRetry(recipientAddress, amountUSDT, maxRetries = 3) {
 }
 ```
 
-## Webhook Notifications
+## Notificaciones Webhook
 
-Polling for estado de la orden works for simple bots, but production systems should use webhooks. MERX sends HTTP POST notifications to your webhook URL when estado de la orden changes.
+El sondeo para cambios de estado de orden funciona para bots simples, pero los sistemas en producción deben usar webhooks. MERX envía notificaciones HTTP POST a tu URL webhook cuando el estado de la orden cambia.
 
-### Setting Up Webhooks
+### Configurar Webhooks
 
-Configure your webhook endpoint in the MERX dashboard or via the API:
+Configura tu endpoint webhook en el panel de control de MERX o a través de la API:
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/webhooks \
@@ -468,7 +468,7 @@ curl -X POST https://merx.exchange/api/v1/webhooks \
   }'
 ```
 
-### Handling Webhook Events
+### Manejar Eventos Webhook
 
 ```javascript
 // webhook-handler.js
@@ -477,13 +477,13 @@ import express from 'express';
 const app = express();
 app.use(express.json());
 
-// Store pending payment callbacks
+// Almacenar devoluciones de llamada de pagos pendientes
 const pendingPayments = new Map();
 
 app.post('/webhooks/merx', (req, res) => {
   const event = req.body;
 
-  // Verify webhook signature (production requirement)
+  // Verificar firma webhook (requisito de producción)
   // const isValid = verifyWebhookSignature(req);
   // if (!isValid) return res.status(401).json({ error: 'Invalid signature' });
 
@@ -506,7 +506,7 @@ app.post('/webhooks/merx', (req, res) => {
   res.status(200).json({ received: true });
 });
 
-// Replace polling with webhook-based waiting
+// Reemplazar sondeo con espera basada en webhook
 export function waitForFillWebhook(orderId, timeoutMs = 60000) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -528,13 +528,13 @@ export function waitForFillWebhook(orderId, timeoutMs = 60000) {
 }
 ```
 
-Webhooks eliminate the polling loop, reduce API calls, and respond faster to order fills (sub-second notification versus 2-second poll intervals).
+Los webhooks eliminan el bucle de sondeo, reducen llamadas API y responden más rápido a los llenados de órdenes (notificación subsecundo versus intervalos de sondeo de 2 segundos).
 
-## Production Considerations
+## Consideraciones de Producción
 
-### Concurrency
+### Concurrencia
 
-If your bot processes multiple payments simultaneously, each payment should have its own idempotency key and operate independently. Use a queue (Bull, BullMQ, or similar) to manage concurrent payments:
+Si tu bot procesa múltiples pagos simultáneamente, cada pago debe tener su propia clave de idempotencia y operar de forma independiente. Usa una cola (Bull, BullMQ o similar) para gestionar pagos concurrentes:
 
 ```javascript
 import Queue from 'bull';
@@ -544,49 +544,49 @@ const paymentQueue = new Queue('payments', {
 });
 
 paymentQueue.process(5, async (job) => {
-  // Process up to 5 payments concurrently
+  // Procesar hasta 5 pagos concurrentemente
   const { recipient, amount } = job.data;
   return await processPayment(recipient, amount);
 });
 
-// Add a payment to the queue
+// Agregar un pago a la cola
 await paymentQueue.add({
   recipient: 'TRecipientAddressHere',
   amount: 100,
 });
 ```
 
-### Monitoring and Alerting
+### Monitoreo y Alertas
 
-Track key metrics for operational visibility:
+Realiza un seguimiento de métricas clave para visibilidad operacional:
 
-- **Payments per hour** - throughput tracking.
-- **Average savings percent** - if savings drop below 80 percent, investigate provider pricing.
-- **MERX balance** - alert when balance drops below a threshold (e.g., enough for 100 transfers).
-- **Fill time** - if delegacion de energia takes longer than 30 seconds, providers might be congested.
-- **Failure rate** - percentage of payment attempts that fail at any step.
+- **Pagos por hora** - seguimiento del rendimiento.
+- **Porcentaje de ahorros promedio** - si los ahorros caen por debajo del 80 por ciento, investiga los precios del proveedor.
+- **Saldo de MERX** - alerta cuando el saldo caiga por debajo de un umbral (por ejemplo, suficiente para 100 transferencias).
+- **Tiempo de llenado** - si la delegación de energía toma más de 30 segundos, los proveedores pueden estar congestionados.
+- **Tasa de fallo** - porcentaje de intentos de pago que fallan en cualquier paso.
 
-Track these in your preferred monitoring tool (Prometheus, Datadog, or even a simple JSON log).
+Realiza un seguimiento de estos en tu herramienta de monitoreo preferida (Prometheus, Datadog o incluso un simple registro JSON).
 
-### Rate Limits
+### Límites de Velocidad
 
-The MERX API limits order creation to 10 requests per minute. If your bot needs to send more than 10 payments per minute, you have two options:
+La API de MERX limita la creación de órdenes a 10 solicitudes por minuto. Si tu bot necesita enviar más de 10 pagos por minuto, tienes dos opciones:
 
-1. **Queue payments** and process them at a rate within the limit.
-2. **Batch energy purchases** - buy enough energy for multiple transfers in a single order, then send the transfers sequentially while the energy is active.
+1. **Cola de pagos** y procesarlos a una velocidad dentro del límite.
+2. **Compras de energía por lotes** - compra suficiente energía para múltiples transferencias en una sola orden, luego envía las transferencias secuencialmente mientras la energía está activa.
 
-Option 2 is more efficient for high-volume scenarios:
+La opción 2 es más eficiente para escenarios de alto volumen:
 
 ```javascript
 async function processBatch(payments) {
-  // Calculate total energy for all payments
-  const totalEnergy = payments.length * 65000; // ~65K per USDT transfer
+  // Calcular energía total para todos los pagos
+  const totalEnergy = payments.length * 65000; // ~65K por transferencia USDT
 
-  // Single energy order for the entire batch
+  // Orden única de energía para todo el lote
   const order = await createEnergyOrder(totalEnergy, SENDER_ADDRESS, 1);
   await waitForFill(order.orderId);
 
-  // Send all USDT transfers while energy is active
+  // Enviar todas las transferencias USDT mientras la energía está activa
   const results = [];
   for (const payment of payments) {
     try {
@@ -601,55 +601,56 @@ async function processBatch(payments) {
 }
 ```
 
-### Security Checklist
+### Lista de Verificación de Seguridad
 
-Before deploying to production:
+Antes de desplegar en producción:
 
-- Store the TRON clave privada in a secrets manager, not in `.env` on disk.
-- Run the bot in a restricted environment with no inbound network access except the webhook endpoint.
-- Use a dedicated TRON wallet for the bot with only the USDT needed for near-term payments. Do not keep your entire treasury in the bot wallet.
-- Implement withdrawal limits - the bot should not be able to drain the wallet in a single run.
-- Log every payment with full details for audit trails.
-- Set up alerts for unusual activity (payment amounts above threshold, rapid successive failures).
+- Almacena la clave privada de TRON en un gestor de secretos, no en `.env` en disco.
+- Ejecuta el bot en un entorno restringido sin acceso a red entrante excepto el endpoint webhook.
+- Usa una billetera TRON dedicada para el bot solo con el USDT necesario para pagos a corto plazo. No mantengas toda tu tesorería en la billetera del bot.
+- Implementa límites de retiro - el bot no debería poder drenar la billetera en una sola ejecución.
+- Registra cada pago con detalles completos para auditoría.
+- Configura alertas para actividad inusual (montos de pago por encima del umbral, fallos sucesivos rápidos).
 
-## Complete Project Structure
+## Estructura Completa del Proyecto
 
 ```
 usdt-payment-bot/
-  .env                  # Never commit
+  .env                  # Nunca confirmar
   .gitignore
   package.json
-  index.js              # Entry point
+  index.js              # Punto de entrada
   src/
-    clients.js          # MERX + TronWeb initialization
-    balance.js          # Balance checking
-    estimate.js         # Cost estimation
-    order.js            # Energy order creation
-    wait.js             # Order fill polling
-    transfer.js         # USDT transfer execution
-    bot.js              # Main orchestration
-    webhook-handler.js  # Webhook receiver (optional)
+    clients.js          # Inicialización de MERX + TronWeb
+    balance.js          # Verificación de saldo
+    estimate.js         # Estimación de costos
+    order.js            # Creación de orden de energía
+    wait.js             # Sondeo de llenado de orden
+    transfer.js         # Ejecución de transferencia USDT
+    bot.js              # Orquestación principal
+    webhook-handler.js  # Receptor webhook (opcional)
 ```
 
-Each file has a single responsibility. The total codebase is under 300 lines. Mock the MERX client for unit tests, use the Shasta testnet for integration tests.
+Cada archivo tiene una única responsabilidad. La base de código total tiene menos de 300 líneas. Simula el cliente MERX para pruebas unitarias, usa la testnet Shasta para pruebas de integración.
 
-## Conclusion
+## Conclusión
 
-This payment bot demonstrates the core MERX integration pattern: estimate, order, wait, transact. The same pattern applies whether you are building a procesador de pagos, a wallet, an exchange withdrawal system, or any application that sends TRC-20 tokens.
+Este bot de pagos demuestra el patrón de integración MERX principal: estimar, ordenar, esperar, transaccionar. El mismo patrón se aplica ya sea que estés construyendo un procesador de pagos, una billetera, un sistema de retiro de intercambio o cualquier aplicación que envíe tokens TRC-20.
 
-The key takeaway is the savings math. At 94 percent savings per transfer, a bot processing 1,000 USDT transfers per day saves approximately 26,000 TRX daily - over 750,000 TRX per month. That is not an optimization. That is a fundamental cost structure change.
+La conclusión clave es la matemática de ahorros. Con un 94 por ciento de ahorros por transferencia, un bot que procesa 1,000 transferencias USDT por día ahorra aproximadamente 26,000 TRX diarios —más de 750,000 TRX por mes. Eso no es una optimización. Eso es un cambio fundamental en la estructura de costos.
 
-Start on the Shasta testnet (`TRON_FULL_HOST=https://api.shasta.trongrid.io`) to validate the flow without risking real funds, then switch to mainnet when everything works.
+Comienza en la testnet Shasta (`TRON_FULL_HOST=https://api.shasta.trongrid.io`) para validar el flujo sin arriesgar fondos reales, luego cambia a mainnet cuando todo funciona.
 
-- MERX platform: [merx.exchange](https://merx.exchange)
-- API documentation: [merx.exchange/docs](https://merx.exchange/docs)
+- Plataforma MERX: [merx.exchange](https://merx.exchange)
+- Documentación de API: [merx.exchange/docs](https://merx.exchange/docs)
 - SDK de JavaScript: [github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js)
 - SDK de Python: [github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
-- Servidor MCP para agentes de IA: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
+- Servidor MCP para agentes IA: [github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Agrega MERX a Claude Desktop o cualquier cliente compatible con MCP —sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -661,6 +662,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente IA: "¿Cuál es la energía TRON más barata en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

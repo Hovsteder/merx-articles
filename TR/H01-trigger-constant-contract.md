@@ -1,47 +1,47 @@
-# triggerConstantContract ile Kesin Energy Simuelasyonu Nasil Mumkun Olur
+# triggerConstantContract Nasıl Tam Enerji Simülasyonunu Sağlar
 
-Every developer who has purchased TRON energy has faced the same problem: how much energy does my transaction actually need? The standard approach is to use hardcoded estimates -- 65,000 for a USDT transfer, 200,000 for a DEX swap -- and hope the estimate is close enough. It usually is not.
+TRON enerjisi satın alan her geliştirici aynı sorunu yaşamıştır: işlemim gerçekten ne kadar enerji tüketiyor? Standart yaklaşım, sabit tahminleri kullanmaktır -- USDT transferi için 65.000, DEX swap'i için 200.000 -- ve tahminlerin yeterince yakın olduğunu umut etmektir. Genellikle değildir.
 
-The solution exists in the TRON protocol itself: `triggerConstantContract`, a dry-run API that simulates smart contract execution without broadcasting a transaction. This article provides a technical deep-dive into how this mechanism works, how MERX uses it for precise energy estimation, and why it produces fundamentally better results than hardcoded values.
+Çözüm TRON protokolünün kendisinde mevcuttur: `triggerConstantContract`, bir işlemi yayınlamadan akıllı kontrat yürütümünü simüle eden kuru çalışma API'ı. Bu makale, bu mekanizmanın nasıl çalıştığına, MERX'in bunu hassas enerji tahmini için nasıl kullandığına ve neden sabit değerlerden temelde daha iyi sonuçlar ürettiğine ilişkin teknik bir inceleme sunmaktadır.
 
-## The Problem with Hardcoded Estimates
+## Sabit Tahminlerin Sorunu
 
-Consider a USDT transfer. The commonly cited figure is 65,000 energy. But the actual energy consumed depends on multiple factors:
+Bir USDT transferini düşünün. Yaygın olarak belirtilen rakam 65.000 enerjidir. Ancak gerçek tüketilen enerji birden fazla faktöre bağlıdır:
 
-- **First-time recipient**: If the recipient address has never held USDT, the contract must create a new balance mapping. This storage allocation costs significantly more energy than updating an existing balance.
-- **Contract state**: The USDT contract's internal state (total holder count, storage layout) affects gas consumption.
-- **Approval state**: If the transfer involves an approved allowance (transferFrom vs direct transfer), the execution path and energy cost differ.
-- **Token amount**: While amount does not directly affect energy in most ERC-20/TRC-20 implementations, some tokens with custom logic (taxes, rebasing, hooks) consume variable energy based on the amount.
+- **İlk kez alıcı**: Alıcı adresi hiç USDT tutmadıysa, kontrat yeni bir bakiye eşlemesi oluşturmalıdır. Bu depolama ayırması, mevcut bir bakiyeyi güncellemeye kıyasla önemli ölçüde daha fazla enerji maliyetine neden olur.
+- **Kontrat durumu**: USDT kontratının dahili durumu (toplam tutucu sayısı, depolama düzeni) gaz tüketimini etkiler.
+- **Onay durumu**: Transfer onaylı bir allowance'ı içeriyorsa (transferFrom vs doğrudan transfer), yürütme yolu ve enerji maliyeti farklılık gösterir.
+- **Token miktarı**: Miktarı doğrudan çoğu ERC-20/TRC-20 uygulamasında enerjiyi etkilemese de, özel mantığı olan bazı tokenler (vergiler, yeniden tabanlama, hook'lar) miktara bağlı olarak değişken enerji tüketir.
 
-A "65,000 energy" USDT transfer might actually consume:
+"65.000 enerji" USDT transferi gerçekten şunları tüketebilir:
 
-- 31,895 energy (direct transfer to existing holder, optimal path)
-- 64,285 energy (standard transfer to existing holder)
-- 65,527 energy (transfer to new holder, new storage slot)
-- 94,000+ energy (complex token with transfer hooks)
+- 31.895 enerji (mevcut sahibine doğrudan transfer, optimal yol)
+- 64.285 enerji (mevcut sahibine standart transfer)
+- 65.527 enerji (yeni sahibine transfer, yeni depolama yuvası)
+- 94.000+ enerji (transfer hook'larıyla karmaşık token)
 
-Using 65,000 as a fixed estimate means you over-purchase in some cases (wasting money) and under-purchase in others (causing partial TRX burn).
+65.000'i sabit tahmin olarak kullanmak, bazı durumlarda aşırı satın almayı (para kaybetme) ve diğerlerinde yetersiz satın almayı (kısmi TRX yakma) anlamına gelir.
 
-## What triggerConstantContract Does
+## triggerConstantContract Ne Yapar
 
-`triggerConstantContract` is a TRON full node API method that executes a smart contract call in a read-only simulation environment. The node processes the call exactly as it would for a real transaction -- including all storage reads, state checks, and computational steps -- but does not:
+`triggerConstantContract`, TRON tam nodu API yöntemidir ve akıllı kontrat çağrısını salt okunur simülasyon ortamında yürütür. Nodu, çağrıyı gerçek bir işlem için yapacağı gibi işler -- tüm depolama okumalarını, durum kontrollerini ve hesaplama adımlarını içererek -- ancak aşağıdakileri yapmaz:
 
-- Broadcast the transaction to the network
-- Modify any blockchain state
-- Consume any actual energy or TRX
-- Require any balance or authorization
+- İşlemi ağa yayınlamak
+- Herhangi bir blockchain durumunu değiştirmek
+- Herhangi bir gerçek enerji veya TRX tüketmek
+- Herhangi bir bakiye veya yetkilendirme gerektirmek
 
-The response includes the exact energy (gas) consumed during simulation, along with the return value and any state changes that would have occurred.
+Yanıt, simülasyon sırasında tüketilen tam enerjiyi (gas), dönüş değerini ve meydana gelecek herhangi bir durum değişikliğini içerir.
 
-### API Endpoint
+### API Uç Noktası
 
-The method is available through TRON full nodes and TronGrid:
+Yöntem TRON tam düğümleri ve TronGrid aracılığıyla mevcuttur:
 
 ```
 POST https://api.trongrid.io/wallet/triggerconstantcontract
 ```
 
-### Request Structure
+### İstek Yapısı
 
 ```json
 {
@@ -53,14 +53,14 @@ POST https://api.trongrid.io/wallet/triggerconstantcontract
 }
 ```
 
-The key fields:
+Ana alanlar:
 
-- **owner_address**: The address that would send the transaction (affects storage read costs and authorization checks)
-- **contract_address**: The smart contract to call
-- **function_selector**: The function signature in Solidity format
-- **parameter**: ABI-encoded function parameters
+- **owner_address**: İşlemi gönderecek adres (depolama okuma maliyetlerini ve yetkilendirme kontrollerini etkiler)
+- **contract_address**: Çağrılacak akıllı kontrat
+- **function_selector**: Solidity formatında işlev imzası
+- **parameter**: ABI-kodlanmış işlev parametreleri
 
-### Response Structure
+### Yanıt Yapısı
 
 ```json
 {
@@ -77,37 +77,37 @@ The key fields:
 }
 ```
 
-The `energy_used` field contains the exact energy consumption for this specific call with these specific parameters against the current contract state.
+`energy_used` alanı, mevcut kontrat durumunda bu belirli parametrelerle bu belirli çağrı için tam enerji tüketimini içerir.
 
-## ABI Encoding
+## ABI Kodlaması
 
-The `parameter` field requires ABI-encoded function arguments. Understanding ABI encoding is necessary for constructing correct simulation requests.
+`parameter` alanı ABI-kodlanmış işlev argümanları gerektirir. Doğru simülasyon istekleri oluşturmak için ABI kodlamasını anlamak gereklidir.
 
-### Basic Types
+### Temel Türler
 
-ABI encoding pads all values to 32 bytes (64 hex characters):
+ABI kodlaması tüm değerleri 32 bayta (64 hex karakteri) doldurur:
 
 ```
-address: Left-pad to 32 bytes
+address: 32 bayta doğru doldurmak
   TJGPeXwDpe6MBY2gwGPVbXbNJhkALrfLjX
   -> 0000000000000000000000005e09d2c48fee51bfb71e4f4a5d3e2f2c3a8b7d01
 
-uint256: Left-pad to 32 bytes
-  1000000 (1 USDT in 6-decimal format)
+uint256: 32 bayta doğru doldurmak
+  1000000 (6 ondalak biçiminde 1 USDT)
   -> 00000000000000000000000000000000000000000000000000000000000f4240
 ```
 
-### Encoding a USDT Transfer
+### USDT Transferi Kodlaması
 
-For `transfer(address,uint256)` with recipient `TRecipient...` and amount `1000000`:
+`transfer(address,uint256)` için `TRecipient...` alıcı ve `1000000` miktarıyla:
 
 ```
 parameter = <recipient_padded_32_bytes><amount_padded_32_bytes>
 ```
 
-### Using TronWeb for ABI Encoding
+### ABI Kodlaması için TronWeb Kullanması
 
-TronWeb simplifies ABI encoding:
+TronWeb ABI kodlamasını basitleştirir:
 
 ```typescript
 import TronWeb from 'tronweb';
@@ -117,9 +117,9 @@ const tronWeb = new TronWeb({
   headers: { 'TRON-PRO-API-KEY': process.env.TRONGRID_KEY }
 });
 
-// Method 1: Using triggerConstantContract directly
+// Yöntem 1: triggerConstantContract'ı doğrudan kullanma
 const result = await tronWeb.transactionBuilder.triggerConstantContract(
-  'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', // USDT contract
+  'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', // USDT kontratı
   'transfer(address,uint256)',
   {},
   [
@@ -129,15 +129,15 @@ const result = await tronWeb.transactionBuilder.triggerConstantContract(
   senderAddress
 );
 
-console.log(`Energy used: ${result.energy_used}`);
+console.log(`Kullanılan enerji: ${result.energy_used}`);
 ```
 
-### Complex Function Signatures
+### Karmaşık İşlev İmzaları
 
-For more complex calls (DEX swaps, NFT mints), the ABI encoding includes multiple parameters and potentially dynamic types:
+Daha karmaşık çağrılar (DEX swap'leri, NFT basımlar) için ABI kodlaması birden fazla parametre ve potansiyel olarak dinamik türler içerir:
 
 ```typescript
-// SunSwap swap simulation
+// SunSwap swap simülasyonu
 const swapResult = await tronWeb.transactionBuilder.triggerConstantContract(
   SUNSWAP_ROUTER_ADDRESS,
   'swapExactTokensForTokens(uint256,uint256,address[],address,uint256)',
@@ -152,15 +152,15 @@ const swapResult = await tronWeb.transactionBuilder.triggerConstantContract(
   senderAddress
 );
 
-console.log(`Swap energy: ${swapResult.energy_used}`);
-// Might return 187,432 instead of the assumed 200,000
+console.log(`Swap enerjisi: ${swapResult.energy_used}`);
+// Varsayılan 200.000 yerine 187.432 döndürebilir
 ```
 
-## How MERX Uses triggerConstantContract
+## MERX triggerConstantContract'ı Nasıl Kullanır
 
-MERX wraps the triggerConstantContract functionality in its `estimateEnergy` method, adding several layers of value:
+MERX, triggerConstantContract işlevselliğini `estimateEnergy` yönteminde sarmalamakta ve birden fazla değer katmanı eklemektedir:
 
-### Simplified Interface
+### Basitleştirilmiş Arayüz
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -174,17 +174,17 @@ const estimate = await merx.estimateEnergy({
   owner_address: senderAddress
 });
 
-console.log(`Exact energy: ${estimate.energy_required}`);
+console.log(`Tam enerji: ${estimate.energy_required}`);
 ```
 
-MERX handles ABI encoding internally, so you pass human-readable parameters instead of hex-encoded bytes.
+MERX ABI kodlamasını dahili olarak işler, bu nedenle hex-kodlanmış baytlar yerine okunabilir parametreleri geçersiniz.
 
-### Integration with Pricing
+### Fiyatlandırma ile Entegrasyon
 
-The estimate integrates directly with the pricing engine:
+Tahmin doğrudan fiyatlandırma motoruyla entegre edilir:
 
 ```typescript
-// Estimate energy
+// Enerji tahmin et
 const estimate = await merx.estimateEnergy({
   contract_address: USDT_CONTRACT,
   function_selector: 'transfer(address,uint256)',
@@ -192,28 +192,28 @@ const estimate = await merx.estimateEnergy({
   owner_address: sender
 });
 
-// Get price for exact amount
+// Tam miktar için fiyat al
 const prices = await merx.getPrices({
   energy_amount: estimate.energy_required,
   duration: '5m'
 });
 
-// Buy exactly what you need at the best price
+// En iyi fiyatla tam olarak ihtiyacın olan miktarı satın al
 const order = await merx.createOrder({
   energy_amount: estimate.energy_required,
   duration: '5m',
   target_address: sender
 });
 
-// Total cost is minimized: exact amount at best price
+// Toplam maliyet en aza indirilir: tam miktar en iyi fiyatla
 const costTrx =
   (prices.best.price_sun * estimate.energy_required) / 1e6;
-console.log(`Total cost: ${costTrx.toFixed(4)} TRX`);
+console.log(`Toplam maliyet: ${costTrx.toFixed(4)} TRX`);
 ```
 
-### Error Detection
+### Hata Algılama
 
-If the simulated transaction would revert (insufficient balance, unauthorized call, contract error), the simulation catches this before you spend money on energy:
+Simüle edilen işlem geri dönerse (yetersiz bakiye, yetkisiz çağrı, kontrat hatası), simülasyon bunu enerji için para harcamadan önce yakalar:
 
 ```typescript
 try {
@@ -226,50 +226,50 @@ try {
 } catch (error) {
   if (error.code === 'SIMULATION_REVERT') {
     console.error(
-      'Transaction would fail: ' + error.message
+      'İşlem başarısız olacak: ' + error.message
     );
-    // Do not buy energy for a transaction that will fail
+    // Başarısız olacak bir işlem için enerji satın almayın
   }
 }
 ```
 
-This prevents the common and expensive mistake of buying energy for a transaction that cannot succeed.
+Bu, başarısız olamayan bir işlem için enerji satın almak gibi yaygın ve pahalı hatayı önler.
 
-## Comparison with Hardcoded Estimates
+## Sabit Tahminlerle Karşılaştırma
 
-### Accuracy
+### Doğruluk
 
-| Transaction Type | Hardcoded Estimate | triggerConstantContract | Difference |
+| İşlem Türü | Sabit Tahmin | triggerConstantContract | Fark |
 |---|---|---|---|
-| USDT transfer (existing holder) | 65,000 | 64,285 | -1.1% |
-| USDT transfer (new holder) | 65,000 | 65,527 | +0.8% |
-| USDT transferFrom | 65,000 | 51,481 | -20.8% |
-| SunSwap simple swap | 200,000 | 143,287 | -28.4% |
-| SunSwap multi-hop swap | 200,000 | 212,456 | +6.2% |
-| NFT mint (simple) | 150,000 | 112,340 | -25.1% |
-| NFT mint (complex) | 150,000 | 267,891 | +78.6% |
+| USDT transferi (mevcut tutucu) | 65.000 | 64.285 | -1,1% |
+| USDT transferi (yeni tutucu) | 65.000 | 65.527 | +0,8% |
+| USDT transferFrom | 65.000 | 51.481 | -20,8% |
+| SunSwap basit swap | 200.000 | 143.287 | -28,4% |
+| SunSwap çok atlamalı swap | 200.000 | 212.456 | +6,2% |
+| NFT basım (basit) | 150.000 | 112.340 | -25,1% |
+| NFT basım (karmaşık) | 150.000 | 267.891 | +78,6% |
 
-The differences are not random noise -- they are consistent for given transaction types and states. Hardcoded estimates are wrong by 1-80% depending on the transaction.
+Farklar rastgele gürültü değildir -- verilen işlem türleri ve durumlar için tutarlıdırlar. Sabit tahminler işleme bağlı olarak %1-80 yanlıştır.
 
-### Cost Impact
+### Maliyet Etkisi
 
-For a system processing 1,000 USDT transfers daily, the cost difference between hardcoded (65,000) and exact (average 63,500) estimation at 28 SUN:
+28 SUN'da günde 1.000 USDT transferi işleyen bir sistem için sabit (65.000) ve tam (ortalama 63.500) tahmin arasındaki maliyet farkı:
 
-- Hardcoded: 65,000 x 1,000 x 28 = 1,820,000,000 SUN = 1,820 TRX
-- Exact: 63,500 x 1,000 x 28 = 1,778,000,000 SUN = 1,778 TRX
-- Daily savings: 42 TRX ($5.04)
-- Monthly savings: 1,260 TRX ($151)
-- Annual savings: 15,330 TRX ($1,840)
+- Sabit: 65.000 x 1.000 x 28 = 1.820.000.000 SUN = 1.820 TRX
+- Tam: 63.500 x 1.000 x 28 = 1.778.000.000 SUN = 1.778 TRX
+- Günlük tasarruf: 42 TRX ($5,04)
+- Aylık tasarruf: 1.260 TRX ($151)
+- Yıllık tasarruf: 15.330 TRX ($1.840)
 
-For DEX operations where the hardcoded estimate is further off (200,000 vs actual ~155,000 average), the savings are proportionally larger.
+Sabit tahminin daha da yanlış olduğu DEX işlemleri (200.000 vs gerçek ~155.000 ortalama) için tasarruflar orantılı olarak daha büyüktür.
 
-## Edge Cases and Considerations
+## Kenar Durumlar ve Dikkat Edilecekler
 
-### State-Dependent Results
+### Durum Bağımlı Sonuçlar
 
-Simulation results are valid for the current contract state. If the contract state changes between simulation and execution (another transaction modifies a relevant storage slot), the actual energy consumption might differ slightly.
+Simülasyon sonuçları mevcut kontrat durumu için geçerlidir. Simülasyon ve yürütme arasında kontrat durumu değişirse (başka bir işlem ilgili bir depolama yuvasını değiştirse), gerçek enerji tüketimi biraz farklılık gösterebilir.
 
-In practice, this is rarely significant for common operations like token transfers. For complex DeFi interactions that depend on pool balances or global state, add a small buffer (2-5%) to the simulation result:
+Uygulamada, bu token transferleri gibi yaygın işlemler için nadiren önemlidir. Havuz bakiyeleri veya küresel duruma bağlı olan karmaşık DeFi etkileşimleri için simülasyon sonucuna küçük bir tampon ekleyin (%2-5):
 
 ```typescript
 const estimate = await merx.estimateEnergy({
@@ -279,28 +279,28 @@ const estimate = await merx.estimateEnergy({
   owner_address: sender
 });
 
-// Add 5% buffer for state-dependent operations
+// Duruma bağlı işlemler için %5 tampon ekle
 const energyToOrder =
   Math.ceil(estimate.energy_required * 1.05);
 ```
 
-### First-Call vs Subsequent Calls
+### İlk Çağrı vs Sonraki Çağrılar
 
-Some smart contracts have initialization logic that runs on the first interaction from a new address. The first call might cost more energy than subsequent calls. Simulation captures this correctly because it reflects the current state -- if the address has never interacted with the contract, the simulation includes the initialization cost.
+Bazı akıllı kontratlar, yeni bir adresin ilk etkileşiminde çalışan başlatma mantığına sahiptir. İlk çağrı sonraki çağrılardan daha fazla enerji maliyetine neden olabilir. Simülasyon bunu doğru şekilde yakalar çünkü mevcut durumu yansıtır -- adres hiç kontratla etkileşim kurmadıysa, simülasyon başlatma maliyetini içerir.
 
-### Gas vs Energy
+### Gaz vs Enerji
 
-In TRON's EVM implementation, gas and energy are conceptually equivalent but use different units. The `triggerConstantContract` response returns the value in energy units directly, matching what you need to purchase from providers.
+TRON'un EVM uygulamasında, gaz ve enerji kavramsal olarak eşdeğerdir ancak farklı birimleri kullanırlar. `triggerConstantContract` yanıtı, doğrudan sağlayıcılardan satın almanız gereken enerji birimlerinde değeri döndürür.
 
-### Rate Limits
+### Oran Sınırları
 
-TronGrid applies rate limits to API calls, including `triggerConstantContract`. For high-frequency operations, use a paid TronGrid plan or run your own full node. MERX's estimation endpoint handles rate limiting internally by distributing queries across multiple full node connections.
+TronGrid, `triggerConstantContract` dahil API çağrılarına oran sınırları uygular. Yüksek frekanslı işlemler için ücretli TronGrid planı kullanın veya kendi tam düğümünüzü çalıştırın. MERX'in tahmin uç noktası, sorguları birden fazla tam düğüm bağlantısı arasında dağıtarak oran sınırlamasını dahili olarak işler.
 
-## Integration Patterns
+## Entegrasyon Desenleri
 
-### Pre-Transaction Estimation
+### İşlem Öncesi Tahmin
 
-The most common pattern: estimate before every transaction.
+En yaygın desen: her işlemden önce tahmin yapın.
 
 ```typescript
 async function sendWithExactEnergy(
@@ -309,7 +309,7 @@ async function sendWithExactEnergy(
   params: any[],
   sender: string
 ): Promise<string> {
-  // 1. Simulate
+  // 1. Simüle et
   const estimate = await merx.estimateEnergy({
     contract_address: contract,
     function_selector: method,
@@ -317,7 +317,7 @@ async function sendWithExactEnergy(
     owner_address: sender
   });
 
-  // 2. Purchase exact energy
+  // 2. Tam enerji satın al
   const order = await merx.createOrder({
     energy_amount: estimate.energy_required,
     duration: '5m',
@@ -326,16 +326,16 @@ async function sendWithExactEnergy(
 
   await waitForFill(order.id);
 
-  // 3. Execute the transaction with zero waste
+  // 3. Sıfır atık ile işlemi yürüt
   return await broadcastTransaction(
     contract, method, params, sender
   );
 }
 ```
 
-### Batch Estimation
+### Toplu Tahmin
 
-For batch operations, simulate all transactions and purchase energy in aggregate:
+Toplu işlemler için tüm işlemleri simüle edin ve enerjileri toplamda satın alın:
 
 ```typescript
 async function batchWithExactEnergy(
@@ -353,7 +353,7 @@ async function batchWithExactEnergy(
     totalEnergy += estimate.energy_required;
   }
 
-  // Single purchase for all operations
+  // Tüm işlemler için tek satın alma
   await merx.createOrder({
     energy_amount: Math.ceil(totalEnergy * 1.02),
     duration: '30m',
@@ -362,9 +362,9 @@ async function batchWithExactEnergy(
 }
 ```
 
-### Cached Estimation
+### Önbelleğe Alınmış Tahmin
 
-For repetitive operations with the same contract and similar parameters, cache the estimate and refresh periodically:
+Aynı kontrat ve benzer parametrelerle tekrarlayan işlemler için tahmini önbelleğe alın ve periyodik olarak yenileyin:
 
 ```typescript
 class EstimationCache {
@@ -372,7 +372,7 @@ class EstimationCache {
     energy: number;
     timestamp: number;
   }>();
-  private ttlMs = 300000; // 5 minutes
+  private ttlMs = 300000; // 5 dakika
 
   async getEstimate(
     contract: string,
@@ -404,23 +404,24 @@ class EstimationCache {
 }
 ```
 
-Caching is appropriate for operations where the energy cost is stable (token transfers to existing holders) but should be avoided for operations where the cost varies significantly (DeFi swaps where pool state changes frequently).
+Önbelleğe alma, enerji maliyetinin stabil olduğu işlemler (mevcut tutucuların sahip olduğu tokenler) için uygulanmalıdır ancak maliyetin önemli ölçüde değiştiği işlemler (havuz durumu sık sık değişen DeFi swap'ları) için kaçınılmalıdır.
 
-## Sonuc
+## Sonuç
 
-`triggerConstantContract` transforms energy purchasing from an estimation game into a precise calculation. Instead of guessing how much energy your transaction needs and hoping the guess is close enough, you simulate the exact transaction against the current contract state and get the exact number.
+`triggerConstantContract` enerji satın almayı tahmin oyunundan tam hesaplamaya dönüştürür. İşleminizin ne kadar enerji gerektirdiğini tahmin etme ve tahminin yeterince yakın olduğunu umma yerine, mevcut kontrat durumuna karşı tam işlemi simüle edin ve tam sayıyı alın.
 
-MERX integrates this capability directly into its energy purchasing workflow. Simulate, get the exact amount, purchase at the best available price from seven providers, and execute the transaction with zero waste and zero TRX burn.
+MERX bu özelliği doğrudan enerji satın alma iş akışına entegre etmiştir. Simüle edin, tam miktarı alın, yedi sağlayıcıdan en iyi mevcut fiyattan satın alın ve işlemi sıfır atık ve sıfır TRX yakma ile yürütün.
 
-The technical mechanism is straightforward -- a dry-run of your smart contract call that reports energy consumption without broadcasting. The practical impact is significant -- eliminating both the waste of over-purchasing and the penalties of under-purchasing, while catching transactions that would fail before you spend money on energy.
+Teknik mekanizm açıktır -- enerji tüketimini raporlayan ancak yayınlamayan akıllı kontrat çağrınızın kuru işletimi. Pratik etki önemlidir -- hem aşırı satın almak hem de yetersiz satın alma cezaları ortadan kaldırarak, herhangi bir anlamlı ölçekte enerji için para harcamadan önce başarısız olacak işlemleri yakalarken.
 
-For developers building on TRON, exact simulation is not an optimization -- it is a necessity for cost-effective operations at any meaningful scale.
+TRON'da inşa eden geliştiriciler için tam simülasyon bir optimizasyon değildir -- herhangi bir anlamlı ölçekteki maliyet etkin işlemler için bir gerekliliktir.
 
-Explore the estimation API at [https://merx.exchange/docs](https://merx.exchange/docs) or try the platform at [https://merx.exchange](https://merx.exchange). For AI agent integration with estimation capabilities, see the MCP server at [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).
+Tahmin API'ını [https://merx.exchange/docs](https://merx.exchange/docs) adresinde keşfedin veya platformu [https://merx.exchange](https://merx.exchange) adresinde deneyin. Tahmin yetenekleriyle yapay zeka aracısı entegrasyonu için MCP sunucusuna bakın [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi Yapay Zeka ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- yüklemesiz, salt okunur araçlar için API anahtarı gerekmez:
 
 ```json
 {
@@ -432,6 +433,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Yapay zeka aracınıza sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

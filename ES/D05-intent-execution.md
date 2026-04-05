@@ -1,39 +1,39 @@
-# Ejecucion de intenciones: planes de multiples pasos para agentes de IA en TRON
+# Ejecución de Intenciones: Planes Multi-Paso para Agentes de IA en TRON
 
-## The Problem with One-at-a-Time
+## El Problema con Uno-a-Uno
 
-AI agents interacting with TRON face a structural problem when tasks involve multiple en cadena operations. Consider a simple scenario: an agent needs to send 100 USDT to Alice and then swap 50 TRX for USDT. Each operation requires its own energy purchase, its own delegation wait, and its own broadcast cycle.
+Los agentes de IA que interactúan con TRON enfrentan un problema estructural cuando las tareas implican múltiples operaciones en cadena. Considera un escenario simple: un agente necesita enviar 100 USDT a Alice y luego intercambiar 50 TRX por USDT. Cada operación requiere su propia compra de energy, su propio tiempo de espera de delegación y su propio ciclo de transmisión.
 
-With the one-at-a-time approach, the agent makes at least 8 tool calls:
+Con el enfoque uno-a-uno, el agente realiza al menos 8 llamadas de herramienta:
 
-1. Estimate energy for USDT transfer
-2. Buy energy for USDT transfer
-3. Wait for delegation
-4. Execute USDT transfer
-5. Estimate energy for swap
-6. Buy energy for swap
-7. Wait for delegation
-8. Execute swap
+1. Estimar energy para transferencia USDT
+2. Comprar energy para transferencia USDT
+3. Esperar delegación
+4. Ejecutar transferencia USDT
+5. Estimar energy para intercambio
+6. Comprar energy para intercambio
+7. Esperar delegación
+8. Ejecutar intercambio
 
-Each energy purchase is a separate market interaction with its own transaction overhead. Each delegation wait adds 3-6 seconds of latency. The total wall-clock time can exceed 30 seconds for what should be a simple two-step task.
+Cada compra de energy es una interacción de mercado separada con su propio overhead de transacción. Cada espera de delegación agrega 3-6 segundos de latencia. El tiempo total puede superar 30 segundos para lo que debería ser una simple tarea de dos pasos.
 
-MERX solves this with intent execution - a system that takes a multi-step plan from an AI agent, simulates every step, optimizes resource purchases across all steps, and executes the entire plan in sequence.
+MERX resuelve esto con ejecución de intenciones - un sistema que toma un plan multi-paso de un agente de IA, simula cada paso, optimiza compras de recursos en todos los pasos, y ejecuta el plan completo en secuencia.
 
-## What Is an Intent
+## Qué es una Intención
 
-In the MERX system, an intent is a declarative description of what the agent wants to accomplish, expressed as an ordered list of actions. The agent specifies the desired outcome, and MERX handles the execution mechanics.
+En el sistema MERX, una intención es una descripción declarativa de lo que el agente desea lograr, expresada como una lista ordenada de acciones. El agente especifica el resultado deseado, y MERX maneja la mecánica de ejecución.
 
-An intent differs from a sequence of tool calls in three important ways:
+Una intención difiere de una secuencia de llamadas de herramienta en tres formas importantes:
 
-1. **Resource optimization** - MERX can batch energy purchases across all steps, buying the total energy needed in a single order rather than step by step.
+1. **Optimización de recursos** - MERX puede agrupar compras de energy en todos los pasos, comprando el energy total necesario en una sola orden en lugar de paso a paso.
 
-2. **Pre-validation** - Every step is simulated before any step executes. If step 3 of a 5-step plan would fail, the agent knows before step 1 is broadcast.
+2. **Pre-validación** - Cada paso se simula antes de que cualquier paso se ejecute. Si el paso 3 de un plan de 5 pasos fallara, el agente lo sabe antes de que el paso 1 se transmita.
 
-3. **Atomic planning** - The agent submits the entire plan at once, giving MERX visibility into the full scope of work. This enables optimizations that are impossible when steps are submitted individually.
+3. **Planificación atómica** - El agente envía el plan completo de una vez, dando a MERX visibilidad del alcance completo del trabajo. Esto permite optimizaciones que son imposibles cuando los pasos se envían individualmente.
 
-## The execute_intent Tool
+## La Herramienta execute_intent
 
-The MCP server exposes intent execution through the `execute_intent` tool:
+El servidor MCP expone la ejecución de intenciones a través de la herramienta `execute_intent`:
 
 ```
 Tool: execute_intent
@@ -61,15 +61,15 @@ Input: {
 }
 ```
 
-The response includes the simulation results for each step, the total resource cost, and the execution status of each step after completion.
+La respuesta incluye los resultados de simulación para cada paso, el costo total de recursos, y el estado de ejecución de cada paso después de completarse.
 
-## Supported Actions
+## Acciones Soportadas
 
-The intent system supports the following action types:
+El sistema de intenciones soporta los siguientes tipos de acción:
 
 ### transfer_trx
 
-Send TRX to an address. This is a native transfer that consumes bandwidth but no energy.
+Enviar TRX a una dirección. Esta es una transferencia nativa que consume bandwidth pero no energy.
 
 ```json
 {
@@ -83,7 +83,7 @@ Send TRX to an address. This is a native transfer that consumes bandwidth but no
 
 ### transfer_trc20
 
-Send a TRC20 token (USDT, USDC, etc.) to an address. Consumes energy for the contrato inteligente call.
+Enviar un token TRC-20 (USDT, USDC, etc.) a una dirección. Consume energy para la llamada de contrato inteligente.
 
 ```json
 {
@@ -98,7 +98,7 @@ Send a TRC20 token (USDT, USDC, etc.) to an address. Consumes energy for the con
 
 ### swap
 
-Execute a token swap on SunSwap V2. Includes exact energy simulation for the specific swap parameters.
+Ejecutar un intercambio de token en SunSwap V2. Incluye simulación exacta de energy para los parámetros de intercambio específicos.
 
 ```json
 {
@@ -114,7 +114,7 @@ Execute a token swap on SunSwap V2. Includes exact energy simulation for the spe
 
 ### approve
 
-Set a spending approval for a TRC20 token. Required before swapping tokens (not needed for swapping TRX).
+Establecer una aprobación de gasto para un token TRC-20. Requerido antes de intercambiar tokens (no necesario para intercambiar TRX).
 
 ```json
 {
@@ -129,7 +129,7 @@ Set a spending approval for a TRC20 token. Required before swapping tokens (not 
 
 ### call_contract
 
-Execute an arbitrary contrato inteligente call. This is the escape hatch for operations not covered by the specific action types.
+Ejecutar una llamada de contrato inteligente arbitraria. Esta es la puerta de escape para operaciones no cubiertas por los tipos de acción específicos.
 
 ```json
 {
@@ -145,7 +145,7 @@ Execute an arbitrary contrato inteligente call. This is the escape hatch for ope
 
 ### buy_resource
 
-Purchase energy or bandwidth as a step in the plan. Useful when the agent wants explicit control over resource timing.
+Comprar energy o bandwidth como un paso en el plan. Útil cuando el agente desea control explícito sobre el timing de recursos.
 
 ```json
 {
@@ -158,55 +158,55 @@ Purchase energy or bandwidth as a step in the plan. Useful when the agent wants 
 }
 ```
 
-## Resource Strategies
+## Estrategias de Recursos
 
-The `resource_strategy` parameter controls how MERX handles energy purchases across the intent's steps.
+El parámetro `resource_strategy` controla cómo MERX maneja las compras de energy en los pasos de la intención.
 
 ### batch_cheapest
 
-This is the default and recommended strategy. MERX simulates all steps, sums the total energy required, subtracts available resources, and makes a single energy purchase for the entire intent.
+Esta es la estrategia predeterminada y recomendada. MERX simula todos los pasos, suma el energy total requerido, resta los recursos disponibles, y realiza una única compra de energy para la intención completa.
 
 ```
-Step 1 (transfer_trc20): 64,895 energy
-Step 2 (swap):           223,354 energy
-Total needed:            288,249 energy
-Currently available:     0 energy
-Purchase:                290,000 energy (rounded to order unit)
+Paso 1 (transfer_trc20): 64,895 energy
+Paso 2 (swap):           223,354 energy
+Total necesario:         288,249 energy
+Disponible actualmente:  0 energy
+Compra:                  290,000 energy (redondeado a unidad de orden)
 ```
 
-One purchase. One delegation wait. Then all steps execute sequentially using the pooled energy.
+Una compra. Una espera de delegación. Luego todos los pasos se ejecutan secuencialmente usando el energy agrupado.
 
-Benefits:
-- Single market interaction (lower overhead)
-- Single delegation wait (lower latency)
-- Potential volume discount on larger orders
-- Simpler failure handling
+Beneficios:
+- Interacción de mercado única (menor overhead)
+- Espera de delegación única (menor latencia)
+- Posible descuento por volumen en órdenes más grandes
+- Manejo de fallos más simple
 
 ### per_step
 
-Each step purchases its own energy independently. Use this when steps are conditional or when you need to minimize risk (if step 1 fails, you haven't purchased energy for step 2).
+Cada paso compra su propio energy independientemente. Usa esto cuando los pasos son condicionales o cuando necesitas minimizar riesgo (si el paso 1 falla, no has comprado energy para el paso 2).
 
 ```
-Step 1: buy 65,000 energy -> wait -> execute transfer
-Step 2: buy 225,000 energy -> wait -> execute swap
+Paso 1: comprar 65,000 energy -> esperar -> ejecutar transferencia
+Paso 2: comprar 225,000 energy -> esperar -> ejecutar intercambio
 ```
 
-This strategy is slower (two delegation waits) but wastes less energy if execution is halted mid-plan.
+Esta estrategia es más lenta (dos esperas de delegación) pero desperdicia menos energy si la ejecución se detiene a mitad del plan.
 
-## Stateful Simulation
+## Simulación Stateful
 
-The intent system's simulation engine maintains state across steps. This is critical for plans where later steps depend on the results of earlier steps.
+El motor de simulación del sistema de intenciones mantiene estado en todos los pasos. Esto es crítico para planes donde los pasos posteriores dependen de los resultados de pasos anteriores.
 
-Consider this intent: "Swap 50 TRX for USDT, then send the received USDT to Alice."
+Considera esta intención: "Intercambiar 50 TRX por USDT, luego enviar el USDT recibido a Alice."
 
-The simulation engine:
+El motor de simulación:
 
-1. Simulates step 1 (swap). Result: agent receives 16.42 USDT.
-2. Updates the simulated state to reflect the new USDT balance.
-3. Simulates step 2 (transfer 16.42 USDT to Alice) against the updated state.
-4. Confirms step 2 would succeed with the balance from step 1.
+1. Simula el paso 1 (intercambio). Resultado: el agente recibe 16.42 USDT.
+2. Actualiza el estado simulado para reflejar el nuevo balance de USDT.
+3. Simula el paso 2 (transferir 16.42 USDT a Alice) contra el estado actualizado.
+4. Confirma que el paso 2 tendría éxito con el balance del paso 1.
 
-Without stateful simulation, step 2 would be simulated against the agent's current balance (which might not include the USDT from the swap). The simulation would incorrectly report that step 2 would fail due to insufficient balance.
+Sin simulación stateful, el paso 2 se simularía contra el balance actual del agente (que podría no incluir el USDT del intercambio). La simulación reportaría incorrectamente que el paso 2 fallaría debido a balance insuficiente.
 
 ```
 Tool: execute_intent
@@ -234,11 +234,11 @@ Input: {
 }
 ```
 
-The `use_previous_output` parameter tells the intent system to use the output amount from the preceding step as the input amount for this step.
+El parámetro `use_previous_output` le dice al sistema de intenciones que use la cantidad de salida del paso anterior como la cantidad de entrada para este paso.
 
-## Simulation Response
+## Respuesta de Simulación
 
-Before execution begins, the intent system returns a simulation summary:
+Antes de que la ejecución comience, el sistema de intenciones devuelve un resumen de simulación:
 
 ```json
 {
@@ -273,11 +273,11 @@ Before execution begins, the intent system returns a simulation summary:
 }
 ```
 
-The agent sees the full plan with costs before any en cadena action is taken. If the costs are unacceptable or a step would fail, the agent can modify the plan without spending anything.
+El agente ve el plan completo con costos antes de que se realice cualquier acción en cadena. Si los costos son inaceptables o un paso fallaría, el agente puede modificar el plan sin gastar nada.
 
-## Execution and Error Handling
+## Ejecución y Manejo de Errores
 
-Once the agent confirms the plan (or if auto-execution is enabled), the intent executes step by step:
+Una vez que el agente confirma el plan (o si la auto-ejecución está habilitada), la intención se ejecuta paso a paso:
 
 ```json
 {
@@ -307,9 +307,9 @@ Once the agent confirms the plan (or if auto-execution is enabled), the intent e
 }
 ```
 
-### Failure Mid-Execution
+### Fallo en Medio de la Ejecución
 
-If a step fails during execution (not during simulation), the intent system stops and reports the failure:
+Si un paso falla durante la ejecución (no durante la simulación), el sistema de intenciones se detiene y reporta el fallo:
 
 ```json
 {
@@ -335,13 +335,13 @@ If a step fails during execution (not during simulation), the intent system stop
 }
 ```
 
-Step 1 has already been committed en cadena and cannot be reversed. The agent receives the remaining energy balance and can decide how to proceed - retry the failed step with adjusted parameters, execute a different action, or let the energy expire.
+El paso 1 ya se ha comprometido en cadena y no puede revertirse. El agente recibe el balance de energy restante y puede decidir cómo proceder - reintentar el paso fallido con parámetros ajustados, ejecutar una acción diferente, o dejar que el energy expire.
 
-## Real-World Example: Treasury Rebalancing
+## Ejemplo del Mundo Real: Rebalanceo de Tesorería
 
-Aqui esta a realistic multi-step intent that an agent might execute for treasury management:
+Aquí hay una intención realista multi-paso que un agente podría ejecutar para gestión de tesorería:
 
-"Swap 1,000 TRX for USDT, send 300 USDT to the operations wallet, send 200 USDT to the marketing wallet, keep the rest."
+"Intercambiar 1,000 TRX por USDT, enviar 300 USDT a la billetera de operaciones, enviar 200 USDT a la billetera de marketing, mantener el resto."
 
 ```
 Tool: execute_intent
@@ -377,63 +377,64 @@ Input: {
 }
 ```
 
-Simulation:
+Simulación:
 
 ```
-Step 1 (swap):     223,354 energy
-Step 2 (transfer): 29,631 energy  (OpsWallet already has USDT)
-Step 3 (transfer): 64,895 energy  (MarketingWallet is new to USDT)
-Total:             317,880 energy
+Paso 1 (intercambio):  223,354 energy
+Paso 2 (transferencia): 29,631 energy  (OpsWallet ya tiene USDT)
+Paso 3 (transferencia): 64,895 energy  (MarketingWallet es nuevo en USDT)
+Total:                 317,880 energy
 
-Batch purchase: 320,000 energy at 16.83 TRX from catfee
+Compra por lotes: 320,000 energy a 16.83 TRX de catfee
 
-Without intent batching: 3 separate purchases = ~18.20 TRX
-With intent batching: 1 purchase = 16.83 TRX
-Savings from batching: 1.37 TRX + reduced latency (1 wait vs 3)
+Sin agrupamiento de intenciones: 3 compras separadas = ~18.20 TRX
+Con agrupamiento de intenciones: 1 compra = 16.83 TRX
+Ahorros por agrupamiento: 1.37 TRX + latencia reducida (1 espera vs 3)
 ```
 
-## When to Use Intents vs Individual Tools
+## Cuándo Usar Intenciones vs Herramientas Individuales
 
-Use `execute_intent` when:
+Usa `execute_intent` cuando:
 
-- The task involves two or more en cadena operations
-- Steps have dependencies (step 2 uses the output of step 1)
-- You want to minimize total resource costs through batching
-- You need pre-validation of the entire plan before committing
+- La tarea implica dos o más operaciones en cadena
+- Los pasos tienen dependencias (el paso 2 usa la salida del paso 1)
+- Quieres minimizar costos totales de recursos a través del agrupamiento
+- Necesitas pre-validación de todo el plan antes de comprometerse
 
-Use individual tools when:
+Usa herramientas individuales cuando:
 
-- The task is a single operation
-- The agent needs to make decisions between steps based on external input
-- Steps are separated by significant time gaps
-- The agent wants maximum control over each stage of execution
+- La tarea es una sola operación
+- El agente necesita tomar decisiones entre pasos basadas en entrada externa
+- Los pasos están separados por brechas de tiempo significativas
+- El agente quiere control máximo sobre cada etapa de ejecución
 
-## Intents and Agent Autonomy
+## Intenciones y Autonomía del Agente
 
-The intent system is designed for agent autonomy. An agent that receives a high-level instruction like "rebalance the treasury" can decompose it into concrete steps, construct an intent, simulate it, review the costs, and execute - all without human intervention at any stage.
+El sistema de intenciones está diseñado para la autonomía del agente. Un agente que recibe una instrucción de alto nivel como "rebalancea la tesorería" puede descomponerla en pasos concretos, construir una intención, simularla, revisar los costos, y ejecutarla - todo sin intervención humana en ninguna etapa.
 
-The simulation step serves as the agent's safety check. Before committing any funds, the agent can verify that every step will succeed, the total cost is within budget, and the expected outputs match the desired outcome. This is the equivalent of a human reviewing a transaction before clicking "confirm," but executed programmatically by the agent itself.
+El paso de simulación sirve como verificación de seguridad del agente. Antes de comprometer fondos, el agente puede verificar que cada paso tendrá éxito, el costo total está dentro del presupuesto, y los resultados esperados coinciden con el resultado deseado. Esto es equivalente a un humano revisando una transacción antes de hacer clic en "confirmar", pero ejecutado programáticamente por el agente mismo.
 
-Combined with orden permanentes for recurring resource purchases and monitors for balance alerts, the intent system enables fully autonomous en cadena operations that run 24/7 without human oversight.
+Combinado con órdenes permanentes para compras recurrentes de recursos y monitores para alertas de balance, el sistema de intenciones permite operaciones en cadena totalmente autónomas que se ejecutan 24/7 sin supervisión humana.
 
-## Conclusion
+## Conclusión
 
-Single-step execution is the training wheels of blockchain automation. Real agent workflows involve multiple operations, dependencies between steps, and resource optimization across the full plan.
+La ejecución de un solo paso son las ruedas de entrenamiento de la automatización blockchain. Los flujos de trabajo reales del agente implican múltiples operaciones, dependencias entre pasos, y optimización de recursos en el plan completo.
 
-MERX intent execution gives AI agents the ability to think in plans rather than individual actions. Simulate everything. Optimize resources across the full scope. Execute with confidence that every step has been pre-validated.
+La ejecución de intenciones MERX da a los agentes de IA la capacidad de pensar en planes en lugar de acciones individuales. Simula todo. Optimiza recursos en el alcance completo. Ejecuta con confianza de que cada paso ha sido pre-validado.
 
-The blockchain is not a single-operation environment. Your agent should not be either.
+El blockchain no es un entorno de operación única. Tu agente tampoco debería serlo.
 
 ---
 
 **Enlaces:**
-- MERX Plataforma: [https://merx.exchange](https://merx.exchange)
+- Plataforma MERX: [https://merx.exchange](https://merx.exchange)
 - Servidor MCP (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - Servidor MCP (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Agrega MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -445,6 +446,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es el energy de TRON más barato en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,54 +1,54 @@
-# Enrutamiento de ordenes en MERX: como su orden obtiene el mejor precio
+# Enrutamiento de Órdenes MERX: Cómo Tu Orden Obtiene el Mejor Precio
 
-When you submit an energy order to MERX, a sequence of decisions happens in milliseconds: which provider has el mejor precio, can they fill this order, what happens if they fail, how do we verify the delegation landed en cadena. This is the enrutamiento de ordenes engine - the component that turns a simple API call into an optimized, fault-tolerant, verified energy delivery.
+Cuando envías una orden de energy a MERX, una secuencia de decisiones ocurre en milisegundos: qué proveedor tiene el mejor precio, ¿pueden completar esta orden?, qué sucede si fallan, cómo verificamos que la delegación se registró en la cadena. Este es el motor de enrutamiento de órdenes - el componente que convierte una simple llamada a API en una entrega de energy optimizada, tolerante a fallos y verificada.
 
-This article walks through the complete lifecycle of a MERX order, from the moment you call `createOrder` to the moment delegated energy appears at your TRON address.
-
----
-
-## The Order Lifecycle
-
-Every order passes through six stages:
-
-```
-1. Validation    -> Is the order well-formed?
-2. Pricing       -> What is the best price right now?
-3. Routing       -> Which provider(s) will fill it?
-4. Execution     -> Submit to provider(s)
-5. Verification  -> Confirm on-chain delegation
-6. Settlement    -> Debit balance, record in ledger
-```
-
-Let us walk through each stage.
+Este artículo recorre el ciclo de vida completo de una orden MERX, desde el momento en que llamas a `createOrder` hasta el momento en que el energy delegado aparece en tu dirección TRON.
 
 ---
 
-## Stage 1: Validation
+## El Ciclo de Vida de la Orden
 
-Before any routing logic runs, the order is validated:
+Cada orden pasa por seis etapas:
+
+```
+1. Validación    -> ¿La orden está bien formada?
+2. Pricing       -> ¿Cuál es el mejor precio en este momento?
+3. Enrutamiento  -> ¿Qué proveedor(es) la completarán?
+4. Ejecución     -> Enviar al/los proveedor(es)
+5. Verificación  -> Confirmar delegación en la cadena
+6. Liquidación   -> Debitar saldo, registrar en libro mayor
+```
+
+Recorramos cada etapa.
+
+---
+
+## Etapa 1: Validación
+
+Antes de que se ejecute cualquier lógica de enrutamiento, la orden se valida:
 
 ```typescript
-// Input validation with Zod
+// Validación de entrada con Zod
 const OrderSchema = z.object({
   energy: z.number().int().min(10000).max(100000000),
   targetAddress: z.string().refine(isValidTronAddress),
   duration: z.enum(['1h', '1d', '3d', '7d', '14d', '30d']),
-  maxPrice: z.number().optional(),  // SUN per energy unit
+  maxPrice: z.number().optional(),  // SUN por unidad de energy
   idempotencyKey: z.string().optional()
 });
 ```
 
-Key validations:
+Validaciones clave:
 
-- **Energy amount**: must be a positive integer within supported range.
-- **Target address**: must be a valid, activated TRON address. The system validates the address format and optionally checks en cadena that the account exists.
-- **Duration**: must be one of the supported delegation periods.
-- **Max price**: optional ceiling. If set, the order only executes if the best available price is at or below this threshold.
-- **Idempotency key**: if provided, duplicate submissions with the same key return the original order instead of creating a new one.
+- **Cantidad de energy**: debe ser un entero positivo dentro del rango soportado.
+- **Dirección de destino**: debe ser una dirección TRON válida y activada. El sistema valida el formato de la dirección y opcionalmente verifica en la cadena que la cuenta existe.
+- **Duración**: debe ser uno de los períodos de delegación soportados.
+- **Precio máximo**: límite superior opcional. Si se establece, la orden solo se ejecuta si el mejor precio disponible está en o por debajo de este umbral.
+- **Clave de idempotencia**: si se proporciona, los envíos duplicados con la misma clave devuelven la orden original en lugar de crear una nueva.
 
-### Idempotency
+### Idempotencia
 
-The idempotency key is critical for production integrations. Network issues can cause a client to retry a request, potentially creating duplicate orders. With an idempotency key, the second request returns the result of the first:
+La clave de idempotencia es crítica para integraciones en producción. Los problemas de red pueden causar que un cliente reintente una solicitud, potencialmente creando órdenes duplicadas. Con una clave de idempotencia, la segunda solicitud devuelve el resultado de la primera:
 
 ```typescript
 const order = await client.createOrder({
@@ -58,15 +58,15 @@ const order = await client.createOrder({
   idempotencyKey: 'payment-123-energy'
 });
 
-// If called again with the same key, returns the same order
-// No duplicate delegation, no double charge
+// Si se llama nuevamente con la misma clave, devuelve la misma orden
+// Sin delegación duplicada, sin cargos dobles
 ```
 
 ---
 
-## Stage 2: Pricing
+## Etapa 2: Pricing
 
-The ejecutor de ordenes reads current prices from the Redis cache. The monitor de precios updates these every 30 seconds, so the data is at most 30 seconds old.
+El ejecutor de órdenes lee los precios actuales del caché de Redis. El monitor de precios actualiza estos cada 30 segundos, así que los datos tienen a lo sumo 30 segundos de antigüedad.
 
 ```typescript
 async function getBestPrices(
@@ -80,20 +80,20 @@ async function getBestPrices(
   for (const key of allPrices) {
     const price = JSON.parse(await redis.get(key));
 
-    // Filter: must support requested duration
+    // Filtro: debe soportar la duración solicitada
     if (!price.durations.includes(duration)) continue;
 
-    // Filter: must have sufficient availability
+    // Filtro: debe tener suficiente disponibilidad
     if (price.availableEnergy < energyAmount) continue;
 
-    // Filter: must pass health threshold
+    // Filtro: debe pasar el umbral de salud
     const health = await getProviderHealth(price.provider);
     if (health.fillRate < 0.90) continue;
 
     validPrices.push(price);
   }
 
-  // Sort by effective price (accounting for reliability)
+  // Ordenar por precio efectivo (considerando confiabilidad)
   return validPrices.sort((a, b) => {
     const effectiveA = a.energyPricePerUnit / a.fillRate;
     const effectiveB = b.energyPricePerUnit / b.fillRate;
@@ -102,9 +102,9 @@ async function getBestPrices(
 }
 ```
 
-### Max Price Enforcement
+### Cumplimiento del Precio Máximo
 
-If the buyer specified a `maxPrice`, the order is rejected if no provider can meet it:
+Si el comprador especificó un `maxPrice`, la orden se rechaza si ningún proveedor puede cumplirlo:
 
 ```typescript
 if (maxPrice && bestPrice.energyPricePerUnit > maxPrice) {
@@ -116,66 +116,66 @@ if (maxPrice && bestPrice.energyPricePerUnit > maxPrice) {
 }
 ```
 
-This prevents unexpected charges during pico de precioss.
+Esto previene cargos inesperados durante picos de precio.
 
 ---
 
-## Stage 3: Routing
+## Etapa 3: Enrutamiento
 
-The routing engine decides which provider(s) will fill the order. This is the core intelligence of the system.
+El motor de enrutamiento decide qué proveedor(es) completarán la orden. Esta es la inteligencia central del sistema.
 
-### Simple Case: Single Provider Fill
+### Caso Simple: Completado por Un Único Proveedor
 
-For orders within a single provider's capacity:
-
-```
-Order: 65,000 energy
-Best provider: itrx at 85 SUN/unit, 500,000 available
-
-Route: 100% to itrx
-```
-
-### Split Case: Multi-Provider Fill
-
-For large orders or when el proveedor mas barato has limited stock:
+Para órdenes dentro de la capacidad de un único proveedor:
 
 ```
-Order: 500,000 energy
+Orden: 65,000 energy
+Mejor proveedor: itrx a 85 SUN/unidad, 500,000 disponibles
 
-Provider A: 200,000 available at 85 SUN
-Provider B: 180,000 available at 87 SUN
-Provider C: 300,000 available at 92 SUN
-
-Routing plan:
-  Leg 1: Provider A -> 200,000 energy at 85 SUN
-  Leg 2: Provider B -> 180,000 energy at 87 SUN
-  Leg 3: Provider C -> 120,000 energy at 92 SUN
-
-Blended rate: (200K*85 + 180K*87 + 120K*92) / 500K = 87.28 SUN
+Enrutamiento: 100% a itrx
 ```
 
-The router fills from cheapest to most expensive, taking as much as possible from each provider before moving to the next.
+### Caso Dividido: Completado por Múltiples Proveedores
 
-### The Failover Chain
-
-Every routing plan includes a cadena de respaldo - an ordered list of alternative providers to try if the primary fails:
+Para órdenes grandes o cuando el proveedor más barato tiene stock limitado:
 
 ```
-Primary:   Provider A (85 SUN)
-Failover 1: Provider B (87 SUN)
-Failover 2: Provider C (92 SUN)
-Failover 3: Provider D (95 SUN)
+Orden: 500,000 energy
+
+Proveedor A: 200,000 disponibles a 85 SUN
+Proveedor B: 180,000 disponibles a 87 SUN
+Proveedor C: 300,000 disponibles a 92 SUN
+
+Plan de enrutamiento:
+  Tramo 1: Proveedor A -> 200,000 energy a 85 SUN
+  Tramo 2: Proveedor B -> 180,000 energy a 87 SUN
+  Tramo 3: Proveedor C -> 120,000 energy a 92 SUN
+
+Tasa combinada: (200K*85 + 180K*87 + 120K*92) / 500K = 87.28 SUN
 ```
 
-If Provider A fails to execute (API error, timeout, insufficient funds), the executor automatically moves to Provider B without any action from the buyer.
+El enrutador se abastece del más barato al más caro, tomando la mayor cantidad posible de cada proveedor antes de pasar al siguiente.
+
+### La Cadena de Respaldo
+
+Todo plan de enrutamiento incluye una cadena de respaldo - una lista ordenada de proveedores alternativos para intentar si el primario falla:
+
+```
+Primario:   Proveedor A (85 SUN)
+Respaldo 1: Proveedor B (87 SUN)
+Respaldo 2: Proveedor C (92 SUN)
+Respaldo 3: Proveedor D (95 SUN)
+```
+
+Si el Proveedor A falla en ejecutar (error de API, tiempo de espera agotado, fondos insuficientes), el ejecutor automáticamente se mueve al Proveedor B sin ninguna acción del comprador.
 
 ---
 
-## Stage 4: Execution
+## Etapa 4: Ejecución
 
-The executor submits the order to the selected provider(s) and monitors for completion.
+El ejecutor envía la orden a el/los proveedor(es) seleccionado(s) y monitorea la finalización.
 
-### Execution Flow
+### Flujo de Ejecución
 
 ```typescript
 async function executeOrder(
@@ -190,7 +190,7 @@ async function executeOrder(
       const result = await executeLeg(leg, order);
       results.push(result);
     } catch (error) {
-      // Primary provider failed - try failover
+      // Proveedor primario falló - intentar respaldo
       const failoverResult = await executeWithFailover(
         leg,
         order,
@@ -222,7 +222,7 @@ async function executeWithFailover(
       );
       return result;
     } catch (error) {
-      // Log and continue to next failover
+      // Registrar y continuar al siguiente respaldo
       continue;
     }
   }
@@ -234,24 +234,24 @@ async function executeWithFailover(
 }
 ```
 
-### Timeout Handling
+### Manejo de Tiempo de Espera
 
-Each provider execution has a strict timeout. If the provider does not acknowledge the order within the timeout window (typically 30 seconds), the executor moves to the cadena de respaldo:
+Cada ejecución de proveedor tiene un tiempo de espera estricto. Si el proveedor no reconoce la orden dentro de la ventana de tiempo de espera (típicamente 30 segundos), el ejecutor se mueve a la cadena de respaldo:
 
 ```
-T+0:    Submit order to Provider A
-T+30s:  No response -> timeout, failover to Provider B
-T+31s:  Submit order to Provider B
-T+35s:  Provider B acknowledges -> proceed to verification
+T+0:    Enviar orden al Proveedor A
+T+30s:  Sin respuesta -> tiempo de espera agotado, respaldo al Proveedor B
+T+31s:  Enviar orden al Proveedor B
+T+35s:  Proveedor B reconoce -> proceder a verificación
 ```
 
 ---
 
-## Stage 5: Verification
+## Etapa 5: Verificación
 
-Acknowledgment from the provider is not enough. MERX verifies that the delegacion de energia actually appears on the TRON blockchain.
+El reconocimiento del proveedor no es suficiente. MERX verifica que la delegación de energy realmente aparezca en la cadena de bloques TRON.
 
-### On-Chain Verification Process
+### Proceso de Verificación En Cadena
 
 ```typescript
 async function verifyDelegation(
@@ -260,18 +260,18 @@ async function verifyDelegation(
   delegationTxHash: string
 ): Promise<VerificationResult> {
 
-  // Step 1: Verify the delegation transaction exists
+  // Paso 1: Verificar que la transacción de delegación existe
   const tx = await tronWeb.trx.getTransaction(delegationTxHash);
   if (!tx || tx.ret[0].contractRet !== 'SUCCESS') {
     return { verified: false, reason: 'Transaction not found or failed' };
   }
 
-  // Step 2: Check target address resources
+  // Paso 2: Verificar recursos de la dirección de destino
   const resources = await tronWeb.trx.getAccountResources(targetAddress);
   const currentEnergy = resources.EnergyLimit || 0;
 
-  // Step 3: Verify energy increased by expected amount (with tolerance)
-  const tolerance = expectedEnergy * 0.02; // 2% tolerance
+  // Paso 3: Verificar que el energy aumentó por la cantidad esperada (con tolerancia)
+  const tolerance = expectedEnergy * 0.02; // Tolerancia del 2%
   if (currentEnergy < expectedEnergy - tolerance) {
     return { verified: false, reason: 'Energy amount below expected' };
   }
@@ -285,39 +285,39 @@ async function verifyDelegation(
 }
 ```
 
-### Why 2% Tolerance
+### Por Qué Tolerancia del 2%
 
-Energy delegation amounts are based on TRX-to-energy conversion ratios that can shift slightly between order placement and delegation confirmation. A 2% tolerance accounts for this without accepting grossly incorrect amounts.
+Los montos de delegación de energy se basan en ratios de conversión de TRX a energy que pueden cambiar ligeramente entre la colocación de la orden y la confirmación de delegación. Una tolerancia del 2% explica esto sin aceptar montos grossamente incorrectos.
 
-### Verification Timing
+### Tiempo de Verificación
 
 ```
-T+0:    Provider acknowledges order
-T+3-6s: Delegation transaction confirms on TRON (1 block)
-T+10s:  MERX queries target address resources
-T+10s:  Verification complete, buyer notified
+T+0:    Proveedor reconoce la orden
+T+3-6s: Transacción de delegación confirma en TRON (1 bloque)
+T+10s:  MERX consulta recursos de dirección de destino
+T+10s:  Verificación completa, comprador notificado
 ```
 
-The entire process from order submission to verified delivery typically takes 15-45 seconds.
+Todo el proceso desde envío de orden hasta entrega verificada típicamente toma 15-45 segundos.
 
 ---
 
-## Stage 6: Settlement
+## Etapa 6: Liquidación
 
-After verification, the financial settlement occurs:
+Después de verificación, ocurre la liquidación financiera:
 
-### Balance Deduction
+### Deducción de Saldo
 
 ```sql
--- Atomic balance check and deduction
+-- Deducción y verificación de saldo atómica
 BEGIN;
 
 SELECT balance_sun FROM accounts
 WHERE user_id = $1
 FOR UPDATE;
 
--- Verify sufficient balance
--- If insufficient, ROLLBACK and return error
+-- Verificar saldo suficiente
+-- Si insuficiente, ROLLBACK y retornar error
 
 UPDATE accounts
 SET balance_sun = balance_sun - $2
@@ -326,11 +326,11 @@ WHERE user_id = $1;
 COMMIT;
 ```
 
-The `SELECT FOR UPDATE` ensures no race condition between verificacion de saldo and deduction. If two orders are processed simultaneously, the second one will wait for the first to complete before checking the balance.
+`SELECT FOR UPDATE` asegura que no haya condición de carrera entre verificación de saldo y deducción. Si dos órdenes se procesan simultáneamente, la segunda esperará a que la primera se complete antes de verificar el saldo.
 
-### Ledger Entry
+### Entrada de Libro Mayor
 
-Every settlement creates an immutable entrada del libro mayor:
+Cada liquidación crea una entrada inmutable de libro mayor:
 
 ```sql
 INSERT INTO ledger (
@@ -346,25 +346,25 @@ INSERT INTO ledger (
 );
 ```
 
-Ledger entries are append-only. They are never updated or deleted. This creates a complete, auditable history of every financial operation.
+Las entradas de libro mayor son solo adiciones. Nunca se actualizan o se eliminan. Esto crea un historial completo y auditable de cada operación financiera.
 
 ---
 
-## Tracking Your Order
+## Rastreando Tu Orden
 
-The MERX API provides tiempo real estado de la orden through both REST and WebSocket:
+La API de MERX proporciona estado de orden en tiempo real a través de REST y WebSocket:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const client = new MerxClient({ apiKey: 'your-key' });
 
-// REST: poll order status
+// REST: consultar estado de la orden
 const order = await client.getOrder('ord_abc123');
 console.log(order.status);
 // 'pending' | 'executing' | 'verifying' | 'completed' | 'failed'
 
-// WebSocket: real-time updates
+// WebSocket: actualizaciones en tiempo real
 client.onOrderUpdate('ord_abc123', (update) => {
   console.log(`Order ${update.orderId}: ${update.status}`);
   if (update.status === 'completed') {
@@ -373,7 +373,7 @@ client.onOrderUpdate('ord_abc123', (update) => {
 });
 ```
 
-### Order Status Flow
+### Flujo de Estado de Orden
 
 ```
 pending -> executing -> verifying -> completed
@@ -382,20 +382,20 @@ pending -> executing -> verifying -> completed
               failed              partially_filled
 ```
 
-- **pending**: Order received, awaiting execution.
-- **executing**: Submitted to provider, awaiting acknowledgment.
-- **verifying**: Provider acknowledged, awaiting en cadena confirmation.
-- **completed**: Energy verified at target address.
-- **failed**: All providers failed. Balance not charged.
-- **partially_filled**: Some legs completed, others failed. Balance charged for filled portion.
+- **pending**: Orden recibida, esperando ejecución.
+- **executing**: Enviada al proveedor, esperando reconocimiento.
+- **verifying**: Proveedor reconoció, esperando confirmación en cadena.
+- **completed**: Energy verificado en dirección de destino.
+- **failed**: Todos los proveedores fallaron. Saldo no cargado.
+- **partially_filled**: Algunos tramos completados, otros fallidos. Saldo cargado solo por porción completada.
 
 ---
 
-## Error Handling
+## Manejo de Errores
 
-### Provider Errors
+### Errores de Proveedor
 
-Every provider can fail in unique ways. The ejecutor de ordenes normalizes all provider errors into standard codigo de errors:
+Cada proveedor puede fallar de formas únicas. El ejecutor de órdenes normaliza todos los errores de proveedor en códigos de error estándar:
 
 ```json
 {
@@ -412,50 +412,51 @@ Every provider can fail in unique ways. The ejecutor de ordenes normalizes all p
 }
 ```
 
-### Partial Fills
+### Completados Parciales
 
-For multi-leg orders, some legs may succeed while others fail. MERX handles this by:
+Para órdenes multi-tramo, algunos tramos pueden tener éxito mientras otros fallan. MERX maneja esto:
 
-1. Completing successful legs normally.
-2. Attempting respaldo for failed legs.
-3. If respaldo also fails, returning a partial fill result.
-4. Charging the buyer only for the energy that was actually delivered.
+1. Completando tramos exitosos normalmente.
+2. Intentando respaldo para tramos fallidos.
+3. Si el respaldo también falla, retornando un resultado de completado parcial.
+4. Cobrando al comprador solo por el energy que fue realmente entregado.
 
 ---
 
-## Performance
+## Rendimiento
 
-Typical ejecucion de ordenes times:
+Tiempos típicos de ejecución de orden:
 
 ```
-Validation:    < 5ms
-Pricing:       < 10ms (Redis read)
-Routing:       < 5ms
-Execution:     5-30 seconds (provider API + blockchain)
-Verification:  3-10 seconds (blockchain confirmation)
+Validación:    < 5ms
+Pricing:       < 10ms (lectura de Redis)
+Enrutamiento:  < 5ms
+Ejecución:     5-30 segundos (API de proveedor + cadena de bloques)
+Verificación:  3-10 segundos (confirmación en cadena de bloques)
 
-Total: 10-45 seconds from API call to verified delivery
+Total: 10-45 segundos desde llamada a API hasta entrega verificada
 ```
 
-The bottleneck is always the blockchain. MERX's internal processing adds less than 50ms of overhead. The rest is waiting for the provider and the TRON network.
+El cuello de botella siempre es la cadena de bloques. El procesamiento interno de MERX agrega menos de 50ms de sobrecarga. El resto es esperar al proveedor y la red TRON.
 
 ---
 
-## Conclusion
+## Conclusión
 
-Order routing is where MERX's value is most tangible. A una sola API call triggers a cascade of optimizations: best-price selection, multi-provider splitting, respaldo automatico, en cadena verification, and atomic settlement. Every step is designed to ensure you get the cheapest energia disponible, delivered reliably, with full auditability.
+El enrutamiento de órdenes es donde el valor de MERX es más tangible. Una sola llamada a API desencadena una cascada de optimizaciones: selección de mejor precio, división multi-proveedor, respaldo automático, verificación en cadena, y liquidación atómica. Cada paso está diseñado para asegurar que obtengas el energy más barato disponible, entregado confiablemente, con completa auditabilidad.
 
-The complexity is real, but it is MERX's complexity to manage, not yours. Your integration remains a una sola API call.
+La complejidad es real, pero es complejidad de MERX para gestionar, no la tuya. Tu integración sigue siendo una sola llamada a API.
 
-Comience a enrutar ordenes en [https://merx.exchange](https://merx.exchange). Referencia completa de la API en [https://merx.exchange/docs](https://merx.exchange/docs).
+Comienza a enrutar órdenes en [https://merx.exchange](https://merx.exchange). Referencia completa de API en [https://merx.exchange/docs](https://merx.exchange/docs).
 
 ---
 
-*Este articulo es parte de la serie tecnica de MERX. MERX es el primer exchange de recursos blockchain. SDKs: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) and [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python). Servidor MCP: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).*
+*Este artículo es parte de la serie técnica de MERX. MERX es el primer intercambio de recursos de cadena de bloques. SDKs: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js) y [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python). Servidor MCP: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Agrega MERX a Claude Desktop o cualquier cliente compatible con MCP -- sin instalación, sin API key necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -467,6 +468,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregunta a tu agente de IA: "¿Cuál es el energy de TRON más barato en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

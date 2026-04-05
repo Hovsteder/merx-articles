@@ -1,90 +1,90 @@
-# Надежность провайдеров: сравнение аптайма, скорости и процента исполнения
+# Надежность провайдера: сравнение анапа времени, скорости и процентов заполнения
 
-Price is the most visible metric when choosing a TRON energy provider. But price alone does not tell the full story. A provider quoting 22 SUN is worthless if the order takes 10 minutes to fill, fails 15% of the time, or the delegation drops before the stated duration expires.
+Цена — самый заметный показатель при выборе провайдера TRON energy. Но одна лишь цена не рассказывает полную историю. Провайдер, котирующий 22 SUN, бесполезен, если заказ заполняется 10 минут, отказывает в 15% случаев или делегирование заканчивается раньше, чем указано в сроке.
 
-This article examines the reliability dimensions that matter beyond price: uptime, fill speed, fill rates, and consistency. It explains how MERX tracks these metrics across all seven providers and how aggregation fundamentally improves reliability compared to single-provider dependence.
+В этой статье рассматриваются измерения надежности, которые имеют значение помимо цены: анапа времени, скорость заполнения, проценты заполнения и консистентность. Объясняется, как MERX отслеживает эти метрики у всех семи провайдеров и как агрегирование фундаментально улучшает надежность по сравнению с зависимостью от одного провайдера.
 
-## Why Reliability Matters
+## Почему надежность важна
 
-For a one-off energy purchase, reliability is a minor concern. If your order fails, you try again. If it takes 5 minutes instead of 30 seconds, you wait.
+Для разовой покупки energy надежность — это второстепенная проблема. Если ваш заказ не выполнится, вы попробуете еще раз. Если он выполнится 5 минут вместо 30 секунд, вы подождете.
 
-For automated systems -- payment processors, trading bots, distribution services -- reliability is a critical operational parameter. A failed energy order can cascade into a failed transaction, which cascades into a failed payment, which costs real money and erodes user trust.
+Для автоматизированных систем — процессоров платежей, торговых ботов, сервисов распределения — надежность является критическим операционным параметром. Неудачный заказ energy может привести к неудачной транзакции, которая приводит к неудачному платежу, что стоит реальных денег и подрывает доверие пользователей.
 
-### The True Cost of Unreliability
+### Настоящая стоимость ненадежности
 
-Consider a payment processor handling 500 USDT transfers per day. Each transfer requires energy. If the energy provider has a 95% fill rate (which sounds high), 5% of orders fail. That is 25 failed energy purchases per day.
+Рассмотрим процессор платежей, обрабатывающий 500 переводов USDT в день. Каждый перевод требует energy. Если провайдер energy имеет 95% проценты заполнения (что звучит высоко), 5% заказов не выполняются. То есть 25 неудачных покупок energy в день.
 
-Each failure triggers a fallback: either retry (adding latency), buy from an alternative (requiring multi-provider integration), or fall back to TRX burn (paying 5-10x more for that transaction).
+Каждый отказ запускает fallback: либо повтор (добавляя задержку), либо покупка у альтернативного провайдера (требуя интеграции с несколькими провайдерами), либо fallback на сжигание TRX (платя 5-10x больше за эту транзакцию).
 
-At 25 failures per day, the annual cost of a "95% reliable" provider includes:
+При 25 отказах в день, годовая стоимость "95% надежного" провайдера включает:
 
-- 9,125 failed orders requiring manual or automated intervention
-- Additional latency on affected transactions
-- Higher cost on fallback transactions
-- Engineering time to build and maintain retry/fallback logic
+- 9 125 неудачных заказов, требующих ручного или автоматического вмешательства
+- Дополнительную задержку на затронутых транзакциях
+- Более высокую стоимость на транзакциях fallback
+- Время инженеров на построение и поддержку логики повтора/fallback
 
-A 99.5% fill rate reduces those 25 daily failures to 2.5 -- a 10x improvement in operational smoothness.
+99,5% проценты заполнения снижает те 25 дневных отказов до 2,5 — 10-кратное улучшение операционной плавности.
 
-## Reliability Dimensions
+## Измерения надежности
 
-### Uptime
+### Анапа времени
 
-Uptime measures the percentage of time a provider's API is responsive and accepting orders. This is the most basic reliability metric -- if the API is down, nothing else matters.
+Анапа времени измеряет процент времени, в течение которого API провайдера отзывчив и принимает заказы. Это самый базовый показатель надежности — если API отключен, ничего больше не имеет значения.
 
-Causes of downtime include:
+Причины отключения включают:
 
-- **Planned maintenance**: Scheduled API updates or infrastructure changes
-- **Infrastructure failures**: Server crashes, network issues, database problems
-- **Supply exhaustion**: Some providers go offline when their energy supply is depleted rather than returning "unavailable" responses
-- **Rate limiting**: Aggressive rate limits can effectively create downtime for high-volume users
+- **Плановое обслуживание**: Запланированные обновления API или изменения инфраструктуры
+- **Отказы инфраструктуры**: Сбои серверов, проблемы с сетью, проблемы с базой данных
+- **Истощение предложения**: Некоторые провайдеры отключаются, когда их запас energy истощается, вместо того чтобы возвращать ответы "недоступно"
+- **Rate limiting**: Агрессивные ограничения скорости могут эффективно создавать отключение для пользователей с высоким объемом
 
-An individual provider might maintain 98-99% uptime, which sounds excellent until you calculate the implications: 1% downtime is 87 hours per year, or roughly 15 minutes per day.
+Отдельный провайдер может поддерживать 98-99% анапа времени, что звучит отлично, пока вы не рассчитаете последствия: 1% отключения — это 87 часов в год, или примерно 15 минут в день.
 
-### Fill Speed
+### Скорость заполнения
 
-Fill speed measures the time from order placement to energy delegation appearing on the target address. This varies significantly across providers:
+Скорость заполнения измеряет время от размещения заказа до того, как делегирование energy появляется на целевом адресе. Это значительно варьируется у разных провайдеров:
 
-- **Fast providers**: 10-30 seconds. The order is processed, the delegation transaction is broadcast, and the target address receives energy within half a minute.
-- **Moderate providers**: 30-120 seconds. Processing takes longer, possibly due to batch delegation or manual approval steps.
-- **Slow providers**: 2-10 minutes. Some providers, particularly P2P marketplaces, require matching with a seller before the delegation can occur.
+- **Быстрые провайдеры**: 10-30 секунд. Заказ обрабатывается, транзакция делегирования транслируется, и целевой адрес получает energy в течение получаса.
+- **Умеренные провайдеры**: 30-120 секунд. Обработка занимает больше времени, возможно, из-за пакетного делегирования или шагов ручного одобрения.
+- **Медленные провайдеры**: 2-10 минут. Некоторые провайдеры, особенно P2P-маркетплейсы, требуют совпадения с продавцом перед тем, как может произойти делегирование.
 
-For time-sensitive operations (user-facing payments, trading bots), the difference between 15-second and 5-minute fills is operationally significant.
+Для операций, чувствительных ко времени (платежи, видимые пользователю, торговые боты), разница между 15-секундным и 5-минутным заполнением операционно значительна.
 
-### Fill Rate
+### Проценты заполнения
 
-Fill rate measures the percentage of orders that successfully complete. An order can fail for several reasons:
+Проценты заполнения измеряют процент заказов, которые успешно выполняются. Заказ может быть не выполнен по нескольким причинам:
 
-- **Insufficient supply**: The provider accepted the order but cannot fulfill it
-- **Delegation failure**: The on-chain delegation transaction fails
-- **Timeout**: The order is not filled within the expected timeframe
-- **Payment issues**: Internal payment processing fails
+- **Недостаточное предложение**: Провайдер принял заказ, но не может его выполнить
+- **Ошибка делегирования**: On-chain транзакция делегирования не выполнена
+- **Timeout**: Заказ не заполнен в ожидаемые сроки
+- **Проблемы с платежом**: Внутренняя обработка платежа не выполнена
 
-Fill rates vary by provider and by order parameters. A provider might have a 99% fill rate for 65,000-energy orders but only 85% for 5,000,000-energy orders due to supply constraints.
+Проценты заполнения варьируются у разных провайдеров и в зависимости от параметров заказа. Провайдер может иметь 99% проценты заполнения для заказов на 65 000 energy, но только 85% для заказов на 5 000 000 energy из-за ограничений предложения.
 
-### Delegation Consistency
+### Консистентность делегирования
 
-Consistency measures whether the energy delegation persists for the full stated duration. A provider selling "1-hour" energy should maintain the delegation for a full 60 minutes, not 45 minutes.
+Консистентность измеряет, сохраняется ли делегирование energy на протяжении всего указанного срока. Провайдер, продающий "1-часовую" energy, должен поддерживать делегирование полных 60 минут, а не 45 минут.
 
-Some providers have been observed to:
+У некоторых провайдеров было замечено:
 
-- End delegations early (particularly during supply crunches)
-- Fail to extend delegations on longer-duration orders
-- Reduce delegated amounts mid-duration
+- Завершение делегирования раньше (особенно во время нехватки предложения)
+- Ошибка в расширении делегирований на заказах с большей продолжительностью
+- Снижение делегированных сумм в середине срока
 
-These consistency issues are difficult for individual buyers to detect but have real cost implications -- if your 1-hour energy disappears after 40 minutes, transactions in the remaining 20 minutes burn TRX.
+Эти проблемы с консистентностью сложно обнаружить отдельным покупателям, но они имеют реальные последствия для затрат — если ваша 1-часовая energy исчезнет через 40 минут, транзакции в оставшиеся 20 минут будут сжигать TRX.
 
-## How MERX Tracks Provider Health
+## Как MERX отслеживает здоровье провайдера
 
-MERX maintains continuous monitoring across all seven providers, tracking metrics that individual buyers cannot practically measure on their own.
+MERX осуществляет непрерывный мониторинг у всех семи провайдеров, отслеживая метрики, которые отдельные покупатели не могут практически измерить самостоятельно.
 
-### Health Monitoring
+### Мониторинг здоровья
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// Compare providers for your specific order profile
+// Сравните провайдеров для вашего конкретного профиля заказа
 const comparison = await merx.compareProviders({
   energy_amount: 65000,
   duration: '1h'
@@ -92,65 +92,65 @@ const comparison = await merx.compareProviders({
 
 for (const provider of comparison.providers) {
   console.log(`${provider.name}:`);
-  console.log(`  Price: ${provider.price_sun} SUN`);
-  console.log(`  Available: ${provider.available}`);
-  console.log(`  Avg fill time: ${provider.avg_fill_seconds}s`);
-  console.log(`  Fill rate: ${provider.fill_rate}%`);
+  console.log(`  Цена: ${provider.price_sun} SUN`);
+  console.log(`  Доступно: ${provider.available}`);
+  console.log(`  Среднее время заполнения: ${provider.avg_fill_seconds}s`);
+  console.log(`  Проценты заполнения: ${provider.fill_rate}%`);
 }
 ```
 
-### What MERX Measures
+### Что измеряет MERX
 
-For each provider, MERX tracks:
+Для каждого провайдера MERX отслеживает:
 
-- **API response time**: How quickly the provider's API responds to queries
-- **Order fill time**: Time from order placement to confirmed delegation
-- **Fill rate**: Percentage of orders that complete successfully
-- **Price accuracy**: Whether the filled price matches the quoted price
-- **Duration compliance**: Whether delegations persist for the stated period
-- **Error patterns**: Types and frequency of errors
+- **Время ответа API**: Насколько быстро API провайдера реагирует на запросы
+- **Время заполнения заказа**: Время от размещения заказа до подтвержденного делегирования
+- **Проценты заполнения**: Процент заказов, которые успешно выполняются
+- **Точность цены**: Совпадает ли заполненная цена с цитируемой ценой
+- **Соответствие длительности**: Сохраняются ли делегирования на указанный период
+- **Закономерности ошибок**: Типы и частота ошибок
 
-This data feeds into MERX's routing algorithm. When prices are equal between two providers, the more reliable one gets the order.
+Эти данные поступают в алгоритм маршрутизации MERX. Когда цены равны между двумя провайдерами, более надежный получает заказ.
 
-## Aggregation and Reliability
+## Агрегирование и надежность
 
-The most powerful reliability benefit of aggregation is not any single metric improvement -- it is the elimination of single-provider dependency.
+Самое мощное преимущество надежности агрегирования — это не какое-либо одиночное улучшение метрики, а устранение зависимости от одного провайдера.
 
-### Single Provider Reliability Model
+### Модель надежности одного провайдера
 
-With one provider at 99% uptime and 97% fill rate:
+С одним провайдером на 99% анапа времени и 97% проценты заполнения:
 
-- Effective success rate: 99% x 97% = 96.03%
-- Annual failed orders (at 500 orders/day): 7,244
-- Monthly failed orders: 604
+- Эффективный процент успеха: 99% x 97% = 96,03%
+- Неудачные заказы в год (при 500 заказах/день): 7 244
+- Неудачные заказы в месяц: 604
 
-### Aggregated Reliability Model (7 providers)
+### Агрегированная модель надежности (7 провайдеров)
 
-With MERX routing across seven providers, the system fails only when all providers simultaneously fail. Even if each provider individually has 99% uptime:
+С маршрутизацией MERX у семи провайдеров система выходит из строя только когда все провайдеры одновременно выходят из строя. Даже если каждый провайдер индивидуально имеет 99% анапа времени:
 
-- Probability of all 7 being down simultaneously: 0.01^7 = 10^-14 (effectively zero)
-- Effective uptime: essentially 100% (limited only by MERX's own infrastructure)
+- Вероятность того, что все 7 одновременно отключены: 0,01^7 = 10^-14 (эффективно нулевая)
+- Эффективная анапа времени: по сути 100% (ограничена только инфраструктурой MERX)
 
-For fill rate, the aggregated model means that if the primary provider cannot fill an order, it routes to the next available provider automatically:
+Для процентов заполнения агрегированная модель означает, что если первичный провайдер не может заполнить заказ, он маршрутизируется к следующему доступному провайдеру автоматически:
 
 ```
-Order placed
+Заказ размещен
   |
   v
-Provider 1 (cheapest): order failed
+Провайдер 1 (самый дешевый): заказ не выполнен
   |
   v
-Provider 2: order filled at slightly higher price
+Провайдер 2: заказ заполнен при немного более высокой цене
   |
   v
-Energy delegated to target address
+Energy делегирована целевому адресу
 ```
 
-The buyer experiences a slightly higher price (the second-cheapest instead of the cheapest) but the order fills. Without aggregation, the same scenario results in a complete failure requiring manual intervention.
+Покупатель испытывает немного более высокую цену (вторую по дешевизне вместо самой дешевой), но заказ заполняется. Без агрегирования тот же сценарий приводит к полному отказу, требующему ручного вмешательства.
 
-### Failover Transparency
+### Прозрачность Failover
 
-MERX's failover is transparent to the buyer. The API response indicates which provider filled the order, but the buyer's code does not need to handle provider-specific failure cases:
+Failover MERX прозрачен для покупателя. Ответ API указывает, какой провайдер заполнил заказ, но код покупателя не должен обрабатывать определенные для провайдера случаи отказа:
 
 ```typescript
 const order = await merx.createOrder({
@@ -159,15 +159,15 @@ const order = await merx.createOrder({
   target_address: wallet
 });
 
-// order.provider tells you who filled it
-// Your code never needs to handle provider failures
-console.log(`Filled by: ${order.provider}`);
+// order.provider говорит вам, кто его заполнил
+// Вашему коду никогда не нужно обрабатывать отказы провайдера
+console.log(`Заполнено: ${order.provider}`);
 ```
 
-Compare this with manual failover:
+Сравните с ручным failover:
 
 ```typescript
-// Without aggregation: manual failover is complex
+// Без агрегирования: ручной failover сложный
 let filled = false;
 for (const provider of [providerA, providerB, providerC]) {
   try {
@@ -175,47 +175,47 @@ for (const provider of [providerA, providerB, providerC]) {
     filled = true;
     break;
   } catch (error) {
-    // Handle provider-specific error
-    // Different error format for each provider
-    // Different retry logic for each provider
+    // Обработайте специфичную для провайдера ошибку
+    // Разный формат ошибки для каждого провайдера
+    // Разная логика повтора для каждого провайдера
     continue;
   }
 }
 if (!filled) {
-  // All providers failed -- handle the crisis
+  // Все провайдеры не выполнили — обработайте кризис
 }
 ```
 
-The aggregated approach eliminates this entire failover codebase.
+Агрегированный подход исключает весь этот код failover.
 
-## Provider Reliability Characteristics
+## Характеристики надежности провайдера
 
-Based on general market observations (specific metrics vary over time):
+На основе общих наблюдений рынка (конкретные метрики варьируются со временем):
 
-### P2P Providers (TronSave)
+### P2P-провайдеры (TronSave)
 
-- **Uptime**: Generally high (99%+)
-- **Fill speed**: Variable (30 seconds to several minutes depending on seller matching)
-- **Fill rate**: Lower for large orders (supply depends on active sellers)
-- **Consistency**: Generally good once delegation is established
+- **Анапа времени**: Обычно высокая (99%+)
+- **Скорость заполнения**: Переменная (от 30 секунд до нескольких минут в зависимости от совпадения продавца)
+- **Проценты заполнения**: Ниже для крупных заказов (предложение зависит от активных продавцов)
+- **Консистентность**: Обычно хорошая после установления делегирования
 
-### Fixed-Price Providers (PowerSun)
+### Фиксированные провайдеры (PowerSun)
 
-- **Uptime**: High (99%+)
-- **Fill speed**: Typically fast (15-60 seconds)
-- **Fill rate**: High for standard orders within supply limits
-- **Consistency**: Excellent -- fixed model incentivizes reliable delivery
+- **Анапа времени**: Высокая (99%+)
+- **Скорость заполнения**: Обычно быстрая (15-60 секунд)
+- **Проценты заполнения**: Высокие для стандартных заказов в пределах лимитов предложения
+- **Консистентность**: Отличная — фиксированная модель стимулирует надежную доставку
 
-### Dynamic Providers (Feee, Catfee, Netts, iTRX, Sohu)
+### Динамические провайдеры (Feee, Catfee, Netts, iTRX, Sohu)
 
-- **Uptime**: Varies by provider (97-99.5%)
-- **Fill speed**: Generally moderate (15-90 seconds)
-- **Fill rate**: Varies, generally 95-99% for standard orders
-- **Consistency**: Generally good, occasional early delegation termination
+- **Анапа времени**: Варьируется у провайдеров (97-99,5%)
+- **Скорость заполнения**: Обычно умеренная (15-90 секунд)
+- **Проценты заполнения**: Варьируется, обычно 95-99% для стандартных заказов
+- **Консистентность**: Обычно хорошая, случайное раннее завершение делегирования
 
-## Building Reliability-Aware Systems
+## Построение систем, осведомленных о надежности
 
-For systems where reliability is paramount, combine MERX aggregation with application-level resilience:
+Для систем, где надежность критична, комбинируйте агрегирование MERX с устойчивостью на уровне приложения:
 
 ```typescript
 async function reliableEnergyPurchase(
@@ -231,7 +231,7 @@ async function reliableEnergyPurchase(
         target_address: wallet
       });
 
-      // Wait for fill confirmation
+      // Дождитесь подтверждения заполнения
       const filled = await waitForFill(order.id, {
         timeout: 60000
       });
@@ -240,32 +240,32 @@ async function reliableEnergyPurchase(
         return order;
       }
 
-      // Order timed out -- MERX may have already routed
-      // to another provider internally
+      // Заказ истек — MERX, возможно, уже маршрутизировал
+      // к другому провайдеру внутри
 
     } catch (error) {
       if (attempt === maxAttempts) {
-        // Final fallback: accept TRX burn
+        // Финальный fallback: принять сжигание TRX
         console.warn(
-          'Energy purchase failed after all attempts. ' +
-          'Transaction will burn TRX.'
+          'Покупка energy не выполнена после всех попыток. ' +
+          'Транзакция будет сжигать TRX.'
         );
         throw error;
       }
-      // Brief pause before retry
+      // Краткая пауза перед повтором
       await delay(2000 * attempt);
     }
   }
 
-  throw new Error('Energy purchase failed');
+  throw new Error('Покупка energy не выполнена');
 }
 ```
 
-Note that even the retry logic here is simpler than manual multi-provider failover because MERX handles the provider routing internally. Your retry logic only needs to handle the rare case where the aggregation layer itself encounters issues.
+Обратите внимание, что даже логика повтора здесь проще, чем ручной multi-provider failover, потому что MERX обрабатывает маршрутизацию провайдера внутри. Вашей логике повтора нужно только обрабатывать редкий случай, когда сам уровень агрегирования встречает проблемы.
 
-## Measuring Your Own Reliability
+## Измерение собственной надежности
 
-Track these metrics for your specific operations:
+Отслеживайте эти метрики для ваших конкретных операций:
 
 ```typescript
 interface ReliabilityMetrics {
@@ -275,26 +275,27 @@ interface ReliabilityMetrics {
   averageFillTimeMs: number;
   medianFillTimeMs: number;
   p95FillTimeMs: number;
-  trxBurnEvents: number; // Times energy was insufficient
+  trxBurnEvents: number; // Разы, когда energy было недостаточно
   providerDistribution: Record<string, number>;
 }
 ```
 
-Monitor these over time. If your fill rate drops or fill times increase, it may indicate market-wide supply issues, and you should adjust your purchasing strategy (higher price targets, earlier purchasing, larger buffers).
+Отслеживайте эти показатели со временем. Если ваш проценты заполнения снижается или время заполнения увеличивается, это может указывать на проблемы с предложением на уровне рынка, и вы должны отрегулировать свою стратегию покупки (более высокие целевые цены, более ранняя покупка, большие буферы).
 
 ## Заключение
 
-Provider reliability encompasses far more than whether the API responds. Fill speed, fill rate, delegation consistency, and failover capability all determine whether your energy procurement actually supports your operations or introduces failure points.
+Надежность провайдера охватывает гораздо больше, чем просто отзывчивость API. Скорость заполнения, проценты заполнения, консистентность делегирования и возможность failover — все это определяет, поддерживает ли ваше энергоснабжение фактически ваши операции или вводит точки отказа.
 
-No single provider guarantees perfect reliability. The aggregation model does not guarantee perfection either, but it achieves near-perfect practical reliability by eliminating single-provider dependency. When seven providers back your energy supply, the probability of complete failure drops to essentially zero.
+Ни один отдельный провайдер не гарантирует идеальную надежность. Модель агрегирования также не гарантирует совершенство, но она достигает практически идеальной надежности, устраняя зависимость от одного провайдера. Когда семь провайдеров поддерживают ваше энергоснабжение, вероятность полного отказа падает к эффективному нулю.
 
-For any automated system where transaction throughput matters, the reliability improvement from aggregation is as valuable as the price optimization -- and often more valuable, because a single critical failure at the wrong moment can cost more than years of price savings.
+Для любой автоматизированной системы, где пропускная способность транзакций имеет значение, улучшение надежности от агрегирования столь же ценно, как оптимизация цены — и часто более ценно, потому что один критический отказ в неправильный момент может стоить больше, чем многолетние экономия на цене.
 
-Explore MERX's provider comparison tools at [https://merx.exchange/docs](https://merx.exchange/docs) or test the platform at [https://merx.exchange](https://merx.exchange).
+Изучите инструменты сравнения провайдеров MERX на [https://merx.exchange/docs](https://merx.exchange/docs) или протестируйте платформу на [https://merx.exchange](https://merx.exchange).
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX к Claude Desktop или любому MCP-совместимому клиенту — без установки, API ключ не требуется для инструментов только для чтения:
 
 ```json
 {
@@ -306,6 +307,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Попросите вашего AI-агента: "Какая сейчас самая дешевая TRON energy?" и получите живые цены от всех подключенных провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

@@ -1,32 +1,32 @@
-# Fikirden Uretime: MERX'i 30 Gunde Insa Etmek
+# Fikirden Üretime: 30 Günde MERX İnşa Etmek
 
-MERX went from concept to live production system in 30 days. Not a landing page. Not a prototype. A fully operational blockchain resource exchange with seven provider integrations, real-time price aggregation, on-chain order execution, double-entry accounting, comprehensive documentation, SDKs in two languages, and an MCP server with 55 tools for AI agent integration.
+MERX, konseptten canlı üretim sistemine 30 günde geçti. Bir açılış sayfası değil. Bir prototip değil. Yedi sağlayıcı entegrasyonu, gerçek zamanlı fiyat toplaması, zincir üstü sipariş yürütme, çift girişli muhasebe, kapsamlı belgeler, iki dilde SDK ve AI ajanı entegrasyonu için 55 araçlı bir MCP sunucusu ile tamamen operasyonel bir blockchain kaynağı değişim platformu.
 
-This article is the technical story of how it happened - the architecture decisions, the problems we solved, the shortcuts we deliberately did not take, and the lessons from building a financial platform at speed without compromising on the things that matter.
-
----
-
-## Day 0: The Problem Statement
-
-The TRON energy market is fragmented. Seven or more providers offer energy delegation services, each with their own API, pricing, and reliability characteristics. If you want the best price, you need to integrate with all of them. If you want failover, you need to build routing logic. If you want transparency, you need to build monitoring.
-
-Every business sending USDT on TRON faces this integration tax. The solution is an aggregation layer - a single API that handles multi-provider routing, best-price selection, and automatic failover.
-
-No one had built it yet. We decided to.
+Bu makale, bunun nasıl gerçekleştiğinin teknik hikayesidir - mimari kararlar, çözdüğümüz sorunlar, kasıtlı olarak almadığımız kısayollar ve önemli olan şeylerde taviz vermeden finansal bir platform hızlıyla inşa etmekten çıkardığımız dersler.
 
 ---
 
-## Week 1: Foundation
+## Gün 0: Problem İfadesi
 
-### Architecture First
+TRON enerji pazarı parçalanmıştır. Yedi veya daha fazla sağlayıcı enerji delegasyon hizmetleri sunarak, her birinin kendi API'ı, fiyatlandırması ve güvenilirlik özellikleri vardır. En iyi fiyatı istiyorsanız, hepsinin tümüyle entegre olmanız gerekir. Yedeklemeli sistem istiyorsanız, yönlendirme mantığı inşa etmeniz gerekir. Şeffaflık istiyorsanız, izleme sistemi inşa etmeniz gerekir.
 
-Before writing a single line of code, we spent two days on architecture. The result was a 40-section architecture document covering everything from database schema to API error formats to color hex codes. This document became the single source of truth for every implementation decision.
+TRON üzerinde USDT gönderen her işletme bu entegrasyon vergisine maruz kalır. Çözüm, bir toplama katmanıdır - çok sağlayıcılı yönlendirmeyi, en iyi fiyat seçimini ve otomatik yedeklemeyi işleyen tek bir API.
 
-Key architecture decisions made in those two days:
+Henüz kimse bunu inşa etmemişti. Biz bunu yapmaya karar verdik.
 
-**Decision 1: Microservices from day one.**
+---
 
-Not because microservices are trendy, but because financial systems need isolation. The treasury signer must not be accessible from the API service. The price monitor must not have write access to user balances. Docker containers provide this isolation naturally.
+## Hafta 1: Temel
+
+### Mimari Öncelikli
+
+Tek satır kod yazmadan önce, mimari üzerine iki gün harcadık. Sonuç, veritabanı şemasından API hata biçimlerine kadar renk onaltılık kodlarına kadar her şeyi kapsayan 40 bölümlü bir mimari belgesi oldu. Bu belge, her uygulama kararı için tek gerçek kaynağı haline geldi.
+
+Bu iki gün içinde alınan anahtar mimari kararlar:
+
+**Karar 1: Birinci günden itibaren mikro hizmetler.**
+
+Mikro hizmetler moda olduğu için değil, ama finansal sistemlerin izolasyona ihtiyacı olduğu için. Hazine imzalayıcı API hizmetinden erişilebilir olmamalıdır. Fiyat monitörünün kullanıcı bakiyelerine yazma erişimi olmamalıdır. Docker konteynerları bu izolasyonu doğal olarak sağlar.
 
 ```
 services/
@@ -38,24 +38,24 @@ services/
   treasury-signer/  Transaction signing (isolated)
 ```
 
-**Decision 2: PostgreSQL + Redis, no exotic databases.**
+**Karar 2: PostgreSQL + Redis, egzotik veritabanları yok.**
 
-PostgreSQL for everything that needs ACID guarantees (balances, orders, ledger entries). Redis for everything that needs speed (price cache, pub/sub, rate limiting). Both are battle-tested, well-documented, and operationally simple.
+ACID garantisi gerektiren her şey için PostgreSQL (bakiyeler, siparişler, defter girişleri). Hız gerektiren her şey için Redis (fiyat önbelleği, pub/sub, hız sınırlaması). İkisi de savaş yolundan çıkmış, iyi belgelenmiş ve operasyonel olarak basittir.
 
-**Decision 3: All amounts in SUN.**
+**Karar 3: Tüm tutarlar SUN cinsinden.**
 
-Every financial value stored as an integer in SUN (1 TRX = 1,000,000 SUN). No floating-point anywhere in the financial path. This eliminated an entire category of bugs before we wrote our first function.
+Her finansal değer SUN'da tamsayı olarak depolanır (1 TRX = 1.000.000 SUN). Finansal yolda hiçbir yerde kayan nokta yoktur. Bu, ilk fonksiyonumuzu yazmadan önce tüm bir hata kategorisini ortadan kaldırdı.
 
-**Decision 4: Node.js + TypeScript for services, Go for the matching engine.**
+**Karar 4: Hizmetler için Node.js + TypeScript, eşleştirme motoru için Go.**
 
-TypeScript for the bulk of the system - fast development, strong typing, excellent async I/O for API and monitoring workloads. Go reserved for the matching engine where raw performance matters.
+Sistem büyüklüğünün çoğu için TypeScript - hızlı geliştirme, güçlü yazım, API ve izleme iş yükleri için mükemmel async I/O. Performansın önemli olduğu eşleştirme motoru için Go ayrılmıştır.
 
-### Database Schema
+### Veritabanı Şeması
 
-The database migrations were written on day 3. Every table was designed with financial integrity in mind:
+Veritabanı geçişleri 3. gün üzerinde yazılmıştır. Her tablo finansal bütünlük göz önünde bulundurularak tasarlanmıştır:
 
 ```sql
--- Core principle: every balance mutation creates a ledger entry
+-- Temel ilke: her bakiye mutasyonu bir defter girişi oluşturur
 CREATE TABLE ledger (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id),
@@ -69,14 +69,14 @@ CREATE TABLE ledger (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- No UPDATE or DELETE triggers - ledger is append-only
+-- UPDATE veya DELETE tetiklemesi yok - defter sadece eklemeye özgüdür
 ```
 
-One file per migration, named `YYYYMMDD_description.sql`. By the end of the 30 days, there were 14 migration files, each one additive, none destructive.
+Geçiş başına bir dosya, `YYYYMMDD_description.sql` şeklinde adlandırılmıştır. 30 günün sonunda 14 geçiş dosyası vardı, her biri toplamsal, yok edici değildir.
 
-### Provider Interface
+### Sağlayıcı Arayüzü
 
-The `IEnergyProvider` interface was defined on day 4. This was the contract every provider adapter would implement:
+`IEnergyProvider` arayüzü 4. gün tanımlanmıştır. Bu, her sağlayıcı adaptörünün uygulanacağı sözleşmedir:
 
 ```typescript
 interface IEnergyProvider {
@@ -88,30 +88,30 @@ interface IEnergyProvider {
 }
 ```
 
-This interface never changed. Seven providers were integrated against it over the following weeks, each in its own file, none requiring changes to the core system.
+Bu arayüz hiçbir zaman değişmedi. Aşağıdaki haftalarda yedi sağlayıcı, her biri kendi dosyasında, hiçbiri çekirdek sisteme değişiklik gerektirmeden bu arayüze karşı entegre edildi.
 
 ---
 
-## Week 2: Core Services
+## Hafta 2: Temel Hizmetler
 
-### Price Monitor
+### Fiyat Monitörü
 
-The price monitor was the first service to go live. It polls every provider every 30 seconds, normalizes prices, publishes to Redis, and stores history in PostgreSQL. The implementation is roughly 180 lines of TypeScript across three files.
+Fiyat monitörü canlı gitmesi gereken ilk hizmet oldu. Her sağlayıcıyı 30 saniyede bir inceler, fiyatları normalleştirir, Redis'e yayımlar ve geçmişi PostgreSQL'de saklar. Uygulama üç dosya genelinde kabaca 180 satır TypeScript'tir.
 
-The hardest part was not the polling logic - it was the normalization. Each provider returns prices in slightly different formats:
+En zor kısım yoklama mantığı değil - normalleştirmedir. Her sağlayıcı fiyatları biraz farklı biçimlerde döndürür:
 
-- Provider A: SUN per energy unit
-- Provider B: total TRX for a fixed energy amount
-- Provider C: SUN per energy unit, but with a different minimum order
-- Provider D: tiered pricing based on volume
+- Sağlayıcı A: Enerji birimi başına SUN
+- Sağlayıcı B: Sabit enerji tutarı için toplam TRX
+- Sağlayıcı C: Enerji birimi başına SUN, ancak farklı minimum sipariş ile
+- Sağlayıcı D: Hacim tabanlı kademeli fiyatlandırma
 
-Each adapter translates its provider's format into the standard `ProviderPriceResponse`. The price monitor does not care about provider quirks; it only sees normalized data.
+Her adaptör, sağlayıcısının biçimini standart `ProviderPriceResponse` içine çevirir. Fiyat monitörü sağlayıcı tuhaftlıkları umursamaz; yalnızca normalleştirilmiş veriler görür.
 
-### Order Executor
+### Sipariş Yürütücüsü
 
-The order executor is the most complex service. It reads prices from Redis, determines optimal routing, submits orders to providers, monitors for on-chain confirmation, and publishes settlement events.
+Sipariş yürütücüsü en karmaşık hizmettir. Redis'ten fiyatları okur, optimal yönlendirmeyi belirler, siparişleri sağlayıcılara gönderir, zincir üstü doğrulama için izler ve kapatma etkinlikleri yayımlar.
 
-The failover chain was the critical design element. If Provider A fails, try Provider B. If B fails, try C. The buyer's API call succeeds as long as any provider is operational.
+Yedeklemeli sistem zinciri kritik tasarım öğesiydi. Sağlayıcı A başarısız olursa, Sağlayıcı B'yi deneyin. B başarısız olursa, C'yi deneyin. Alıcının API çağrısı, herhangi bir sağlayıcı operasyonel olduğu sürece başarılı olur.
 
 ```
 Order received -> Read prices -> Select cheapest
@@ -123,9 +123,9 @@ Order received -> Read prices -> Select cheapest
         -> ... and so on
 ```
 
-### Ledger Service
+### Defter Hizmeti
 
-The ledger service enforces the double-entry constraint. Every balance mutation creates paired entries. The service runs a reconciliation check every hour:
+Defter hizmeti çift girişli kısıtlamayı uygular. Her bakiye mutasyonu eşleştirilmiş girişler oluşturur. Hizmet saatte bir kez mutabakat kontrolü çalıştırır:
 
 ```sql
 SELECT SUM(CASE direction
@@ -135,15 +135,15 @@ END) FROM ledger;
 -- Must be 0. If not: alert immediately.
 ```
 
-In 30 days of development and testing, this check never fired. The constraint was never violated because the architecture made violations structurally impossible, not just unlikely.
+30 gün geliştirme ve test döneminde, bu kontrol hiçbir zaman çalışmadı. Kısıtlama hiçbir zaman ihlal edilmedi çünkü mimari ihlalleri sadece olası değil, yapısal olarak imkansız kıldı.
 
 ---
 
-## Week 3: API, Frontend, and On-Chain Verification
+## Hafta 3: API, Ön Uç ve Zincir Üstü Doğrulama
 
-### API Design
+### API Tasarımı
 
-The API follows REST conventions with strict versioning (`/api/v1/...`). Every endpoint was designed before implementation:
+API, katı sürümlemeyle (`/api/v1/...`) REST kurallarına uyar. Her uç nokta, uygulamadan önce tasarlandı:
 
 ```
 GET    /api/v1/prices          Current prices from all providers
@@ -155,7 +155,7 @@ POST   /api/v1/deposit         Get deposit address
 POST   /api/v1/withdraw        Request withdrawal
 ```
 
-Error responses use a consistent format:
+Hata yanıtları tutarlı bir biçim kullanır:
 
 ```json
 {
@@ -170,25 +170,25 @@ Error responses use a consistent format:
 }
 ```
 
-No endpoint was published without Zod validation on all inputs.
+Hiçbir uç nokta, tüm girdiler üzerinde Zod doğrulaması olmadan yayımlanmadı.
 
-### Frontend
+### Ön Uç
 
-The frontend is a Next.js application with a strict design system: dark theme only, no rounded corners over 2px, no gradients, no shadows, Cormorant Garamond for headings, IBM Plex Mono for everything else. The visual identity was defined in the architecture document and implemented faithfully.
+Ön uç, katı bir tasarım sistemi olan bir Next.js uygulamasıdır: yalnızca koyu tema, 2px üzerinde köşe yok, gradyan yok, gölge yok, başlıklar için Cormorant Garamond, her şey diğer için IBM Plex Mono. Görsel kimlik mimari belgede tanımlanmış ve sadık bir şekilde uygulanmıştır.
 
-### On-Chain Verification
+### Zincir Üstü Doğrulama
 
-Every order is verified on the TRON blockchain. The verification service watches for delegation transactions and confirms that energy arrived at the target address. This was the most challenging integration because blockchain confirmation times are variable and provider transaction formats differ.
+Her sipariş TRON blokzincirinde doğrulanır. Doğrulama hizmeti delegasyon işlemlerini izler ve enerjinin hedef adrese ulaştığını doğrular. Bu, blokzincir doğrulama süreleri değişken ve sağlayıcı işlem biçimleri farklı olduğu için en zorlayıcı entegrasyon oldu.
 
-Eight mainnet transactions were verified during the testing phase, confirming that the end-to-end flow - from API call to on-chain delegation - worked correctly with real TRX and real providers.
+Test aşamasında sekiz ana ağ işlemi doğrulandı, uçtan uca akış - API çağrısından zincir üstü delegasyona - gerçek TRX ve gerçek sağlayıcılarla doğru bir şekilde çalıştığını doğruladı.
 
 ---
 
-## Week 4: SDKs, MCP Server, and Documentation
+## Hafta 4: SDK'lar, MCP Sunucusu ve Belgeler
 
 ### JavaScript SDK
 
-The JavaScript SDK was built for Node.js and browser environments:
+JavaScript SDK, Node.js ve tarayıcı ortamları için inşa edilmiştir:
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
@@ -206,7 +206,7 @@ Kaynak: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/
 
 ### Python SDK
 
-The Python SDK mirrors the JavaScript SDK's API surface:
+Python SDK, JavaScript SDK'sının API yüzeyini yansıtır:
 
 ```python
 from merx import MerxClient
@@ -222,11 +222,11 @@ order = client.create_order(
 
 Kaynak: [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python)
 
-### MCP Sunucusu: 52 Tools
+### MCP Sunucusu: 52 Araç
 
-The MCP (Model Context Protocol) server was perhaps the most forward-looking component. It exposes MERX functionality as tools that AI agents can use directly.
+MCP (Model Context Protocol) sunucusu belki de en ileriye dönük bileşen oldu. MERX işlevselliğini AI ajanlarının doğrudan kullanabileceği araçlar olarak ortaya koymaktadır.
 
-The MCP server grew from 7 tools in its initial version to 55 tools by the end of the 30 days:
+MCP sunucusu başlangıç sürümünde 7 araçtan 30 günün sonunda 55 araçla büyümüştür:
 
 ```
 Account management:    create_account, login, get_balance, get_deposit_info
@@ -241,65 +241,65 @@ Analytics:             calculate_savings, get_price_history, suggest_duration
 
 Kaynak: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-### Documentation
+### Belgeler
 
-Documentation was rebuilt from 5 pages to 36 pages, covering the complete API reference, SDK guides, TRON concepts, and integration tutorials. The documentation lives at [https://merx.exchange/docs](https://merx.exchange/docs).
+Belgeler 5 sayfadan 36 sayfaya yeniden inşa edildi, tam API referansı, SDK kılavuzları, TRON kavramları ve entegrasyon öğreticilerini kapsayan. Belgeler [https://merx.exchange/docs](https://merx.exchange/docs) adresinde bulunmaktadır.
 
-Additionally, 4 SEO guide pages and 7 provider comparison pages were published, bringing the sitemap to 53 URLs.
-
----
-
-## What We Did Not Compromise On
-
-Speed creates pressure to cut corners. Here are the corners we explicitly did not cut:
-
-### No Floating-Point for Money
-
-Using integers (SUN) for all financial values added complexity in display formatting but eliminated rounding errors entirely. Every test case matched expected values exactly.
-
-### No String Concatenation for SQL
-
-Every database query uses parameterized statements. This was a non-negotiable rule from day one. SQL injection is a solved problem, and we kept it solved.
-
-### No Hardcoded Secrets
-
-Environment variables from day one. Docker secrets for the treasury key. `.gitignore` set up before the first commit.
-
-### No Services Sharing State Directly
-
-Services communicate via Redis pub/sub or REST API calls. No direct imports between services. This made independent deployment possible and prevented cascade failures.
-
-### No Ledger Mutations
-
-Append-only ledger from the first migration. No UPDATE or DELETE on ledger tables. Corrections create new entries, not modifications.
+Ek olarak, 4 SEO kılavuz sayfası ve 7 sağlayıcı karşılaştırma sayfası yayımlandı, sitemap'i 53 URL'ye getirdi.
 
 ---
 
-## What We Learned
+## Taviz Vermediğimiz Şeyler
 
-### Lesson 1: Architecture Documents Pay for Themselves
+Hız, köşe kesme baskısı oluşturur. İşte kasıtlı olarak kesmediğimiz köşeler:
 
-The two days spent on architecture saved weeks of rework. Every developer question was answered by the document. Every design disagreement was resolved by referencing the spec. The 40 sections were not bureaucratic overhead; they were a forcing function for thinking through problems before they became bugs.
+### Para için Kayan Nokta Yok
 
-### Lesson 2: Provider APIs Are Unreliable
+Tüm finansal değerler için tamsayılar (SUN) kullanmak, ekran biçimlendirmesinde karmaşıklık ekledi ama yuvarlama hatalarını tamamen ortadan kaldırdı. Her test durumu tam olarak beklenen değerleri eşleştirdi.
 
-Of the seven providers integrated, at least two experienced downtime during the 30-day build period. The failover chain was not a theoretical nicety - it was exercised within the first week of testing.
+### SQL için String Birleştirme Yok
 
-### Lesson 3: The Adapter Pattern Is Worth the Boilerplate
+Her veritabanı sorgusu parametreli deyimler kullanır. Bu birinci günden beri tartışılmaz bir kuraldı. SQL enjeksiyonu çözülen bir problemdir ve biz onu çözüldü tutmaya devam ettik.
 
-Writing seven adapters that all implement the same interface felt repetitive. But when Provider C changed their API response format on day 22, we updated one file and nothing else changed. The 10 minutes spent updating the adapter versus the days we would have spent updating every call site made the pattern's value obvious.
+### Sabit Sırlar Yok
 
-### Lesson 4: MCP Is the Future of Service Integration
+Birinci günden itibaren ortam değişkenleri. Hazine anahtarı için Docker gizlilikleri. `.gitignore` ilk commit'ten önce ayarlanmıştır.
 
-The MCP server was initially an experiment. But watching AI agents use MERX tools to autonomously manage energy procurement was a revelation. This is how services will be consumed in the future - not through human developers writing integration code, but through AI agents calling tool APIs directly.
+### Hizmetler Doğrudan Durumu Paylaşmıyor
 
-### Lesson 5: 200-Line File Limit Is a Feature
+Hizmetler Redis pub/sub veya REST API çağrıları aracılığıyla iletişim kurar. Hizmetler arasında doğrudan içe aktarma yok. Bu bağımsız dağıtımı mümkün kıldı ve çağlı hataları önledi.
 
-We enforced a strict 200-line-per-file limit throughout the project. This forced constant decomposition. Functions stayed small. Responsibilities stayed clear. When a file approached 200 lines, it was time to split, and the split always improved clarity.
+### Defter Mutasyonları Yok
+
+İlk göçten itibaren sadece eklemeli defter. Defter tablolarında UPDATE veya DELETE yok. Düzeltmeler yeni girişler oluşturur, modifikasyonlar değil.
 
 ---
 
-## By the Numbers
+## Neler Öğrendik
+
+### Ders 1: Mimari Belgeler Kendileri İçin Ödeme Yapıyor
+
+Mimari üzerine harcanan iki gün haftaların yeniden yapılandırmasını kaydetti. Her geliştirici sorusu belgede cevaplandı. Her tasarım anlaşmazlığı spesifikasyona başvurarak çözüldü. 40 bölüm bürokratik havale değildi; bunlar sorunları bug haline gelmeden önce düşünmeye zorlayan bir mekanizmaydı.
+
+### Ders 2: Sağlayıcı API'leri Güvenilmez
+
+Entegre edilen yedi sağlayıcıdan, en az ikisi 30 günlük yapı döneminde kapalı kalma yaşadı. Yedeklemeli sistem teorik bir zarafet değildi - test döneminin ilk haftasında uygulandı.
+
+### Ders 3: Adaptör Deseni Demirbaş Değişikliğine Değer
+
+Aynı arayüzü uygulayan yedi adaptör yazmak tekrarlı göründü. Ama Sağlayıcı C 22. gün API yanıt biçimini değiştirdiğinde, bir dosya güncelledik ve başka hiçbir şey değişmedi. Adaptörü güncelleme süresi 10 dakika versus her çağrı sitesini güncelleme süresi gün, desenin değerini açıkça yaptı.
+
+### Ders 4: MCP, Hizmet Entegrasyonunun Geleceğidir
+
+MCP sunucusu başlangıçta bir deneydi. Ama AI ajanlarının enerji tedarikini özerk şekilde yönetmek için MERX araçlarını kullanmasını izlemek bir açıklama oldu. Bu, hizmetlerin gelecekte nasıl tüketileceğidir - insan geliştiriciler entegrasyon kodu yazmayarak değil, AI ajanları doğrudan araç API'lerini çağırarak.
+
+### Ders 5: 200 Satır Dosya Sınırı Bir Özellik
+
+Proje genelinde katı bir 200 satır dosya sınırı uygulandı. Bu sürekli ayrıştırmaya zorladı. Fonksiyonlar küçük kaldı. Sorumluluklar net kaldı. Bir dosya 200 satıra yaklaştığında, bölünmenin zamanı oldu ve bölünme her zaman açıklığı iyileştirdi.
+
+---
+
+## Rakamlar Bazında
 
 ```
 Architecture document:     40 sections
@@ -318,19 +318,20 @@ Days to production:        30
 
 ---
 
-## Sirada Ne Var
+## Bundan Sonra Ne Geliyor
 
-The platform is live at [https://merx.exchange](https://merx.exchange). The immediate focus is testing, optimization, and onboarding the first production users. The foundation is solid - the architecture supports horizontal scaling, new providers can be added in hours, and the zero-commission model removes adoption friction.
+Platform [https://merx.exchange](https://merx.exchange) adresinde canlıdır. Yakın odak, test, optimizasyon ve ilk üretim kullanıcılarını eklemeye odaklandır. Temel katı - mimari yatay ölçeklendirmeyi destekler, yeni sağlayıcılar saatler içinde eklenebilir ve sıfır komisyon modeli benimseme uyuşmazlığını kaldırır.
 
-The energy aggregation market on TRON is waiting for a platform that makes it simple. MERX is that platform.
+TRON üzerindeki enerji toplama pazarı bunu basit kılan bir platform için bekliyor. MERX bu platformdur.
 
 ---
 
-*MERX, ilk blokzincir kaynak borsasidir. Platformu kesfetmek icin [https://merx.exchange](https://merx.exchange). Dokumantasyon: [https://merx.exchange/docs](https://merx.exchange/docs). Acik kaynakli SDK'lar ve MCP sunucusu GitHub'da mevcuttur.*
+*MERX ilk blockchain kaynağı değişimidir. Platform'u [https://merx.exchange](https://merx.exchange) adresinde keşfedin. Belgeler [https://merx.exchange/docs](https://merx.exchange/docs) adresinde. GitHub'da açık kaynak SDK'lar ve MCP sunucusu.*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır kurulum, salt okunur araçlar için API anahtarına gerek yok:
 
 ```json
 {
@@ -342,6 +343,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanınızdan şunu sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

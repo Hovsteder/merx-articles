@@ -1,75 +1,75 @@
 # Архитектура безопасности MERX: как мы защищаем ваши средства
 
-When a platform handles financial transactions, security is not a feature - it is the foundation everything else sits on. A single vulnerability can destroy user trust permanently. At MERX, security considerations shaped every architectural decision from day one, not as an afterthought bolted on after the fact.
+Когда платформа обрабатывает финансовые транзакции, безопасность — это не функция, а основание, на котором всё держится. Единая уязвимость может навсегда разрушить доверие пользователей. В MERX соображения безопасности определили каждое архитектурное решение с самого начала, а не были добавлены как последующее расширение.
 
-This article details the security architecture of MERX: how funds are protected, how data integrity is maintained, how the system defends against common attack vectors, and the design principles that make the platform resilient.
-
----
-
-## Principle 1: No Custody of Private Keys
-
-MERX never holds, stores, or has access to your TRON private keys. This is a fundamental design decision that eliminates an entire class of attacks.
-
-### How It Works
-
-When you use MERX to purchase energy, the delegation happens from the provider's address to your address. MERX orchestrates this transaction but never needs access to your wallet. Your private key stays on your device, in your hardware wallet, or wherever you manage it.
-
-The flow:
-
-```
-1. You tell MERX: "Delegate 65,000 energy to TMyAddress"
-2. MERX tells the provider: "Delegate 65,000 energy to TMyAddress"
-3. The provider delegates from TProviderAddress to TMyAddress
-4. MERX verifies the delegation on-chain
-5. Your private key was never involved
-```
-
-### Why This Matters
-
-If MERX were compromised, attackers could not steal your TRX or tokens because MERX does not have your keys. Compare this with platforms that require you to deposit tokens to a platform-controlled address - those platforms hold your keys (or keys to your funds), creating a single point of failure.
-
-### The Treasury Exception
-
-MERX does manage its own treasury address for receiving deposits and processing withdrawals. The treasury private key is stored as a Docker secret, accessible only to the `treasury-signer` service. It is never exposed to the API service, the web frontend, or any other component. More on this isolation below.
+В этой статье описывается архитектура безопасности MERX: как защищаются средства, как обеспечивается целостность данных, как система защищается от типичных векторов атак и какие принципы проектирования делают платформу устойчивой.
 
 ---
 
-## Principle 2: Double-Entry Ledger
+## Принцип 1: отсутствие хранения приватных ключей
 
-Every financial operation on MERX creates a paired ledger entry. This is the same accounting principle used by every bank and financial institution for the last 700 years. It works.
+MERX никогда не хранит, не сохраняет и не имеет доступа к вашим приватным ключам TRON. Это фундаментальное решение по проектированию, которое исключает целый класс атак.
 
-### How It Works
+### Как это работает
 
-Every transaction creates two entries: a debit and a credit. The sum of all debits always equals the sum of all credits. If they do not, something is wrong, and the system detects it immediately.
+Когда вы используете MERX для покупки energy, делегирование происходит с адреса провайдера на ваш адрес. MERX организует эту транзакцию, но никогда не нуждается в доступе к вашему кошельку. Ваш приватный ключ остаётся на вашем устройстве, в аппаратном кошельке или там, где вы его храните.
+
+Процесс:
+
+```
+1. Вы говорите MERX: "Делегируй 65 000 energy на TMyAddress"
+2. MERX говорит провайдеру: "Делегируй 65 000 energy на TMyAddress"
+3. Провайдер делегирует с TProviderAddress на TMyAddress
+4. MERX проверяет делегирование в блокчейне
+5. Ваш приватный ключ никогда не был задействован
+```
+
+### Почему это важно
+
+Если бы MERX была скомпрометирована, злоумышленники не смогли бы украсть ваш TRX или токены, потому что MERX не имеет ваших ключей. Сравните это с платформами, которые требуют депозита токенов на контролируемый ими адрес — такие платформы хранят ваши ключи (или ключи от ваших средств), создавая единую точку отказа.
+
+### Исключение казначейства
+
+MERX действительно управляет собственным адресом казначейства для получения депозитов и обработки вывода. Приватный ключ казначейства хранится как секрет Docker, доступный только сервису `treasury-signer`. Он никогда не раскрывается сервису API, веб-интерфейсу или любому другому компоненту. Подробнее об изоляции ниже.
+
+---
+
+## Принцип 2: двойная бухгалтерская книга
+
+Каждая финансовая операция на MERX создаёт парную запись в реестре. Это тот же принцип бухгалтерского учёта, используемый каждым банком и финансовым учреждением последние 700 лет. Это работает.
+
+### Как это работает
+
+Каждая транзакция создаёт две записи: дебет и кредит. Сумма всех дебетов всегда равна сумме всех кредитов. Если они не совпадают, что-то не так, и система это немедленно обнаруживает.
 
 ```sql
--- Order payment example
+-- Пример оплаты заказа
 INSERT INTO ledger (account_id, type, amount_sun, direction)
 VALUES
   ($user_id, 'ORDER_PAYMENT', 5525000, 'DEBIT'),
   ($provider_settlement, 'ORDER_PAYMENT', 5525000, 'CREDIT');
 ```
 
-### Immutability
+### Неизменяемость
 
-Ledger records are never updated or deleted. If a transaction needs to be reversed (e.g., a refund), a new ledger entry is created with the opposite direction:
+Записи реестра никогда не обновляются и не удаляются. Если транзакция должна быть отменена (например, возврат), создаётся новая запись реестра с противоположным направлением:
 
 ```sql
--- Refund: new entries, original entries remain
+-- Возврат: новые записи, исходные остаются
 INSERT INTO ledger (account_id, type, amount_sun, direction, reference_id)
 VALUES
   ($user_id, 'REFUND', 5525000, 'CREDIT', $original_order_id),
   ($provider_settlement, 'REFUND', 5525000, 'DEBIT', $original_order_id);
 ```
 
-The original debit entry is never modified. The refund credit entry explicitly references the original, creating a complete audit trail.
+Исходная запись дебета никогда не изменяется. Запись кредита возврата явно ссылается на исходную, создавая полный аудиторский след.
 
-### Why This Matters
+### Почему это важно
 
-If an attacker compromises the application layer and attempts to inflate a user's balance, the ledger entries will not balance. Regular reconciliation checks detect this immediately:
+Если злоумышленник скомпрометирует уровень приложения и попытается завысить баланс пользователя, записи реестра не будут сбалансированы. Регулярные проверки согласования обнаруживают это немедленно:
 
 ```sql
--- Reconciliation query: should always return 0
+-- Запрос согласования: должен всегда возвращать 0
 SELECT SUM(CASE direction
   WHEN 'DEBIT' THEN amount_sun
   WHEN 'CREDIT' THEN -amount_sun
@@ -77,60 +77,60 @@ END) as imbalance
 FROM ledger;
 ```
 
-Any non-zero result triggers an immediate alert and investigation.
+Любой ненулевой результат запускает немедленное оповещение и расследование.
 
 ---
 
-## Principle 3: Atomic Balance Operations
+## Принцип 3: атомарные операции баланса
 
-Every balance mutation uses `SELECT FOR UPDATE` to prevent race conditions. This is not optional - it is enforced at the database level.
+Каждое изменение баланса использует `SELECT FOR UPDATE` для предотвращения состояний гонки. Это не опционально — это принудительно на уровне базы данных.
 
-### The Race Condition Problem
+### Проблема состояния гонки
 
-Without proper locking, a user with a 10 TRX balance could submit two simultaneous orders for 8 TRX each:
+Без надлежащей блокировки пользователь с балансом в 10 TRX мог бы отправить два одновременных заказа по 8 TRX каждый:
 
 ```
-Thread 1: SELECT balance WHERE user_id = 1    -> 10 TRX
-Thread 2: SELECT balance WHERE user_id = 1    -> 10 TRX
-Thread 1: balance (10) >= order (8)? YES       -> proceed
-Thread 2: balance (10) >= order (8)? YES       -> proceed
-Thread 1: UPDATE balance = 10 - 8 = 2 TRX
-Thread 2: UPDATE balance = 10 - 8 = 2 TRX
+Поток 1: SELECT balance WHERE user_id = 1    -> 10 TRX
+Поток 2: SELECT balance WHERE user_id = 1    -> 10 TRX
+Поток 1: balance (10) >= order (8)? ДА        -> продолжить
+Поток 2: balance (10) >= order (8)? ДА        -> продолжить
+Поток 1: UPDATE balance = 10 - 8 = 2 TRX
+Поток 2: UPDATE balance = 10 - 8 = 2 TRX
 
-Result: User spent 16 TRX with only 10 TRX balance
+Результат: пользователь потратил 16 TRX с балансом только 10 TRX
 ```
 
-### The Solution
+### Решение
 
 ```sql
 BEGIN;
 
--- Lock the row - second transaction waits here
+-- Блокируем строку - второй запрос ждёт здесь
 SELECT balance_sun FROM accounts
 WHERE user_id = $1
 FOR UPDATE;
 
--- Check balance
--- If insufficient: ROLLBACK
--- If sufficient: proceed
+-- Проверяем баланс
+-- Если недостаточно: ROLLBACK
+-- Если достаточно: продолжаем
 
 UPDATE accounts
 SET balance_sun = balance_sun - $order_amount
 WHERE user_id = $1
-  AND balance_sun >= $order_amount;  -- Double-check in UPDATE
+  AND balance_sun >= $order_amount;  -- Двойная проверка в UPDATE
 
 COMMIT;
 ```
 
-`FOR UPDATE` acquires a row-level lock. The second transaction blocks until the first commits or rolls back. After the first transaction commits (reducing balance to 2 TRX), the second transaction reads the updated balance (2 TRX) and correctly rejects the insufficient-funds order.
+`FOR UPDATE` получает блокировку на уровне строки. Второй запрос блокируется до тех пор, пока первый не завершится или не откатится. После того как первый запрос завершится (сокращая баланс до 2 TRX), второй запрос прочитает обновлённый баланс (2 TRX) и правильно отклонит заказ с недостаточными средствами.
 
 ---
 
-## Principle 4: Input Validation
+## Принцип 4: валидация входных данных
 
-All inputs are validated with Zod schemas before processing. This includes API requests, webhook payloads, provider responses, and internal service messages.
+Все входные данные проверяются с помощью схем Zod перед обработкой. Это включает запросы API, полезные нагрузки веб-хуков, ответы провайдеров и внутренние сообщения сервисов.
 
-### API Input Validation
+### Валидация входных данных API
 
 ```typescript
 const CreateOrderSchema = z.object({
@@ -155,40 +155,40 @@ const CreateOrderSchema = z.object({
 });
 ```
 
-Every field is typed, bounded, and validated. No raw user input reaches business logic or database queries.
+Каждое поле типизировано, ограничено и проверено. Никакие необработанные данные пользователя не достигают бизнес-логики или запросов к базе данных.
 
-### SQL Injection Prevention
+### Предотвращение SQL-инъекций
 
-All database queries use parameterized statements. String concatenation is never used to build SQL:
+Все запросы к базе данных используют параметризованные операторы. Конкатенация строк никогда не используется для построения SQL:
 
 ```typescript
-// Never this:
+// Никогда так:
 const query = `SELECT * FROM users WHERE id = '${userId}'`;  // SQL injection
 
-// Always this:
+// Всегда так:
 const query = 'SELECT * FROM users WHERE id = $1';
 const result = await db.query(query, [userId]);
 ```
 
-This is enforced by code review and linting rules. There is no mechanism for raw SQL string interpolation in the codebase.
+Это принудительно выполняется проверкой кода и правилами linting. Нет механизма для интерполяции необработанных SQL-строк в кодовой базе.
 
-### TRON Address Validation
+### Валидация TRON адреса
 
-TRON addresses are validated at multiple levels:
+TRON адреса проверяются на нескольких уровнях:
 
-1. **Format check**: must match the TRON address regex (starts with T, 34 characters, base58).
-2. **Checksum verification**: the address includes a checksum that detects typos.
-3. **On-chain verification** (optional): confirm the address exists and is activated.
+1. **Проверка формата**: должны соответствовать регулярному выражению TRON адреса (начинаются с T, 34 символа, base58).
+2. **Проверка контрольной суммы**: адрес включает контрольную сумму, которая обнаруживает опечатки.
+3. **Проверка в блокчейне** (опционально): подтвердить, что адрес существует и активирован.
 
-Sending energy to an invalid address wastes resources and cannot be reversed on-chain. Strict validation prevents this.
+Отправка energy на неверный адрес потратит ресурсы и не может быть отменена в блокчейне. Строгая валидация это предотвращает.
 
 ---
 
-## Principle 5: Service Isolation
+## Принцип 5: изоляция сервисов
 
-MERX runs as a set of isolated Docker containers, each with minimal permissions and no unnecessary access.
+MERX работает как набор изолированных контейнеров Docker, каждый с минимальными разрешениями и без ненужного доступа.
 
-### Container Architecture
+### Архитектура контейнеров
 
 ```
 Docker network:
@@ -205,65 +205,65 @@ Docker network:
   |-- redis         (port 6379, internal only)
 ```
 
-### Key Isolation Properties
+### Ключевые свойства изоляции
 
-- **The API service cannot access the treasury private key.** Only the `treasury-signer` container can read the Docker secret containing the key.
-- **The price monitor cannot modify balances.** It only has read access to provider APIs and write access to Redis price channels.
-- **The order executor cannot directly modify the ledger.** It publishes settlement events to Redis, which the ledger service consumes.
-- **PostgreSQL and Redis are not exposed externally.** They are only accessible from within the Docker network.
+- **Сервис API не может получить доступ к приватному ключу казначейства.** Только контейнер `treasury-signer` может прочитать секрет Docker, содержащий ключ.
+- **Монитор цен не может изменять балансы.** Он имеет только доступ на чтение к API провайдеров и доступ на запись к каналам Redis с ценами.
+- **Исполнитель заказов не может напрямую изменять реестр.** Он публикует события расчёта в Redis, которые потребляет сервис реестра.
+- **PostgreSQL и Redis не раскрываются снаружи.** Они доступны только из Docker сети.
 
-### Why This Matters
+### Почему это важно
 
-If an attacker compromises the API service (the most exposed component), they cannot:
-- Access the treasury private key (different container, Docker secret).
-- Directly modify ledger entries (different service, no database write access to ledger tables).
-- Bypass balance checks (enforced at database level with FOR UPDATE).
+Если злоумышленник скомпрометирует сервис API (самый раскрытый компонент), он не может:
+- Получить доступ к приватному ключу казначейства (другой контейнер, секрет Docker).
+- Напрямую изменять записи реестра (другой сервис, без доступа на запись к таблицам реестра).
+- Обойти проверки баланса (принудительно на уровне базы данных с FOR UPDATE).
 
-The blast radius of any single-service compromise is limited by design.
-
----
-
-## Principle 6: Rate Limiting and Abuse Prevention
-
-### API Rate Limits
-
-Every API endpoint has rate limits appropriate to its purpose:
-
-```
-Public endpoints (prices, health):     100 requests/minute
-Authenticated reads (orders, balance): 60 requests/minute
-Authenticated writes (create order):   30 requests/minute
-Withdrawals:                           5 requests/minute
-```
-
-Rate limits are enforced per API key, tracked in Redis with sliding windows.
-
-### Withdrawal Safeguards
-
-Withdrawals are the highest-risk operation (moving real assets off-platform). Additional safeguards include:
-
-- **Rate limiting**: maximum 5 withdrawal requests per minute.
-- **Amount limits**: daily withdrawal limits per account.
-- **Confirmation delay**: large withdrawals trigger a cooldown period.
-- **Balance verification**: `SELECT FOR UPDATE` ensures sufficient balance.
-- **Idempotency**: duplicate withdrawal requests (same idempotency key) return the original result.
+Радиус взрыва при скомпрометировании любого одного сервиса ограничен по проектированию.
 
 ---
 
-## Principle 7: Webhook Security
+## Принцип 6: ограничение частоты и предотвращение злоупотреблений
 
-MERX sends webhook notifications for order status updates, deposits, and other events. Webhooks are signed with HMAC-SHA256 to prevent forgery.
+### Ограничения частоты API
 
-### How HMAC Webhooks Work
+Каждая конечная точка API имеет ограничения частоты, подходящие для её назначения:
 
 ```
-1. MERX computes: HMAC-SHA256(webhook_body, your_webhook_secret)
-2. MERX includes the signature in the X-Merx-Signature header
-3. Your server recomputes the HMAC with the same secret
-4. If signatures match: genuine webhook. If not: forged, discard.
+Публичные конечные точки (цены, здоровье):     100 запросов/минуту
+Аутентифицированное чтение (заказы, баланс): 60 запросов/минуту
+Аутентифицированная запись (создание заказа):  30 запросов/минуту
+Выводы:                                        5 запросов/минуту
 ```
 
-### Verification in Code
+Ограничения частоты применяются к каждому API ключу, отслеживаются в Redis с использованием скользящих окон.
+
+### Защита при выводе
+
+Выводы — это операция с наибольшим риском (перемещение реальных активов с платформы). Дополнительные защиты включают:
+
+- **Ограничение частоты**: максимум 5 запросов вывода в минуту.
+- **Ограничения сумм**: дневные лимиты вывода на счёт.
+- **Задержка подтверждения**: большие выводы запускают период охлаждения.
+- **Проверка баланса**: `SELECT FOR UPDATE` обеспечивает достаточный баланс.
+- **Идемпотентность**: дублирующиеся запросы вывода (с тем же ключом идемпотентности) возвращают исходный результат.
+
+---
+
+## Принцип 7: безопасность веб-хуков
+
+MERX отправляет уведомления веб-хуков для обновлений статуса заказов, депозитов и других событий. Веб-хуки подписаны с помощью HMAC-SHA256 для предотвращения подделки.
+
+### Как работают веб-хуки HMAC
+
+```
+1. MERX вычисляет: HMAC-SHA256(webhook_body, your_webhook_secret)
+2. MERX включает подпись в заголовок X-Merx-Signature
+3. Ваш сервер пересчитывает HMAC с тем же секретом
+4. Если подписи совпадают: подлинный веб-хук. Если нет: подделка, отбросить.
+```
+
+### Проверка в коде
 
 ```typescript
 import crypto from 'crypto';
@@ -281,18 +281,18 @@ function verifyWebhook(body: string, signature: string, secret: string): boolean
 }
 ```
 
-Note the use of `timingSafeEqual` to prevent timing attacks. A naive string comparison (`===`) would leak information about the correct signature through response time variations.
+Обратите внимание на использование `timingSafeEqual` для предотвращения атак по времени. Наивное сравнение строк (`===`) будет раскрывать информацию о правильной подписи через временные вариации ответа.
 
 ---
 
-## Principle 8: Secrets Management
+## Принцип 8: управление секретами
 
-No secret is ever hardcoded in source code. All sensitive values are managed through environment variables and Docker secrets.
+Ни один секрет никогда не кодируется жёстко в исходном коде. Все чувствительные значения управляются через переменные окружения и секреты Docker.
 
-### Environment Variables
+### Переменные окружения
 
 ```
-# .env (never committed to git)
+# .env (никогда не коммитится в git)
 DATABASE_URL=postgresql://...
 REDIS_URL=redis://...
 API_JWT_SECRET=...
@@ -300,9 +300,9 @@ WEBHOOK_SIGNING_SECRET=...
 TRON_API_KEY=...
 ```
 
-### Docker Secrets (for High-Sensitivity Values)
+### Секреты Docker (для очень чувствительных значений)
 
-The treasury private key is too sensitive for environment variables (which can be logged or leaked through process inspection). It is stored as a Docker secret:
+Приватный ключ казначейства слишком чувствителен для переменных окружения (которые могут быть залогированы или раскрыты через проверку процесса). Он хранится как секрет Docker:
 
 ```yaml
 # docker-compose.yml
@@ -316,11 +316,11 @@ secrets:
     file: /run/secrets/treasury_key
 ```
 
-Docker secrets are mounted as files inside the container, readable only by the service process. They do not appear in environment variable listings, container inspect output, or logs.
+Секреты Docker монтируются как файлы внутри контейнера, читаемые только процессом сервиса. Они не появляются в списках переменных окружения, выходе docker inspect или логах.
 
-### Git Protection
+### Защита Git
 
-The `.gitignore` file excludes all sensitive files:
+Файл `.gitignore` исключает все чувствительные файлы:
 
 ```
 .env
@@ -329,25 +329,25 @@ The `.gitignore` file excludes all sensitive files:
 secrets/
 ```
 
-This is set up before the first commit, not after.
+Это устанавливается перед первым коммитом, а не после.
 
 ---
 
-## Monitoring and Incident Response
+## Мониторинг и реагирование на инциденты
 
-### Automated Alerts
+### Автоматизированные оповещения
 
-The following conditions trigger immediate alerts:
+Следующие условия запускают немедленные оповещения:
 
-- Ledger imbalance detected (debit-credit mismatch).
-- Treasury balance drops below threshold.
-- Failed authentication attempts exceed threshold (10/minute per IP).
-- Provider API returns unexpected errors.
-- Order execution failure rate exceeds 5%.
+- Обнаружен дисбаланс реестра (несоответствие дебета и кредита).
+- Баланс казначейства падает ниже порога.
+- Неудачные попытки аутентификации превышают порог (10/минуту на IP).
+- API провайдера возвращает неожиданные ошибки.
+- Процент отказов выполнения заказа превышает 5%.
 
-### Audit Logging
+### Логирование аудита
 
-Every security-relevant operation is logged with structured data:
+Каждая операция, относящаяся к безопасности, регистрируется со структурированными данными:
 
 ```json
 {
@@ -360,27 +360,28 @@ Every security-relevant operation is logged with structured data:
 }
 ```
 
-Logs are retained for forensic analysis and compliance. They are append-only and stored separately from application data.
+Логи хранятся для судебного анализа и соответствия требованиям. Они добавляются только и хранятся отдельно от данных приложения.
 
 ---
 
 ## Заключение
 
-Security at MERX is not a single feature but a set of interlocking principles: no key custody, double-entry accounting, atomic balance operations, strict input validation, service isolation, rate limiting, signed webhooks, and proper secrets management. Each principle addresses a specific threat vector, and together they create a defense-in-depth architecture where compromising any single component does not compromise the system.
+Безопасность в MERX — это не одна функция, а набор взаимосвязанных принципов: отсутствие хранения ключей, двойная бухгалтерская книга, атомарные операции баланса, строгая валидация входных данных, изоляция сервисов, ограничение частоты, подписанные веб-хуки и надлежащее управление секретами. Каждый принцип решает конкретный вектор угрозы, и вместе они создают архитектуру защиты в глубину, где скомпрометирование любого одного компонента не скомпрометирует всю систему.
 
-No system is invulnerable. But by designing security into the architecture from the start - rather than patching it on later - MERX minimizes the attack surface and maximizes the cost an attacker must pay to cause harm.
+Ни одна система не неуязвима. Но, проектируя безопасность в архитектуру с самого начала — а не исправляя её позже — MERX минимизирует поверхность атаки и максимизирует затраты, которые должен понести злоумышленник, чтобы причинить вред.
 
-Review the open-source components: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js), [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python), [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).
+Просмотрите компоненты с открытым исходным кодом: [https://github.com/Hovsteder/merx-sdk-js](https://github.com/Hovsteder/merx-sdk-js), [https://github.com/Hovsteder/merx-sdk-python](https://github.com/Hovsteder/merx-sdk-python), [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp).
 
-Start using MERX at [https://merx.exchange](https://merx.exchange).
+Начните использовать MERX на [https://merx.exchange](https://merx.exchange).
 
 ---
 
-*This article is part of the MERX technical series. MERX is the first blockchain resource exchange, built with security as a foundational requirement, not an afterthought.*
+*Эта статья является частью технической серии MERX. MERX — первая блокчейн биржа ресурсов, построенная с безопасностью как фундаментальным требованием, а не как последующее расширение.*
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Попробуйте прямо сейчас с AI
+
+Добавьте MERX в Claude Desktop или любой клиент, совместимый с MCP — без установки, API ключ не требуется для инструментов только для чтения:
 
 ```json
 {
@@ -392,6 +393,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Спросите вашего AI агента: "What is the cheapest TRON energy right now?" и получите живые цены от всех подключённых провайдеров.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Полная документация MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

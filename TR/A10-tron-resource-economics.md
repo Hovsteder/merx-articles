@@ -1,268 +1,268 @@
-# TRON Kaynak Ekonomisi: Gelistirici Rehberi
+# TRON Kaynak Ekonomisi: Geliştirici Rehberi
 
-Every transaction on TRON consumes resources. If you do not understand how those resources work, you will overpay for every operation your application performs. This is not a theoretical concern -- the difference between a resource-optimized TRON application and a naive one can exceed 90% in operating costs.
+TRON'daki her işlem kaynakları tüketir. Bu kaynakların nasıl çalıştığını anlamıyorsanız, uygulamanızın gerçekleştirdiği her işlem için fazla ödeme yaparsınız. Bu teorik bir endişe değildir -- kaynakları optimize edilmiş bir TRON uygulaması ile saf bir uygulama arasındaki fark işletme maliyetlerinde %90'ı aşabilir.
 
-This article is a complete developer reference for TRON resource economics. It covers energy costs per operation type, bandwidth mechanics, staking ratios, burn rates, the rental market, and a decision framework for choosing the right resource strategy for your use case.
+Bu makale, TRON kaynak ekonomisi için tam bir geliştirici referansıdır. İşlem türü başına enerji maliyetlerini, bandwidth mekaniklerini, staking oranlarını, yakma oranlarını, kiralama pazarını ve kullanım durumunuz için doğru kaynak stratejisini seçmek için bir karar çerçevesini kapsar.
 
-## The Two Resources: Energy and Bandwidth
+## İki Kaynak: Enerji ve Bandwidth
 
-TRON has two computational resources that transactions consume:
+TRON'un işlemlerin tükettiği iki hesaplama kaynağı vardır:
 
-**Energy** is consumed by smart contract execution. Every opcode in the TVM (TRON Virtual Machine) has an energy cost. The more complex the contract interaction, the more energy it consumes. Energy is the expensive resource -- it drives the majority of transaction costs on TRON.
+**Enerji**, akıllı sözleşme yürütülmesi tarafından tüketilir. TVM'deki (TRON Sanal Makinesi) her opcode'un bir enerji maliyeti vardır. Sözleşme etkileşimi ne kadar karmaşıksa, o kadar fazla enerji tüketir. Enerji, pahalı olan kaynaktır -- TRON'daki işlem maliyetlerinin çoğunluğunu yönlendirir.
 
-**Bandwidth** is consumed by the raw data size of a transaction. Every byte of transaction data costs bandwidth. Simple TRX transfers, token transfers, and contract calls all consume bandwidth proportional to their serialized size. Bandwidth is the cheaper resource, and TRON grants a daily free allowance of 600 bandwidth points to every active address.
+**Bandwidth**, bir işlemin ham veri boyutu tarafından tüketilir. İşlem verilerinin her baytı bandwidth tüketir. Basit TRX transferleri, token transferleri ve sözleşme çağrıları hepsi seri hale getirilmiş boyutlarıyla orantılı bandwidth tüketir. Bandwidth, daha ucuz olan kaynaktır ve TRON her aktif adrese günde 600 bandwidth puanı ücretsiz olarak verir.
 
-The critical distinction: a simple TRX transfer consumes only bandwidth (no smart contract involved). A USDT transfer, a DEX swap, or any other smart contract interaction consumes both energy and bandwidth.
+Kritik ayrım: basit bir TRX transferi yalnızca bandwidth tüketir (hiçbir akıllı sözleşme söz konusu değildir). Bir USDT transferi, bir DEX swapı veya diğer herhangi bir akıllı sözleşme etkileşimi hem enerji hem de bandwidth tüketir.
 
-## Energy Costs by Operation Type
+## İşlem Türüne Göre Enerji Maliyetleri
 
-Energy consumption varies dramatically by operation type. Here are empirical measurements from mainnet transactions:
+Enerji tüketimi işlem türüne göre önemli ölçüde değişir. İşte mainnet işlemlerinden alınan ampirik ölçümler:
 
-### TRC-20 Token Transfers
-
-```
-USDT transfer (existing recipient):     ~31,895 - 64,285 energy
-USDT transfer (new recipient):          ~65,527 energy
-USDT transferFrom (with approval):      ~45,000 - 68,000 energy
-USDC transfer:                          ~32,000 - 65,000 energy
-Custom TRC-20 transfer:                 ~30,000 - 100,000+ energy
-```
-
-The variance in USDT transfers deserves explanation. When the recipient has never held USDT before, the contract must allocate a new storage slot in its internal mapping. This SSTORE operation costs significantly more energy than updating an existing balance (SLOAD + SSTORE on existing slot). The difference between a first-time and repeat recipient can exceed 30,000 energy.
-
-### DEX Operations
+### TRC-20 Token Transferleri
 
 ```
-SunSwap V2 single-pair swap:            ~200,000 - 300,000 energy
-SunSwap V2 multi-hop swap:              ~400,000 - 600,000 energy
-Add liquidity:                          ~250,000 - 350,000 energy
-Remove liquidity:                       ~200,000 - 300,000 energy
+USDT transferi (mevcut alıcı):          ~31,895 - 64,285 enerji
+USDT transferi (yeni alıcı):            ~65,527 enerji
+USDT transferFrom (onay ile):           ~45,000 - 68,000 enerji
+USDC transferi:                         ~32,000 - 65,000 enerji
+Özel TRC-20 transferi:                  ~30,000 - 100,000+ enerji
 ```
 
-DEX operations are expensive because they involve multiple contract calls within a single transaction: router contract, pair contract, token approvals, price calculations, and token transfers.
+USDT transferlerindeki varyans açıklamayı hak ediyor. Alıcı daha önce hiç USDT tutmadığında, sözleşme iç mapping'inde yeni bir depolama yuvası tahsis etmelidir. Bu SSTORE işlemi, mevcut bir bakiyeyi güncellemeye göre (mevcut slotta SLOAD + SSTORE) önemli ölçüde daha fazla enerji maliyeti yaşar. İlk kez ve tekrarlanan alıcı arasındaki fark 30.000 enerjiyi aşabilir.
 
-### NFT Operations
-
-```
-TRC-721 mint:                           ~100,000 - 200,000 energy
-TRC-721 transfer:                       ~50,000 - 80,000 energy
-TRC-1155 mint (single):                 ~80,000 - 150,000 energy
-TRC-1155 batch mint:                    ~150,000 - 500,000+ energy
-```
-
-### Contract Deployment
+### DEX İşlemleri
 
 ```
-Simple contract deployment:             ~500,000 - 1,000,000 energy
-Complex contract (DEX pair):            ~2,000,000 - 5,000,000 energy
-Proxy contract deployment:              ~300,000 - 600,000 energy
+SunSwap V2 tek çift swapı:              ~200,000 - 300,000 enerji
+SunSwap V2 multi-hop swapı:             ~400,000 - 600,000 enerji
+Likidite ekleme:                        ~250,000 - 350,000 enerji
+Likidite çıkarma:                       ~200,000 - 300,000 enerji
 ```
 
-### Key Insight: Do Not Hardcode
+DEX işlemleri pahalıdır çünkü tek bir işlem içinde birden fazla sözleşme çağrısı içerirler: router sözleşmesi, pair sözleşmesi, token onayları, fiyat hesaplamaları ve token transferleri.
 
-These numbers are ranges, not constants. The actual energy consumed depends on the contract's internal state at the moment of execution. Use `triggerConstantContract` to simulate the exact cost before purchasing energy. MERX exposes this through the `estimate_contract_call` tool and the `/api/v1/estimate` endpoint.
-
-## Bandwidth Costs
-
-Bandwidth is simpler than energy. Every transaction consumes bandwidth proportional to its serialized byte size. The formula:
+### NFT İşlemleri
 
 ```
-bandwidth_consumed = transaction_size_bytes
+TRC-721 mint:                           ~100,000 - 200,000 enerji
+TRC-721 transferi:                      ~50,000 - 80,000 enerji
+TRC-1155 mint (tek):                    ~80,000 - 150,000 enerji
+TRC-1155 toplu mint:                    ~150,000 - 500,000+ enerji
 ```
 
-Typical bandwidth costs:
+### Sözleşme Dağıtımı
 
 ```
-Simple TRX transfer:                    ~270 bandwidth
-TRC-20 transfer:                        ~345 bandwidth
-DEX swap:                               ~400 - 600 bandwidth
-Contract deployment:                    ~1,000 - 10,000 bandwidth
+Basit sözleşme dağıtımı:                ~500,000 - 1,000,000 enerji
+Karmaşık sözleşme (DEX pair):           ~2,000,000 - 5,000,000 enerji
+Proxy sözleşme dağıtımı:                ~300,000 - 600,000 enerji
 ```
 
-### The Free Allowance
+### Önemli İçgörü: Hardcode Yapmayın
 
-Every TRON address receives 600 free bandwidth points per day, replenished at midnight UTC. This is enough for 1-2 simple TRX transfers per day but falls short for contract interactions.
+Bu sayılar sabitler değil, aralıklardır. Tüketilen gerçek enerji, yürütme sırasında sözleşmenin iç durumuna bağlıdır. Enerji satın almadan önce tam maliyeti simüle etmek için `triggerConstantContract` kullanın. MERX bunu `estimate_contract_call` aracı ve `/api/v1/estimate` uç noktası aracılığıyla sunar.
 
-If your bandwidth is exhausted, the network burns TRX from your account to cover the cost. The burn rate is currently 1,000 SUN (0.001 TRX) per bandwidth point. For a 345-bandwidth USDT transfer, that is 0.345 TRX burned for bandwidth -- relatively small compared to energy costs, but it adds up at volume.
+## Bandwidth Maliyetleri
+
+Bandwidth, enerjiden daha basittir. Her işlem, serileştirilmiş bayt boyutuyla orantılı bandwidth tüketir. Formül:
+
+```
+tüketilen_bandwidth = işlem_boyutu_bayt
+```
+
+Tipik bandwidth maliyetleri:
+
+```
+Basit TRX transferi:                    ~270 bandwidth
+TRC-20 transferi:                       ~345 bandwidth
+DEX swapı:                              ~400 - 600 bandwidth
+Sözleşme dağıtımı:                      ~1,000 - 10,000 bandwidth
+```
+
+### Ücretsiz Tahsisat
+
+Her TRON adresi günde 600 ücretsiz bandwidth puanı alır ve UTC gece yarısında yenilenir. Bu günde 1-2 basit TRX transferi için yeterlidir ancak sözleşme etkileşimleri için eksiktir.
+
+Bandwidth'iniz tükenirse, ağ maliyeti karşılamak için hesabınızdan TRX yakar. Yakma oranı şu anda bandwidth noktası başına 1.000 SUN (0.001 TRX) olur. 345 bandwidth'li bir USDT transferi için, bandwidth için 0.345 TRX yakılır -- enerji maliyetlerine kıyasla nispeten küçüktür, ancak yüksek hacimde birikir.
 
 ### Bandwidth Staking
 
-You can stake TRX for bandwidth just as you can for energy. The bandwidth-per-TRX ratio depends on total network stake for bandwidth:
+Enerji için yapabildiğiniz gibi TRX'i bandwidth için stake edebilirsiniz. Bandwidth-per-TRX oranı bandwidth için toplam ağ stake'ine bağlıdır:
 
 ```
-your_bandwidth = (your_staked_trx / total_network_bandwidth_stake) * total_bandwidth_limit
+sizin_bandwidth = (stake_ettiğiniz_trx / toplam_ağ_bandwidth_stake) * toplam_bandwidth_limiti
 ```
 
-Bandwidth staking is less commonly discussed because:
-1. The free 600-point daily allowance covers light usage
-2. Bandwidth costs are small relative to energy costs
-3. Most developers focus on energy optimization first
+Bandwidth staking daha az tartışılır çünkü:
+1. Ücretsiz 600 puanlık günlük tahsisat hafif kullanımı kapsar
+2. Bandwidth maliyetleri enerji maliyetlerine kıyasla küçüktür
+3. Çoğu geliştirici önce enerji optimizasyonuna odaklanır
 
-For high-volume applications processing hundreds of transactions daily, bandwidth staking can save meaningful amounts. But energy optimization should always come first.
+Günde yüzlerce işlem işleyen yüksek hacimli uygulamalar için, bandwidth staking anlamlı tutarlar tasarruf edebilir. Ancak enerji optimizasyonu her zaman ilk gelmesi gerekir.
 
-## Staking Ratios
+## Staking Oranları
 
-Staking TRX is the first-party method for obtaining resources. You lock TRX in Stake 2.0 and receive energy or bandwidth in return.
+TRX'i stake etmek, kaynakları elde etmenin birinci taraf yöntemidir. TRX'i Stake 2.0'da kilitler ve enerji veya bandwidth alırsınız.
 
-### Energy Staking Ratio
+### Enerji Staking Oranı
 
-The energy you receive from staking depends on two factors: how much TRX you stake and how much TRX the entire network has staked for energy.
-
-```
-your_energy = (your_staked_trx / total_network_energy_stake) * total_energy_limit
-```
-
-As of early 2026, the approximate ratio is:
+Staking'ten aldığınız enerji iki faktöre bağlıdır: kaç TRX stake ettiğiniz ve tüm ağın enerji için kaç TRX stake ettiği.
 
 ```
-Total network energy limit:     ~90,000,000,000 energy/day
-Total network energy stake:     ~50,000,000,000 TRX
-
-Energy per TRX staked:          ~1.8 energy/day per TRX staked
+sizin_enerji = (stake_ettiğiniz_trx / toplam_ağ_enerji_stake) * toplam_enerji_limiti
 ```
 
-To cover a single USDT transfer (65,000 energy), you would need to stake approximately:
+2026 başı itibarıyla yaklaşık oran:
 
 ```
-65,000 / 1.8 = ~36,111 TRX staked
+Toplam ağ enerji limiti:        ~90,000,000,000 enerji/gün
+Toplam ağ enerji stake:         ~50,000,000,000 TRX
+
+Stake edilen TRX başına enerji:  ~1.8 enerji/gün stake edilen TRX başına
 ```
 
-At current TRX prices, that is a significant capital commitment -- and you get enough energy for one USDT transfer per day. This is why the rental market exists: renting energy is dramatically more capital-efficient than staking.
-
-### The Staking Paradox
-
-Staking has zero marginal cost (you get your TRX back when you unstake after a 14-day waiting period), but the opportunity cost is real. The TRX you stake cannot be used for trading, lending, or other yield-generating activities. For most developers and businesses, renting energy from the market is more cost-effective than locking up the capital required to self-stake.
-
-The crossover point depends on your daily energy consumption:
+Tek bir USDT transferini (65.000 enerji) karşılamak için, yaklaşık olarak stake etmeniz gerekirdi:
 
 ```
-Break-even analysis (approximate):
-
-  Daily energy need:    65,000 (one USDT transfer)
-  Rental cost:          ~1.5 TRX/day
-  Staking required:     ~36,111 TRX
-  TRX annual yield:     ~4% (staking rewards)
-  Opportunity cost:     ~36,111 * 0.04 / 365 = ~3.96 TRX/day
-
-  Verdict: Renting is cheaper (1.5 < 3.96 TRX/day)
-
-  Daily energy need:    6,500,000 (100 USDT transfers)
-  Rental cost:          ~150 TRX/day
-  Staking required:     ~3,611,111 TRX
-  Opportunity cost:     ~3,611,111 * 0.04 / 365 = ~395 TRX/day
-
-  Verdict: Renting is still cheaper (150 < 395 TRX/day)
+65,000 / 1.8 = ~36,111 TRX stake edildi
 ```
 
-For most use cases, renting wins on pure economics. Staking makes sense when you need guaranteed resource availability regardless of market conditions, or when you are a validator who stakes for governance purposes and treats energy as a byproduct.
+Mevcut TRX fiyatlarında, bu önemli bir sermaye taahhüdüdür -- ve günde bir USDT transferi için yeterli enerji elde edersiniz. Bu nedenle kiralama pazarı vardır: enerji kiralamak, stake etmekten çok daha fazla sermaye verimlidir.
 
-## Burn Rates: What Happens Without Resources
+### Staking Paradoksu
 
-If you execute a transaction without sufficient energy or bandwidth, TRON does not reject the transaction. Instead, it burns TRX from your account to cover the deficit.
+Stake'in sıfır marjinal maliyeti vardır (14 günlük bekleme süresinden sonra stake'inizi geri alırsınız), ancak fırsat maliyeti gerçektir. Stake ettiğiniz TRX ticaret, ödünç verme veya diğer getiri üreten faaliyetler için kullanılamaz. Çoğu geliştirici ve işletme için, pazardan enerji kiralamak, kilitli sermaye gerektiren kendi stake'i yapmaktan daha uygun maliyetlidir.
 
-### Energy Burn Rate
-
-```
-1 energy unit = 420 SUN burned (0.00042 TRX)
-```
-
-For a 65,000-energy USDT transfer without any energy:
+Kırılma noktası günlük enerji tüketiminize bağlıdır:
 
 ```
-65,000 * 420 = 27,300,000 SUN = 27.3 TRX burned
+Başabaş analizi (yaklaşık):
+
+  Günlük enerji ihtiyacı:       65,000 (bir USDT transferi)
+  Kiralama maliyeti:            ~1.5 TRX/gün
+  Gerekli stake:                ~36,111 TRX
+  TRX yıllık getirisi:          ~%4 (staking ödülleri)
+  Fırsat maliyeti:              ~36,111 * 0.04 / 365 = ~3.96 TRX/gün
+
+  Sonuç: Kiralama daha ucuzdur (1.5 < 3.96 TRX/gün)
+
+  Günlük enerji ihtiyacı:       6,500,000 (100 USDT transferi)
+  Kiralama maliyeti:            ~150 TRX/gün
+  Gerekli stake:                ~3,611,111 TRX
+  Fırsat maliyeti:              ~3,611,111 * 0.04 / 365 = ~395 TRX/gün
+
+  Sonuç: Kiralama hala daha ucuzdur (150 < 395 TRX/gün)
 ```
 
-Compare this to renting 65,000 energy through MERX at 28 SUN per unit:
+Çoğu kullanım durumu için, saf ekonomi açısından kiralama kazanır. Staking, pazar koşullarından bağımsız olarak garantili kaynak kullanılabilirliğine ihtiyacınız olduğunda veya stake'i yönetim için yapan ve enerjiyi bir yan ürün olarak gören bir doğrulayıcı olduğunuzda mantıklıdır.
+
+## Yakma Oranları: Kaynak Olmadan Ne Olur
+
+Yeterli enerji veya bandwidth olmadan bir işlem yürütürseniz, TRON işlemi reddetmez. Bunun yerine, açığı kapatmak için hesabınızdan TRX yakar.
+
+### Enerji Yakma Oranı
 
 ```
-65,000 * 28 = 1,820,000 SUN = 1.82 TRX rental cost
+1 enerji birimi = 420 SUN yakılır (0.00042 TRX)
 ```
 
-The savings: 27.3 - 1.82 = 25.48 TRX saved, or a 93% cost reduction. This is why the energy rental market exists and why it matters.
-
-### Bandwidth Burn Rate
+Herhangi bir enerji olmadan 65.000 enerjili bir USDT transferi için:
 
 ```
-1 bandwidth point = 1,000 SUN burned (0.001 TRX)
+65,000 * 420 = 27,300,000 SUN = 27.3 TRX yakılır
 ```
 
-For a 345-bandwidth USDT transfer:
+Bunu MERX üzerinden birim başına 28 SUN'da 65.000 enerji kiralamakla karşılaştırın:
 
 ```
-345 * 1,000 = 345,000 SUN = 0.345 TRX burned
+65,000 * 28 = 1,820,000 SUN = 1.82 TRX kiralama maliyeti
 ```
 
-### Partial Coverage
+Tasarruf: 27.3 - 1.82 = 25.48 TRX tasarruf edilir veya %93 maliyet azalması. Bu nedenle enerji kiralama pazarı vardır ve neden önemli olduğudur.
 
-If you have some energy but not enough, TRON uses your available energy first and burns TRX for the remainder:
-
-```
-Energy needed:      65,000
-Energy available:   40,000
-Energy deficit:     25,000
-TRX burned:         25,000 * 420 = 10,500,000 SUN = 10.5 TRX
-```
-
-This is why accurate energy estimation matters. Buying 40,000 energy when you need 65,000 wastes the rental cost and still results in a significant TRX burn.
-
-## The Rental Market Overview
-
-The energy rental market has evolved into a structured ecosystem with predictable patterns.
-
-### How Rentals Work
-
-Energy providers stake large amounts of TRX and accumulate energy. They then delegate that energy to buyers for a fee. The delegation is an on-chain operation: the provider's address delegates a specified amount of energy to the buyer's address for a specified duration.
+### Bandwidth Yakma Oranı
 
 ```
-Provider stakes 1,000,000 TRX
-  -> Receives ~1,800,000 energy/day
-  -> Delegates energy to buyers at market rates
-  -> Collects rental fees
-  -> TRX remains staked (principal preserved)
+1 bandwidth noktası = 1,000 SUN yakılır (0.001 TRX)
 ```
 
-### Duration Options
-
-Most providers offer multiple duration tiers:
+345 bandwidth'li bir USDT transferi için:
 
 ```
-1 hour      Cheapest per-unit price, ideal for single transactions
-1 day       Moderate pricing, good for daily batch operations
-3 days      Volume discount begins
-7 days      Significant discount for committed usage
-14 days     Lowest per-unit rates
-30 days     Best rates, requires confidence in demand
+345 * 1,000 = 345,000 SUN = 0.345 TRX yakılır
 ```
 
-The optimal duration depends on your usage pattern. If you process 10 USDT transfers per day, a 24-hour rental of 650,000 energy is more cost-effective than ten separate 1-hour rentals of 65,000 energy each.
+### Kısmi Kapsam
 
-### Price Discovery
-
-Energy prices fluctuate based on supply and demand. Typical price ranges as of early 2026:
+Biraz enerji var ama yeterli değilse, TRON önce mevcut enerji kullanır ve kalanı için TRX yakar:
 
 ```
-1-hour rental:      25 - 40 SUN per energy unit
-1-day rental:       20 - 35 SUN per energy unit
-7-day rental:       15 - 30 SUN per energy unit
-30-day rental:      10 - 25 SUN per energy unit
+Gerekli enerji:         65,000
+Mevcut enerji:          40,000
+Enerji açığı:           25,000
+Yakılan TRX:            25,000 * 420 = 10,500,000 SUN = 10.5 TRX
 ```
 
-Prices are lowest during off-peak hours (roughly 00:00-08:00 UTC) and highest during peak transaction periods. The MERX price monitor captures these fluctuations across all providers every 30 seconds.
+Bu nedenle doğru enerji tahmini önemlidir. 65.000'e ihtiyaçken 40.000 enerji satın almak kiralama maliyetini boşa harcar ve yine de önemli bir TRX yakması ile sonuçlanır.
 
-## Decision Framework: Choosing Your Resource Strategy
+## Kiralama Pazarına Genel Bakış
 
-### Low Volume (1-10 transactions/day)
+Enerji kiralama pazarı, tahmin edilebilir desenlere sahip yapılandırılmış bir ekosisteme evrimleşmiştir.
 
-**Recommended strategy: Rent per transaction through MERX**
+### Kiralamaların Nasıl Çalıştığı
 
-At low volume, the simplest approach is to buy energy for each transaction as needed. The overhead of staking or maintaining long-duration rentals is not justified.
+Enerji sağlayıcıları büyük miktarlarda TRX stake eder ve enerji biriktirir. Daha sonra bu enerjiyi alıcılara bir ücret karşılığında devrederlerse. Devreden, zincirde bir işlemdir: sağlayıcının adresi, belirli miktarda enerjiyi belirli bir süre için alıcının adresine devrediler.
+
+```
+Sağlayıcı 1,000,000 TRX stake eder
+  -> ~1,800,000 enerji/gün alır
+  -> Alıcılara pazar oranında enerji devreder
+  -> Kiralama ücretleri toplar
+  -> TRX stake'de kalır (ana para korunur)
+```
+
+### Süre Seçenekleri
+
+Çoğu sağlayıcı birden fazla süre seviyesi sunar:
+
+```
+1 saat        En ucuz birim fiyatı, tek işlemler için ideal
+1 gün         Orta fiyatlandırma, günlük toplu işlemler için iyi
+3 gün         Hacim indirimi başlar
+7 gün         Taahhütlü kullanım için anlamlı indirim
+14 gün        En düşük birim oranlar
+30 gün        En iyi oranlar, talep hakkında güven gerekir
+```
+
+Optimal süre, kullanım şeklinize bağlıdır. Günde 10 USDT transferi işliyorsanız, 650.000 enerji'nin 24 saatlik kiralanması, 65.000 enerji'nin on ayrı 1 saatlik kiralama'sından daha uygun maliyetlidir.
+
+### Fiyat Keşfi
+
+Enerji fiyatları arz ve talebe göre dalgalanır. 2026 başı itibarıyla tipik fiyat aralıkları:
+
+```
+1 saatlik kiralama:     25 - 40 SUN birim başına
+1 günlük kiralama:      20 - 35 SUN birim başına
+7 günlük kiralama:      15 - 30 SUN birim başına
+30 günlük kiralama:     10 - 25 SUN birim başına
+```
+
+Fiyatlar yoğun olmayan saatlerde (kabaca 00:00-08:00 UTC) en düşüktür ve yüksek işlem dönemlerinde en yüksektir. MERX fiyat monitörü, 30 saniyede bir tüm sağlayıcılar arasında bu dalgalanmaları yakalar.
+
+## Karar Çerçevesi: Kaynak Stratejisini Seçme
+
+### Düşük Hacim (günde 1-10 işlem)
+
+**Önerilen strateji: MERX üzerinden işlem başına kiralama**
+
+Düşük hacimde, en basit yaklaşım, gerektiğinde her işlem için enerji satın almaktır. Staking veya uzun süreli kiralamaları sürdürmenin ek yükü haklı değildir.
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// Before each USDT transfer, buy exactly the energy you need
+// Her USDT transferinden önce, tam ihtiyacınız olan enerjiyi satın alın
 const estimate = await merx.estimateContractCall({
   contract_address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
   function_selector: 'transfer(address,uint256)',
@@ -277,28 +277,28 @@ const order = await merx.createOrder({
 });
 ```
 
-### Medium Volume (10-100 transactions/day)
+### Orta Hacim (günde 10-100 işlem)
 
-**Recommended strategy: Daily energy rentals with buffer**
+**Önerilen strateji: Buffer'lı günlük enerji kiralamaları**
 
-Buy a 24-hour energy rental sized for your expected daily volume plus a 20% buffer. This gives you a lower per-unit price than hourly rentals and avoids the overhead of per-transaction purchases.
+Beklenen günlük hacminiz artı %20 buffer için boyutlandırılmış 24 saatlik enerji kiralaması satın alın. Bu saatlik kiralama'dan daha düşük birim fiyatı verir ve işlem başına satın alma ek yükünü ortadan kaldırır.
 
 ```
-Daily USDT transfers:     50
-Energy per transfer:      65,000
-Daily energy need:        3,250,000
-With 20% buffer:          3,900,000
-Duration:                 24 hours
+Günlük USDT transferleri:   50
+Transfer başına enerji:     65,000
+Günlük enerji ihtiyacı:     3,250,000
+%20 buffer ile:             3,900,000
+Süre:                       24 saat
 ```
 
-### High Volume (100+ transactions/day)
+### Yüksek Hacim (günde 100+ işlem)
 
-**Recommended strategy: Weekly or monthly rentals with standing orders**
+**Önerilen strateji: Haftalık veya aylık kiralamaları sabit siparişlerle**
 
-At high volume, longer durations offer the best per-unit pricing. Use MERX standing orders to automatically purchase energy when prices drop below your threshold:
+Yüksek hacimde, daha uzun süreler en iyi birim fiyatlandırması sunar. MERX sabit siparişlerini kullanarak fiyatlar eşiğinizin altına düştüğünde otomatik olarak enerji satın alın:
 
 ```typescript
-// Standing order: auto-buy when price drops below 25 SUN
+// Sabit sipariş: fiyat 25 SUN'nun altına düştüğünde otomatik satın al
 await merx.createStandingOrder({
   energy_amount: 30000000,
   duration: '7d',
@@ -307,37 +307,38 @@ await merx.createStandingOrder({
 });
 ```
 
-### Enterprise / Infrastructure
+### Kurumsal / Altyapı
 
-**Recommended strategy: Hybrid staking + rental**
+**Önerilen strateji: Hibrit staking + kiralama**
 
-For infrastructure operators processing thousands of transactions daily, a combination of self-staking (for baseline capacity) and market rentals (for burst capacity) provides the best economics and reliability:
+Binlerce işlem işleyen altyapı operatörleri için, kendi stake'i (temel kapasite için) ve pazar kiralamaları (patlama kapasitesi için) kombinasyonu en iyi ekonomi ve güvenilirlik sağlar:
 
 ```
-Baseline (staked):    Cover 60% of average daily energy need
-Burst (rented):       Cover remaining 40% + spikes via MERX
+Temel (stake edildi):   Günlük enerji ihtiyacının ortalama %60'ını kapla
+Patlama (kirala):       Kalan %40 + MERX üzerinden çıkıntıları kapla
 ```
 
-This ensures resource availability even during market disruptions while keeping capital efficiency reasonable.
+Bu, pazar bozulmaları sırasında bile kaynak kullanılabilirliğini sağlarken makul sermaye verimliliğini tutar.
 
-## Izleme ve Optimizasyon
+## İzleme ve Optimizasyon
 
-Whatever strategy you choose, monitor your actual energy consumption against your estimates. MERX provides tools for this:
+Hangi stratejiyi seçerseniz seçin, gerçek enerji tüketiminizi tahminlerinize karşı izleyin. MERX buna yönelik araçlar sağlar:
 
-- **Price history API**: Track how energy prices change over time
-- **Order history**: Review what you have paid and optimize
-- **WebSocket price feeds**: React to price movements in real time
-- **Delegation monitors**: Get notified when your delegated energy is about to expire
+- **Fiyat geçmişi API**: Enerji fiyatlarının zaman içinde nasıl değiştiğini izle
+- **Sipariş geçmişi**: Ne ödediğinizi gözden geçirin ve optimize edin
+- **WebSocket fiyat akışları**: Fiyat hareketlerine gerçek zamanda tepki verin
+- **Devreden monitörler**: Devredilen enerji süreniz dolmak üzereyken bildirim alın
 
-The TRON resource model rewards developers who understand it. Energy costs dominate transaction economics, and the difference between burning TRX at the protocol level and renting energy at market rates is consistently 90% or more. Whether you rent per transaction, buy daily blocks, or self-stake, the key is to never let a transaction burn TRX that could have been covered by rented energy.
+TRON kaynak modeli, bunu anlayanları ödüllendirir. Enerji maliyetleri işlem ekonomisine hakim olur ve protokol düzeyinde TRX yakma ile enerjiyi pazar oranında kiralama arasındaki fark tutarlı bir şekilde %90 veya daha fazladır. İşlem başına kiralama yapın, günlük bloklar satın alın veya kendi stake'inizi yapın, anahtar kiralanan enerji ile karşılanabilecek hiçbir işlemin TRX yakmamasını sağlamaktır.
 
-Eksiksiz dokumantasyon: [https://merx.exchange/docs](https://merx.exchange/docs)
+Tam dokümantasyon: [https://merx.exchange/docs](https://merx.exchange/docs)
 Platform: [https://merx.exchange](https://merx.exchange)
 MCP sunucusu: [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Deneyin
+
+MERX'i Claude Desktop veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır kurulum, salt okunur araçlar için API anahtarı gerekli değildir:
 
 ```json
 {
@@ -349,6 +350,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI aracınızdan şunu sorun: "Şu anda en ucuz TRON enerjisi nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP dokümantasyonu: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

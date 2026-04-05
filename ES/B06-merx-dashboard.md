@@ -1,18 +1,18 @@
-# Panel de MERX: comprar energia sin escribir codigo
+# MERX Dashboard: Comprando Energía sin Escribir Código
 
-Not every energy buyer is a developer. Not every developer wants to write code for a one-off purchase. And not every organization has the engineering bandwidth to integrate an API before they can start saving on TRON costo de transaccions.
+No todo comprador de energía es desarrollador. No todo desarrollador quiere escribir código para una compra única. Y no todas las organizaciones tienen la capacidad de ingeniería para integrar una API antes de poder comenzar a ahorrar en costos de transacciones de TRON.
 
-The MERX dashboard at [merx.exchange](https://merx.exchange) provides a complete web interface for buying energy, comparing provider prices, managing your balance, tracking orders, and generating clave de APIs -- all without writing a single line of code. This article walks through every feature of the dashboard and shows how to use it effectively.
+El dashboard de MERX en [merx.exchange](https://merx.exchange) proporciona una interfaz web completa para comprar energía, comparar precios de proveedores, gestionar tu saldo, rastrear pedidos y generar claves API -- todo sin escribir una sola línea de código. Este artículo recorre todas las características del dashboard y muestra cómo utilizarlo de manera efectiva.
 
-## Como comenzar
+## Primeros Pasos
 
-Navigate to [merx.exchange](https://merx.exchange) and create an account. The registration requires an email address and password. No KYC. No identity verification. No waiting period. Your account is active immediately.
+Navega a [merx.exchange](https://merx.exchange) y crea una cuenta. El registro requiere una dirección de correo electrónico y contraseña. Sin KYC. Sin verificación de identidad. Sin tiempo de espera. Tu cuenta está activa inmediatamente.
 
-Once logged in, you land on the main dashboard view. The interface follows a dark theme with high-contrast typography -- no visual noise, no unnecessary decoration, just the information you need to make purchase decisions.
+Una vez que inicies sesión, llegarás a la vista principal del dashboard. La interfaz sigue un tema oscuro con tipografía de alto contraste -- sin ruido visual, sin decoración innecesaria, solo la información que necesitas para tomar decisiones de compra.
 
-## The Price Panel
+## El Panel de Precios
 
-The first thing you see on the dashboard is the live price panel. This displays current precios de energia from all seven integrated providers, updated every 30 seconds.
+Lo primero que ves en el dashboard es el panel de precios en vivo. Este muestra los precios actuales de energía de los siete proveedores integrados, actualizados cada 30 segundos.
 
 ```
 Provider      1h Price    1d Price    Available
@@ -26,11 +26,11 @@ TronSave      35 SUN      28 SUN      Yes
 SoHu          34 SUN      27 SUN      Yes
 ```
 
-The panel highlights el proveedor mas barato for each duration tier. Prices are displayed in SUN per unidad de energia -- the standard denomination that allows direct comparison across providers regardless of how they internally quote their rates.
+El panel resalta el proveedor más económico para cada categoría de duración. Los precios se muestran en SUN por unidad de energía -- la denominación estándar que permite comparación directa entre proveedores sin importar cómo cotizan internamente sus tarifas.
 
-### What the Prices Mean
+### Qué Significan los Precios
 
-Each price represents the cost per unit of energy for the specified rental duration. To calculate the total cost for your purchase:
+Cada precio representa el costo por unidad de energía para la duración de alquiler especificada. Para calcular el costo total de tu compra:
 
 ```
 Total cost = energy_amount * price_per_unit
@@ -39,36 +39,36 @@ Example:
   65,000 energy * 28 SUN/unit = 1,820,000 SUN = 1.82 TRX
 ```
 
-The dashboard performs this calculation automatically when you enter an order. You see the total cost in both SUN and TRX before confirming.
+El dashboard realiza este cálculo automáticamente cuando ingresas un pedido. Ves el costo total tanto en SUN como en TRX antes de confirmar.
 
-### Price History
+### Historial de Precios
 
-Below the live prices, a historical chart shows how prices have moved over the past 24 hours, 7 days, or 30 days. This helps you identify patterns -- prices tend to be lower during off-peak hours (00:00-08:00 UTC) and higher during peak transaction periods.
+Debajo de los precios en vivo, un gráfico histórico muestra cómo se han movido los precios durante las últimas 24 horas, 7 días o 30 días. Esto te ayuda a identificar patrones -- los precios tienden a ser más bajos durante las horas de menor actividad (00:00-08:00 UTC) y más altos durante los períodos de mayor transacción.
 
-The chart is not just informational. If you are placing a large order and timing flexibility exists, waiting a few hours for a price dip can save a meaningful percentage.
+El gráfico no es solo informativo. Si estás realizando un pedido grande y existe flexibilidad de tiempo, esperar algunas horas para una caída de precio puede ahorrar un porcentaje significativo.
 
-## Creating an Order
+## Creando un Pedido
 
-The order creation form is the core function of the dashboard. Aqui esta the process:
+El formulario de creación de pedidos es la función central del dashboard. Aquí está el proceso:
 
-### Step 1: Enter Order Parameters
+### Paso 1: Ingresar Parámetros del Pedido
 
-Fill in three fields:
+Completa tres campos:
 
-- **Energy amount**: The number of unidad de energias you need. If you are unsure, the dashboard provides quick-select buttons for common amounts:
-  - 32,000 (minimal USDT transfer)
-  - 65,000 (standard USDT transfer)
-  - 200,000 (DEX swap)
-  - 500,000 (complex contract interaction)
-  - Custom amount
+- **Energy amount**: El número de unidades de energía que necesitas. Si no estás seguro, el dashboard proporciona botones de selección rápida para cantidades comunes:
+  - 32,000 (transferencia USDT mínima)
+  - 65,000 (transferencia USDT estándar)
+  - 200,000 (intercambio DEX)
+  - 500,000 (interacción de contrato compleja)
+  - Cantidad personalizada
 
-- **Target address**: The TRON address that will receive the delegacion de energia. This is the address that will execute the transaction needing energy. The dashboard validates the address format before proceeding.
+- **Target address**: La dirección de TRON que recibirá la delegación de energía. Esta es la dirección que ejecutará la transacción que necesita energía. El dashboard valida el formato de la dirección antes de continuar.
 
-- **Duration**: How long you need the energy. Options typically include 1 hour, 1 day, 3 days, 7 days, 14 days, and 30 days.
+- **Duration**: Cuánto tiempo necesitas la energía. Las opciones típicamente incluyen 1 hora, 1 día, 3 días, 7 días, 14 días y 30 días.
 
-### Step 2: Review the Quote
+### Paso 2: Revisar la Cotización
 
-After entering your parameters, the dashboard displays a detailed quote:
+Después de ingresar tus parámetros, el dashboard muestra una cotización detallada:
 
 ```
 Order Summary
@@ -83,31 +83,31 @@ Account balance:  50.00 TRX
 Balance after:    48.18 TRX
 ```
 
-The quote shows exactly which provider will fulfill the order, the per-unit price, the total cost, and the impact on your account balance. Hay sin comisiones ocultas or markups.
+La cotización muestra exactamente qué proveedor cumplirá el pedido, el precio por unidad, el costo total y el impacto en tu saldo de cuenta. No hay comisiones ocultas ni recargos.
 
-### Step 3: Confirm and Execute
+### Paso 3: Confirmar y Ejecutar
 
-Click the confirm button. The order is submitted to the MERX backend, which routes it to the selected provider for execution. The delegation typically completes within seconds.
+Haz clic en el botón de confirmación. El pedido se envía al backend de MERX, que lo enruta al proveedor seleccionado para su ejecución. La delegación típicamente se completa en segundos.
 
-Once the order is filled, the dashboard updates to show the estado de la orden, the en cadena delegation hash de transaccion, and the time remaining on the rental.
+Una vez que se completa el pedido, el dashboard se actualiza para mostrar el estado del pedido, el hash de transacción de delegación en cadena y el tiempo restante en el alquiler.
 
-## Managing Your Balance
+## Gestionando Tu Saldo
 
-### Depositing Funds
+### Depositando Fondos
 
-Before you can buy energy, you need a TRX balance on MERX. The deposit process:
+Antes de poder comprar energía, necesitas un saldo de TRX en MERX. El proceso de depósito:
 
-1. Navigate to the Balance section
-2. Click "Deposit"
-3. The dashboard displays your unique deposit address
-4. Send TRX to that address from any TRON wallet
-5. The deposit is credited automatically after en cadena confirmation
+1. Navega a la sección de Saldo
+2. Haz clic en "Depositar"
+3. El dashboard muestra tu dirección de depósito única
+4. Envía TRX a esa dirección desde cualquier billetera de TRON
+5. El depósito se acredita automáticamente después de la confirmación en cadena
 
-The deposit monitor service watches for incoming transactions continuously. Credits typically appear within 1-2 minutes of the transaction being confirmed en cadena.
+El servicio de monitoreo de depósitos observa las transacciones entrantes continuamente. Los créditos típicamente aparecen dentro de 1-2 minutos de que la transacción sea confirmada en cadena.
 
-### Viewing Balance History
+### Viendo Historial de Saldo
 
-The balance section shows a complete history of all balance changes:
+La sección de saldo muestra un historial completo de todos los cambios de saldo:
 
 ```
 Date/Time            Type          Amount       Balance
@@ -119,48 +119,48 @@ Date/Time            Type          Amount       Balance
 2026-03-29 09:15     Order #1249   -5.40 TRX    140.83 TRX
 ```
 
-Every entry corresponds to a partida doble ledger record in the MERX accounting system. The sum of all entries always reconciles to your current balance -- this is verifiable and auditable.
+Cada entrada corresponde a un registro de libro mayor de doble entrada en el sistema de contabilidad de MERX. La suma de todas las entradas siempre se reconcilia con tu saldo actual -- esto es verificable y auditable.
 
-### Withdrawals
+### Retiros
 
-If you need to withdraw TRX from your MERX account:
+Si necesitas retirar TRX de tu cuenta de MERX:
 
-1. Navigate to the Balance section
-2. Click "Withdraw"
-3. Enter the destination TRON address
-4. Enter the amount to withdraw
-5. Confirm the withdrawal
+1. Navega a la sección de Saldo
+2. Haz clic en "Retirar"
+3. Ingresa la dirección de TRON de destino
+4. Ingresa la cantidad a retirar
+5. Confirma el retiro
 
-Withdrawals are processed by the treasury-signer service and broadcast to the TRON network. Processing time depends on network conditions but typically completes within a few minutes.
+Los retiros se procesan mediante el servicio de treasury-signer y se transmiten a la red de TRON. El tiempo de procesamiento depende de las condiciones de la red pero típicamente se completa en algunos minutos.
 
-## Order History
+## Historial de Pedidos
 
-The Order History view provides a searchable, filterable list of all your past orders. Each entry shows:
+La vista de Historial de Pedidos proporciona una lista buscable y filtrable de todos tus pedidos anteriores. Cada entrada muestra:
 
-- **Order ID**: Unique identifier for reference
-- **Date/Time**: When the order was placed
-- **Energy Amount**: How many unidad de energias were purchased
-- **Duration**: Rental period
-- **Provider**: Which provider fulfilled the order
-- **Price**: Per-unit price in SUN
-- **Total Cost**: Total amount charged in TRX
-- **Status**: Pending, Active, Completed, or Failed
-- **Target Address**: Where the energy was delegated
+- **Order ID**: Identificador único para referencia
+- **Date/Time**: Cuándo se realizó el pedido
+- **Energy Amount**: Cuántas unidades de energía se compraron
+- **Duration**: Período de alquiler
+- **Provider**: Qué proveedor cumplió el pedido
+- **Price**: Precio por unidad en SUN
+- **Total Cost**: Cantidad total cobrada en TRX
+- **Status**: Pendiente, Activo, Completado o Fallido
+- **Target Address**: Dónde se delegó la energía
 
-### Filtering and Search
+### Filtrado y Búsqueda
 
-You can filter orders by:
+Puedes filtrar pedidos por:
 
-- Date range
-- Status (active, completed, all)
-- Provider
-- Target address
+- Rango de fechas
+- Estado (activo, completado, todos)
+- Proveedor
+- Dirección de destino
 
-This is particularly useful for organizations that purchase energy for multiple addresses and need to track costs per wallet or per application.
+Esto es particularmente útil para organizaciones que compran energía para múltiples direcciones y necesitan rastrear costos por billetera o por aplicación.
 
-### Order Details
+### Detalles del Pedido
 
-Clicking on any order opens a detail view with full information:
+Hacer clic en cualquier pedido abre una vista de detalles con información completa:
 
 ```
 Order #1247
@@ -178,34 +178,34 @@ Delegation Start: 2026-03-28 14:35:30 UTC
 Delegation End:   2026-03-28 15:35:30 UTC
 ```
 
-The hash de transaccion is a link to the en cadena delegation record, verifiable through any TRON explorador de bloques.
+El hash de transacción es un enlace al registro de delegación en cadena, verificable mediante cualquier explorador de bloques de TRON.
 
-## Generating API Keys
+## Generando Claves API
 
-When you are ready to integrate MERX into your application programmatically, the dashboard lets you generate clave de APIs without needing to contact support.
+Cuando estés listo para integrar MERX en tu aplicación de manera programática, el dashboard te permite generar claves API sin necesidad de contactar con soporte.
 
-1. Navigate to the Settings or API section
-2. Click "Generate API Key"
-3. Provide a label for the key (e.g., "Production server", "Staging environment")
-4. The key is displayed once -- copy it immediately
-5. The key is stored hashed on the server; it cannot be retrieved again
+1. Navega a la sección de Configuración o API
+2. Haz clic en "Generar Clave API"
+3. Proporciona una etiqueta para la clave (p. ej., "Servidor de producción", "Entorno de staging")
+4. La clave se muestra una vez -- cópiala inmediatamente
+5. La clave se almacena hash en el servidor; no se puede recuperar nuevamente
 
-You can manage multiple clave de APIs, each with its own label. If a key is compromised, revoke it from the dashboard and generate a new one. Revoking a key is immediate -- all requests using the revoked key will fail with an authentication error.
+Puedes gestionar múltiples claves API, cada una con su propia etiqueta. Si una clave se ve comprometida, revócala desde el dashboard y genera una nueva. Revocar una clave es inmediato -- todas las solicitudes que usen la clave revocada fallarán con un error de autenticación.
 
-### API Key Security
+### Seguridad de Claves API
 
-clave de APIs authenticate your requests to the MERX REST API, WebSocket feeds, and SDKs. Treat them like passwords:
+Las claves API autentican tus solicitudes a la API REST de MERX, feeds de WebSocket y SDKs. Trátalas como contraseñas:
 
-- Never commit clave de APIs to version control
-- Store them in environment variables or secret managers
-- Use separate keys for development, staging, and production
-- Rotate keys periodically
+- Nunca confirmes claves API en control de versiones
+- Almacénalas en variables de entorno o gestores de secretos
+- Usa claves separadas para desarrollo, staging y producción
+- Rota claves periódicamente
 
-The dashboard shows the last-used timestamp for each key, making it easy to identify and revoke unused keys.
+El dashboard muestra la marca de tiempo de último uso para cada clave, facilitando la identificación y revocación de claves sin usar.
 
-## Monitoring Active Delegations
+## Monitoreando Delegaciones Activas
 
-The dashboard includes a tiempo real view of your active delegacion de energias:
+El dashboard incluye una vista en tiempo real de tus delegaciones de energía activas:
 
 ```
 Active Delegations
@@ -216,47 +216,47 @@ TAddr2...         200,000    2026-03-31 09:00  20h 30m
 TAddr3...         500,000    2026-04-02 12:00  3d 2h 30m
 ```
 
-For each active delegation, you can:
+Para cada delegación activa, puedes:
 
-- See the exact expiration time
-- View the remaining time
-- See how much energy is available
-- Extend the delegation by placing a new order for the same address
+- Ver la hora exacta de vencimiento
+- Ver el tiempo restante
+- Ver cuánta energía está disponible
+- Extender la delegación realizando un nuevo pedido para la misma dirección
 
-The system does not currently support canceling an active delegation early (delegacion de energia on TRON is an en cadena operation that runs until its specified duration expires), but you can always extend an existing delegation by purchasing additional energy for the same target address.
+El sistema actualmente no soporta cancelar una delegación activa antes de tiempo (la delegación de energía en TRON es una operación en cadena que se ejecuta hasta su duración especificada), pero siempre puedes extender una delegación existente comprando energía adicional para la misma dirección de destino.
 
-## Energy Estimation Tool
+## Herramienta de Estimación de Energía
 
-The dashboard includes a built-in estimacion de energia tool. If you are not sure how much energy your transaction will need, you can simulate it directly from the dashboard:
+El dashboard incluye una herramienta integrada de estimación de energía. Si no estás seguro de cuánta energía necesitará tu transacción, puedes simularla directamente desde el dashboard:
 
-1. Enter the contract address (e.g., the USDT contract)
-2. Select the function (e.g., transfer)
-3. Enter the parameters (recipient address, amount)
-4. Click "Estimate"
+1. Ingresa la dirección del contrato (p. ej., el contrato USDT)
+2. Selecciona la función (p. ej., transferencia)
+3. Ingresa los parámetros (dirección del destinatario, cantidad)
+4. Haz clic en "Estimar"
 
-The tool calls `triggerConstantContract` under the hood and returns the exact energy required for your specific transaction against the current contract state. This eliminates guesswork and prevents over-purchasing or under-purchasing energy.
+La herramienta llama a `triggerConstantContract` internamente y devuelve la energía exacta requerida para tu transacción específica contra el estado actual del contrato. Esto elimina conjeturas y previene la compra excesiva o insuficiente de energía.
 
-## Who the Dashboard Is For
+## Para Quién Es Este Dashboard
 
-### Business Operators
+### Operadores de Negocio
 
-If you run a business that sends USDT payments -- payroll, vendor payments, remittances -- you do not need a developer to integrate an API. Open the dashboard, deposit TRX, and start buying energy before each batch of transfers. The ahorro de costos are immediate and significant.
+Si diriges un negocio que envía pagos USDT -- nóminas, pagos a proveedores, remesas -- no necesitas un desarrollador para integrar una API. Abre el dashboard, deposita TRX y comienza a comprar energía antes de cada lote de transferencias. Los ahorros de costos son inmediatos y significativos.
 
-### Developers Evaluating MERX
+### Desarrolladores Evaluando MERX
 
-Before committing to an API integration, use the dashboard to test the service. Place a few orders, observe the pricing, verify that delegations arrive en cadena as expected. Once you are satisfied, generate an clave de API and move to programmatic access.
+Antes de comprometerte con una integración API, utiliza el dashboard para probar el servicio. Realiza algunos pedidos, observa los precios, verifica que las delegaciones lleguen en cadena como se espera. Una vez que estés satisfecho, genera una clave API y pasa al acceso programático.
 
-### Finance Teams
+### Equipos de Finanzas
 
-The order history and balance views provide the reporting that finance teams need: what was spent, when, on what, from which provider. Export this data for reconciliation with your internal accounting systems.
+Las vistas de historial de pedidos y saldos proporcionan los reportes que los equipos de finanzas necesitan: qué se gastó, cuándo, en qué y de qué proveedor. Exporta estos datos para reconciliación con tus sistemas de contabilidad internos.
 
-### Occasional Users
+### Usuarios Ocasionales
 
-If you make TRON transactions occasionally -- a few per week or per month -- the dashboard is likely all you need. No integration, no code, no maintenance. Just log in, buy energy, and save 90% on comision de transaccions.
+Si realizas transacciones de TRON ocasionalmente -- algunas pocas por semana o por mes -- el dashboard probablemente es todo lo que necesitas. Sin integración, sin código, sin mantenimiento. Solo inicia sesión, compra energía y ahorra el 90% en comisiones de transacción.
 
-## From Dashboard to API
+## Del Dashboard a la API
 
-The dashboard and the API share the same backend. Every action you perform in the dashboard -- checking prices, placing orders, viewing history -- maps directly to an API endpoint. When you are ready to automate:
+El dashboard y la API comparten el mismo backend. Cada acción que realizas en el dashboard -- verificar precios, realizar pedidos, ver historial -- se asigna directamente a un endpoint de API. Cuando estés listo para automatizar:
 
 ```
 Dashboard action          API equivalent
@@ -268,14 +268,15 @@ View balance              GET /api/v1/balance
 Estimate energy           POST /api/v1/estimate
 ```
 
-The transition from dashboard user to API user is seamless. Your account, balance, and order history carry over. The only addition is the clave de API you generate from the dashboard itself.
+La transición de usuario de dashboard a usuario de API es perfecta. Tu cuenta, saldo e historial de pedidos se transfieren. La única adición es la clave API que generas desde el mismo dashboard.
 
-Documentacion completa: [https://merx.exchange/docs](https://merx.exchange/docs)
+Documentación completa: [https://merx.exchange/docs](https://merx.exchange/docs)
 Plataforma: [https://merx.exchange](https://merx.exchange)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Pruébalo Ahora con IA
+
+Agrega MERX a Claude Desktop o a cualquier cliente compatible con MCP -- sin instalación, sin clave API necesaria para herramientas de solo lectura:
 
 ```json
 {
@@ -287,6 +288,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+Pregúntale a tu agente de IA: "¿Cuál es la energía de TRON más económica en este momento?" y obtén precios en vivo de todos los proveedores conectados.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Documentación completa de MCP: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

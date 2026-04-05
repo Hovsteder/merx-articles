@@ -1,323 +1,323 @@
-# 30 Prompt ve 21 Kaynak: MERX Neden Tek Tam Protokol MCP Sunucusudur
+# 30 Prompt ve 21 Kaynak: Neden MERX Tek Tam Protokol MCP Sunucusu
 
-## MCP Has Three Primitives, Not One
+## MCP'nin Bir Değil Üç Primitifi Var
 
-The Model Context Protocol defines three types of capabilities that a server can expose to an AI client:
+Model Context Protocol, bir sunucunun bir AI istemcisine açığa çıkarabileceği üç tür yeteneği tanımlar:
 
-1. **Tools** - executable actions (send a transaction, buy energy, execute a swap)
-2. **Prompts** - pre-built templates that guide the model through complex workflows
-3. **Resources** - structured data the model can read (price feeds, network parameters, documentation)
+1. **Tools** - yürütülebilir eylemler (işlem gönder, enerji satın al, takas yap)
+2. **Prompts** - modeli karmaşık iş akışlarında rehber yapan önceden oluşturulmuş şablonlar
+3. **Resources** - modelin okuyabileceği yapılandırılmış veriler (fiyat beslemeleri, ağ parametreleri, belgeler)
 
-Most MCP servers implement only tools. They expose a handful of callable functions, call it a day, and market themselves as "MCP-compatible." This is technically correct in the same way that a car with an engine but no steering wheel is technically a vehicle.
+Çoğu MCP sunucusu sadece tools uygular. Bir avuç çağrılabilir fonksiyonu açığa çıkarır, işi bittiği söyler ve kendilerini "MCP-uyumlu" olarak pazarlarlar. Bu, teknik olarak motoru olan ama direksiyonu olmayan bir arabaya sahip olmanın teknik olarak bir araç sayılması gibi doğrudur.
 
-Tools alone give the model actions but no guidance on when or how to use them. Without prompts, the model must figure out complex multi-step workflows from scratch every time. Without resources, the model has no structured data to reference - it must make tool calls just to read information that should be passively available.
+Tools tek başına modele eylemler verirler ama ne zaman ve nasıl kullanılacağı konusunda hiçbir rehberlik vermezler. Promptlar olmadan, model her seferinde karmaşık çok adımlı iş akışlarını sıfırdan anlamalıdır. Resources olmadan, modelin referans alacağı yapılandırılmış verisi yoktur - sadece erişilebilir olması gereken bilgileri okumak için tool çağrısı yapmak zorundadır.
 
-MERX implements all three primitives: 55 tools, 30 prompts, and 21 resources. This article explains what each primitive does, why all three matter, and how MERX uses them to create an MCP server that is qualitatively different from tools-only implementations.
+MERX üç primitifi de uygular: 55 tool, 30 prompt ve 21 resource. Bu makale her primitifin ne yaptığını, üçünün neden önemli olduğunu ve MERX'in bunu tools-only uygulamalardan niteliksel olarak farklı bir MCP sunucusu oluşturmak için nasıl kullandığını açıklar.
 
-## Primitive 1: Tools (Actions)
+## Primitive 1: Tools (Eylemler)
 
-Tools are the most intuitive primitive. A tool is a function the model can call to perform an action. It has a name, a description, typed parameters, and returns a structured response.
+Tools en sezgisel primitiftir. Bir tool, modelin bir eylemi gerçekleştirmek için çağırabileceği bir fonksiyondur. Bir adı, açıklaması, yazılı parametreleri ve yapılandırılmış bir yanıtı vardır.
 
-MERX exposes 55 tools covering the full scope of TRON blockchain operations:
+MERX, TRON blokzincirinin tüm işlem alanını kapsayan 55 tool açığa çıkarır:
 
-### Wallet Operations
-- `set_private_key` - Configure the wallet with a private key (derives address automatically)
-- `get_trx_balance` - Check TRX balance of any address
-- `get_trc20_balance` - Check TRC20 token balance
-- `transfer_trx` - Send TRX to an address
-- `transfer_trc20` - Send TRC20 tokens to an address
-- `check_address_resources` - View energy and bandwidth allocation
+### Cüzdan İşlemleri
+- `set_private_key` - Cüzdanı özel anahtarla yapılandır (adresi otomatik türet)
+- `get_trx_balance` - Herhangi bir adresin TRX bakiyesini kontrol et
+- `get_trc20_balance` - TRC20 token bakiyesini kontrol et
+- `transfer_trx` - TRX'i bir adrese gönder
+- `transfer_trc20` - TRC20 tokenlarını bir adrese gönder
+- `check_address_resources` - Enerji ve bandwidth tahsisini görüntüle
 
-### Energy Market
-- `get_prices` - Current prices from all providers
-- `get_best_price` - Find the cheapest energy offer
-- `create_order` - Purchase energy from the market
-- `create_paid_order` - Purchase energy via x402 (no account needed)
-- `ensure_resources` - Automatically purchase needed resources
-- `list_orders` - View order history
-- `get_order` - Get details of a specific order
+### Enerji Pazarı
+- `get_prices` - Tüm sağlayıcılardan mevcut fiyatlar
+- `get_best_price` - En ucuz enerji teklifini bul
+- `create_order` - Pazardan enerji satın al
+- `create_paid_order` - x402 aracılığıyla enerji satın al (hesap gerekmez)
+- `ensure_resources` - Gerekli kaynakları otomatik satın al
+- `list_orders` - Sipariş geçmişini görüntüle
+- `get_order` - Belirli bir siparişin detaylarını al
 
-### DEX Trading
-- `get_swap_quote` - Get a SunSwap V2 quote with exact simulation
-- `execute_swap` - Execute a swap with automatic resource management
-- `approve_trc20` - Set token spending approval
+### DEX Ticareti
+- `get_swap_quote` - Tam simülasyonlu SunSwap V2 teklifi al
+- `execute_swap` - Otomatik kaynak yönetimi ile takas yap
+- `approve_trc20` - Token harcama onayı ayarla
 
-### Automation
-- `create_standing_order` - Set up automatic energy purchases
-- `list_standing_orders` - View active standing orders
-- `create_monitor` - Set up delegation or balance monitors
-- `list_monitors` - View active monitors
+### Otomasyon
+- `create_standing_order` - Otomatik enerji satın alımları ayarla
+- `list_standing_orders` - Aktif standing order'ları görüntüle
+- `create_monitor` - Delegasyon veya bakiye monitörü kur
+- `list_monitors` - Aktif monitörleri görüntüle
 
-### Advanced
-- `execute_intent` - Execute multi-step transaction plans
-- `estimate_contract_call` - Simulate any contract call for energy estimation
+### İleri Seviye
+- `execute_intent` - Çok adımlı işlem planlarını yürüt
+- `estimate_contract_call` - Enerji tahmini için herhangi bir sözleşme çağrısını simüle et
 
-Each tool has a JSON Schema definition for its parameters, a natural language description, and structured return types. The model knows exactly what each tool does, what parameters it needs, and what it will return.
+Her tool'un parametreleri için JSON Schema tanımı, doğal dil açıklaması ve yapılandırılmış dönüş türleri vardır. Model her tool'un ne yaptığını, hangi parametrelere ihtiyaç duyduğunu ve ne döndüreceğini tam olarak bilir.
 
-But tools alone are not enough.
+Ama tools tek başına yeterli değildir.
 
-## Primitive 2: Prompts (Templates)
+## Primitive 2: Prompts (Şablonlar)
 
-A prompt is a pre-built template that the model can use to handle a specific type of request. Think of it as a recipe: "When the user asks for X, here is the step-by-step approach, including which tools to call, in what order, and how to interpret the results."
+Bir prompt, modelin belirli bir istek türünü ele almak için kullanabileceği önceden oluşturulmuş bir şablondur. Bunu bir reçete gibi düşün: "Kullanıcı X için sorduğunda, işte adım adım yaklaşım, hangi tool'ları çağrılacak, hangi sırada ve sonuçlar nasıl yorumlanacak."
 
-MERX provides 30 prompts organized across 10 categories.
+MERX, 10 kategori arasında organize edilmiş 30 prompt sağlar.
 
-### Baslangic (3 prompts)
+### Başlarken (3 prompt)
 
 **setup_wallet**
 ```
-Template: Walk the user through wallet configuration
-Steps:
-  1. Explain private key security
-  2. Call set_private_key
-  3. Call get_trx_balance to verify
-  4. Call check_address_resources for baseline
-  5. Recommend next steps based on balance
+Şablon: Kullanıcıyı cüzdan yapılandırmasında yönlendir
+Adımlar:
+  1. Özel anahtar güvenliğini açıkla
+  2. set_private_key'i çağır
+  3. Doğrulamak için get_trx_balance'ı çağır
+  4. Temel için check_address_resources'ı çağır
+  5. Bakiyeye göre sonraki adımları öner
 ```
 
 **first_energy_purchase**
 ```
-Template: Guide first-time energy buyers
-Steps:
-  1. Explain what energy is and why it matters
-  2. Call get_prices to show market overview
-  3. Help choose amount and duration
-  4. Call create_order or create_paid_order
-  5. Verify delegation with check_address_resources
+Şablon: İlk kez enerji satın alanları rehberlik et
+Adımlar:
+  1. Enerji nedir ve neden önemli olduğunu açıkla
+  2. Pazar genel görünümü göstermek için get_prices'ı çağır
+  3. Miktar ve süreyi seçmede yardımcı ol
+  4. create_order veya create_paid_order'ı çağır
+  5. check_address_resources ile delegasyonu doğrula
 ```
 
 **platform_overview**
 ```
-Template: Explain MERX capabilities
-Content: Structured overview of all tools, prompts, and resources
-  with examples of when to use each
+Şablon: MERX yeteneklerini açıkla
+İçerik: Her bir tool, prompt ve resource'un ne zaman kullanılacağını
+  içeren tüm tool'ların yapılandırılmış genel görünümü
 ```
 
-### Energy Management (4 prompts)
+### Enerji Yönetimi (4 prompt)
 
 **buy_cheapest_energy**
 ```
-Template: Find and buy energy at the best price
-Steps:
-  1. Call get_best_price with user's parameters
-  2. Show price comparison across providers
-  3. Confirm purchase with user
-  4. Call create_order
-  5. Poll for delegation confirmation
+Şablon: En iyi fiyatta enerji bul ve satın al
+Adımlar:
+  1. Kullanıcının parametreleriyle get_best_price'ı çağır
+  2. Sağlayıcılar arasında fiyat karşılaştırması göster
+  3. Kullanıcı ile satın alma işlemini onayla
+  4. create_order'ı çağır
+  5. Delegasyon onayı için poll yap
 ```
 
 **compare_providers**
 ```
-Template: Detailed provider comparison
-Steps:
-  1. Call get_prices for all providers
-  2. Calculate cost for user's specific needs
-  3. Present comparison table
-  4. Include reliability and speed metrics
-  5. Recommend best option with reasoning
+Şablon: Detaylı sağlayıcı karşılaştırması
+Adımlar:
+  1. Tüm sağlayıcılar için get_prices'ı çağır
+  2. Kullanıcının özel ihtiyaçları için maliyeti hesapla
+  3. Karşılaştırma tablosunu sun
+  4. Güvenilirlik ve hız metriklerini dahil et
+  5. Akıl yürütme ile en iyi seçeneği öner
 ```
 
 **optimize_costs**
 ```
-Template: Analyze spending and suggest optimizations
-Steps:
-  1. Review order history
-  2. Analyze price patterns
-  3. Identify opportunities for standing orders
-  4. Calculate potential savings
-  5. Present optimization plan
+Şablon: Harcamaları analiz et ve optimizasyon öner
+Adımlar:
+  1. Sipariş geçmişini inceleyebilirsiniz
+  2. Fiyat modellerini analiz et
+  3. Standing order'lar için fırsatları belirle
+  4. Olası tasarrufu hesapla
+  5. Optimizasyon planını sun
 ```
 
 **ensure_resources_for_tx**
 ```
-Template: Prepare resources for a specific transaction
-Steps:
-  1. Estimate energy for the planned transaction
-  2. Check current resources
-  3. Calculate deficit
-  4. Purchase if needed
-  5. Confirm readiness
+Şablon: Belirli bir işlem için kaynakları hazırla
+Adımlar:
+  1. Planlanan işlem için enerjiyi tahmin et
+  2. Mevcut kaynakları kontrol et
+  3. Açığı hesapla
+  4. Gerekirse satın al
+  5. Hazır olduğunu onayla
 ```
 
-### Transaction Execution (4 prompts)
+### İşlem Yürütme (4 prompt)
 
 **send_usdt**
 ```
-Template: Complete USDT transfer with resource optimization
-Steps:
-  1. Validate recipient address
-  2. Estimate energy
-  3. Ensure resources
-  4. Execute transfer
-  5. Verify on-chain
+Şablon: Kaynak optimizasyonu ile tam USDT transferi
+Adımlar:
+  1. Alıcı adresini doğrula
+  2. Enerjiyi tahmin et
+  3. Kaynakları sağla
+  4. Transferi yürüt
+  5. Zincir üzerinde doğrula
 ```
 
 **send_trx**
 ```
-Template: TRX transfer (simpler - no energy needed)
-Steps:
-  1. Validate recipient address
-  2. Check bandwidth
-  3. Execute transfer
-  4. Verify on-chain
+Şablon: TRX transferi (daha basit - enerji gerekmez)
+Adımlar:
+  1. Alıcı adresini doğrula
+  2. Bandwidth'i kontrol et
+  3. Transferi yürüt
+  4. Zincir üzerinde doğrula
 ```
 
 **swap_tokens**
 ```
-Template: DEX swap with full pipeline
-Steps:
-  1. Get quote
-  2. Review price impact and slippage
-  3. Check if approval needed
-  4. Ensure resources for approval + swap
-  5. Execute swap
-  6. Verify result
+Şablon: Tam pipeline ile DEX takas
+Adımlar:
+  1. Teklif al
+  2. Fiyat etkisini ve kaymayı gözden geçir
+  3. Onay gerekli mi kontrol et
+  4. Onay + takas için kaynakları sağla
+  5. Takas'ı yürüt
+  6. Sonucu doğrula
 ```
 
 **execute_complex_intent**
 ```
-Template: Multi-step transaction plan
-Steps:
-  1. Help user define steps
-  2. Simulate all steps
-  3. Review total costs
-  4. Choose resource strategy
-  5. Execute intent
-  6. Report results
+Şablon: Çok adımlı işlem planı
+Adımlar:
+  1. Kullanıcının adımları tanımlamasına yardımcı ol
+  2. Tüm adımları simüle et
+  3. Toplam maliyetleri gözden geçir
+  4. Kaynak stratejisini seç
+  5. Intent'i yürüt
+  6. Sonuçları bildir
 ```
 
-### Automation (4 prompts)
+### Otomasyon (4 prompt)
 
 **setup_standing_order**
 ```
-Template: Configure automatic energy purchases
-Steps:
-  1. Understand user's needs (volume, timing, budget)
-  2. Recommend trigger type
-  3. Set appropriate constraints
-  4. Create standing order
-  5. Explain monitoring and management
+Şablon: Otomatik enerji satın almalarını yapılandır
+Adımlar:
+  1. Kullanıcının ihtiyaçlarını anla (hacim, zaman, bütçe)
+  2. Tetikleyici türü öner
+  3. Uygun kısıtlamaları ayarla
+  4. Standing order'ı oluştur
+  5. İzleme ve yönetimi açıkla
 ```
 
 **setup_delegation_monitor**
 ```
-Template: Configure auto-renewal for energy delegations
-Steps:
-  1. Review current delegations
-  2. Set renewal window
-  3. Configure price protection
-  4. Set notification channels
-  5. Create monitor
+Şablon: Enerji delegasyonlarının otomatik yenilenmesini yapılandır
+Adımlar:
+  1. Mevcut delegasyonları inceleyebilirsiniz
+  2. Yenileme penceresi ayarla
+  3. Fiyat korumasını yapılandır
+  4. Bildirim kanallarını ayarla
+  5. Monitor'ı oluştur
 ```
 
 **setup_balance_monitor**
 ```
-Template: Configure balance-based alerts and actions
-Steps:
-  1. Analyze current resource usage patterns
-  2. Recommend threshold levels
-  3. Configure action (buy, ensure, or notify)
-  4. Set budget constraints
-  5. Create monitor
+Şablon: Bakiye tabanlı uyarılar ve eylemler yapılandır
+Adımlar:
+  1. Mevcut kaynak kullanım modellerini analiz et
+  2. Eşik seviyelerini öner
+  3. Eylem yapılandır (satın al, sağla veya bildir)
+  4. Bütçe kısıtlamaları ayarla
+  5. Monitor'ı oluştur
 ```
 
 **review_automation**
 ```
-Template: Audit and optimize existing automation
-Steps:
-  1. List all standing orders and monitors
-  2. Review execution history
-  3. Identify underperforming rules
-  4. Suggest improvements
-  5. Apply changes if approved
+Şablon: Mevcut otomasyonu denetim ve optimize et
+Adımlar:
+  1. Tüm standing order'ları ve monitörleri listele
+  2. Yürütme geçmişini inceleyebilirsiniz
+  3. Düşük performanslı kuralları belirle
+  4. İyileştirmeler öner
+  5. Onaylanırsa değişiklikleri uygula
 ```
 
-### Analysis (4 prompts)
+### Analiz (4 prompt)
 
 **analyze_prices**
 ```
-Template: Market price analysis
-Steps:
-  1. Pull current prices from all providers
-  2. Pull price history
-  3. Identify trends and patterns
-  4. Calculate optimal buy times
-  5. Present analysis with charts
+Şablon: Pazar fiyat analizi
+Adımlar:
+  1. Tüm sağlayıcılardan mevcut fiyatları çek
+  2. Fiyat geçmişini çek
+  3. Eğilimleri ve modelleri belirle
+  4. Optimal satın alma zamanlarını hesapla
+  5. Grafikler ile analiz sunebilirsiniz
 ```
 
 **calculate_savings**
 ```
-Template: Calculate savings from using delegated energy
-Steps:
-  1. Estimate energy for user's transaction types
-  2. Calculate cost with TRX burn
-  3. Calculate cost with energy purchase
-  4. Show savings percentage
-  5. Project annual savings at given volume
+Şablon: Delegeli enerji kullanımından yapılan tasarrufu hesapla
+Adımlar:
+  1. Kullanıcının işlem türleri için enerjiyi tahmin et
+  2. TRX yanması ile maliyeti hesapla
+  3. Enerji satın alma ile maliyeti hesapla
+  4. Tasarruf yüzdesini göster
+  5. Verilen hacimde yıllık tasarrufu projeksiyonu
 ```
 
 **estimate_transaction_cost**
 ```
-Template: Cost estimation for any transaction type
-Steps:
-  1. Identify transaction type
-  2. Simulate with exact parameters
-  3. Show energy and bandwidth requirements
-  4. Show cost with and without delegation
-  5. Recommend optimal approach
+Şablon: Herhangi bir işlem türü için maliyet tahmini
+Adımlar:
+  1. İşlem türünü belirle
+  2. Tam parametrelerle simüle et
+  3. Enerji ve bandwidth gereksinimlerini göster
+  4. Delegasyonu olan ve olmayan maliyeti göster
+  5. Optimal yaklaşımı öner
 ```
 
 **portfolio_overview**
 ```
-Template: Complete account overview
-Steps:
-  1. Check all balances (TRX, USDT, other tokens)
-  2. Check resource allocation
-  3. Review active delegations
-  4. Summarize active automation rules
-  5. Present financial overview
+Şablon: Tam hesap genel görünümü
+Adımlar:
+  1. Tüm bakiyeleri kontrol et (TRX, USDT, diğer tokenler)
+  2. Kaynak tahsisini kontrol et
+  3. Aktif delegasyonları gözden geçir
+  4. Aktif otomasyon kurallarını özetleyebilirsiniz
+  5. Mali genel görünümü sun
 ```
 
-### Account Management (3 prompts)
+### Hesap Yönetimi (3 prompt)
 
-**account_setup**, **deposit_guide**, **withdrawal_guide** - Step-by-step templates for account lifecycle operations.
+**account_setup**, **deposit_guide**, **withdrawal_guide** - Hesap yaşam döngüsü işlemleri için adım adım şablonlar.
 
-### x402 (2 prompts)
+### x402 (2 prompt)
 
-**x402_purchase** - Guide through the zero-registration purchase flow.
-**x402_explain** - Explain how x402 works and when to use it.
+**x402_purchase** - Sıfır kayıt satın alma akışında rehberlik.
+**x402_explain** - x402'nin nasıl çalıştığını ve ne zaman kullanılacağını açıkla.
 
-### Network Information (2 prompts)
+### Ağ Bilgisi (2 prompt)
 
-**explain_energy**, **explain_bandwidth** - Educational templates that explain TRON's resource model using data from resources.
+**explain_energy**, **explain_bandwidth** - Resources'deki verileri kullanarak TRON'ın kaynak modelini açıklayan eğitim şablonları.
 
-### Troubleshooting (2 prompts)
+### Sorun Giderme (2 prompt)
 
-**transaction_failed**, **delegation_not_arrived** - Diagnostic templates that help identify and resolve common issues.
+**transaction_failed**, **delegation_not_arrived** - Yaygın sorunları tanımlamaya ve çözmeye yardımcı olan tanı şablonları.
 
-### Integration (2 prompts)
+### Entegrasyon (2 prompt)
 
-**sdk_quickstart**, **api_integration** - Templates for developers integrating MERX into their applications.
+**sdk_quickstart**, **api_integration** - MERX'i uygulamalarına entegre eden geliştiriciler için şablonlar.
 
-### Why Prompts Matter
+### Prompt'lar Neden Önemli
 
-Without prompts, a model receiving the request "help me buy energy" would need to:
-1. Figure out which tools are relevant
-2. Determine the correct order of operations
-3. Decide what information to gather first
-4. Handle edge cases it may not know about
+Prompt'lar olmadan, "bana enerji satın almada yardımcı ol" isteğini alan bir model şunları yapması gerekir:
+1. Hangi tool'ların ilgili olduğunu bulabilirsebilirsiniz
+2. İşlem sırasını belirle
+3. Önce hangi bilgiyi toplayacağına karar ver
+4. Bilmeyebileceği kenar durumlarını ele al
 
-With the `buy_cheapest_energy` prompt, the model has a tested, optimized workflow that handles edge cases, presents information in the right format, and follows the correct sequence of operations. The difference is the same as handing someone a set of tools versus handing them tools plus a manual.
+`buy_cheapest_energy` prompt'u ile, model kenar durumları ele alan, bilgiyi doğru biçimde sunan ve işlem sırasını takip eden test edilmiş, optimize edilmiş bir iş akışına sahiptir. Fark, birine tool vermek ile tool'lar artı bir kılavuz vermek arasındakidir.
 
-## Primitive 3: Resources (Data)
+## Primitive 3: Resources (Veriler)
 
-Resources are structured data that the model can read without making an action call. Unlike tools, which do something, resources provide something - they make information passively available.
+Resources, modelin bir eylem çağrısı yapmadan okuyabileceği yapılandırılmış verilerdir. Tool'lardan farklı olarak, eylemi yaparlar, resource'lar sağlarlar - bilgiyi pasif olarak kullanılabilir hale getirirler.
 
-MERX provides 21 resources: 14 static and 7 dynamic templates.
+MERX, 21 resource sağlar: 14 statik ve 7 dinamik şablon.
 
-### Static Resources (14)
+### Statik Resources (14)
 
-Static resources provide fixed reference data that does not change between sessions:
+Statik resource'lar oturumlar arasında değişmeyen sabit referans veriler sağlarlar:
 
 ```
 merx://docs/getting-started
@@ -336,11 +336,11 @@ merx://docs/faq
 merx://docs/troubleshooting
 ```
 
-When the model reads `merx://docs/energy-explained`, it receives a structured document explaining TRON's energy model - what energy is, how it is consumed, how delegation works, and how it relates to TRX costs. This information is available immediately, without making any API calls or tool invocations.
+Model `merx://docs/energy-explained`'i okuduğunda, TRON'ın enerji modelini açıklayan yapılandırılmış bir belge alır - enerji nedir, nasıl tüketilir, delegasyon nasıl çalışır ve TRX maliyetleriyle nasıl ilişkilidir. Bu bilgi herhangi bir API çağrısı veya tool çağrısı yapılmadan hemen kullanılabilir.
 
-### Dynamic Template Resources (7)
+### Dinamik Şablon Resources (7)
 
-Template resources accept parameters and return data specific to the request:
+Şablon resource'lar parametreleri kabul eder ve istege özgü veriler döndürür:
 
 ```
 merx://prices/current
@@ -352,7 +352,7 @@ merx://network/parameters
 merx://network/chain-info
 ```
 
-For example, `merx://prices/current` returns the current energy prices from all providers in a structured format:
+Örneğin, `merx://prices/current` tüm sağlayıcılardan mevcut enerji fiyatlarını yapılandırılmış biçimde döndürür:
 
 ```json
 {
@@ -376,7 +376,7 @@ For example, `merx://prices/current` returns the current energy prices from all 
 }
 ```
 
-And `merx://account/{address}/resources` returns the current resource allocation for any address:
+Ve `merx://account/{address}/resources` herhangi bir adres için mevcut kaynak tahsisini döndürür:
 
 ```json
 {
@@ -401,89 +401,90 @@ And `merx://account/{address}/resources` returns the current resource allocation
 }
 ```
 
-### Why Resources Matter
+### Resources Neden Önemli
 
-Resources give the model context without the overhead of tool calls. When a user asks "what is my energy balance?", the model can check the resource `merx://account/{address}/resources` directly. When the model needs to reference documentation about standing orders before creating one, it reads `merx://docs/standing-orders-guide`.
+Resources, modele tool çağrılarının ek yükü olmadan bağlam sağlar. Kullanıcı "enerji bakiyem nedir?" diye sorduğunda, model `merx://account/{address}/resources` resource'unu doğrudan kontrol edebilir. Model standing order'ları oluşturmadan önce bunlar hakkında referans alma ihtiyacı duyduğunda, `merx://docs/standing-orders-guide` okur.
 
-Without resources, every piece of information requires a tool call. The model would need to call `get_prices` to see current prices, even though that information could be passively available. The distinction is between a model that must actively request every piece of data (tools-only) and a model that has a rich information environment available for reference (tools + resources).
+Resources olmadan, her bilgi parçası bir tool çağrısı gerektirir. Model mevcut fiyatları görmek için `get_prices`'ı çağırması gerekir, hatta bu bilgi pasif olarak kullanılabilir olsa bile. Ayırım, her bilgi parçasını aktif olarak isteyen bir model (tools-only) ile başvuru için kullanabileceği zengin bir bilgi ortamına sahip bir model (tools + resources) arasındadır.
 
-## The Full-Protocol Advantage
+## Tam Protokol Avantajı
 
-When all three primitives work together, the model operates at a fundamentally different level:
+Üç primitive birlikte çalışırken, model temelde farklı bir seviyede çalışır:
 
-### Scenario: User asks "Help me set up energy automation"
+### Senaryo: Kullanıcı "Bana enerji otomasyonu ayarlamada yardımcı ol" diyor
 
 **Tools-only MCP sunucusu:**
-1. Model guesses which tools exist for automation
-2. Calls tools in a trial-and-error sequence
-3. May miss important configuration options
-4. No guidance on best practices
-5. No background reference material
+1. Model hangi tool'ların otomasyon için var olduğunu tahmin eder
+2. Tool'ları deneme yanılma sırasıyla çağırır
+3. Önemli yapılandırma seçeneklerini kaçırabileceğiniz
+4. En iyi uygulamalar konusunda rehberlik yok
+5. Referans materyali yok
 
-**Full-protocol MERX MCP sunucusu:**
-1. Model reads `merx://docs/standing-orders-guide` for reference material
-2. Model activates `setup_standing_order` prompt for step-by-step workflow
-3. Model reads `merx://prices/history/7d` to recommend price thresholds
-4. Model calls `create_standing_order` tool with optimized parameters
-5. Model reads `merx://docs/monitors-guide` and suggests complementary monitors
-6. Model calls `create_monitor` tool for delegation expiry protection
-7. Result: Complete, well-configured automation with documentation-backed decisions
+**Tam protokol MERX MCP sunucusu:**
+1. Model referans materyali için `merx://docs/standing-orders-guide` okur
+2. Model adım adım iş akışı için `setup_standing_order` prompt'unu etkinleştirir
+3. Model fiyat eşikleri önerisinde bulunmak için `merx://prices/history/7d` okur
+4. Model optimize edilmiş parametrelerle `create_standing_order` tool'unu çağırır
+5. Model `merx://docs/monitors-guide`'i okur ve tamamlayıcı monitörleri önerir
+6. Model delegasyon sona ermesi koruması için `create_monitor` tool'unu çağırır
+7. Sonuç: Belgeleme destekli kararlarla tam, iyi yapılandırılmış otomasyon
 
-The full-protocol approach is not just marginally better - it produces qualitatively different outcomes because the model has access to guidance (prompts), knowledge (resources), and capability (tools) simultaneously.
+Tam protokol yaklaşımı sadece marjinal olarak daha iyi değildir - model rehberlik (prompts), bilgi (resources) ve yetenek (tools) eşzamanlı olarak kullanabilir çünkü niteliksel olarak farklı sonuçlar üretir.
 
-## What Other MCP Servers Are Missing
+## Diğer MCP Sunucularının Eksik Oldukları
 
-A survey of blockchain-related MCP servers as of early 2026 shows a consistent pattern:
+2026 başı itibariyle blokzincir ile ilgili MCP sunucularının incelemesi tutarlı bir kalıp gösterir:
 
-| Server | Tools | Prompts | Resources | Full Protocol |
+| Sunucu | Tools | Prompts | Resources | Tam Protokol |
 |---|---|---|---|---|
-| Generic ETH MCP | 5-8 | 0 | 0 | No |
-| Solana MCP | 10-12 | 0 | 0 | No |
-| Bitcoin MCP | 3-4 | 0 | 0 | No |
-| Multi-chain MCP | 15-20 | 0 | 0 | No |
-| MERX | 52 | 30 | 21 | Yes |
+| Genel ETH MCP | 5-8 | 0 | 0 | Hayır |
+| Solana MCP | 10-12 | 0 | 0 | Hayır |
+| Bitcoin MCP | 3-4 | 0 | 0 | Hayır |
+| Multi-chain MCP | 15-20 | 0 | 0 | Hayır |
+| MERX | 52 | 30 | 21 | Evet |
 
-No other blockchain MCP server implements prompts or resources. They are all tools-only, which means:
+Başka hiçbir blokzincir MCP sunucusu prompt'ları veya resource'ları uygulamaz. Hepsinin tools-only, bu da şu anlama gelir:
 
-- No workflow guidance for multi-step operations
-- No documentation available at model inference time
-- No passive data access for context and reference
-- Every interaction starts from scratch with no structural knowledge
+- Çok adımlı işlemler için iş akışı rehberliği yok
+- Model çıkarsama zamanında belge yok
+- Bağlam ve referans için pasif veri erişimi yok
+- Her etkileşim yapısal bilgi olmadan sıfırdan başlar
 
-MERX is the only MCP server where the model has a complete operational environment - the ability to act (tools), the knowledge of how to act (prompts), and the data to inform decisions (resources).
+MERX, modelin eksiksiz bir işletim ortamına - hareket etme yeteneğine (tools), ne zaman hareket edeceğini bilme bilgisine (prompts) ve kararları bilgilendirmek için verilere (resources) sahip tek MCP sunucusudur.
 
-## The Numbers
+## Sayılar
 
-MERX by the numbers:
+MERX rakamlarla:
 
-- **55 tools** across 5 categories (wallet, energy market, DEX, automation, advanced)
-- **30 prompts** across 10 categories (getting started, energy, transactions, automation, analysis, accounts, x402, network, troubleshooting, integration)
-- **21 resources** (14 static documentation, 7 dynamic data templates)
-- **72 total capabilities** exposed through a single MCP server
+- **55 tool** 5 kategoride (cüzdan, enerji pazarı, DEX, otomasyon, ileri seviye)
+- **30 prompt** 10 kategoride (başlarken, enerji, işlemler, otomasyon, analiz, hesaplar, x402, ağ, sorun giderme, entegrasyon)
+- **21 resource** (14 statik belgelendirme, 7 dinamik veri şablonu)
+- **72 toplam yetenek** tek bir MCP sunucusu aracılığıyla açığa çıkarılmış
 
-For an AI agent connected to MERX, this means:
-- It can perform any TRON operation (tools)
-- It knows the best approach for any scenario (prompts)
-- It has real-time data and documentation always available (resources)
+MERX'e bağlı bir AI ajanı için bu şu anlama gelir:
+- Herhangi bir TRON işlemini gerçekleştirebilir (tools)
+- Herhangi bir senaryo için en iyi yaklaşımı bilir (prompts)
+- Her zaman gerçek zamanlı veriler ve belgeler kullanılabilir (resources)
 
-## Sonuc
+## Sonuç
 
-MCP is a protocol with three primitives, not one. Implementing only tools is like building an API with endpoints but no documentation and no data feeds. It works, technically, but it forces the consumer to figure out everything on their own.
+MCP, bir değil üç primitif olan bir protokoldür. Yalnızca tool'ları uygulamak, uç noktaları olan ancak belgelendirmesi ve veri beslemesi olmayan bir API oluşturmak gibidir. Teknik olarak çalışır, ama her şeyi kendi başına anlaması gereken tüketicisini zorlar.
 
-MERX implements the full protocol because the full protocol is how MCP was designed to be used. Tools for action. Prompts for guidance. Resources for knowledge. All three working together to create an environment where an AI agent can operate on the TRON blockchain with the same depth of capability as a human developer with years of experience.
+MERX tam protokolü uygular çünkü tam protokol MCP'nin kullanılmak üzere tasarlandığı şeklidir. Tools eylem için. Prompts rehberlik için. Resources bilgi için. Üçü birlikte çalışarak bir AI ajanının TRON blokzincirinde yıllarca deneyime sahip bir insan geliştirici kadar derinlikli yetenek ile çalışabilmesi için bir ortam oluşturur.
 
-Thirty prompts. Twenty-one resources. Twenty-one tools. No other blockchain MCP server comes close.
+Otuz prompt. Yirmi bir resource. Yirmi bir tool. Başka hiçbir blokzincir MCP sunucusu buna yakın değildir.
 
 ---
 
-**Baglantilar:**
+**Bağlantılar:**
 - MERX Platformu: [https://merx.exchange](https://merx.exchange)
 - MCP Sunucusu (GitHub): [https://github.com/Hovsteder/merx-mcp](https://github.com/Hovsteder/merx-mcp)
 - MCP Sunucusu (npm): [https://www.npmjs.com/package/merx-mcp](https://www.npmjs.com/package/merx-mcp)
 
-## Try It Now with AI
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+## Şimdi AI ile Dene
+
+MERX'i Claude Desktop veya herhangi bir MCP-uyumlu istemciye ekle -- sıfır kurulum, salt okunur tool'lar için API anahtarı gerekli değildir:
 
 ```json
 {
@@ -495,6 +496,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI ajanına sor: "TRON enerjisinin en ucuz fiyatı nedir?" ve tüm bağlı sağlayıcılardan canlı fiyatlar al.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgelendirmesi: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)

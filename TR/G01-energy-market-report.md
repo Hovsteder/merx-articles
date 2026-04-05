@@ -1,112 +1,112 @@
-# TRON Energy Pazar Raporu: Fiyatlar, Trendler ve Saglayicilar
+# TRON Enerji Pazar Raporu: Fiyatlar, Trendler ve Sağlayıcılar
 
-The TRON energy market has matured from a handful of ad hoc services into a structured ecosystem of providers, aggregators, and sophisticated pricing mechanisms. For anyone building on TRON or managing transaction costs, understanding this market is no longer optional -- it directly impacts operational costs and architectural decisions.
+TRON enerji pazarı, birkaç geçici hizmetten yapılandırılmış bir sağlayıcı, agregatör ve sofistike fiyatlandırma mekanizmalarının ekosistimine dönüşmüştür. TRON'da inşa eden veya işlem maliyetlerini yöneten herkes için bu pazarı anlamak artık isteğe bağlı değildir -- doğrudan işletme maliyetlerini ve mimari kararları etkiler.
 
-This report provides a comprehensive overview of the current TRON energy market: who the providers are, how prices are structured, what volumes look like, and where the market is heading.
+Bu rapor, mevcut TRON enerji pazarının kapsamlı bir genel görünümünü sunar: sağlayıcılar kimler, fiyatlandırma nasıl yapılandırılmıştır, hacimlerin neler olduğu ve pazar nereye gidiyor.
 
-## Market Overview
+## Pazar Özeti
 
-TRON's energy system is fundamental to how the network operates. Every smart contract interaction -- USDT transfers, DEX swaps, NFT mints, DeFi operations -- consumes energy. Without energy, the network burns TRX from the transaction sender's wallet to cover computational costs. Energy rental emerged as a cost optimization layer: instead of burning TRX at full network rates, users can rent energy from providers who have acquired it through TRX staking.
+TRON'un enerji sistemi, ağın nasıl çalıştığının temelini oluşturur. Her akıllı kontrat etkileşimi -- USDT transferleri, DEX takasları, NFT basımları, DeFi işlemleri -- enerji tüketir. Enerji olmadan, ağ işlem gönderenin cüzdanından hesaplama maliyetlerini karşılamak için TRX yakar. Enerji kiralama, bir maliyet optimizasyonu katmanı olarak ortaya çıkmıştır: TRX'i tam ağ oranlarında yakmak yerine, kullanıcılar TRX staking aracılığıyla enerji satın almış sağlayıcılardan enerji kiralayabilirler.
 
-The market exists because the cost difference is substantial. Burning TRX for energy costs roughly 0.21 TRX per 1,000 energy units at current network rates. Renting energy from providers costs 0.022-0.080 TRX per 1,000 energy units -- a 60-90% discount depending on the provider and market conditions.
+Pazar, maliyet farkı önemli olduğu için var olur. TRX yakmak enerji için mevcut ağ oranlarında kabaca 1.000 enerji birimi başına 0,21 TRX maliyeti vardır. Sağlayıcılardan enerji kiralamak, sağlayıcı ve pazar koşullarına bağlı olarak 1.000 enerji birimi başına 0,022-0,080 TRX maliyeti vardır -- %60-90 indirim.
 
-This price differential has created a multi-million-dollar market with seven significant providers competing for order flow.
+Bu fiyat farkı, sipariş akışı için yedi önemli sağlayıcının rekabet ettiği birkaç milyon dolarlık bir pazar yarattı.
 
-## Provider Landscape
+## Sağlayıcı Ortamı
 
 ### TronSave
 
-**Model:** Peer-to-peer marketplace
-**Strengths:** Large order capacity, established reputation
-**Pricing:** Variable, set by individual sellers
-**Duration options:** Flexible
+**Model:** Eşler arası pazaryeri
+**Güçlü Yönler:** Büyük sipariş kapasitesi, köklü itibar
+**Fiyatlandırma:** Değişken, bireysel satıcılar tarafından belirlenir
+**Süre seçenekleri:** Esnek
 
-TronSave connects energy stakers directly with buyers. The P2P model means prices are determined by supply and demand among marketplace participants. For very large orders (millions of energy units), TronSave's seller base can provide competitive bulk rates because large stakers are incentivized to move volume.
+TronSave, enerji staker'larını doğrudan alıcılarla bağlar. P2P modeli, pazaryeri katılımcıları arasındaki arz ve talep tarafından fiyatların belirlendiği anlamına gelir. Çok büyük siparişler için (milyonlarca enerji birimi), TronSave'in satıcı tabanı, büyük staker'lar hacim taşınmaya teşvik edildiğinden rekabetçi toplu oranlar sağlayabilir.
 
 ### PowerSun
 
-**Model:** Fixed-price provider
-**Strengths:** Price predictability, 10 duration tiers
-**Pricing:** Fixed rates per duration tier
-**Duration options:** 5min, 10min, 30min, 1h, 3h, 6h, 12h, 1d, 3d, 14d
+**Model:** Sabit fiyatlı sağlayıcı
+**Güçlü Yönler:** Fiyat öngörülebilirliği, 10 süre katmanı
+**Fiyatlandırma:** Süre katmanı başına sabit oranlar
+**Süre seçenekleri:** 5dk, 10dk, 30dk, 1s, 3s, 6s, 12s, 1g, 3g, 14g
 
-PowerSun offers the most structured pricing in the market. Fixed rates eliminate price uncertainty -- you know exactly what you will pay before ordering. The ten duration tiers cover every use case from single transactions to multi-week operations.
+PowerSun pazardaki en yapılandırılmış fiyatlandırmayı sunar. Sabit oranlar fiyat belirsizliğini ortadan kaldırır -- sipariş vermeden önce tam olarak ne ödeyeceğinizi bilirsiniz. On süre katmanı, tek işlemlerden çok haftalık işlemlere kadar her kullanım durumunu kapsar.
 
 ### Feee
 
-**Model:** Direct provider
-**Strengths:** Often competitive pricing
-**Pricing:** Dynamic, market-responsive
-**Duration options:** Multiple tiers
+**Model:** Doğrudan sağlayıcı
+**Güçlü Yönler:** Genellikle rekabetçi fiyatlandırma
+**Fiyatlandırma:** Dinamik, pazara duyarlı
+**Süre seçenekleri:** Birden fazla katman
 
-Feee has positioned itself as a price-competitive alternative, frequently appearing as the cheapest option for medium-sized orders.
+Feee kendisini fiyat-rekabetçi bir alternatif olarak konumlandırmış, sıklıkla orta ölçekli siparişler için en ucuz seçenek olarak görünüyor.
 
 ### Catfee
 
-**Model:** Direct provider
-**Strengths:** Competitive on specific order sizes
-**Pricing:** Dynamic
-**Duration options:** Multiple tiers
+**Model:** Doğrudan sağlayıcı
+**Güçlü Yönler:** Belirli sipariş boyutlarında rekabetçi
+**Fiyatlandırma:** Dinamik
+**Süre seçenekleri:** Birden fazla katman
 
-Catfee competes primarily on price for standard order sizes (50,000-200,000 energy units).
+Catfee, temel sipariş boyutları (50.000-200.000 enerji birimi) için fiyat üzerinde rekabet eder.
 
 ### Netts
 
-**Model:** Direct provider
-**Strengths:** Consistent availability
-**Pricing:** Moderate
-**Duration options:** Standard tiers
+**Model:** Doğrudan sağlayıcı
+**Güçlü Yönler:** Tutarlı kullanılabilirlik
+**Fiyatlandırma:** Orta düzey
+**Süre seçenekleri:** Standart katmanlar
 
-Netts maintains steady supply and moderate pricing. It rarely has the lowest price but provides reliable availability.
+Netts istikrarlı arz ve orta düzey fiyatlandırma sağlar. Nadiren en düşük fiyata sahip olur ancak güvenilir kullanılabilirlik sağlar.
 
 ### iTRX
 
-**Model:** Direct provider
-**Strengths:** Active market participation
-**Pricing:** Competitive
-**Duration options:** Standard tiers
+**Model:** Doğrudan sağlayıcı
+**Güçlü Yönler:** Aktif pazar katılımı
+**Fiyatlandırma:** Rekabetçi
+**Süre seçenekleri:** Standart katmanlar
 
-iTRX is an active competitor in the mid-range pricing segment.
+iTRX orta seviye fiyatlandırma segmentinde aktif bir rakiptir.
 
 ### Sohu
 
-**Model:** Direct provider
-**Strengths:** Market presence
-**Pricing:** Variable
-**Duration options:** Standard tiers
+**Model:** Doğrudan sağlayıcı
+**Güçlü Yönler:** Pazar varlığı
+**Fiyatlandırma:** Değişken
+**Süre seçenekleri:** Standart katmanlar
 
-Sohu rounds out the provider landscape, adding liquidity and competitive pressure to the market.
+Sohu sağlayıcı ortamını tamamlar, likidite ve pazar rekabetçi baskısı ekler.
 
-## Price Ranges and Distribution
+## Fiyat Aralıkları ve Dağılımı
 
-Energy prices across the market currently range from approximately 22 SUN to 80 SUN per unit, depending on several factors:
+Pazardaki enerji fiyatları şu anda birkaç faktöre bağlı olarak yaklaşık 22 SUN ile 80 SUN arasında değişir:
 
-### By Order Size
+### Sipariş Boyutuna Göre
 
-| Order Size | Typical Price Range (SUN) | Notes |
+| Sipariş Boyutu | Tipik Fiyat Aralığı (SUN) | Notlar |
 |---|---|---|
-| 10,000 - 50,000 | 28 - 50 | Small orders, some providers have minimums |
-| 50,000 - 200,000 | 25 - 40 | Standard range, most competitive |
-| 200,000 - 1,000,000 | 22 - 35 | Better rates at volume |
-| 1,000,000+ | 22 - 30 | Best rates, fewer providers available |
+| 10.000 - 50.000 | 28 - 50 | Küçük siparişler, bazı sağlayıcıların minimumları var |
+| 50.000 - 200.000 | 25 - 40 | Standart aralık, en rekabetçi |
+| 200.000 - 1.000.000 | 22 - 35 | Hacimde daha iyi oranlar |
+| 1.000.000+ | 22 - 30 | En iyi oranlar, daha az sağlayıcı mevcut |
 
-### By Duration
+### Süreye Göre
 
-Longer durations command higher per-unit prices because providers lock their staked TRX (and the energy it generates) for longer periods.
+Daha uzun süreler, sağlayıcıların stake edilmiş TRX'lerini (ve oluşturduğu enerjiyi) daha uzun dönem için kilitlediğinden daha yüksek birim başına fiyat talep eder.
 
-| Duration | Price Multiplier (vs 5min baseline) |
+| Süre | Fiyat Çarpanı (5dk taban karşılaştırması) |
 |---|---|
-| 5 minutes | 1.0x |
-| 1 hour | 1.1-1.3x |
-| 6 hours | 1.3-1.6x |
-| 1 day | 1.5-2.0x |
-| 14 days | 2.0-3.5x |
+| 5 dakika | 1,0x |
+| 1 saat | 1,1-1,3x |
+| 6 saat | 1,3-1,6x |
+| 1 gün | 1,5-2,0x |
+| 14 gün | 2,0-3,5x |
 
-### Best Available Price
+### En İyi Mevcut Fiyat
 
-At any given moment, the best available price across all seven providers for a standard order (65,000 energy, 1-hour duration) typically falls between 22 and 35 SUN. The exact rate depends on market conditions, time of day, and provider supply levels.
+Herhangi bir zamanda, yedi sağlayıcının tümü arasında standart bir sipariş için (65.000 enerji, 1 saat süre) en iyi mevcut fiyat tipik olarak 22 ile 35 SUN arasında düşer. Kesin oran pazar koşullarına, günün saatine ve sağlayıcı arz seviyelerine bağlıdır.
 
-MERX aggregates all seven providers to consistently find the lowest available rate:
+MERX, her zaman en düşük mevcut oranı bulmak için yedi sağlayıcıyı bir araya toplar:
 
 ```bash
 curl -X POST https://merx.exchange/api/v1/prices \
@@ -115,40 +115,40 @@ curl -X POST https://merx.exchange/api/v1/prices \
   -d '{"energy_amount": 65000, "duration": "1h"}'
 ```
 
-## Volume Trends
+## Hacim Trendleri
 
-The TRON energy market's total volume is driven by the network's transaction activity, which is itself driven primarily by USDT transfers. TRON processes millions of USDT transactions daily, and the majority of sophisticated operators use energy rental rather than TRX burn.
+TRON enerji pazarının toplam hacmi, ağın işlem etkinliği tarafından sürülür; bu da kendisi birincil olarak USDT transferleri tarafından sürülür. TRON günlük milyonlarca USDT işlemini işler ve sofistike operatörlerin çoğu enerji kiralaması yerine TRX yakmayı kullanır.
 
-### What Drives Volume
+### Hacmi Neyin Sürüdüğü
 
-**USDT dominance.** TRON is the leading network for USDT transfers. Each transfer consumes approximately 65,000 energy, making USDT transfers the single largest source of energy demand.
+**USDT hakimiyeti.** TRON, USDT transferleri için lider ağdır. Her transfer yaklaşık 65.000 enerji tüketir ve USDT transferlerini enerji talebinin tek en büyük kaynağı yapar.
 
-**DeFi activity.** SunSwap and other TRON DEXs generate energy demand through swap operations (120,000-223,000 energy per swap).
+**DeFi etkinliği.** SunSwap ve diğer TRON DEX'leri takas işlemleri aracılığıyla enerji talebini oluşturur (takas başına 120.000-223.000 enerji).
 
-**Token launches and airdrops.** Large-scale token distributions create burst demand as thousands of TRC-20 transfers are processed in short windows.
+**Token lansmanları ve hava damlaları.** Büyük ölçekli token dağıtımları, binlerce TRC-20 transferi kısa pencereler içinde işlendiğinde patlama talebini oluşturur.
 
-**Payment processors.** Businesses processing TRON payments at scale are consistent, high-volume energy buyers.
+**Ödeme işlemcileri.** TRON ödemelerini ölçekte işleyen işletmeler, tutarlı, yüksek hacimli enerji alıcılarıdır.
 
-### Volume Patterns
+### Hacim Desenleri
 
-Energy demand follows daily and weekly patterns:
+Enerji talebinin günlük ve haftalık desenleri vardır:
 
-- **Peak hours:** Highest demand during business hours in East Asian time zones (UTC+8), where TRON usage is concentrated
-- **Off-peak:** Lower demand during late night UTC+8 and weekends
-- **Burst events:** Token launches, market volatility, and DeFi events create unpredictable demand spikes
+- **Yoğun saatler:** Doğu Asya saat diliminde iş saatleri sırasında en yüksek talep (UTC+8), burada TRON kullanımı yoğunlaşır
+- **Yoğun olmayan:** UTC+8 gece geç saatleri ve hafta sonları daha düşük talep
+- **Patlama etkinlikleri:** Token lansmanları, pazar oynaklığı ve DeFi etkinlikleri öngörülemeyen talep artışları oluşturur
 
-## Market Dynamics
+## Pazar Dinamikleri
 
-### Price Competition
+### Fiyat Rekabeti
 
-The seven-provider market creates genuine price competition. No single provider can maintain above-market rates without losing order flow to competitors. This competitive pressure benefits buyers, particularly when using an aggregator that routes to the cheapest option automatically.
+Yedi sağlayıcılı pazar gerçek fiyat rekabeti yaratır. Hiçbir sağlayıcı, rakiplere sipariş akışını kaybetmeden pazar üstü oranları koruyamaz. Bu rekabetçi baskı, özellikle otomatik olarak en ucuz seçeneğe yönlendiren bir agregatör kullanırken alıcılara fayda sağlar.
 
 ```typescript
 import { MerxClient } from 'merx-sdk';
 
 const merx = new MerxClient({ apiKey: process.env.MERX_API_KEY });
 
-// See competition in action
+// Rekabeti harekete geçiş olarak görün
 const prices = await merx.getPrices({
   energy_amount: 65000,
   duration: '1h'
@@ -157,37 +157,37 @@ const prices = await merx.getPrices({
 for (const offer of prices.providers) {
   console.log(`${offer.provider}: ${offer.price_sun} SUN`);
 }
-// Each provider competes for the order
+// Her sağlayıcı sipariş için rekabet eder
 ```
 
-### Supply Constraints
+### Arz Kısıtlamaları
 
-Energy supply is ultimately limited by the total amount of TRX staked in the network. As TRX staking levels change (influenced by TRX price, staking rewards, and alternative yield opportunities), the total available energy for rental shifts accordingly.
+Enerji arzı sonuçta ağda stake edilen toplam TRX miktarı tarafından sınırlanır. TRX stake seviyeleri değiştikçe (TRX fiyatı, staking ödülleri ve alternatif verim fırsatları tarafından etkilenir), kiralama için mevcut toplam enerji buna göre değişir.
 
-During periods of high demand and constrained supply, prices rise. Providers with larger TRX staking reserves can maintain supply during these periods, while smaller providers may reduce availability or raise prices.
+Yüksek talep ve sınırlı arz dönemlerinde fiyatlar yükselir. Daha büyük TRX stake rezervlerine sahip sağlayıcılar bu dönemlerde arzı koruyabilirken, daha küçük sağlayıcılar kullanılabilirliği azaltabilir veya fiyatları yükseltebilir.
 
-### Provider Specialization
+### Sağlayıcı Uzmanlaşması
 
-Different providers are competitive for different order profiles:
+Farklı sağlayıcılar farklı sipariş profilleri için rekabetçidir:
 
-- Some providers offer the best rates for small, short-duration orders
-- Others specialize in large, long-duration energy blocks
-- P2P marketplaces (TronSave) can handle very large orders through their seller network
-- Fixed-price providers (PowerSun) offer stability at the cost of potentially higher rates
+- Bazı sağlayıcılar küçük, kısa süreli siparişler için en iyi oranları sunar
+- Diğerleri büyük, uzun süreli enerji blokları konusunda uzmanlaşmıştır
+- P2P pazaryerleri (TronSave) satıcı ağı aracılığıyla çok büyük siparişleri işleyebilir
+- Sabit fiyatlı sağlayıcılar (PowerSun) potansiyel olarak daha yüksek oranlar pahasına istikrar sunar
 
-This specialization is one reason aggregation adds value: the cheapest provider for a 50,000-energy, 5-minute order might be different from the cheapest provider for a 5,000,000-energy, 1-day order.
+Bu uzmanlaşma, agregasyonun değer eklediği nedenlerden biridir: 50.000 enerji, 5 dakika sipariş için en ucuz sağlayıcı, 5.000.000 enerji, 1 gün sipariş için en ucuz sağlayıcıdan farklı olabilir.
 
-## The Aggregation Layer
+## Agregasyon Katmanı
 
-MERX operates as the market's aggregation layer, connecting buyers to all seven providers through a single interface. This provides several market-level functions:
+MERX, pazarın agregasyon katmanı olarak çalışır ve alıcıları tek bir arayüz aracılığıyla yedi sağlayıcıya bağlar. Bu birkaç pazar düzeyinde işlevi sağlar:
 
-**Price transparency.** A single API call reveals prices from all providers, making the market more efficient.
+**Fiyat şeffaflığı.** Tek bir API çağrısı tüm sağlayıcılardan fiyatları ortaya çıkarır ve pazarı daha verimli hale getirir.
 
-**Automatic routing.** Orders flow to the cheapest available provider without manual comparison.
+**Otomatik yönlendirme.** Siparişler, manuel karşılaştırma olmaksızın en ucuz mevcut sağlayıcıya akar.
 
-**Failover.** Provider outages do not disrupt energy procurement because orders route to alternatives automatically.
+**Yedek.** Sağlayıcı kesintileri, siparişler otomatik olarak alternatiflere yönlendirildiğinden enerji tedarikini kesintiye uğratmaz.
 
-**Analytics.** MERX's price analysis tools provide market intelligence:
+**Analitik.** MERX'in fiyat analiz araçları pazar istihbaratı sağlar:
 
 ```typescript
 const analysis = await merx.analyzePrices({
@@ -196,54 +196,54 @@ const analysis = await merx.analyzePrices({
   period: '30d'
 });
 
-console.log(`30-day median: ${analysis.median_sun} SUN`);
-console.log(`30-day low: ${analysis.min_sun} SUN`);
-console.log(`30-day high: ${analysis.max_sun} SUN`);
+console.log(`30 günlük medyan: ${analysis.median_sun} SUN`);
+console.log(`30 günlük en düşük: ${analysis.min_sun} SUN`);
+console.log(`30 günlük en yüksek: ${analysis.max_sun} SUN`);
 ```
 
-## Market Challenges
+## Pazar Zorlukları
 
-### Price Opacity
+### Fiyat Saydamlığı Eksikliği
 
-Despite improvements, the energy market still lacks the transparency of traditional commodity markets. Not all providers publish real-time prices publicly, and historical price data is fragmented. Aggregators like MERX improve transparency by making price comparison accessible through APIs.
+İyileştirmelere rağmen, enerji pazarı hâlâ geleneksel emtia pazarlarının şeffaflığını sağlamaktan yoksundur. Tüm sağlayıcılar gerçek zamanlı fiyatları kamuya yayımlamaz ve tarihi fiyat verileri parçalanmıştır. MERX gibi agregatorlar, fiyat karşılaştırmasını API'ler aracılığıyla erişilebilir hale getirerek şeffaflığı iyileştirir.
 
-### Quality Variation
+### Kalite Değişimi
 
-Not all energy delegation is equal. Fill time (how quickly energy is actually delegated after an order is placed), reliability (whether the delegation completes at all), and consistency (whether the provider maintains the delegation for the full stated duration) vary across providers.
+Tüm enerji delegasyonlar eşit değildir. Doldurma süresi (siparişin yerleştirildikten sonra enerji gerçekten delegasyon edilene kadar geçen süre), güvenilirlik (delegasyonun hiç tamamlanıp tamamlanmadığı) ve tutarlılık (sağlayıcı delegasyonu tam belirtilen süre boyunca korumuş) sağlayıcılar arasında değişir.
 
-MERX tracks these quality metrics and factors them into routing decisions, preferring providers with consistent fill rates and fast delegation times when prices are similar.
+MERX bu kalite metriklerini izler ve yönlendirme kararlarına dahil eder; fiyatlar benzer olduğunda tutarlı doldurma oranlarına ve hızlı delegasyon sürelerine sahip sağlayıcıları tercih eder.
 
-### Regulatory Uncertainty
+### Düzenleyici Belirsizlik
 
-The regulatory landscape for crypto services, including energy rental, remains evolving globally. Providers and aggregators operating in this space must monitor regulatory developments across jurisdictions.
+Enerji kiralama da dahil olmak üzere kripto hizmetleri için mevzuat ortamı, dünya çapında gelişmeye devam etmektedir. Bu alanda faaliyet gösteren sağlayıcılar ve agregatorlar, yargı alanları arasında mevzuat gelişmelerini izlemelidir.
 
-## Market Outlook
+## Pazar Görünümü
 
-Several trends are shaping the TRON energy market:
+Çeşitli trendler TRON enerji pazarını şekillendiriyor:
 
-**Growing USDT volume.** As TRON's share of global USDT transfers continues to grow, energy demand will increase proportionally.
+**USDT hacminin büyümesi.** TRON'un küresel USDT transferlerindeki payı büyümeye devam ettikçe, enerji talebinin orantılı olarak artacağı.
 
-**Provider competition.** More providers entering the market will increase competition and likely push average prices lower.
+**Sağlayıcı rekabeti.** Pazara daha fazla sağlayıcının girmesi rekabeti arttıracak ve muhtemelen ortalama fiyatları düşürecektir.
 
-**Automation.** The shift from manual energy purchasing to automated systems (standing orders, auto-energy, API-driven procurement) is accelerating. Providers that offer robust APIs will capture more of this automated flow.
+**Otomasyon.** Manual enerji satın almaktan otomatikleştirilmiş sistemlere (kalıcı siparişler, otomatik enerji, API tabanlı tedarik) geçiş hızlanıyor. Güçlü API'ler sunulan sağlayıcılar, bu otomatikleştirilmiş akışın daha fazlasını yakalayacaktır.
 
-**AI integration.** MCP servers and AI agent capabilities are creating new interaction models for energy management. The ability for AI systems to manage energy procurement autonomously is an emerging capability.
+**AI entegrasyonu.** MCP sunucuları ve AI aracı yetenekleri, enerji yönetimi için yeni etkileşim modelleri yaratıyor. AI sistemlerinin enerji tedarikini otonom olarak yönetebilmesi yeteneği, ortaya çıkan bir yetenektir.
 
-**Duration innovation.** Providers are experimenting with more flexible duration models, including pay-per-transaction pricing that could simplify the market for small buyers.
+**Süre inovasyonu.** Sağlayıcılar, küçük alıcılar için pazarı basitleştirebilen işlem başına ödeme fiyatlandırması da dahil olmak üzere daha esnek süre modelleri deneyiyor.
 
-## Sonuc
+## Sonuç
 
-The TRON energy market is a functional, competitive ecosystem with seven providers serving a growing demand base. Prices range from 22-80 SUN depending on order size, duration, and provider, with the best rates available through aggregation.
+TRON enerji pazarı, büyüyen bir talep tabanına hizmet veren yedi sağlayıcıya sahip işlevsel, rekabetçi bir ekosistemdir. Fiyatlar, sipariş boyutu, süre ve sağlayıcıya bağlı olarak 22-80 SUN arasında değişir; en iyi oranlar agregasyon aracılığıyla mevcuttur.
 
-For buyers, the market offers genuine savings over TRX burn -- 60-90% depending on the provider and order profile. The key to capturing these savings is either maintaining relationships with multiple providers or using an aggregator that handles multi-provider comparison automatically.
+Alıcılar için pazar, TRX yakmaya karşı gerçek tasarruflar sunmuştur -- sağlayıcı ve sipariş profiline bağlı olarak %60-90. Bu tasarrufları yakalamak için anahtar, birden fazla sağlayıcı ile ilişkiler sürdürmek veya çok sağlayıcı karşılaştırmasını otomatik olarak işleyen bir agregatör kullanmaktır.
 
-Understanding market dynamics -- when prices are lower, which providers are competitive for your order profile, and how to structure purchases for optimal cost -- is the difference between mediocre and exceptional energy cost management.
+Pazar dinamiklerini anlamak -- fiyatların ne zaman daha düşük olduğu, hangi sağlayıcıların sipariş profiliniz için rekabetçi olduğu ve optimal maliyet için satın almaları nasıl yapılandıracağı -- orta düzey ve istisna enerji maliyet yönetimi arasındaki farktır.
 
-Explore current market prices at [https://merx.exchange](https://merx.exchange) or access price analytics through the API at [https://merx.exchange/docs](https://merx.exchange/docs).
+Mevcut pazar fiyatlarını [https://merx.exchange](https://merx.exchange) adresinde keşfedin veya [https://merx.exchange/docs](https://merx.exchange/docs) adresindeki API aracılığıyla fiyat analitiğine erişin.
 
-## Try It Now with AI
+## Şimdi AI ile Deneyin
 
-Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API key needed for read-only tools:
+MERX'i Claude Desktop'a veya herhangi bir MCP uyumlu istemciye ekleyin -- sıfır yükleme, salt okunur araçlar için API anahtarı gerekli değildir:
 
 ```json
 {
@@ -255,6 +255,6 @@ Add MERX to Claude Desktop or any MCP-compatible client -- zero install, no API 
 }
 ```
 
-Ask your AI agent: "What is the cheapest TRON energy right now?" and get live prices from all connected providers.
+AI aracınızdan şu şekilde sorun: "Şu anda en ucuz TRON enerji nedir?" ve bağlı tüm sağlayıcılardan canlı fiyatlar alın.
 
-Full MCP documentation: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
+Tam MCP belgeleri: [merx.exchange/docs/tools/mcp-server](https://merx.exchange/docs/tools/mcp-server)
